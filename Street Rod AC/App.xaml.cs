@@ -12,10 +12,12 @@ namespace Street_Rod_AC
     public partial class App : Application
     {
         public IAssettoCorsaContentService ContentService { get; private set; }
+        public IAssettoCorsaLauncher Launcher { get; private set; }
 
         public App()
         {
             ContentService = new AssettoCorsaContentService();
+            Launcher = new AssettoCorsaLauncher();
         }
 
         protected override async void OnStartup(StartupEventArgs e)

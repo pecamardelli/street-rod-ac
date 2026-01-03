@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using Street_Rod_AC.Models.AC;
 using Street_Rod_AC.Services;
 
@@ -9,12 +10,22 @@ namespace Street_Rod_AC.ViewModels;
 /// <summary>
 /// ViewModel for the main window displaying AC content
 /// </summary>
-public class MainWindowViewModel(IAssettoCorsaContentService contentService) : INotifyPropertyChanged
+public class MainWindowViewModel : INotifyPropertyChanged
 {
-    private readonly IAssettoCorsaContentService _contentService = contentService;
+    private readonly IAssettoCorsaContentService _contentService;
+    private readonly IAssettoCorsaLauncher _launcher;
     private CarInfo? _selectedCar;
     private TrackInfo? _selectedTrack;
     private string _statusText = "Ready";
+
+    public MainWindowViewModel(IAssettoCorsaContentService contentService, IAssettoCorsaLauncher launcher)
+    {
+        _contentService = contentService;
+        _launcher = launcher;
+
+        // Initialize LaunchRaceCommand
+        LaunchRaceCommand = new AsyncRelayCommand(LaunchRaceAsync, CanLaunchRace);
+    }
 
     public ObservableCollection<CarInfo> Cars { get; } = new ObservableCollection<CarInfo>();
     public ObservableCollection<TrackInfo> Tracks { get; } = new ObservableCollection<TrackInfo>();
@@ -26,6 +37,7 @@ public class MainWindowViewModel(IAssettoCorsaContentService contentService) : I
         {
             _selectedCar = value;
             OnPropertyChanged();
+            LaunchRaceCommand.RaiseCanExecuteChanged();
         }
     }
 
@@ -36,8 +48,11 @@ public class MainWindowViewModel(IAssettoCorsaContentService contentService) : I
         {
             _selectedTrack = value;
             OnPropertyChanged();
+            LaunchRaceCommand.RaiseCanExecuteChanged();
         }
     }
+
+    public AsyncRelayCommand LaunchRaceCommand { get; }
 
     public string StatusText
     {
@@ -83,6 +98,41 @@ public class MainWindowViewModel(IAssettoCorsaContentService contentService) : I
         {
             StatusText = $"Error: {ex.Message}";
             Console.WriteLine($"ViewModel Error: {ex}");
+        }
+    }
+
+    private bool CanLaunchRace()
+    {
+        return SelectedCar != null && SelectedTrack != null;
+    }
+
+    private async Task LaunchRaceAsync()
+    {
+        if (SelectedCar == null || SelectedTrack == null)
+            return;
+
+        try
+        {
+            StatusText = "Launching Assetto Corsa...";
+
+            // For drag tracks with variants, use the first configuration if available
+            string? trackConfig = null;
+            if (SelectedTrack.Configurations.Count > 0)
+            {
+                trackConfig = SelectedTrack.Configurations[0].FolderName;
+            }
+
+            await _launcher.LaunchRaceAsync(SelectedCar, SelectedTrack, trackConfig);
+
+            StatusText = $"Race completed with {SelectedCar.Name} at {SelectedTrack.Name}";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Launch failed: {ex.Message}";
+            MessageBox.Show($"Failed to launch Assetto Corsa:\n\n{ex.Message}",
+                "Launch Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
     }
 

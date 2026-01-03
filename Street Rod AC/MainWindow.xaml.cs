@@ -23,9 +23,9 @@ namespace Street_Rod_AC
         {
             InitializeComponent();
 
-            // Get the content service from the App instance
+            // Get services from the App instance
             var app = (App)Application.Current;
-            _viewModel = new MainWindowViewModel(app.ContentService);
+            _viewModel = new MainWindowViewModel(app.ContentService, app.Launcher);
             DataContext = _viewModel;
 
             // Load content when window loads

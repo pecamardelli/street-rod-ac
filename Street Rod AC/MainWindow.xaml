@@ -178,6 +178,30 @@
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusText}"/>
             </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <Button Content="🏁 Launch Race"
+                        Command="{Binding LaunchRaceCommand}"
+                        Padding="15,5"
+                        FontWeight="Bold"
+                        Background="#FF4CAF50"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#FF45A049"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Background" Value="#FFCCCCCC"/>
+                                    <Setter Property="Foreground" Value="#FF666666"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StatusBarItem>
         </StatusBar>
     </Grid>
 </Window>
