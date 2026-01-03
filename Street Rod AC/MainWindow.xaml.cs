@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Street_Rod_AC.ViewModels;
 
 namespace Street_Rod_AC
 {
@@ -16,9 +17,19 @@ namespace Street_Rod_AC
     /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly MainWindowViewModel _viewModel;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            // Get the content service from the App instance
+            var app = (App)Application.Current;
+            _viewModel = new MainWindowViewModel(app.ContentService);
+            DataContext = _viewModel;
+
+            // Load content when window loads
+            Loaded += async (s, e) => await _viewModel.LoadContentAsync();
         }
     }
 }

@@ -5,8 +5,179 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Street_Rod_AC"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Street Rod AC - Assetto Corsa Content Browser" Height="600" Width="1000">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
+        <!-- Main Content Area -->
+        <TabControl Grid.Row="0" Margin="10">
+            <!-- Cars Tab -->
+            <TabItem Header="Cars">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Car List -->
+                    <ListBox Grid.Column="0"
+                             ItemsSource="{Binding Cars}"
+                             SelectedItem="{Binding SelectedCar}"
+                             Margin="5">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="5">
+                                    <TextBlock Text="{Binding Brand}" FontWeight="Bold" FontSize="12"/>
+                                    <TextBlock Text="{Binding Name}" FontSize="11"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Car Details -->
+                    <ScrollViewer Grid.Column="1" Margin="5" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="10" DataContext="{Binding SelectedCar}">
+                            <TextBlock Text="Car Details" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Car ID:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CarId}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Name:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Name}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Brand:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Brand}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Class:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Class}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Power:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Specs.Bhp}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Torque:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Specs.Torque}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Weight:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Specs.Weight}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="7" Grid.Column="0" Text="Top Speed:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding Specs.TopSpeed}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="8" Grid.Column="0" Text="Folder:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding FolderPath}" TextWrapping="Wrap" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="9" Grid.Column="0" Text="Description:" FontWeight="Bold" Margin="0,5" VerticalAlignment="Top"/>
+                                <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding Description}" TextWrapping="Wrap" Margin="0,5"/>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- Tracks Tab -->
+            <TabItem Header="Tracks">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Track List -->
+                    <ListBox Grid.Column="0"
+                             ItemsSource="{Binding Tracks}"
+                             SelectedItem="{Binding SelectedTrack}"
+                             Margin="5">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="5">
+                                    <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="12"/>
+                                    <TextBlock Text="{Binding Country}" FontSize="10" Foreground="Gray"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Track Details -->
+                    <ScrollViewer Grid.Column="1" Margin="5" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="10" DataContext="{Binding SelectedTrack}">
+                            <TextBlock Text="Track Details" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Track ID:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding TrackId}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Name:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Name}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Country:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Country}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="City:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding City}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Length:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Length}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Width:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Width}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Pitboxes:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Pitboxes}" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="7" Grid.Column="0" Text="Folder:" FontWeight="Bold" Margin="0,5"/>
+                                <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding FolderPath}" TextWrapping="Wrap" Margin="0,5"/>
+
+                                <TextBlock Grid.Row="8" Grid.Column="0" Text="Description:" FontWeight="Bold" Margin="0,5" VerticalAlignment="Top"/>
+                                <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding Description}" TextWrapping="Wrap" Margin="0,5"/>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- Status Bar -->
+        <StatusBar Grid.Row="1">
+            <StatusBarItem>
+                <TextBlock Text="{Binding StatusText}"/>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>
