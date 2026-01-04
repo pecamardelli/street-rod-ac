@@ -114,12 +114,12 @@ public partial class CarRendererWindow : Window
             // V-Sync OFF for unlimited FPS
             _renderer.SyncInterval = false;  // Disable V-Sync to see true performance
 
-            // Setup camera
+            // Setup camera - 3/4 view from front corner
             if (_renderer.CameraOrbit != null)
             {
-                _renderer.CameraOrbit.Radius = 5.0f;
-                _renderer.CameraOrbit.Alpha = 0.0f;
-                _renderer.CameraOrbit.Beta = 0.3f;
+                _renderer.CameraOrbit.Radius = 7.5f;  // Farther distance
+                _renderer.CameraOrbit.Alpha = 0.8f;  // 45° horizontal angle (π/4 radians) for 3/4 view
+                _renderer.CameraOrbit.Beta = 0.2f;  // Slight downward angle
             }
 
             // Setup render loop
