@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Threading;
+using AcTools.Render.Forward;
 using AcTools.Render.Kn5Specific.Objects;
 using AcTools.Render.Kn5SpecificForward;
 using Street_Rod_AC.Models.AC;
@@ -16,11 +17,17 @@ public partial class CarRendererWindow : Window
     private DispatcherTimer? _renderTimer;
     private System.Drawing.Point _lastMousePosition;
     private bool _isMouseDown;
+    private DateTime _lastFrameTime = DateTime.Now;
+    private string _baseTitle = "";
+    private WindowStyle _previousWindowStyle;
+    private WindowState _previousWindowState;
+    private bool _isFullscreen = false;
 
     public CarRendererWindow(CarInfo carInfo)
     {
         InitializeComponent();
-        Title = $"Car Viewer - {carInfo.Brand} {carInfo.Name}";
+        _baseTitle = $"Car Viewer - {carInfo.Brand} {carInfo.Name}";
+        Title = _baseTitle;
 
         try
         {
@@ -29,9 +36,11 @@ public partial class CarRendererWindow : Window
 
             // Create renderer
             _renderer = new ForwardKn5ObjectRenderer(carDesc);
-            _renderer.Width = 800;
-            _renderer.Height = 600;
+            _renderer.Width = 1920;
+            _renderer.Height = 1080;
             _renderer.AutoRotate = false;
+
+            // Minimal settings - will add quality settings after initialization
         }
         catch (Exception ex)
         {
@@ -67,6 +76,44 @@ public partial class CarRendererWindow : Window
             // Initialize renderer with panel handle
             _renderer.Initialize(_renderPanel.Handle);
 
+            // ========== ALL QUALITY SETTINGS (AFTER INITIALIZATION) ==========
+
+            // Resolution & Super-Sampling
+            _renderer.ResolutionMultiplier = 2.0;  // Render at 4K (3840x2160) internally
+            _renderer.UseSsaa = true;  // Enable super-sampling anti-aliasing
+
+            // Anti-Aliasing (Quad-stack for ultimate smoothness)
+            _renderer.UseMsaa = true;
+            _renderer.MsaaSampleCount = 8;  // Maximum MSAA (8x samples per pixel)
+            _renderer.UseFxaa = true;  // Fast approximate AA
+            _renderer.UseSmaa = true;  // Subpixel morphological AA
+
+            // Shadows - Maximum Quality
+            _renderer.EnableShadows = true;  // Enable shadow rendering
+            _renderer.UsePcss = true;  // Percentage-Closer Soft Shadows (best quality)
+            _renderer.CarShadowsOpacity = 1.0f;  // Full shadow opacity
+
+            // Reflections - Ultra Resolution
+            _renderer.CubemapReflectionMapSize = 4096;  // 4K cubemap resolution
+            _renderer.CubemapReflectionFacesPerFrame = 6;  // Update all 6 faces every frame
+            _renderer.ForceUpdateWholeCubemapAtOnce = true;  // No frame delays
+            _renderer.ReflectionCubemapAtCamera = true;  // Position at camera for best reflections
+
+            // Post-Processing Effects
+            _renderer.UseBloom = true;  // HDR bloom
+            _renderer.BloomRadiusMultiplier = 1.5f;  // Enhanced bloom radius
+            _renderer.UseLensFlares = true;  // Lens flare effects
+            _renderer.UseDither = true;  // Dithering to prevent color banding
+
+            // Tone Mapping - Filmic look
+            _renderer.ToneMapping = ToneMappingFn.Uncharted2;  // Best cinematic tone mapping
+            _renderer.ToneExposure = 1.0f;  // Optimal exposure
+            _renderer.ToneGamma = 2.2f;  // Standard gamma correction
+            _renderer.ToneWhitePoint = 2.0f;  // Higher white point for better highlights
+
+            // V-Sync OFF for unlimited FPS
+            _renderer.SyncInterval = false;  // Disable V-Sync to see true performance
+
             // Setup camera
             if (_renderer.CameraOrbit != null)
             {
@@ -78,7 +125,7 @@ public partial class CarRendererWindow : Window
             // Setup render loop
             _renderTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(16) // ~60 FPS
+                Interval = TimeSpan.FromMilliseconds(1) // Maximum FPS (let renderer control frame rate)
             };
             _renderTimer.Tick += RenderTimer_Tick;
             _renderTimer.Start();
@@ -97,6 +144,12 @@ public partial class CarRendererWindow : Window
     {
         try
         {
+            // Calculate and display FPS
+            var now = DateTime.Now;
+            var fps = 1000.0 / (now - _lastFrameTime).TotalMilliseconds;
+            Title = $"{_baseTitle} - FPS: {fps:F1}";
+            _lastFrameTime = now;
+
             _renderer?.Draw();
         }
         catch (Exception ex)
@@ -172,6 +225,46 @@ public partial class CarRendererWindow : Window
         if (_renderer != null)
         {
             _renderer.AutoRotate = AutoRotateCheck.IsChecked ?? false;
+        }
+    }
+
+    private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (_renderer != null && _renderPanel != null)
+        {
+            // Update renderer size to match window
+            var renderSize = RenderHost.RenderSize;
+            _renderer.Width = (int)renderSize.Width;
+            _renderer.Height = (int)renderSize.Height;
+        }
+    }
+
+    private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        // F11 to toggle fullscreen
+        if (e.Key == System.Windows.Input.Key.F11)
+        {
+            ToggleFullscreen();
+        }
+    }
+
+    private void ToggleFullscreen()
+    {
+        if (_isFullscreen)
+        {
+            // Exit fullscreen
+            WindowStyle = _previousWindowStyle;
+            WindowState = _previousWindowState;
+            _isFullscreen = false;
+        }
+        else
+        {
+            // Enter fullscreen
+            _previousWindowStyle = WindowStyle;
+            _previousWindowState = WindowState;
+            WindowStyle = WindowStyle.None;
+            WindowState = WindowState.Maximized;
+            _isFullscreen = true;
         }
     }
 
