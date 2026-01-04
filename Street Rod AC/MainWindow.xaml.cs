@@ -24,7 +24,7 @@ namespace Street_Rod_AC
             InitializeComponent();
 
             // Get services from the App instance
-            var app = (App)Application.Current;
+            var app = (App)System.Windows.Application.Current;
             _viewModel = new MainWindowViewModel(app.ContentService, app.Launcher);
             DataContext = _viewModel;
 

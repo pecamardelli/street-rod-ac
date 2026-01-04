@@ -9,7 +9,7 @@ namespace Street_Rod_AC
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
+    public partial class App : System.Windows.Application
     {
         public IAssettoCorsaContentService ContentService { get; private set; }
         public IAssettoCorsaLauncher Launcher { get; private set; }
@@ -27,7 +27,7 @@ namespace Street_Rod_AC
             // Validate AC installation
             if (!AppSettings.Instance.IsValidInstallation())
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Assetto Corsa installation not found at:\n{AppSettings.Instance.AssettoCorsaPath}\n\n" +
                     "Please verify the installation path in the configuration.",
                     "Installation Not Found",
@@ -48,7 +48,7 @@ namespace Street_Rod_AC
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"Error loading Assetto Corsa content:\n{ex.Message}",
                     "Load Error",
                     MessageBoxButton.OK,

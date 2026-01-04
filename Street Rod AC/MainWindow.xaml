@@ -90,6 +90,33 @@
                                 <TextBlock Grid.Row="9" Grid.Column="0" Text="Description:" FontWeight="Bold" Margin="0,5" VerticalAlignment="Top"/>
                                 <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding Description}" TextWrapping="Wrap" Margin="0,5"/>
                             </Grid>
+
+                            <!-- View in 3D Button -->
+                            <Button Command="{Binding DataContext.View3DCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    Content="View in 3D"
+                                    Padding="20,10"
+                                    Margin="0,20,0,0"
+                                    FontSize="14"
+                                    FontWeight="Bold"
+                                    Background="#FF2196F3"
+                                    Foreground="White"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    HorizontalAlignment="Left">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#FF1976D2"/>
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Background" Value="#FFCCCCCC"/>
+                                                <Setter Property="Foreground" Value="#FF666666"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>

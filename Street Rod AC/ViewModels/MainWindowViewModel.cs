@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Input;
 using Street_Rod_AC.Models.AC;
 using Street_Rod_AC.Services;
 
@@ -25,6 +26,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         // Initialize LaunchRaceCommand
         LaunchRaceCommand = new AsyncRelayCommand(LaunchRaceAsync, CanLaunchRace);
+
+        // Initialize View3DCommand
+        View3DCommand = new RelayCommand(View3D, CanView3D);
     }
 
     public ObservableCollection<CarInfo> Cars { get; } = new ObservableCollection<CarInfo>();
@@ -37,7 +41,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             _selectedCar = value;
             OnPropertyChanged();
-            LaunchRaceCommand.RaiseCanExecuteChanged();
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 
@@ -48,11 +52,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             _selectedTrack = value;
             OnPropertyChanged();
-            LaunchRaceCommand.RaiseCanExecuteChanged();
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 
     public AsyncRelayCommand LaunchRaceCommand { get; }
+    public RelayCommand View3DCommand { get; }
 
     public string StatusText
     {
@@ -129,8 +134,33 @@ public class MainWindowViewModel : INotifyPropertyChanged
         catch (Exception ex)
         {
             StatusText = $"Launch failed: {ex.Message}";
-            MessageBox.Show($"Failed to launch Assetto Corsa:\n\n{ex.Message}",
+            System.Windows.MessageBox.Show($"Failed to launch Assetto Corsa:\n\n{ex.Message}",
                 "Launch Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private bool CanView3D()
+    {
+        return SelectedCar != null;
+    }
+
+    private void View3D()
+    {
+        if (SelectedCar == null)
+            return;
+
+        try
+        {
+            var rendererWindow = new CarRendererWindow(SelectedCar);
+            rendererWindow.Show();
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Failed to open 3D viewer: {ex.Message}";
+            System.Windows.MessageBox.Show($"Failed to open 3D viewer:\n\n{ex.Message}",
+                "3D Viewer Error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }
