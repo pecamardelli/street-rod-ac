@@ -12,8 +12,17 @@
         Background="Transparent">
     <!-- Main Menu Grid with Background -->
     <Grid Background="{StaticResource MainBackgroundBrush}">
+        <!-- Exit Button -->
+        <Button Style="{StaticResource ExitButtonStyle}"
+                Background="{StaticResource ExitButtonBrush}"
+                Command="{Binding ExitCommand}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Margin="20,20,0,0"/>
+
         <!-- Menu Buttons Container -->
-        <StackPanel VerticalAlignment="Center"
+        <StackPanel Orientation="Horizontal"
+                    VerticalAlignment="Center"
                     HorizontalAlignment="Center">
             <StackPanel.Triggers>
                 <EventTrigger RoutedEvent="FrameworkElement.Loaded">
@@ -28,16 +37,16 @@
                 </EventTrigger>
             </StackPanel.Triggers>
 
-            <!-- New Game Button -->
-            <Button Style="{StaticResource MenuButtonStyle}"
-                    Background="{StaticResource NewGameButtonBrush}"
-                    Command="{Binding NewGameCommand}"
-                    Margin="0,0,0,20"/>
-
             <!-- Load Game Button -->
             <Button Style="{StaticResource MenuButtonStyle}"
                     Background="{StaticResource LoadGameButtonBrush}"
-                    Command="{Binding LoadGameCommand}"/>
+                    Command="{Binding LoadGameCommand}"
+                    Margin="0,0,100,0"/>
+
+            <!-- New Game Button -->
+            <Button Style="{StaticResource MenuButtonStyle}"
+                    Background="{StaticResource NewGameButtonBrush}"
+                    Command="{Binding NewGameCommand}"/>
         </StackPanel>
     </Grid>
 </Window>

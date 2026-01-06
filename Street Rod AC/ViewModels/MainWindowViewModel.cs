@@ -27,6 +27,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         // Initialize menu commands
         NewGameCommand = new RelayCommand(NewGame);
         LoadGameCommand = new RelayCommand(LoadGame);
+        ExitCommand = new RelayCommand(Exit);
 
         // Initialize LaunchRaceCommand
         LaunchRaceCommand = new AsyncRelayCommand(LaunchRaceAsync, CanLaunchRace);
@@ -62,6 +63,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     public RelayCommand NewGameCommand { get; }
     public RelayCommand LoadGameCommand { get; }
+    public RelayCommand ExitCommand { get; }
     public AsyncRelayCommand LaunchRaceCommand { get; }
     public RelayCommand View3DCommand { get; }
 
@@ -190,6 +192,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
             "Load Game",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
+    }
+
+    private void Exit()
+    {
+        System.Windows.Application.Current.Shutdown();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

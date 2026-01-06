@@ -39,4 +39,8 @@
                 ImageSource="pack://application:,,,/Assets/Images/Buttons/load_game.png"
                 Stretch="Fill"/>
 
+    <ImageBrush x:Key="ExitButtonBrush"
+                ImageSource="pack://application:,,,/Assets/Images/Buttons/exit.png"
+                Stretch="Fill"/>
+
 </ResourceDictionary>
