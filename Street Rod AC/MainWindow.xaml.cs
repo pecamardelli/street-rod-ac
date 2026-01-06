@@ -20,6 +20,7 @@ namespace Street_Rod_AC
     public partial class MainWindow : Window
     {
         private readonly MainWindowViewModel _viewModel;
+        private readonly double FadeDuration = 0.5;
 
         public MainWindow()
         {
@@ -55,21 +56,79 @@ namespace Street_Rod_AC
             var splashScreen = sender as Grid;
             if (splashScreen == null) return;
 
-            // Create fade out animation
-            var fadeOut = new DoubleAnimation
+            // Create splash fade out animation
+            var splashFadeOut = new DoubleAnimation
             {
                 From = 1.0,
                 To = 0.0,
-                Duration = TimeSpan.FromSeconds(0.5)
+                Duration = TimeSpan.FromSeconds(FadeDuration)
             };
 
-            // When animation completes, hide the splash screen
-            fadeOut.Completed += (s, args) =>
+            // When splash fade completes, hide it
+            splashFadeOut.Completed += (s, args) =>
             {
                 splashScreen.Visibility = Visibility.Collapsed;
             };
 
-            splashScreen.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+            splashScreen.BeginAnimation(UIElement.OpacityProperty, splashFadeOut);
+
+            // Simultaneously start main menu background fade-in (with slight delay for overlap)
+            var mainMenuFadeIn = new DoubleAnimation
+            {
+                From = 0.0,
+                To = 1.0,
+                BeginTime = TimeSpan.FromSeconds(0.2),
+                Duration = TimeSpan.FromSeconds(FadeDuration)
+            };
+
+            mainMenuFadeIn.Completed += (s, args) =>
+            {
+                // After background is visible, fade in and slide up the buttons
+                AnimateButtons();
+            };
+
+            MainMenuGrid.BeginAnimation(UIElement.OpacityProperty, mainMenuFadeIn);
+        }
+
+        private void AnimateButtons()
+        {
+            // Exit button fade-in and slide-up
+            var exitButtonFadeIn = new DoubleAnimation
+            {
+                From = 0.0,
+                To = 1.0,
+                Duration = TimeSpan.FromSeconds(FadeDuration)
+            };
+
+            var exitButtonSlideUp = new DoubleAnimation
+            {
+                From = 30,
+                To = 0,
+                Duration = TimeSpan.FromSeconds(FadeDuration)
+            };
+
+            ExitButton.BeginAnimation(UIElement.OpacityProperty, exitButtonFadeIn);
+            var exitTransform = ExitButton.RenderTransform as TranslateTransform;
+            exitTransform?.BeginAnimation(TranslateTransform.YProperty, exitButtonSlideUp);
+
+            // Menu buttons fade-in and slide-up
+            var menuButtonsFadeIn = new DoubleAnimation
+            {
+                From = 0.0,
+                To = 1.0,
+                Duration = TimeSpan.FromSeconds(FadeDuration)
+            };
+
+            var menuButtonsSlideUp = new DoubleAnimation
+            {
+                From = 30,
+                To = 0,
+                Duration = TimeSpan.FromSeconds(FadeDuration)
+            };
+
+            MenuButtonsContainer.BeginAnimation(UIElement.OpacityProperty, menuButtonsFadeIn);
+            var menuTransform = MenuButtonsContainer.RenderTransform as TranslateTransform;
+            menuTransform?.BeginAnimation(TranslateTransform.YProperty, menuButtonsSlideUp);
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using Street_Rod_AC.Models.AC;
 using Street_Rod_AC.Services;
+using Street_Rod_AC.Views;
 
 namespace Street_Rod_AC.ViewModels;
 
@@ -196,7 +197,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
     private void Exit()
     {
-        System.Windows.Application.Current.Shutdown();
+        var dialog = new QuitConfirmationDialog();
+        var result = dialog.ShowDialog();
+
+        if (result == true)
+        {
+            System.Windows.Application.Current.Shutdown();
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

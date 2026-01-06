@@ -1,0 +1,92 @@
+<local:BaseWindow x:Class="Street_Rod_AC.Views.TestDialog"
+                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:local="clr-namespace:Street_Rod_AC.Controls"
+                  Title="Test Dialog"
+                  Width="600"
+                  Height="400">
+    <Grid Margin="20">
+        <StackPanel>
+            <TextBlock Text="Styled Window System Demo"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Margin="0,0,0,20"/>
+
+            <TextBlock Foreground="{StaticResource TextSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,10">
+                This is a test dialog demonstrating the reusable styled window system.
+            </TextBlock>
+
+            <TextBlock Foreground="{StaticResource TextSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,10">
+                Features:
+            </TextBlock>
+
+            <TextBlock Foreground="{StaticResource TextSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       Margin="20,0,0,5">
+                • Dark, minimal Assetto Corsa-like theme
+            </TextBlock>
+
+            <TextBlock Foreground="{StaticResource TextSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       Margin="20,0,0,5">
+                • Custom title bar with minimize, maximize, close buttons
+            </TextBlock>
+
+            <TextBlock Foreground="{StaticResource TextSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       Margin="20,0,0,5">
+                • Draggable title bar (single-click to drag, double-click to maximize)
+            </TextBlock>
+
+            <TextBlock Foreground="{StaticResource TextSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       Margin="20,0,0,5">
+                • Drop shadow for depth
+            </TextBlock>
+
+            <TextBlock Foreground="{StaticResource TextSecondaryBrush}"
+                       TextWrapping="Wrap"
+                       Margin="20,0,0,20">
+                • Resizable with grip
+            </TextBlock>
+
+            <Button Content="Close Dialog"
+                    Click="CloseDialogButton_Click"
+                    HorizontalAlignment="Left"
+                    Padding="20,10"
+                    Background="{StaticResource AccentPrimaryBrush}"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Cursor="Hand">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource AccentHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource AccentPressedBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </StackPanel>
+    </Grid>
+</local:BaseWindow>

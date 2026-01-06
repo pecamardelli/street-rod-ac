@@ -13,24 +13,13 @@
     <!-- Root Grid -->
     <Grid>
         <!-- Main Menu Grid with Background -->
-        <Grid Background="{StaticResource MainBackgroundBrush}"
+        <Grid x:Name="MainMenuGrid"
+              Background="{StaticResource MainBackgroundBrush}"
               Opacity="0">
-            <Grid.Triggers>
-                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                           From="0.0"
-                                           To="1.0"
-                                           BeginTime="0:0:4"
-                                           Duration="0:0:1"/>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </Grid.Triggers>
 
         <!-- Exit Button -->
-        <Button Style="{StaticResource ExitButtonStyle}"
+        <Button x:Name="ExitButton"
+                Style="{StaticResource ExitButtonStyle}"
                 Background="{StaticResource ExitButtonBrush}"
                 Command="{Binding ExitCommand}"
                 HorizontalAlignment="Left"
@@ -40,52 +29,17 @@
             <Button.RenderTransform>
                 <TranslateTransform Y="30"/>
             </Button.RenderTransform>
-            <Button.Triggers>
-                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                           From="0.0"
-                                           To="1.0"
-                                           BeginTime="0:0:5"
-                                           Duration="0:0:1"/>
-                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
-                                           From="30"
-                                           To="0"
-                                           BeginTime="0:0:5"
-                                           Duration="0:0:1"/>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </Button.Triggers>
         </Button>
 
         <!-- Menu Buttons Container -->
-        <StackPanel Orientation="Horizontal"
+        <StackPanel x:Name="MenuButtonsContainer"
+                    Orientation="Horizontal"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
                     Opacity="0">
             <StackPanel.RenderTransform>
                 <TranslateTransform Y="30"/>
             </StackPanel.RenderTransform>
-            <StackPanel.Triggers>
-                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                           From="0.0"
-                                           To="1.0"
-                                           BeginTime="0:0:5"
-                                           Duration="0:0:1"/>
-                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
-                                           From="30"
-                                           To="0"
-                                           BeginTime="0:0:5"
-                                           Duration="0:0:1"/>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </StackPanel.Triggers>
 
             <!-- Load Game Button -->
             <Button Style="{StaticResource MenuButtonStyle}"
