@@ -25,9 +25,13 @@
     <SolidColorBrush x:Key="BorderDarkBrush" Color="{StaticResource BorderDark}"/>
     <SolidColorBrush x:Key="BorderLightBrush" Color="{StaticResource BorderLight}"/>
 
-    <!-- Background Image -->
+    <!-- Background Images -->
     <ImageBrush x:Key="MainBackgroundBrush"
                 ImageSource="pack://application:,,,/Assets/Images/Backgrounds/main.png"
+                Stretch="UniformToFill"/>
+
+    <ImageBrush x:Key="InitBackgroundBrush"
+                ImageSource="pack://application:,,,/Assets/Images/Backgrounds/init.png"
                 Stretch="UniformToFill"/>
 
     <!-- Button Images -->
@@ -42,5 +46,10 @@
     <ImageBrush x:Key="ExitButtonBrush"
                 ImageSource="pack://application:,,,/Assets/Images/Buttons/exit.png"
                 Stretch="Fill"/>
+
+    <!-- Text Images -->
+    <ImageBrush x:Key="StreetRodLogoTextBrush"
+                ImageSource="pack://application:,,,/Assets/Images/Text/street_rod_powered_by_ac.png"
+                Stretch="Uniform"/>
 
 </ResourceDictionary>

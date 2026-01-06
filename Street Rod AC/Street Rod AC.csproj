@@ -33,6 +33,7 @@
     <Resource Include="Assets\Images\Buttons\*.png" />
     <Resource Include="Assets\Images\Icons\*.png" />
     <Resource Include="Assets\Images\UI\*.png" />
+    <Resource Include="Assets\Images\Text\*.png" />
   </ItemGroup>
 
   <ItemGroup>

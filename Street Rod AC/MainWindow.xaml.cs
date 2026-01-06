@@ -6,6 +6,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -47,6 +48,28 @@ namespace Street_Rod_AC
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
+        }
+
+        private void SplashScreen_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var splashScreen = sender as Grid;
+            if (splashScreen == null) return;
+
+            // Create fade out animation
+            var fadeOut = new DoubleAnimation
+            {
+                From = 1.0,
+                To = 0.0,
+                Duration = TimeSpan.FromSeconds(0.5)
+            };
+
+            // When animation completes, hide the splash screen
+            fadeOut.Completed += (s, args) =>
+            {
+                splashScreen.Visibility = Visibility.Collapsed;
+            };
+
+            splashScreen.BeginAnimation(UIElement.OpacityProperty, fadeOut);
         }
     }
 }
