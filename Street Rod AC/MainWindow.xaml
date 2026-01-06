@@ -9,7 +9,7 @@
         WindowStyle="None"
         AllowsTransparency="True"
         WindowState="Maximized"
-        Background="Transparent">
+        Background="{StaticResource BgDarkBrush}">
     <!-- Root Grid -->
     <Grid>
         <!-- Main Menu Grid with Background -->
