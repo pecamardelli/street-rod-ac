@@ -16,6 +16,8 @@ namespace Street_Rod_AC
 
         public App()
         {
+            InitializeComponent();
+
             ContentService = new AssettoCorsaContentService();
             Launcher = new AssettoCorsaLauncher();
         }

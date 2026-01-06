@@ -1,0 +1,42 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Merge Colors -->
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Colors.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- Background Brushes -->
+    <SolidColorBrush x:Key="BgDarkBrush" Color="{StaticResource BgDark}"/>
+    <SolidColorBrush x:Key="BgMediumBrush" Color="{StaticResource BgMedium}"/>
+    <SolidColorBrush x:Key="BgLightBrush" Color="{StaticResource BgLight}"/>
+
+    <!-- Text Brushes -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimary}"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}"/>
+    <SolidColorBrush x:Key="TextDisabledBrush" Color="{StaticResource TextDisabled}"/>
+
+    <!-- Accent Brushes -->
+    <SolidColorBrush x:Key="AccentPrimaryBrush" Color="{StaticResource AccentPrimary}"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="{StaticResource AccentHover}"/>
+    <SolidColorBrush x:Key="AccentPressedBrush" Color="{StaticResource AccentPressed}"/>
+
+    <!-- Border Brushes -->
+    <SolidColorBrush x:Key="BorderDarkBrush" Color="{StaticResource BorderDark}"/>
+    <SolidColorBrush x:Key="BorderLightBrush" Color="{StaticResource BorderLight}"/>
+
+    <!-- Background Image -->
+    <ImageBrush x:Key="MainBackgroundBrush"
+                ImageSource="pack://application:,,,/Assets/Images/Backgrounds/main.png"
+                Stretch="UniformToFill"/>
+
+    <!-- Button Images -->
+    <ImageBrush x:Key="NewGameButtonBrush"
+                ImageSource="pack://application:,,,/Assets/Images/Buttons/new_game.png"
+                Stretch="Fill"/>
+
+    <ImageBrush x:Key="LoadGameButtonBrush"
+                ImageSource="pack://application:,,,/Assets/Images/Buttons/load_game.png"
+                Stretch="Fill"/>
+
+</ResourceDictionary>

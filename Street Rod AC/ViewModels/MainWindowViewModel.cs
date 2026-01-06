@@ -24,6 +24,10 @@ public class MainWindowViewModel : INotifyPropertyChanged
         _contentService = contentService;
         _launcher = launcher;
 
+        // Initialize menu commands
+        NewGameCommand = new RelayCommand(NewGame);
+        LoadGameCommand = new RelayCommand(LoadGame);
+
         // Initialize LaunchRaceCommand
         LaunchRaceCommand = new AsyncRelayCommand(LaunchRaceAsync, CanLaunchRace);
 
@@ -56,6 +60,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    public RelayCommand NewGameCommand { get; }
+    public RelayCommand LoadGameCommand { get; }
     public AsyncRelayCommand LaunchRaceCommand { get; }
     public RelayCommand View3DCommand { get; }
 
@@ -164,6 +170,26 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }
+    }
+
+    private void NewGame()
+    {
+        StatusText = "New Game started";
+        // TODO: Implement new game logic
+        System.Windows.MessageBox.Show("New Game - To be implemented",
+            "New Game",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+    }
+
+    private void LoadGame()
+    {
+        StatusText = "Load Game selected";
+        // TODO: Implement load game logic
+        System.Windows.MessageBox.Show("Load Game - To be implemented",
+            "Load Game",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

@@ -7,7 +7,8 @@
       "Bash(dotnet build:*)",
       "Bash(dir /s /b \"C:\\\\Users\\\\Administrator\\\\source\\\\repos\\\\actools\\\\*.dll\")",
       "Bash(findstr:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(dotnet restore:*)"
     ]
   }
 }
