@@ -6,7 +6,8 @@
       "WebSearch",
       "Bash(dotnet build:*)",
       "Bash(dir /s /b \"C:\\\\Users\\\\Administrator\\\\source\\\\repos\\\\actools\\\\*.dll\")",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(mkdir:*)"
     ]
   }
 }

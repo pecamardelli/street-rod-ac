@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -30,6 +31,22 @@ namespace Street_Rod_AC
 
             // Load content when window loads
             Loaded += async (s, e) => await _viewModel.LoadContentAsync();
+        }
+
+        private void LaunchShowroom_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var overlay = new ShowroomOverlay();
+                overlay.Show();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Failed to launch showroom overlay:\n\n{ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
     }
 }

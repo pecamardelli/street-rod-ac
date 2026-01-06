@@ -1,0 +1,210 @@
+WPF STYLING GUIDELINES & PROJECT STRUCTURE
+======================================
+
+PROJECT GOAL
+------------
+Build a Windows desktop application (Street Rod Manager) similar in scope to Assetto Corsa Content Manager.
+UI must be:
+- Dark, minimal, Assetto Corsa–like
+- Fully native WPF (NO HTML, NO WebView)
+- MVVM-driven
+- Easy to maintain and extend
+This document is meant to be used as CONTEXT for an AI assistant (Claude) to avoid architectural or styling mistakes.
+
+--------------------------------------------------
+TECH STACK
+--------------------------------------------------
+- Language: C#
+- Framework: .NET 10 (LTS)
+- UI: WPF
+- Pattern: MVVM
+- Target OS: Windows
+
+--------------------------------------------------
+CORE WPF STYLING CONCEPTS (MANDATORY)
+--------------------------------------------------
+
+1) STYLES
+---------
+- Styles are defined in XAML, never in code-behind
+- Styles are type-based (TargetType)
+- Default styles should be global (no x:Key) when possible
+
+Example:
+<Style TargetType="Button">
+  <Setter Property="Background" Value="#1E1E1E"/>
+  <Setter Property="Foreground" Value="#D0D0D0"/>
+</Style>
+
+RULES:
+- No inline styling
+- No code-behind visual changes
+- All visuals come from styles or templates
+
+--------------------------------------------------
+
+2) BASED-ON STYLES (INHERITANCE)
+--------------------------------
+- Use BasedOn to build a design system
+- Never duplicate setters
+
+Example:
+<Style x:Key="PrimaryButton"
+       TargetType="Button"
+       BasedOn="{StaticResource {x:Type Button}}"/>
+
+--------------------------------------------------
+
+3) CONTROL TEMPLATES (CRITICAL)
+--------------------------------
+- Default WPF control visuals must be replaced
+- ControlTemplate defines structure (Border, ContentPresenter, etc.)
+
+Example:
+<ControlTemplate TargetType="Button">
+  <Border Background="{TemplateBinding Background}">
+    <ContentPresenter HorizontalAlignment="Center"
+                      VerticalAlignment="Center"/>
+  </Border>
+</ControlTemplate>
+
+RULES:
+- No default Windows look
+- Minimal borders
+- Flat, dark visuals
+
+--------------------------------------------------
+
+4) TRIGGERS (STATES)
+--------------------
+- Use Triggers for visual states only
+- States: Hover, Pressed, Disabled
+
+Example:
+<Trigger Property="IsMouseOver" Value="True">
+  <Setter Property="Background" Value="#2A2A2A"/>
+</Trigger>
+
+RULES:
+- No animations unless necessary
+- Subtle changes only
+
+--------------------------------------------------
+
+5) RESOURCE DICTIONARIES (THEME SYSTEM)
+---------------------------------------
+- All colors, brushes, fonts live in ResourceDictionaries
+- Never hardcode colors in views
+
+Required dictionaries:
+- Colors.xaml
+- Brushes.xaml
+- Fonts.xaml
+- Controls.xaml
+
+Example:
+<Color x:Key="BgDark">#1B1B1B</Color>
+<SolidColorBrush x:Key="BgDarkBrush"
+                 Color="{StaticResource BgDark}"/>
+
+--------------------------------------------------
+
+6) CUSTOM WINDOW CHROME
+-----------------------
+- Disable default Windows chrome
+- Draw custom title bar
+
+Window configuration:
+- WindowStyle="None"
+- AllowsTransparency="True"
+
+RULES:
+- Custom close/minimize buttons
+- No system default title bar
+
+--------------------------------------------------
+MVVM RULES (NON-NEGOTIABLE)
+--------------------------------------------------
+
+- Views contain NO logic
+- ViewModels contain NO UI code
+- Commands are used for all actions
+- No event handlers in code-behind (except unavoidable UI glue)
+
+Bindings example:
+<Button Content="Start"
+        Command="{Binding StartGameCommand}"/>
+
+--------------------------------------------------
+PROJECT STRUCTURE (RECOMMENDED)
+--------------------------------------------------
+
+StreetRodManager/
+│
+├── App.xaml
+├── App.xaml.cs
+│
+├── Views/
+│   ├── MainWindow.xaml
+│   ├── GarageView.xaml
+│   ├── LicenseView.xaml
+│   └── NewspaperView.xaml
+│
+├── ViewModels/
+│   ├── MainViewModel.cs
+│   ├── GarageViewModel.cs
+│   ├── LicenseViewModel.cs
+│   └── NewspaperViewModel.cs
+│
+├── Styles/
+│   ├── Colors.xaml
+│   ├── Brushes.xaml
+│   ├── Fonts.xaml
+│   ├── Buttons.xaml
+│   ├── Lists.xaml
+│   ├── ScrollBars.xaml
+│   └── Windows.xaml
+│
+├── Models/
+│   ├── GameProfile.cs
+│   ├── CarData.cs
+│   └── SaveData.cs
+│
+├── Services/
+│   ├── AssettoCorsaService.cs
+│   ├── SaveService.cs
+│   └── ConfigService.cs
+│
+└── Commands/
+    └── RelayCommand.cs
+
+--------------------------------------------------
+STYLING PHILOSOPHY (ASSETTO CORSA-LIKE)
+--------------------------------------------------
+
+DO:
+- Dark neutral palette
+- Subtle gradients
+- Thin separators
+- Flat UI
+- Strong alignment
+
+DO NOT:
+- Rounded bubbly controls
+- Bright accent colors
+- Heavy animations
+- Default WPF visuals
+- Inline styling
+
+--------------------------------------------------
+FINAL NOTES FOR AI ASSISTANT (CLAUDE)
+--------------------------------------------------
+
+- Always respect MVVM separation
+- Never introduce HTML, WebView, or Electron
+- Never put styling in code-behind
+- Use ResourceDictionaries for all visuals
+- Follow the project structure strictly
+- Optimize for maintainability, not shortcuts
+
+END OF DOCUMENT
