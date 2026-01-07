@@ -9,7 +9,28 @@
         WindowStyle="None"
         AllowsTransparency="True"
         WindowState="Maximized"
-        Background="{StaticResource BgDarkBrush}">
-    <!-- Screen Host -->
-    <ContentControl Content="{Binding CurrentScreen}"/>
+        Background="{StaticResource BgDarkBrush}"
+        x:Name="MainWindowRoot">
+    <Grid>
+        <!-- Screen Host -->
+        <ContentControl Content="{Binding NavigationService.CurrentScreen, RelativeSource={RelativeSource AncestorType=Window}}"/>
+
+        <!-- Dialog Host Overlay -->
+        <Grid x:Name="DialogHost"
+              Background="#99000000"
+              Visibility="{Binding DialogService.IsDialogOpen, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border Background="{StaticResource BgMediumBrush}"
+                    BorderBrush="{StaticResource BorderLightBrush}"
+                    BorderThickness="2"
+                    CornerRadius="8"
+                    MaxWidth="600"
+                    MaxHeight="400"
+                    Padding="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Effect="{StaticResource DropShadowEffect}">
+                <ContentControl Content="{Binding DialogService.CurrentDialog, RelativeSource={RelativeSource AncestorType=Window}}"/>
+            </Border>
+        </Grid>
+    </Grid>
 </Window>

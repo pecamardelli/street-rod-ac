@@ -4,6 +4,8 @@
              xmlns:local="clr-namespace:Street_Rod_AC"
              xmlns:init="clr-namespace:Street_Rod_AC.Screens.Init"
              xmlns:mainMenu="clr-namespace:Street_Rod_AC.Screens.MainMenu"
+             xmlns:confirmation="clr-namespace:Street_Rod_AC.Dialogs.Confirmation"
+             xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -14,6 +16,17 @@
                 <ResourceDictionary Source="Styles/Windows.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
+            <!-- Converters -->
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+            <!-- Effects -->
+            <DropShadowEffect x:Key="DropShadowEffect"
+                            Color="Black"
+                            Direction="270"
+                            ShadowDepth="5"
+                            BlurRadius="15"
+                            Opacity="0.5"/>
+
             <!-- Screen DataTemplates -->
             <DataTemplate DataType="{x:Type init:InitScreenViewModel}">
                 <init:InitScreenView/>
@@ -21,6 +34,15 @@
 
             <DataTemplate DataType="{x:Type mainMenu:MainMenuScreenViewModel}">
                 <mainMenu:MainMenuScreenView/>
+            </DataTemplate>
+
+            <!-- Dialog DataTemplates -->
+            <DataTemplate DataType="{x:Type confirmation:ConfirmationDialogViewModel}">
+                <confirmation:ConfirmationDialogView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type information:InformationDialogViewModel}">
+                <information:InformationDialogView/>
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
