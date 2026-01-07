@@ -1,0 +1,97 @@
+STREET ROD MANAGER – SCREEN SYSTEM GUIDELINES (FOR AI ASSISTANTS)
+
+PURPOSE
+This document defines the architectural and conceptual guidelines for implementing a screen-based UI system in the Street Rod Manager project. Its goal is to provide a clear mental model and constraints so that future implementations remain clean, scalable, and consistent.
+
+This is a WPF desktop application intended to behave like a game launcher (similar to Assetto Corsa Content Manager), not a traditional business app.
+
+CORE PHILOSOPHY
+- Think in terms of GAME SCREENS, not windows or dialogs
+- One main window, multiple interchangeable screens
+- Navigation is application state, not UI logic
+- Views never directly control navigation
+- Screens are self-contained and replaceable
+
+HIGH-LEVEL ARCHITECTURE
+- Single main window that hosts all content
+- A screen host that displays the active screen
+- A navigation service responsible for switching screens
+- Each screen represented by its own ViewModel and View
+- MVVM pattern strictly enforced
+
+SCREEN CONCEPT
+A “screen” represents a full application state, similar to a game menu or mode.
+
+Examples:
+- Home / Main Menu
+- Garage
+- Load Game
+- New Game
+- Settings
+
+Each screen:
+- Owns its own logic and UI
+- Has no knowledge of other screens
+- Can react to lifecycle events (enter / exit)
+- Is swapped in and out of the screen host
+
+LIFECYCLE
+Screens should support a simple lifecycle concept:
+- Enter: called when the screen becomes active
+- Exit: called when the screen is replaced
+
+This allows:
+- Resource loading/unloading
+- State preparation
+- Animations or transitions later
+
+NAVIGATION RULES
+- Navigation is handled by a central screen/navigation service
+- Screens request navigation via commands, not direct references
+- No screen should instantiate or directly manipulate another screen’s view
+- The navigation service owns the “current screen” state
+
+VIEW / VIEWMODEL RELATIONSHIP
+- Each screen has exactly one View and one ViewModel
+- Views are passive and contain no logic
+- All behavior lives in the ViewModel
+- ViewModels do not reference Views directly
+
+PROJECT STRUCTURE (CONCEPTUAL)
+- A Screens folder at the root of the UI project
+- One subfolder per screen
+- Each screen folder contains:
+  - A View (XAML)
+  - A ViewModel
+- Shared infrastructure (navigation, base classes) lives outside Screens
+
+STYLING & CONSISTENCY
+- Styling is handled via WPF Styles and ResourceDictionaries
+- Screens must not define ad-hoc styles inline
+- Visual consistency across screens is mandatory
+- Screens should feel like different states of the same application, not separate apps
+
+EXTENSIBILITY GOALS
+The system must allow, without refactoring:
+- Animated transitions between screens
+- Loading screens or async screens
+- Navigation history (Back / Forward)
+- Conditional navigation (locked screens, progression)
+- Game-like flow control
+
+ANTI-PATTERNS (DO NOT USE)
+- Multiple windows for navigation
+- WPF Frame/Page navigation
+- Code-behind for navigation logic
+- Screens directly creating or switching other screens
+- UI-driven state instead of ViewModel-driven state
+
+MENTAL MODEL SUMMARY
+Treat the application like a game:
+- The main window is the game engine
+- Screens are game states
+- Navigation is state transition
+- UI reacts to state, never drives it
+
+These guidelines are intentional constraints.
+They are meant to preserve architectural clarity, scalability, and long-term maintainability.

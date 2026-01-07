@@ -2,6 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Street_Rod_AC"
+             xmlns:init="clr-namespace:Street_Rod_AC.Screens.Init"
+             xmlns:mainMenu="clr-namespace:Street_Rod_AC.Screens.MainMenu"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -11,6 +13,15 @@
                 <ResourceDictionary Source="Styles/Buttons.xaml"/>
                 <ResourceDictionary Source="Styles/Windows.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Screen DataTemplates -->
+            <DataTemplate DataType="{x:Type init:InitScreenViewModel}">
+                <init:InitScreenView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type mainMenu:MainMenuScreenViewModel}">
+                <mainMenu:MainMenuScreenView/>
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

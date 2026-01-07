@@ -1,0 +1,153 @@
+STREET ROD MANAGER – DIALOG & MODAL SYSTEM GUIDELINES
+
+PURPOSE
+This document defines the official rules and mental model for dialogs, confirmations, and modal UI elements in the Street Rod Manager project. These guidelines exist to prevent UI complexity, architectural decay, and inconsistent user experience.
+
+Dialogs are treated as part of the game-like UI system, not as operating system windows.
+
+CORE PRINCIPLE
+Dialogs are NOT windows.
+Dialogs are NOT stacked.
+Dialogs are modal overlays within the single main application window.
+
+Nested dialogs are explicitly forbidden.
+
+MENTAL MODEL
+Think in terms of layers, not stacks.
+
+Correct model:
+- Main Screen (game state)
+- One Modal Dialog Overlay (optional)
+
+Incorrect model:
+- Dialog opening another dialog
+- Multiple modal stacks
+- Window-based popups
+
+Dialogs behave like in-game overlays, not desktop message boxes.
+
+WHAT A DIALOG IS
+A dialog is:
+- A modal overlay rendered above the current screen
+- Controlled by a central dialog service
+- Implemented using MVVM (View + ViewModel)
+- Responsible for a single, focused user decision or interaction
+
+Dialogs do not own application flow.
+
+WHAT A DIALOG IS NOT
+A dialog is NOT:
+- A Window
+- A MessageBox
+- A navigation mechanism
+- A workflow engine
+- A container for complex multi-step logic
+
+DIALOG LIFECYCLE
+Dialogs support a simple lifecycle:
+- Opened by the dialog service
+- Blocks interaction with the underlying screen
+- Returns a result (or completes)
+- Closed by the dialog service
+
+Dialogs must always resolve to a clear outcome.
+
+NAVIGATION RULES
+- Dialogs must NEVER open other dialogs
+- Dialogs must NEVER navigate between screens
+- Dialogs must NEVER control application state beyond their result
+- Screens may request dialogs
+- Only the dialog service controls dialog visibility
+
+If complexity exceeds dialog scope, escalate to a screen.
+
+CONFIRMATION PATTERN (MANDATORY)
+All confirmations must follow the inline confirmation pattern.
+
+Inline confirmation means:
+- The same dialog updates its content and actions
+- No secondary dialog is opened
+- The user never loses context
+
+Examples:
+- “Delete save?” → same dialog switches to confirmation state
+- “Exit application?” → same dialog updates buttons
+
+Nested confirmation dialogs are forbidden.
+
+SUPPORTED DIALOG TYPES
+The system supports a limited, intentional set of dialog types:
+
+1. Confirmation Dialog
+   - Yes / No
+   - Yes / No / Cancel
+   - Inline confirmation only
+
+2. Information Dialog
+   - Read-only content
+   - Single acknowledge action
+
+3. Form Dialog
+   - Simple user input
+   - Validation
+   - OK / Cancel
+
+4. Structured Data Dialog
+   - Read-only data presentation
+   - Lists, sections, summaries
+   - No editing or navigation
+
+5. Progress Dialog
+   - Blocking
+   - Async operation feedback
+   - Optional cancel
+
+All dialog types must follow the same architectural rules.
+
+STRUCTURED DATA RULES
+Dialogs showing structured data:
+- Are read-only
+- Do not paginate application state
+- Do not open detail dialogs
+- May expand or collapse content inline
+
+If the data requires deep exploration, use a screen.
+
+STYLING & UX CONSISTENCY
+Dialogs must:
+- Visually dim or blur the background screen
+- Use the same theme, fonts, and colors as screens
+- Appear centered and contained
+- Feel like part of the same game world
+
+Dialogs must NOT:
+- Look like OS-native message boxes
+- Introduce new visual language
+
+ANTI-PATTERNS (STRICTLY FORBIDDEN)
+- Nested dialogs
+- Dialogs opening dialogs
+- Native MessageBox usage
+- Multiple modal windows
+- Dialog-specific navigation logic
+- Business logic inside dialogs
+- Code-behind dialog control
+
+ESCALATION RULE
+If a dialog becomes complex:
+- Close the dialog
+- Navigate to a dedicated screen
+
+Screens handle complexity.
+Dialogs handle decisions.
+
+SUMMARY (NON-NEGOTIABLE RULES)
+- One main window
+- One dialog overlay at a time
+- No nested dialogs
+- Inline confirmation only
+- Dialogs return results, not behavior
+- Screens handle workflows
+
+These rules are intentional constraints.
+They exist to preserve clarity, maintainability, and a game-like user experience.

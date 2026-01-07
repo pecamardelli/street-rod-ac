@@ -2,6 +2,8 @@
 using System.Data;
 using System.Windows;
 using Street_Rod_AC.Configuration;
+using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Screens.Init;
 using Street_Rod_AC.Services;
 
 namespace Street_Rod_AC
@@ -13,6 +15,7 @@ namespace Street_Rod_AC
     {
         public IAssettoCorsaContentService ContentService { get; private set; }
         public IAssettoCorsaLauncher Launcher { get; private set; }
+        public NavigationService NavigationService { get; private set; }
 
         public App()
         {
@@ -20,6 +23,7 @@ namespace Street_Rod_AC
 
             ContentService = new AssettoCorsaContentService();
             Launcher = new AssettoCorsaLauncher();
+            NavigationService = new NavigationService();
         }
 
         protected override async void OnStartup(StartupEventArgs e)
@@ -57,6 +61,10 @@ namespace Street_Rod_AC
                     MessageBoxImage.Error);
                 Shutdown();
             }
+
+            // Navigate to initial screen
+            var initScreen = new InitScreenViewModel(NavigationService);
+            NavigationService.NavigateTo(initScreen);
         }
     }
 
