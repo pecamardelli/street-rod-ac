@@ -7,6 +7,11 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Background="{StaticResource MainBackgroundBrush}"
           Opacity="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
         <Grid.Triggers>
             <EventTrigger RoutedEvent="FrameworkElement.Loaded">
                 <BeginStoryboard>
@@ -23,6 +28,7 @@
 
         <!-- Back Button -->
         <Button x:Name="BackButton"
+                Grid.Row="0"
                 Style="{StaticResource ExitButtonStyle}"
                 Background="{StaticResource BackButtonBrush}"
                 Command="{Binding BackCommand}"
@@ -57,6 +63,7 @@
 
         <!-- Game Buttons Container -->
         <StackPanel x:Name="GameButtonsContainer"
+                    Grid.Row="0"
                     Orientation="Vertical"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
@@ -110,5 +117,34 @@
                         Tag="Hit the streets"/>
             </StackPanel>
         </StackPanel>
+
+        <!-- Bottom Nav Bar -->
+        <Border Grid.Row="1"
+                Background="#404040"
+                BorderBrush="#303030"
+                BorderThickness="0,1,0,0"
+                Height="40">
+            <Grid Margin="20,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Bankroll Display -->
+                <StackPanel Grid.Column="0"
+                           Orientation="Horizontal"
+                           VerticalAlignment="Center">
+                    <TextBlock Text="Bankroll:"
+                              Foreground="{StaticResource TextPrimaryBrush}"
+                              FontSize="16"
+                              FontWeight="Bold"
+                              Margin="0,0,10,9"/>
+                    <TextBlock Text="{Binding BankrollDisplay}"
+                              Foreground="#90EE90"
+                              FontSize="16"
+                              FontWeight="Bold"/>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

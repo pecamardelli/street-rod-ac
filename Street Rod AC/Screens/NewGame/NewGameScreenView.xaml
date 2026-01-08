@@ -64,7 +64,7 @@
                          VerticalAlignment="Top"
                          TextAlignment="Left"
                          Width="260"
-                         Margin="223,87,0,0">
+                         Margin="221,95,0,0">
                     <TextBox.InputBindings>
                         <KeyBinding Key="Return" Command="{Binding StartGameCommand}"/>
                     </TextBox.InputBindings>

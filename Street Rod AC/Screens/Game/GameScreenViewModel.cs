@@ -13,6 +13,8 @@ namespace Street_Rod_AC.Screens.Game
 
         public RelayCommand BackCommand { get; }
 
+        public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
+
         public GameScreenViewModel(NavigationService navigationService, DialogService dialogService, Models.GameState.GameState gameState)
         {
             _navigationService = navigationService;
