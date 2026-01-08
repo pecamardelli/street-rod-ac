@@ -27,12 +27,8 @@ namespace Street_Rod_AC.Screens.MainMenu
 
         private void OnNewGame()
         {
-            var infoDialog = new InformationDialogViewModel(
-                _dialogService,
-                "New Game functionality is coming soon!",
-                "New Game");
-
-            _dialogService.ShowDialog(infoDialog);
+            var newGameScreen = new NewGame.NewGameScreenViewModel(_navigationService, _dialogService);
+            _navigationService.NavigateTo(newGameScreen);
         }
 
         private void OnLoadGame()

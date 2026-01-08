@@ -4,6 +4,7 @@
              xmlns:local="clr-namespace:Street_Rod_AC"
              xmlns:init="clr-namespace:Street_Rod_AC.Screens.Init"
              xmlns:mainMenu="clr-namespace:Street_Rod_AC.Screens.MainMenu"
+             xmlns:newGame="clr-namespace:Street_Rod_AC.Screens.NewGame"
              xmlns:confirmation="clr-namespace:Street_Rod_AC.Dialogs.Confirmation"
              xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
              StartupUri="MainWindow.xaml">
@@ -34,6 +35,10 @@
 
             <DataTemplate DataType="{x:Type mainMenu:MainMenuScreenViewModel}">
                 <mainMenu:MainMenuScreenView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type newGame:NewGameScreenViewModel}">
+                <newGame:NewGameScreenView/>
             </DataTemplate>
 
             <!-- Dialog DataTemplates -->
