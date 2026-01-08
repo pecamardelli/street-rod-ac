@@ -9,7 +9,8 @@
       "Bash(findstr:*)",
       "Bash(mkdir:*)",
       "Bash(dotnet restore:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(dotnet add package:*)"
     ]
   }
 }

@@ -6,6 +6,7 @@ using Street_Rod_AC.Dialogs;
 using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Screens.Init;
 using Street_Rod_AC.Services;
+using Street_Rod_AC.Services.Storage;
 
 namespace Street_Rod_AC
 {
@@ -18,6 +19,7 @@ namespace Street_Rod_AC
         public IAssettoCorsaLauncher Launcher { get; private set; }
         public NavigationService NavigationService { get; private set; }
         public DialogService DialogService { get; private set; }
+        public IGameStateRepository GameStateRepository { get; private set; }
 
         public App()
         {
@@ -27,6 +29,7 @@ namespace Street_Rod_AC
             Launcher = new AssettoCorsaLauncher();
             NavigationService = new NavigationService();
             DialogService = new DialogService();
+            GameStateRepository = new GameStateRepository();
         }
 
         protected override async void OnStartup(StartupEventArgs e)
