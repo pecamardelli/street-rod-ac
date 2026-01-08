@@ -99,6 +99,7 @@
                 <!-- Newspaper Button -->
                 <Button Style="{StaticResource GameButtonStyle}"
                         Background="{StaticResource NewspaperButtonBrush}"
+                        Command="{Binding NewspaperCommand}"
                         Tag="Newspaper"
                         Margin="0,0,100,0"/>
 

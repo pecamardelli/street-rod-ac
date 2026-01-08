@@ -12,6 +12,7 @@ namespace Street_Rod_AC.Screens.Game
         private readonly Models.GameState.GameState _gameState;
 
         public RelayCommand BackCommand { get; }
+        public RelayCommand NewspaperCommand { get; }
 
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
 
@@ -22,6 +23,13 @@ namespace Street_Rod_AC.Screens.Game
             _gameState = gameState;
 
             BackCommand = new RelayCommand(OnBack);
+            NewspaperCommand = new RelayCommand(OnNewspaper);
+        }
+
+        private void OnNewspaper()
+        {
+            var newspaperViewModel = new Newspaper.NewspaperScreenViewModel(_navigationService, _dialogService, _gameState);
+            _navigationService.NavigateTo(newspaperViewModel);
         }
 
         private void OnBack()

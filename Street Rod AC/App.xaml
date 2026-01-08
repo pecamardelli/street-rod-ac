@@ -8,6 +8,7 @@
              xmlns:newGame="clr-namespace:Street_Rod_AC.Screens.NewGame"
              xmlns:loadGame="clr-namespace:Street_Rod_AC.Screens.LoadGame"
              xmlns:game="clr-namespace:Street_Rod_AC.Screens.Game"
+             xmlns:newspaper="clr-namespace:Street_Rod_AC.Screens.Newspaper"
              xmlns:confirmation="clr-namespace:Street_Rod_AC.Dialogs.Confirmation"
              xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
              StartupUri="MainWindow.xaml">
@@ -52,6 +53,10 @@
 
             <DataTemplate DataType="{x:Type game:GameScreenViewModel}">
                 <game:GameScreenView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type newspaper:NewspaperScreenViewModel}">
+                <newspaper:NewspaperScreenView/>
             </DataTemplate>
 
             <!-- Dialog DataTemplates -->

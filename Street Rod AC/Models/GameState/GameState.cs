@@ -39,8 +39,8 @@ namespace Street_Rod_AC.Models.GameState
 
             Player = new Player("Player");
             Racers = new RacerCollection();
-            UsedCars = new List<Car>();
-            UsedParts = new List<Part>();
+            UsedCars = [];
+            UsedParts = [];
             NewspaperAds = new NewspaperAds();
 
             CatalogVersion = 1;
