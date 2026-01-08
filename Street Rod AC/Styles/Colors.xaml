@@ -20,4 +20,7 @@
     <Color x:Key="BorderDark">#101010</Color>
     <Color x:Key="BorderLight">#404040</Color>
 
+    <!-- License Input Colors -->
+    <Color x:Key="LicenseBrown">#2C1810</Color>
+
 </ResourceDictionary>

@@ -143,4 +143,21 @@
         </Setter>
     </Style>
 
+    <!-- License Name Input Style -->
+    <Style x:Key="LicenseNameInputStyle" TargetType="TextBox">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="Foreground" Value="{StaticResource LicenseBrownBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource LicenseBrownBrush}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="FontSize" Value="28"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontFamily" Value="Courier New"/>
+        <Setter Property="CharacterCasing" Value="Upper"/>
+        <Setter Property="MaxLength" Value="32"/>
+        <Setter Property="Padding" Value="1"/>
+        <Setter Property="CaretBrush" Value="{StaticResource LicenseBrownBrush}"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Height" Value="38"/>
+    </Style>
+
 </ResourceDictionary>

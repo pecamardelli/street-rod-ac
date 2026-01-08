@@ -25,6 +25,9 @@
     <SolidColorBrush x:Key="BorderDarkBrush" Color="{StaticResource BorderDark}"/>
     <SolidColorBrush x:Key="BorderLightBrush" Color="{StaticResource BorderLight}"/>
 
+    <!-- License Input Brushes -->
+    <SolidColorBrush x:Key="LicenseBrownBrush" Color="{StaticResource LicenseBrown}"/>
+
     <!-- Background Images -->
     <ImageBrush x:Key="MainBackgroundBrush"
                 ImageSource="pack://application:,,,/Assets/Images/Backgrounds/main.png"

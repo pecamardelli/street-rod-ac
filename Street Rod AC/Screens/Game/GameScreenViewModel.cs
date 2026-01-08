@@ -27,14 +27,14 @@ namespace Street_Rod_AC.Screens.Game
             // Show confirmation dialog
             var confirmDialog = new ConfirmationDialogViewModel(
                 _dialogService,
-                "Are you sure you want to go back to the New Game screen? Your current game will remain saved.",
+                "Are you sure you want to go back to the Main Menu? Your current game will remain saved.",
                 "Go Back?",
                 confirmed =>
                 {
                     if (confirmed)
                     {
-                        var newGameViewModel = new NewGame.NewGameScreenViewModel(_navigationService, _dialogService);
-                        _navigationService.NavigateTo(newGameViewModel);
+                        var mainMenuViewModel = new MainMenu.MainMenuScreenViewModel(_navigationService, _dialogService);
+                        _navigationService.NavigateTo(mainMenuViewModel);
                     }
                 });
 

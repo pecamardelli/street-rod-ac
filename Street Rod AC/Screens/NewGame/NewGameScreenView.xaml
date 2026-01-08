@@ -59,23 +59,12 @@
                 <!-- Name Input Overlay - Positioned on License -->
                 <TextBox x:Name="PlayerNameTextBox"
                          Text="{Binding PlayerName, UpdateSourceTrigger=PropertyChanged}"
-                         Background="White"
-                         Foreground="#2C1810"
-                         BorderBrush="#2C1810"
-                         BorderThickness="2"
-                         FontSize="28"
-                         FontWeight="Bold"
-                         FontFamily="Courier New"
-                         CharacterCasing="Upper"
-                         MaxLength="32"
+                         Style="{StaticResource LicenseNameInputStyle}"
                          HorizontalAlignment="Left"
                          VerticalAlignment="Top"
                          TextAlignment="Left"
                          Width="260"
-                         Padding="1"
-                         Margin="223,87,0,0"
-                         CaretBrush="#2C1810"
-                         FocusVisualStyle="{x:Null}" Height="38">
+                         Margin="223,87,0,0">
                     <TextBox.InputBindings>
                         <KeyBinding Key="Return" Command="{Binding StartGameCommand}"/>
                     </TextBox.InputBindings>
