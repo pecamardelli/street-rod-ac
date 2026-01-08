@@ -47,6 +47,10 @@
                 ImageSource="pack://application:,,,/Assets/Images/Buttons/exit.png"
                 Stretch="Fill"/>
 
+    <ImageBrush x:Key="BackButtonBrush"
+                ImageSource="pack://application:,,,/Assets/Images/Buttons/back.png"
+                Stretch="Fill"/>
+
     <!-- Text Images -->
     <ImageBrush x:Key="StreetRodLogoTextBrush"
                 ImageSource="pack://application:,,,/Assets/Images/Text/street_rod_powered_by_ac.png"

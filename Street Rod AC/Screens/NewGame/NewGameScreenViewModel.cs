@@ -84,8 +84,9 @@ namespace Street_Rod_AC.Screens.NewGame
                         {
                             // Create new save, overwriting the existing one
                             var gameState = repository.CreateNew(saveName, playerName);
-                            // TODO: Navigate to gameplay screen with gameState
-                            System.Windows.MessageBox.Show($"New game created for {playerName}!", "Success");
+                            // Navigate to game screen
+                            var gameViewModel = new Game.GameScreenViewModel(_navigationService, _dialogService, gameState);
+                            _navigationService.NavigateTo(gameViewModel);
                         }
                     });
 
@@ -95,8 +96,9 @@ namespace Street_Rod_AC.Screens.NewGame
             {
                 // Create new save
                 var gameState = repository.CreateNew(saveName, playerName);
-                // TODO: Navigate to gameplay screen with gameState
-                System.Windows.MessageBox.Show($"New game created for {playerName}!", "Success");
+                // Navigate to game screen
+                var gameViewModel = new Game.GameScreenViewModel(_navigationService, _dialogService, gameState);
+                _navigationService.NavigateTo(gameViewModel);
             }
         }
 
