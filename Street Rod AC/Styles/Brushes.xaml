@@ -54,6 +54,14 @@
                 ImageSource="pack://application:,,,/Assets/Images/Buttons/back.png"
                 Stretch="Fill"/>
 
+    <ImageBrush x:Key="NewspaperButtonBrush"
+                ImageSource="pack://application:,,,/Assets/Images/Buttons/newspaper.png"
+                Stretch="Fill"/>
+
+    <ImageBrush x:Key="GarageButtonBrush"
+                ImageSource="pack://application:,,,/Assets/Images/Buttons/garage.png"
+                Stretch="Fill"/>
+
     <!-- Text Images -->
     <ImageBrush x:Key="StreetRodLogoTextBrush"
                 ImageSource="pack://application:,,,/Assets/Images/Text/street_rod_powered_by_ac.png"

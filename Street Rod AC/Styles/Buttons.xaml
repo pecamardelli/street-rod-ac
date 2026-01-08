@@ -143,6 +143,60 @@
         </Setter>
     </Style>
 
+    <!-- Game Button Style with Hover Label -->
+    <Style x:Key="GameButtonStyle" TargetType="Button">
+        <Setter Property="Width" Value="300"/>
+        <Setter Property="Height" Value="300"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <!-- Rounded Border with Image Background -->
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="20">
+                            <Border.Clip>
+                                <RectangleGeometry RadiusX="20" RadiusY="20">
+                                    <RectangleGeometry.Rect>
+                                        <Rect Width="300" Height="300"/>
+                                    </RectangleGeometry.Rect>
+                                </RectangleGeometry>
+                            </Border.Clip>
+                        </Border>
+
+                        <!-- Hover Label at Bottom Center -->
+                        <TextBlock x:Name="hoverLabel"
+                                   Text="{TemplateBinding Tag}"
+                                   FontFamily="Courier New"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Bottom"
+                                   Margin="0,0,0,20"
+                                   Opacity="0"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Opacity" Value="0.8"/>
+                            <Setter TargetName="hoverLabel" Property="Opacity" Value="1"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Opacity" Value="0.6"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="border" Property="Opacity" Value="0.3"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- License Name Input Style -->
     <Style x:Key="LicenseNameInputStyle" TargetType="TextBox">
         <Setter Property="Background" Value="White"/>

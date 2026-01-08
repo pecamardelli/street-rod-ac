@@ -55,12 +55,60 @@
             </Button.Triggers>
         </Button>
 
-        <!-- Game Content (Placeholder for now) -->
-        <TextBlock Text="Game Screen"
-                   Foreground="{StaticResource TextPrimaryBrush}"
-                   FontSize="48"
-                   FontWeight="Bold"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"/>
+        <!-- Game Buttons Container -->
+        <StackPanel x:Name="GameButtonsContainer"
+                    Orientation="Vertical"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Opacity="0">
+            <StackPanel.RenderTransform>
+                <TranslateTransform Y="30"/>
+            </StackPanel.RenderTransform>
+            <StackPanel.Triggers>
+                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <!-- Fade in -->
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                           From="0.0"
+                                           To="1.0"
+                                           BeginTime="0:0:0.3"
+                                           Duration="0:0:0.5"/>
+                            <!-- Slide up -->
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                           From="30"
+                                           To="0"
+                                           BeginTime="0:0:0.3"
+                                           Duration="0:0:0.5"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </StackPanel.Triggers>
+
+            <!-- First Row: Newspaper and Garage Buttons -->
+            <StackPanel Orientation="Horizontal"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,20">
+                <!-- Newspaper Button -->
+                <Button Style="{StaticResource GameButtonStyle}"
+                        Background="{StaticResource NewspaperButtonBrush}"
+                        Tag="Newspaper"
+                        Margin="0,0,100,0"/>
+
+                <!-- Garage Button -->
+                <Button Style="{StaticResource GameButtonStyle}"
+                        Background="{StaticResource GarageButtonBrush}"
+                        Tag="Go to garage"/>
+            </StackPanel>
+
+            <!-- Second Row: Garage Button -->
+            <StackPanel Orientation="Horizontal"
+                       HorizontalAlignment="Center">
+                <!-- Garage Button -->
+                <Button Style="{StaticResource GameButtonStyle}"
+                        Background="{StaticResource GarageButtonBrush}"
+                        Tag="Hit the streets"/>
+            </StackPanel>
+        </StackPanel>
     </Grid>
 </UserControl>
