@@ -33,12 +33,8 @@ namespace Street_Rod_AC.Screens.MainMenu
 
         private void OnLoadGame()
         {
-            var infoDialog = new InformationDialogViewModel(
-                _dialogService,
-                "Load Game functionality is coming soon!",
-                "Load Game");
-
-            _dialogService.ShowDialog(infoDialog);
+            var loadGameScreen = new LoadGame.LoadGameScreenViewModel(_navigationService, _dialogService);
+            _navigationService.NavigateTo(loadGameScreen);
         }
 
         private void OnExit()

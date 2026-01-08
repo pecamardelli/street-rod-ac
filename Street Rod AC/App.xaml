@@ -6,6 +6,7 @@
              xmlns:init="clr-namespace:Street_Rod_AC.Screens.Init"
              xmlns:mainMenu="clr-namespace:Street_Rod_AC.Screens.MainMenu"
              xmlns:newGame="clr-namespace:Street_Rod_AC.Screens.NewGame"
+             xmlns:loadGame="clr-namespace:Street_Rod_AC.Screens.LoadGame"
              xmlns:game="clr-namespace:Street_Rod_AC.Screens.Game"
              xmlns:confirmation="clr-namespace:Street_Rod_AC.Dialogs.Confirmation"
              xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
@@ -21,6 +22,7 @@
 
             <!-- Converters -->
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
 
             <!-- Effects -->
@@ -42,6 +44,10 @@
 
             <DataTemplate DataType="{x:Type newGame:NewGameScreenViewModel}">
                 <newGame:NewGameScreenView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type loadGame:LoadGameScreenViewModel}">
+                <loadGame:LoadGameScreenView/>
             </DataTemplate>
 
             <DataTemplate DataType="{x:Type game:GameScreenViewModel}">
