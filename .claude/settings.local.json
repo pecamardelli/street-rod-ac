@@ -10,7 +10,8 @@
       "Bash(mkdir:*)",
       "Bash(dotnet restore:*)",
       "Bash(tree:*)",
-      "Bash(dotnet add package:*)"
+      "Bash(dotnet add package:*)",
+      "Bash(git rm:*)"
     ]
   }
 }

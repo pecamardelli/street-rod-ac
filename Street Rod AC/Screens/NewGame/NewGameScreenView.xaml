@@ -49,11 +49,46 @@
                 </EventTrigger>
             </StackPanel.Triggers>
 
-            <!-- Driver's License Image -->
-            <Image Source="pack://application:,,,/Assets/Images/Misc/license.png"
-                   Stretch="Uniform"
-                   MaxWidth="600"
-                   Margin="0,0,0,40"/>
+            <!-- Driver's License with Name Input -->
+            <Grid MaxWidth="600" Margin="0,0,0,20">
+                <!-- Driver's License Image -->
+                <Image Source="pack://application:,,,/Assets/Images/Misc/license.png"
+                       Stretch="Uniform"
+                       HorizontalAlignment="Center"/>
+
+                <!-- Name Input Overlay - Positioned on License -->
+                <TextBox x:Name="PlayerNameTextBox"
+                         Text="{Binding PlayerName, UpdateSourceTrigger=PropertyChanged}"
+                         Background="White"
+                         Foreground="#2C1810"
+                         BorderBrush="#2C1810"
+                         BorderThickness="2"
+                         FontSize="28"
+                         FontWeight="Bold"
+                         FontFamily="Courier New"
+                         CharacterCasing="Upper"
+                         MaxLength="32"
+                         HorizontalAlignment="Left"
+                         VerticalAlignment="Top"
+                         TextAlignment="Left"
+                         Width="260"
+                         Padding="1"
+                         Margin="223,87,0,0"
+                         CaretBrush="#2C1810"
+                         FocusVisualStyle="{x:Null}" Height="38">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Return" Command="{Binding StartGameCommand}"/>
+                    </TextBox.InputBindings>
+                </TextBox>
+            </Grid>
+
+            <!-- Error Message -->
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{StaticResource AccentPrimaryBrush}"
+                       FontSize="14"
+                       TextAlignment="Center"
+                       Margin="0,0,0,20"
+                       Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
 
             <!-- Buttons Container -->
             <StackPanel Orientation="Horizontal"
