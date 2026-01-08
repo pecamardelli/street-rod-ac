@@ -17,7 +17,7 @@ public class CarInfo
     public string Description { get; set; } = string.Empty;
 
     [JsonPropertyName("tags")]
-    public List<string> Tags { get; set; } = new();
+    public List<string> Tags { get; set; } = [];
 
     [JsonPropertyName("class")]
     public string Class { get; set; } = string.Empty;

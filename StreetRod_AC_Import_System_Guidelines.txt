@@ -1,0 +1,212 @@
+STREET ROD MANAGER – ASSETTO CORSA IMPORT SYSTEM GUIDELINES
+
+PURPOSE
+This document defines the official guidelines for importing Assetto Corsa content (cars and tracks) into the Street Rod Manager project.
+The goal is to provide a robust, deterministic, and mod-safe import pipeline that integrates Assetto Corsa as an external data source without leaking its complexity into the game logic or UI.
+
+Assetto Corsa is treated as an external, unreliable content provider.
+Street Rod Manager is the authority on gameplay, progression, and persistence.
+
+CORE PHILOSOPHY
+- Assetto Corsa data is INPUT, not truth
+- Imported data is normalized into the Catalog
+- Game logic never depends directly on AC files
+- Imports are repeatable, deterministic, and idempotent
+- Broken or missing content must never corrupt saves
+
+IMPORT BOUNDARY (NON-NEGOTIABLE)
+The Assetto Corsa installation is an external system.
+
+Rules:
+- No Screen, ViewModel, or UI component may read AC files directly
+- All access to AC files happens inside the Import System
+- Imported data is stored in the Catalog database
+- The Catalog is the only source of truth for content availability
+
+AC FILESYSTEM REALITY
+Assetto Corsa content is inconsistent by nature:
+- Mods may be incomplete, outdated, or malformed
+- CSP may override physics and visuals
+- Files may disappear between launches
+
+The import system must be defensive and tolerant.
+
+CAR DISCOVERY PHASE
+The first phase of import is discovery.
+
+Discovery responsibilities:
+- Enumerate content/cars directories
+- Identify car folders by directory name (primary ID)
+- Validate minimum required UI files
+- Never parse physics or binary data at this stage
+
+Minimum files to consider a car valid:
+- ui/ui_car.json
+- Car folder name (used as immutable ID)
+
+Optional but recommended:
+- ui/badge.png
+- skins/*/preview.jpg
+
+Discovery output is transient and not persisted.
+
+CATALOG MATERIALIZATION PHASE
+Discovered cars are materialized into persistent Catalog entries.
+
+Catalog storage:
+- LiteDB collection shared by all save files
+- Independent collection within the same database as game saves
+- Global content catalog accessible to all gameplay sessions
+
+Catalog rules:
+- Each car folder maps to exactly one CarDefinition
+- CarDefinition IDs are stable and derived from folder names
+- No random identifiers are generated
+- Imports must be idempotent (same input → same output)
+
+CarDefinition represents:
+- Identity
+- Metadata
+- Display information
+
+CarDefinition does NOT represent gameplay state.
+
+Track handling:
+- Same principles apply to tracks as to cars
+- TrackDefinition follows identical import patterns
+- Layout variants are handled as separate entities with linked metadata
+
+SOURCE METADATA (MANDATORY)
+Each imported car must include source metadata.
+
+Recommended source classification:
+- Kunos
+- DLC
+- Mod
+- Unknown
+
+Source metadata must not affect gameplay logic directly, but may be used for:
+- Filtering
+- UI grouping
+- Career balancing overlays
+- Narrative flavor
+
+ENRICHMENT PHASE (DEFERRED)
+Enrichment is optional and must never block initial import.
+
+Current status:
+- Enrichment is DISMISSED for initial implementation
+- Focus on core import pipeline first
+- Enrichment can be added later without breaking existing catalog
+
+Examples of enrichment (future consideration):
+- Era classification (1950s, 1960s, modern)
+- Power class
+- Weight class
+- Street vs race classification
+
+Enrichment rules (when implemented):
+- Must be repeatable
+- Must not modify raw imported data
+- Should be additive metadata only
+
+GAMEPLAY OVERLAY SEPARATION
+Imported data must be strictly separated from gameplay data.
+
+Recommended conceptual split:
+- CarDefinition: immutable imported identity
+- CarProfile: gameplay overlay
+- CarInstance: player-owned state
+
+Gameplay systems must never mutate CarDefinition.
+
+LEGACY & BROKEN CONTENT HANDLING
+Imported content must never be deleted automatically.
+
+Car states:
+- Active: present in AC install
+- Legacy: missing from AC install but referenced by saves
+- Broken: missing required files or invalid metadata
+
+Rules:
+- Legacy and broken cars remain in the Catalog
+- UI must gracefully indicate unavailable content
+- Saves referencing missing cars must remain valid
+
+DETERMINISTIC IMPORT REQUIREMENTS
+The import system must be deterministic.
+
+Requirements:
+- Stable ordering
+- Stable IDs
+- No timestamps or random values in Catalog entries
+- Hash-based change detection for incremental updates
+
+Change detection strategy:
+- Hash ui_car.json contents for cars
+- Hash skin preview images (preview.jpg) for visual change detection
+- Compare hashes on rescan to identify modified content
+- Only re-import entries with changed hashes
+- Store hash values in Catalog for comparison
+
+INDEXING & PERFORMANCE
+The Catalog database must be indexed appropriately.
+
+Recommended indexes:
+- CarDefinition.Id
+- CarDefinition.Brand
+- CarDefinition.Source
+- CarInstance.DefinitionId
+
+The import system must be:
+- Asynchronous
+- Non-blocking for UI
+- Capable of incremental updates
+
+UI INTEGRATION RULES
+The UI must never bind directly to imported data models.
+
+Rules:
+- ViewModels consume read-only projections
+- File system paths are resolved outside the UI layer
+- Thumbnails and previews are cached or preprocessed
+
+Thumbnail caching strategy:
+- Badge images (badge.png) cached on import
+- Skin preview images (preview.jpg) cached on import
+- Cache stored in application data directory
+- Cache keyed by stable CarDefinition ID
+- Missing cache entries regenerated on demand
+- Cache survives rescans and application restarts
+
+Initial import UX:
+- Display progress indicator on init screen
+- Show progress text at bottom of init screen
+- Display current operation (e.g., "Importing cars... 45/150")
+- Non-blocking UI during import
+- Allow cancellation if import takes excessive time
+
+RESCAN & UPDATE STRATEGY
+Rescans are explicit actions.
+
+Rules:
+- No automatic rescans on startup unless configured
+- Rescans must preserve existing Catalog entries
+- New content is added, missing content is marked legacy
+
+ANTI-PATTERNS (FORBIDDEN)
+- Reading AC files from ViewModels
+- Parsing physics or binary data during discovery
+- Deleting Catalog entries automatically
+- Tying gameplay balance directly to AC stats
+- Using GUIDs for imported content IDs
+
+MENTAL MODEL SUMMARY
+- Assetto Corsa is a content provider
+- The Catalog is the normalized mirror
+- Gameplay overlays reinterpret content
+- Saves reference Catalog identities, not AC files
+- The import system is defensive, deterministic, and isolated
+
+These rules are intentional constraints.
+They exist to protect save integrity, mod compatibility, and long-term maintainability.
