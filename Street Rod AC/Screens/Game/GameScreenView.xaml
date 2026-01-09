@@ -88,6 +88,7 @@
                 <!-- Garage Button -->
                 <Button Style="{StaticResource GameButtonStyle}"
                         Background="{StaticResource GarageButtonBrush}"
+                        Command="{Binding GarageCommand}"
                         Tag="Go to garage"/>
             </StackPanel>
 

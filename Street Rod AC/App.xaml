@@ -11,6 +11,7 @@
              xmlns:newspaper="clr-namespace:Street_Rod_AC.Screens.Newspaper"
              xmlns:usedCarMarket="clr-namespace:Street_Rod_AC.Screens.UsedCarMarket"
              xmlns:usedParts="clr-namespace:Street_Rod_AC.Screens.UsedParts"
+             xmlns:garage="clr-namespace:Street_Rod_AC.Screens.Garage"
              xmlns:confirmation="clr-namespace:Street_Rod_AC.Dialogs.Confirmation"
              xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
              StartupUri="MainWindow.xaml">
@@ -67,6 +68,10 @@
 
             <DataTemplate DataType="{x:Type usedParts:UsedPartsScreenViewModel}">
                 <usedParts:UsedPartsScreenView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type garage:GarageScreenViewModel}">
+                <garage:GarageScreenView/>
             </DataTemplate>
 
             <!-- Dialog DataTemplates -->

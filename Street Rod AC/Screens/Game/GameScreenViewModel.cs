@@ -13,6 +13,7 @@ namespace Street_Rod_AC.Screens.Game
 
         public RelayCommand BackCommand { get; }
         public RelayCommand NewspaperCommand { get; }
+        public RelayCommand GarageCommand { get; }
 
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
 
@@ -24,12 +25,20 @@ namespace Street_Rod_AC.Screens.Game
 
             BackCommand = new RelayCommand(OnBack);
             NewspaperCommand = new RelayCommand(OnNewspaper);
+            GarageCommand = new RelayCommand(OnGarage);
         }
 
         private void OnNewspaper()
         {
             var newspaperViewModel = new Newspaper.NewspaperScreenViewModel(_navigationService, _dialogService, _gameState);
             _navigationService.NavigateTo(newspaperViewModel);
+        }
+
+        private void OnGarage()
+        {
+            var app = (App)System.Windows.Application.Current;
+            var garageViewModel = new Garage.GarageScreenViewModel(_navigationService, _dialogService, _gameState, app.CatalogRepository);
+            _navigationService.NavigateTo(garageViewModel);
         }
 
         private void OnBack()
