@@ -1,0 +1,139 @@
+STREET ROD MANAGER – ASSETTO CORSA INI MODIFICATION SYSTEM GUIDELINES
+
+PURPOSE
+This document defines the official architectural guidelines for modifying Assetto Corsa INI files within the Street Rod Manager project.
+The goal is to enable safe, reversible, and controlled configuration changes without corrupting user setups, mods, or Assetto Corsa itself.
+
+Street Rod Manager is a configuration orchestrator, not a raw file editor.
+
+CORE PHILOSOPHY
+
+Assetto Corsa INI files are user- and mod-owned
+Street Rod Manager declares intent, never raw file operations
+All modifications must be minimal, reversible, and traceable
+Assetto Corsa must remain usable outside Street Rod Manager
+
+CENTRALIZED ACCESS RULE (NON-NEGOTIABLE)
+
+There must be exactly one system responsible for reading and writing Assetto Corsa INI files.
+
+Rules:
+All INI access goes through a single centralized service
+No Screen, ViewModel, Importer, or Gameplay system may touch INI files directly
+File paths must never be hardcoded outside this service
+This rule exists to prevent corruption, duplication, and uncontrolled side effects.
+
+TARGET FILE SCOPE
+
+1. GLOBAL CONFIGURATION FILES
+Location:
+Documents/Assetto Corsa/cfg/
+
+Characteristics:
+User-controlled
+Frequently modified outside the app
+Volatile and unpredictable
+
+Rules:
+Treat as user preferences
+Never overwrite blindly
+Modify only a strictly limited and intentional subset of keys
+Preserve unknown keys, comments, and formatting
+
+2. CAR DATA CONFIGURATION FILES
+Location:
+content/cars/<car_id>/data/
+
+Assumption:
+Each car mod provides a data folder
+
+Characteristics:
+Mod-controlled
+May be overwritten by mod updates
+Directly affects physics and behavior
+
+Rules:
+Never assume long-term ownership
+Treat modifications as gameplay overlays
+Be prepared to reapply changes after updates
+
+THREE-LAYER MODIFICATION MODEL
+
+1. READ (OBSERVE)
+Parse INI files into an in-memory representation
+Preserve section order, key order, comments, and unknown entries
+Reading must be non-destructive
+Street Rod Manager must be able to read everything while understanding only what it needs.
+
+2. INTENT (DECLARE)
+Street Rod Manager declares semantic intent, not file mutations.
+
+Examples:
+Disable driving assists
+Reduce engine power
+Apply street-legal handling
+Enforce career difficulty rules
+
+Intent is:
+High-level
+Declarative
+Independent of file structure
+
+3. APPLY (MATERIALIZE)
+
+Map intent to concrete INI changes
+Apply minimal diffs only
+Write back safely and atomically
+This layer isolates Assetto Corsa specifics from gameplay logic.
+
+MODIFICATION RULES (CRITICAL)
+
+Minimal Diff Rule
+Modify only keys explicitly owned by Street Rod Manager
+Never reformat or rewrite entire files
+Never reorder sections unless required for correctness
+Reversibility Rule
+Every modification must be reversible
+Requires backups, snapshots, or change tracking
+Idempotency Rule
+Applying the same intent multiple times must produce the same result
+Changes must never compound
+
+CHANGE OWNERSHIP & TRACEABILITY
+
+Track which keys were modified by Street Rod Manager
+Never modify keys not previously touched
+Support clean revert and partial reset
+This enables debugging, updates, and user trust.
+
+FAILURE & SAFETY STRATEGY
+
+Write changes to a temporary file
+Validate before replacing originals
+Replace atomically
+Never leave partial writes
+
+On failure:
+
+Log detailed diagnostics
+Leave original files untouched
+
+STRICT ANTI-PATTERNS
+
+Editing INI files from UI or ViewModels
+Regex-only or string-replace parsing
+Overwriting entire files
+Silent failures
+Assuming CSP or third-party behavior
+Mixing file IO with gameplay logic
+
+MENTAL MODEL SUMMARY
+
+INI files are contracts, not assets
+Street Rod Manager declares intent
+One service translates intent to AC reality
+Changes are minimal, reversible, and owned
+Assetto Corsa remains stable and playable independently
+
+These constraints are intentional.
+They protect user data, mod compatibility, and long-term maintainability.

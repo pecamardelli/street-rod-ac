@@ -8,6 +8,7 @@ using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Screens.Init;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Configuration;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Storage;
 
@@ -28,6 +29,7 @@ namespace Street_Rod_AC
         public ICarProfileRepository ProfileRepository { get; private set; }
         public ICarProfileService ProfileService { get; private set; }
         public IUsedCarMarketService MarketService { get; private set; }
+        public IIniModificationService IniModificationService { get; private set; }
 
         public App()
         {
@@ -46,6 +48,7 @@ namespace Street_Rod_AC
             ProfileRepository = new CarProfileRepository();
             ProfileService = new CarProfileService(CatalogRepository, ProfileRepository);
             MarketService = new UsedCarMarketService(CatalogRepository, ProfileRepository);
+            IniModificationService = new IniModificationService();
         }
 
         protected override async void OnStartup(StartupEventArgs e)

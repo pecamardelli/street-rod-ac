@@ -1,0 +1,188 @@
+using Street_Rod_AC.Logging;
+using Street_Rod_AC.Services.Configuration.Models;
+using Street_Rod_AC.Services.Configuration.Parsers;
+using System.IO;
+
+namespace Street_Rod_AC.Services.Configuration
+{
+    /// <summary>
+    /// Central service for all Assetto Corsa INI file modifications.
+    /// Implements the Read -> Intent -> Apply model.
+    /// </summary>
+    public class IniModificationService : IIniModificationService
+    {
+        private readonly string _cfgDirectory;
+        private readonly IniParser _parser;
+        private readonly IniWriter _writer;
+        private readonly IAppLogger _logger;
+
+        public IniModificationService()
+        {
+            // AC cfg files are in Documents/Assetto Corsa/cfg
+            var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            _cfgDirectory = Path.Combine(documentsPath, "Assetto Corsa", "cfg");
+
+            _parser = new IniParser();
+            _writer = new IniWriter();
+            _logger = AppLoggerFactory.CreateLogger("IniModification");
+
+            // Ensure cfg directory exists
+            if (!Directory.Exists(_cfgDirectory))
+            {
+                _logger.Warning("AC cfg directory not found: {CfgDirectory}", _cfgDirectory);
+            }
+            else
+            {
+                _logger.Information("INI Modification Service initialized. CFG directory: {CfgDirectory}", _cfgDirectory);
+            }
+        }
+
+        public bool ApplyIntent(ModificationIntent intent)
+        {
+            _logger.Information("Applying intent: {Description}", intent.Description);
+
+            try
+            {
+                return intent switch
+                {
+                    ShowroomIntent showroomIntent => ApplyShowroomIntent(showroomIntent),
+                    DisableAssistsIntent assistsIntent => ApplyDisableAssistsIntent(assistsIntent),
+                    RaceConfigIntent raceIntent => ApplyRaceConfigIntent(raceIntent),
+                    _ => throw new NotSupportedException($"Intent type not supported: {intent.GetType().Name}")
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to apply intent: {Description}", intent.Description);
+                return false;
+            }
+        }
+
+        public IniFile? ReadIniFile(string fileName)
+        {
+            var filePath = GetIniFilePath(fileName);
+            return _parser.TryParse(filePath);
+        }
+
+        public bool FileExists(string fileName)
+        {
+            var filePath = GetIniFilePath(fileName);
+            return File.Exists(filePath);
+        }
+
+        public string GetIniFilePath(string fileName)
+        {
+            // If already absolute path, return as-is
+            if (Path.IsPathRooted(fileName))
+            {
+                return fileName;
+            }
+
+            // Otherwise, resolve relative to cfg directory
+            return Path.Combine(_cfgDirectory, fileName);
+        }
+
+        public bool RestoreFromBackup(string fileName, string? backupTimestamp = null)
+        {
+            try
+            {
+                var filePath = GetIniFilePath(fileName);
+                var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
+                var fileNameOnly = Path.GetFileNameWithoutExtension(filePath);
+                var extension = Path.GetExtension(filePath);
+
+                var backupPattern = $"{fileNameOnly}.backup_*{extension}";
+                var backups = Directory.GetFiles(directory, backupPattern)
+                    .Select(f => new FileInfo(f))
+                    .OrderByDescending(f => f.CreationTime)
+                    .ToList();
+
+                if (backups.Count == 0)
+                {
+                    _logger.Warning("No backups found for {FileName}", fileName);
+                    return false;
+                }
+
+                FileInfo backupToRestore;
+
+                if (backupTimestamp != null)
+                {
+                    backupToRestore = backups.FirstOrDefault(b => b.Name.Contains(backupTimestamp))
+                        ?? throw new FileNotFoundException($"Backup with timestamp {backupTimestamp} not found");
+                }
+                else
+                {
+                    backupToRestore = backups.First(); // Most recent
+                }
+
+                File.Copy(backupToRestore.FullName, filePath, true);
+                _logger.Information("Restored {FileName} from backup: {BackupFile}",
+                    fileName, backupToRestore.Name);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to restore {FileName} from backup", fileName);
+                return false;
+            }
+        }
+
+        // ===== INTENT APPLICATION METHODS =====
+
+        private bool ApplyShowroomIntent(ShowroomIntent intent)
+        {
+            var filePath = GetIniFilePath(intent.TargetFile);
+
+            // Parse or create new file
+            var iniFile = _parser.TryParse(filePath) ?? new IniFile(filePath);
+
+            // Apply changes to [SHOWROOM] section
+            iniFile.SetValue("SHOWROOM", "CAR", intent.CarId);
+            iniFile.SetValue("SHOWROOM", "SKIN", intent.SkinId);
+            iniFile.SetValue("SHOWROOM", "SELECTED_SKIN", intent.SkinId);
+            iniFile.SetValue("SHOWROOM", "TRACK", intent.Track);
+
+            // Write back
+            _writer.Write(iniFile);
+
+            _logger.Information("Applied showroom intent: Car={CarId}, Skin={SkinId}",
+                intent.CarId, intent.SkinId);
+
+            return true;
+        }
+
+        private bool ApplyDisableAssistsIntent(DisableAssistsIntent intent)
+        {
+            var filePath = GetIniFilePath(intent.TargetFile);
+
+            var iniFile = _parser.TryParse(filePath) ?? new IniFile(filePath);
+
+            // TODO: Implement assist disabling logic
+            // This would set ABS=0, TC=0, etc. in the assists.ini file
+
+            _writer.Write(iniFile);
+
+            _logger.Information("Applied disable assists intent");
+
+            return true;
+        }
+
+        private bool ApplyRaceConfigIntent(RaceConfigIntent intent)
+        {
+            var filePath = GetIniFilePath(intent.TargetFile);
+
+            var iniFile = _parser.TryParse(filePath) ?? new IniFile(filePath);
+
+            // TODO: Implement race configuration logic
+            // This would configure race.ini with car, track, session settings
+
+            _writer.Write(iniFile);
+
+            _logger.Information("Applied race config intent: Car={CarId}, Track={TrackId}",
+                intent.CarId, intent.TrackId);
+
+            return true;
+        }
+    }
+}
