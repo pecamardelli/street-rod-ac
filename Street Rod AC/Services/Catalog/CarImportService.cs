@@ -1,4 +1,5 @@
 using Street_Rod_AC.Configuration;
+using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using System.Diagnostics;
 using System.IO;
@@ -15,6 +16,7 @@ namespace Street_Rod_AC.Services.Catalog
     {
         private readonly IContentCatalogRepository _catalog;
         private readonly AppSettings _settings;
+        private readonly IAppLogger _logger;
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -32,23 +34,29 @@ namespace Street_Rod_AC.Services.Catalog
         {
             _catalog = catalog;
             _settings = AppSettings.Instance;
+            _logger = AppLoggerFactory.CreateLogger(LogCategory.Import);
         }
 
         public async Task<ImportResult> ImportCarsAsync(IProgress<ImportProgress>? progress = null)
         {
+            _logger.Information("Starting car import from {CarsPath}", _settings.CarsPath);
             var stopwatch = Stopwatch.StartNew();
             var result = new ImportResult();
 
             if (!Directory.Exists(_settings.CarsPath))
             {
-                result.Errors.Add($"Cars directory not found: {_settings.CarsPath}");
+                var error = $"Cars directory not found: {_settings.CarsPath}";
+                _logger.Error("Cars directory not found at {CarsPath}", _settings.CarsPath);
+                result.Errors.Add(error);
                 result.Duration = stopwatch.Elapsed;
                 return result;
             }
 
             // DISCOVERY PHASE: Find all car folders with valid ui_car.json
+            _logger.Debug("Starting discovery phase");
             var carFolders = await DiscoverCarsAsync();
             result.TotalFound = carFolders.Count;
+            _logger.Information("Discovery phase completed. Found {CarCount} cars", carFolders.Count);
 
             // MATERIALIZATION PHASE: Process each discovered car
             for (int i = 0; i < carFolders.Count; i++)
@@ -99,12 +107,17 @@ namespace Street_Rod_AC.Services.Catalog
                 catch (Exception ex)
                 {
                     result.Failed++;
-                    result.Errors.Add($"{carId}: {ex.Message}");
+                    var errorMsg = $"{carId}: {ex.Message}";
+                    result.Errors.Add(errorMsg);
+                    _logger.Warning(ex, "Failed to import car {CarId}", carId);
                 }
             }
 
             stopwatch.Stop();
             result.Duration = stopwatch.Elapsed;
+
+            _logger.Information("Car import finished. Duration: {Duration}s, Imported: {Imported}, Updated: {Updated}, Skipped: {Skipped}, Failed: {Failed}",
+                result.Duration.TotalSeconds, result.Imported, result.Updated, result.Skipped, result.Failed);
 
             return result;
         }
