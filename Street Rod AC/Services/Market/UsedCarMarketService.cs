@@ -167,7 +167,14 @@ namespace Street_Rod_AC.Services.Market
             var condition = GenerateCondition();
             var mileage = GenerateMileage();
             var price = CalculatePrice(profile.BasePrice, condition);
-            var skinId = "default"; // TODO: Get random skin from car skins
+
+            // Get random skin from available skins
+            var skinId = "default";
+            if (carDef.AvailableSkins != null && carDef.AvailableSkins.Count > 0)
+            {
+                skinId = carDef.AvailableSkins[_random.Next(carDef.AvailableSkins.Count)];
+            }
+
             var dealer = dealers[_random.Next(dealers.Count)];
 
             return new UsedCarListing

@@ -4,6 +4,7 @@ namespace Street_Rod_AC.Models.GameState
     {
         public Guid InstanceId { get; set; }
         public string DefinitionId { get; set; } // Reference to catalog (AC car folder)
+        public string SkinId { get; set; } = "default"; // Selected skin/livery
 
         // Condition & Mileage (Street Rod style)
         public double OdometerKM { get; set; }
@@ -33,7 +34,7 @@ namespace Street_Rod_AC.Models.GameState
             TransmissionHealth = 1.0;
             BodyCondition = 1.0;
             TireCondition = 1.0;
-            InstalledParts = new List<Part>();
+            InstalledParts = [];
             PurchasePrice = 0m;
             PurchaseDate = DateTime.Now;
         }

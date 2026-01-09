@@ -272,6 +272,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             {
                 InstanceId = Guid.NewGuid(),
                 DefinitionId = listing.CarDefinitionId,
+                SkinId = listing.SkinId,
                 PurchasePrice = listing.Price,
                 PurchaseDate = _gameState.Date,
                 OdometerKM = listing.Mileage,

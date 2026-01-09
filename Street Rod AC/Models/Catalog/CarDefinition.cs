@@ -72,6 +72,11 @@ namespace Street_Rod_AC.Models.Catalog
         public CarSpecsData? Specs { get; set; }
 
         /// <summary>
+        /// Available skins/liveries for this car (folder names from skins directory)
+        /// </summary>
+        public List<string> AvailableSkins { get; set; } = [];
+
+        /// <summary>
         /// Source classification (Kunos, DLC, Mod, Unknown)
         /// </summary>
         public ContentSource Source { get; set; } = ContentSource.Unknown;

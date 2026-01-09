@@ -101,12 +101,19 @@ namespace Street_Rod_AC.Screens.Garage
                     continue;
                 }
 
-                // Get preview image path
-                var previewPath = Path.Combine(AppSettings.Instance.CarsPath, carDef.Id, "preview.jpg");
+                // Get preview image path for the specific skin
+                var skinId = !string.IsNullOrEmpty(car.SkinId) ? car.SkinId : "default";
+                var previewPath = Path.Combine(AppSettings.Instance.CarsPath, carDef.Id, "skins", skinId, "preview.jpg");
+
                 if (!File.Exists(previewPath))
                 {
-                    // Fallback to ui folder preview if main preview doesn't exist
-                    previewPath = Path.Combine(AppSettings.Instance.CarsPath, carDef.Id, "ui", "preview.jpg");
+                    // Fallback to generic car preview if skin preview doesn't exist
+                    previewPath = Path.Combine(AppSettings.Instance.CarsPath, carDef.Id, "preview.jpg");
+                    if (!File.Exists(previewPath))
+                    {
+                        // Final fallback to ui folder preview
+                        previewPath = Path.Combine(AppSettings.Instance.CarsPath, carDef.Id, "ui", "preview.jpg");
+                    }
                 }
 
                 var displayVm = new CarDisplayViewModel

@@ -239,6 +239,9 @@ namespace Street_Rod_AC.Services.Catalog
                     };
                 }
 
+                // Scan available skins
+                carDef.AvailableSkins = ScanAvailableSkins(carFolder);
+
                 return carDef;
             }
             catch (Exception ex)
@@ -315,6 +318,46 @@ namespace Street_Rod_AC.Services.Catalog
                 return prop.GetInt32();
             }
             return null;
+        }
+
+        /// <summary>
+        /// Scans the skins directory and returns a list of available skin folder names
+        /// </summary>
+        private List<string> ScanAvailableSkins(string carFolder)
+        {
+            var skins = new List<string>();
+            var skinsPath = Path.Combine(carFolder, "skins");
+
+            if (!Directory.Exists(skinsPath))
+            {
+                _logger.Debug("No skins directory found for car at {CarFolder}", carFolder);
+                return skins;
+            }
+
+            try
+            {
+                // Get all subdirectories in the skins folder
+                var skinFolders = Directory.GetDirectories(skinsPath);
+
+                foreach (var skinFolder in skinFolders)
+                {
+                    var skinId = Path.GetFileName(skinFolder);
+
+                    // Only include directories that aren't empty and have valid names
+                    if (!string.IsNullOrEmpty(skinId) && !skinId.StartsWith("."))
+                    {
+                        skins.Add(skinId);
+                    }
+                }
+
+                _logger.Debug("Found {SkinCount} skins for car at {CarFolder}", skins.Count, carFolder);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "Failed to scan skins for car at {CarFolder}", carFolder);
+            }
+
+            return skins;
         }
     }
 }
