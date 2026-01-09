@@ -9,6 +9,8 @@
              xmlns:loadGame="clr-namespace:Street_Rod_AC.Screens.LoadGame"
              xmlns:game="clr-namespace:Street_Rod_AC.Screens.Game"
              xmlns:newspaper="clr-namespace:Street_Rod_AC.Screens.Newspaper"
+             xmlns:usedCarMarket="clr-namespace:Street_Rod_AC.Screens.UsedCarMarket"
+             xmlns:usedParts="clr-namespace:Street_Rod_AC.Screens.UsedParts"
              xmlns:confirmation="clr-namespace:Street_Rod_AC.Dialogs.Confirmation"
              xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
              StartupUri="MainWindow.xaml">
@@ -57,6 +59,14 @@
 
             <DataTemplate DataType="{x:Type newspaper:NewspaperScreenViewModel}">
                 <newspaper:NewspaperScreenView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type usedCarMarket:UsedCarMarketScreenViewModel}">
+                <usedCarMarket:UsedCarMarketScreenView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type usedParts:UsedPartsScreenViewModel}">
+                <usedParts:UsedPartsScreenView/>
             </DataTemplate>
 
             <!-- Dialog DataTemplates -->
