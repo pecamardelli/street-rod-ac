@@ -24,6 +24,10 @@ namespace Street_Rod_AC.Models.GameState
         public List<Part> UsedParts { get; set; }
         public NewspaperAds NewspaperAds { get; set; }
 
+        // Used Car Market System
+        public List<UsedCarListing> UsedCarMarket { get; set; }
+        public List<DealerLocation> DealerLocations { get; set; }
+
         // Metadata
         public int CatalogVersion { get; set; }
         public DateTime CreatedDate { get; set; }
@@ -42,6 +46,9 @@ namespace Street_Rod_AC.Models.GameState
             UsedCars = [];
             UsedParts = [];
             NewspaperAds = new NewspaperAds();
+
+            UsedCarMarket = [];
+            DealerLocations = [];
 
             CatalogVersion = 1;
             CreatedDate = now;

@@ -8,6 +8,7 @@ using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Screens.Init;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Storage;
 
 namespace Street_Rod_AC
@@ -24,6 +25,9 @@ namespace Street_Rod_AC
         public IGameStateRepository GameStateRepository { get; private set; }
         public IContentCatalogRepository CatalogRepository { get; private set; }
         public ICarImportService CarImportService { get; private set; }
+        public ICarProfileRepository ProfileRepository { get; private set; }
+        public ICarProfileService ProfileService { get; private set; }
+        public IUsedCarMarketService MarketService { get; private set; }
 
         public App()
         {
@@ -39,6 +43,9 @@ namespace Street_Rod_AC
             GameStateRepository = new GameStateRepository();
             CatalogRepository = new ContentCatalogRepository();
             CarImportService = new CarImportService(CatalogRepository);
+            ProfileRepository = new CarProfileRepository();
+            ProfileService = new CarProfileService(CatalogRepository, ProfileRepository);
+            MarketService = new UsedCarMarketService(CatalogRepository, ProfileRepository);
         }
 
         protected override async void OnStartup(StartupEventArgs e)
@@ -85,6 +92,12 @@ namespace Street_Rod_AC
                         logger.Warning("Import error: {Error}", error);
                     }
                 }
+
+                // Generate car profiles for all imported cars
+                logger.Information("Ensuring car profiles exist");
+                await ProfileService.EnsureProfilesExistAsync();
+                logger.Information("Car profiles ready. Total profiles: {ProfileCount}",
+                    ProfileRepository.GetProfileCount());
             }
             catch (Exception ex)
             {
