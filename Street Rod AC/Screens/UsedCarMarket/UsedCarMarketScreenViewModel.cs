@@ -7,6 +7,7 @@ using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Market;
+using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.ViewModels;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -22,6 +23,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
         private readonly IUsedCarMarketService _marketService;
         private readonly IContentCatalogRepository _catalogRepo;
         private readonly ICarProfileRepository _profileRepo;
+        private readonly IGameStateRepository _gameStateRepo;
         private readonly IAppLogger _logger;
 
         public RelayCommand BackCommand { get; }
@@ -72,7 +74,8 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             Models.GameState.GameState gameState,
             IUsedCarMarketService marketService,
             IContentCatalogRepository catalogRepo,
-            ICarProfileRepository profileRepo)
+            ICarProfileRepository profileRepo,
+            IGameStateRepository gameStateRepo)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
@@ -80,6 +83,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             _marketService = marketService;
             _catalogRepo = catalogRepo;
             _profileRepo = profileRepo;
+            _gameStateRepo = gameStateRepo;
             _logger = AppLoggerFactory.CreateLogger("UsedCarMarket");
 
             BackCommand = new RelayCommand(OnBack);
@@ -295,6 +299,22 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
 
             _logger.Information("Purchase completed: {CarName} for ${Price}, new bankroll: ${Bankroll}",
                 carDef.Name, listing.Price, _gameState.Player.Money);
+
+            // Save game state
+            try
+            {
+                _gameStateRepo.Save(_gameState, _gameState.SaveName);
+                _logger.Information("Game state saved after purchase");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to save game state after purchase");
+                var errorDialog = new InformationDialogViewModel(
+                    _dialogService,
+                    "The purchase was successful but failed to save the game. Please save manually.",
+                    "Save Warning");
+                _dialogService.ShowDialog(errorDialog);
+            }
 
             // Refresh display
             LoadListings();

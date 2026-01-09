@@ -33,6 +33,10 @@ namespace Street_Rod_AC.Models.GameState
         public DateTime CreatedDate { get; set; }
         public DateTime LastPlayedDate { get; set; }
 
+        // Save file name (not persisted in DB, set at runtime)
+        [BsonIgnore]
+        public string SaveName { get; set; } = string.Empty;
+
         public GameState()
         {
             var now = DateTime.Now;

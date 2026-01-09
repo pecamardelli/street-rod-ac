@@ -15,6 +15,8 @@ namespace Street_Rod_AC.Screens.Newspaper
         public RelayCommand UsedCarsCommand { get; }
         public RelayCommand UsedPartsCommand { get; }
 
+        public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
+
         public NewspaperScreenViewModel(NavigationService navigationService, DialogService dialogService, Models.GameState.GameState gameState)
         {
             _navigationService = navigationService;
@@ -35,7 +37,8 @@ namespace Street_Rod_AC.Screens.Newspaper
                 _gameState,
                 app.MarketService,
                 app.CatalogRepository,
-                app.ProfileRepository);
+                app.ProfileRepository,
+                app.GameStateRepository);
             _navigationService.NavigateTo(usedCarMarketViewModel);
         }
 

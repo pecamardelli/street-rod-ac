@@ -36,6 +36,7 @@ namespace Street_Rod_AC.Services.Storage
                 if (state != null)
                 {
                     state.LastPlayedDate = DateTime.Now;
+                    state.SaveName = saveName;
                 }
 
                 return state;
@@ -108,6 +109,7 @@ namespace Street_Rod_AC.Services.Storage
         public GameState CreateNew(string saveName, string playerName)
         {
             var state = GameState.CreateNew(playerName);
+            state.SaveName = saveName;
             Save(state, saveName);
             return state;
         }
