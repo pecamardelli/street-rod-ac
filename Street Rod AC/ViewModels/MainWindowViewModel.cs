@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using Street_Rod_AC.Models.AC;
 using Street_Rod_AC.Services;
+using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.Views;
 
 namespace Street_Rod_AC.ViewModels;
@@ -136,9 +137,29 @@ public class MainWindowViewModel : INotifyPropertyChanged
                 trackConfig = SelectedTrack.Configurations[0].FolderName;
             }
 
-            await _launcher.LaunchRaceAsync(SelectedCar, SelectedTrack, trackConfig);
+            // Create launch intent
+            var intent = new RaceLaunchIntent
+            {
+                CarId = SelectedCar.CarId,
+                SkinId = "default",
+                TrackId = SelectedTrack.TrackId,
+                TrackConfig = trackConfig
+            };
 
-            StatusText = $"Race completed with {SelectedCar.Name} at {SelectedTrack.Name}";
+            var result = await _launcher.LaunchRaceAsync(intent);
+
+            if (result.Success)
+            {
+                StatusText = $"Race completed with {SelectedCar.Name} at {SelectedTrack.Name}";
+            }
+            else
+            {
+                StatusText = $"Launch failed: {result.ErrorMessage}";
+                System.Windows.MessageBox.Show($"Failed to launch Assetto Corsa:\n\n{result.ErrorMessage}",
+                    "Launch Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
         catch (Exception ex)
         {

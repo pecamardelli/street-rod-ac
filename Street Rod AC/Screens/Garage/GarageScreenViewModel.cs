@@ -4,10 +4,13 @@ using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.ViewModels;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows;
 
 namespace Street_Rod_AC.Screens.Garage
 {
@@ -17,9 +20,11 @@ namespace Street_Rod_AC.Screens.Garage
         private readonly DialogService _dialogService;
         private readonly Models.GameState.GameState _gameState;
         private readonly IContentCatalogRepository _catalogRepo;
+        private readonly IAssettoCorsaLauncher _launcher;
         private readonly IAppLogger _logger;
 
         public RelayCommand BackCommand { get; }
+        public AsyncRelayCommand LaunchShowroomCommand { get; }
 
         private ObservableCollection<CarDisplayViewModel> _cars;
         public ObservableCollection<CarDisplayViewModel> Cars
@@ -64,15 +69,18 @@ namespace Street_Rod_AC.Screens.Garage
             NavigationService navigationService,
             DialogService dialogService,
             Models.GameState.GameState gameState,
-            IContentCatalogRepository catalogRepo)
+            IContentCatalogRepository catalogRepo,
+            IAssettoCorsaLauncher launcher)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
             _gameState = gameState;
             _catalogRepo = catalogRepo;
+            _launcher = launcher;
             _logger = AppLoggerFactory.CreateLogger("Garage");
 
             BackCommand = new RelayCommand(OnBack);
+            LaunchShowroomCommand = new AsyncRelayCommand(OnLaunchShowroom, CanLaunchShowroom);
 
             _cars = new ObservableCollection<CarDisplayViewModel>();
 
@@ -133,6 +141,54 @@ namespace Street_Rod_AC.Screens.Garage
             }
 
             _logger.Information("Loaded {Count} cars into garage view", Cars.Count);
+        }
+
+        private bool CanLaunchShowroom()
+        {
+            return SelectedCar != null && !_launcher.IsExecutionLocked;
+        }
+
+        private async Task OnLaunchShowroom()
+        {
+            if (SelectedCar == null)
+                return;
+
+            _logger.Information("Launching showroom for car {CarId} with skin {SkinId}",
+                SelectedCar.CarDefinition.Id, SelectedCar.CarInstance.SkinId);
+
+            try
+            {
+                var intent = new ShowroomLaunchIntent
+                {
+                    CarId = SelectedCar.CarDefinition.Id,
+                    SkinId = SelectedCar.CarInstance.SkinId
+                };
+
+                var result = await _launcher.LaunchShowroomAsync(intent);
+
+                if (result.Success)
+                {
+                    _logger.Information("Showroom launched successfully");
+                }
+                else
+                {
+                    _logger.Error("Showroom launch failed: {Error}", result.ErrorMessage);
+                    System.Windows.MessageBox.Show(
+                        $"Failed to launch showroom:\n\n{result.ErrorMessage}",
+                        "Launch Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Exception during showroom launch");
+                System.Windows.MessageBox.Show(
+                    $"Failed to launch showroom:\n\n{ex.Message}",
+                    "Launch Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
 
         private void OnBack()

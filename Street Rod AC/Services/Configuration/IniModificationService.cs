@@ -174,13 +174,16 @@ namespace Street_Rod_AC.Services.Configuration
 
             var iniFile = _parser.TryParse(filePath) ?? new IniFile(filePath);
 
-            // TODO: Implement race configuration logic
-            // This would configure race.ini with car, track, session settings
+            // Configure [RACE] section
+            iniFile.SetValue("RACE", "MODEL", intent.CarId);
+            iniFile.SetValue("RACE", "SKIN", intent.SkinId);
+            iniFile.SetValue("RACE", "TRACK", intent.TrackId);
+            iniFile.SetValue("RACE", "CONFIG_TRACK", intent.TrackConfig ?? string.Empty);
 
             _writer.Write(iniFile);
 
-            _logger.Information("Applied race config intent: Car={CarId}, Track={TrackId}",
-                intent.CarId, intent.TrackId);
+            _logger.Information("Applied race config intent: Car={CarId}, Skin={SkinId}, Track={TrackId}, Config={TrackConfig}",
+                intent.CarId, intent.SkinId, intent.TrackId, intent.TrackConfig ?? "(none)");
 
             return true;
         }

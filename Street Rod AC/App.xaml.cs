@@ -39,7 +39,8 @@ namespace Street_Rod_AC
             InitializeComponent();
 
             ContentService = new AssettoCorsaContentService();
-            Launcher = new AssettoCorsaLauncher();
+            IniModificationService = new IniModificationService();
+            Launcher = new AssettoCorsaLauncher(IniModificationService);
             NavigationService = new NavigationService();
             DialogService = new DialogService();
             GameStateRepository = new GameStateRepository();
@@ -48,7 +49,6 @@ namespace Street_Rod_AC
             ProfileRepository = new CarProfileRepository();
             ProfileService = new CarProfileService(CatalogRepository, ProfileRepository);
             MarketService = new UsedCarMarketService(CatalogRepository, ProfileRepository);
-            IniModificationService = new IniModificationService();
         }
 
         protected override async void OnStartup(StartupEventArgs e)

@@ -159,45 +159,52 @@
                            VerticalAlignment="Bottom"
                            Padding="20"
                            Visibility="{Binding HasCars, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                            <!-- Condition -->
+                            <TextBlock Grid.Column="0"
+                                      Text="Condition:"
+                                      FontSize="14"
+                                      Foreground="{StaticResource TextSecondaryBrush}"
+                                      Margin="0,0,10,0"
+                                      VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1"
+                                      Text="{Binding SelectedCar.ConditionDisplay}"
+                                      FontSize="14"
+                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                      Margin="0,0,20,0"
+                                      VerticalAlignment="Center"/>
 
-                                <!-- Condition -->
-                                <TextBlock Grid.Row="0" Grid.Column="0"
-                                          Text="Condition:"
-                                          FontSize="14"
-                                          Foreground="{StaticResource TextSecondaryBrush}"
-                                          Margin="0,0,10,5"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1"
-                                          Text="{Binding SelectedCar.ConditionDisplay}"
-                                          FontSize="14"
-                                          Foreground="{StaticResource TextPrimaryBrush}"
-                                          Margin="0,0,20,5"/>
+                            <!-- Mileage -->
+                            <TextBlock Grid.Column="2"
+                                      Text="Mileage:"
+                                      FontSize="14"
+                                      Foreground="{StaticResource TextSecondaryBrush}"
+                                      Margin="0,0,10,0"
+                                      VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="3"
+                                      Text="{Binding SelectedCar.MileageDisplay}"
+                                      FontSize="14"
+                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                      Margin="0,0,20,0"
+                                      VerticalAlignment="Center"/>
 
-                                <!-- Mileage -->
-                                <TextBlock Grid.Row="0" Grid.Column="2"
-                                          Text="Mileage:"
-                                          FontSize="14"
-                                          Foreground="{StaticResource TextSecondaryBrush}"
-                                          Margin="0,0,10,5"/>
-                                <TextBlock Grid.Row="0" Grid.Column="3"
-                                          Text="{Binding SelectedCar.MileageDisplay}"
-                                          FontSize="14"
-                                          Foreground="{StaticResource TextPrimaryBrush}"
-                                          Margin="0,0,0,5"/>
-                            </Grid>
-                        </StackPanel>
+                            <!-- Showroom Button -->
+                            <Button Grid.Column="4"
+                                    Content="Preview in Showroom"
+                                    Command="{Binding LaunchShowroomCommand}"
+                                    Style="{StaticResource DialogPrimaryButtonStyle}"
+                                    Padding="15,8"
+                                    FontSize="14"
+                                    VerticalAlignment="Center"/>
+                        </Grid>
                     </Border>
                 </Grid>
             </Border>

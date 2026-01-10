@@ -37,7 +37,7 @@ namespace Street_Rod_AC.Screens.Game
         private void OnGarage()
         {
             var app = (App)System.Windows.Application.Current;
-            var garageViewModel = new Garage.GarageScreenViewModel(_navigationService, _dialogService, _gameState, app.CatalogRepository);
+            var garageViewModel = new Garage.GarageScreenViewModel(_navigationService, _dialogService, _gameState, app.CatalogRepository, app.Launcher);
             _navigationService.NavigateTo(garageViewModel);
         }
 

@@ -60,7 +60,7 @@ namespace Street_Rod_AC.Services.Configuration.Models
         public string CarId { get; set; } = string.Empty;
         public string SkinId { get; set; } = string.Empty;
         public string TrackId { get; set; } = string.Empty;
-        public string TrackConfig { get; set; } = string.Empty;
+        public string? TrackConfig { get; set; }
 
         public override string Description =>
             $"Configure race: car '{CarId}', track '{TrackId}'";

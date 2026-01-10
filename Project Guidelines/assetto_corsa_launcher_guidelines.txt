@@ -161,4 +161,48 @@ Execution is read-only
 Cleanup is explicit
 Control is centralized
 
+IMPLEMENTATION CLARIFICATIONS
+
+EXECUTABLES
+
+Race Mode: acs.exe (located in Assetto Corsa installation root)
+Showroom Mode: acShowroom.exe (located in Assetto Corsa installation root)
+
+No command-line arguments are required. All configuration is passed via INI files in the user's Documents\Assetto Corsa\cfg directory.
+
+CONFIGURATION RESTORATION
+
+ALWAYS restore original configuration after Assetto Corsa exits, regardless of success or error.
+
+The restoration is mandatory and automatic:
+- On successful completion: restore
+- On error or crash: restore
+- On user cancellation: restore
+
+This ensures Assetto Corsa remains usable outside Street Rod Manager and prevents configuration drift.
+
+INTENT ARCHITECTURE
+
+Launch Intents and Modification Intents are separate concepts:
+
+LAUNCH INTENT (High-level user action)
+- Represents what the user wants to do
+- Example: "Preview this car in showroom"
+- Example: "Start a race with these settings"
+- Contains metadata about execution context
+
+MODIFICATION INTENT (Low-level configuration change)
+- Represents specific INI file changes
+- Example: "Set CAR=ks_porsche_911_gt3_rs in showroom_start.ini"
+- Applied by IniModificationService
+
+Launch Intents generate one or more Modification Intents:
+- ShowroomLaunchIntent → ShowroomIntent
+- RaceLaunchIntent → RaceConfigIntent + DisableAssistsIntent + OpponentIntent
+
+This separation allows:
+- Multiple configuration changes per launch
+- Reusable modification intents across different launch scenarios
+- Clean architectural boundaries
+
 END OF DOCUMENT
