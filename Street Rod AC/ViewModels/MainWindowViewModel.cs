@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
+using Street_Rod_AC.Dialogs;
+using Street_Rod_AC.Dialogs.Information;
 using Street_Rod_AC.Models.AC;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Configuration.Models;
@@ -17,14 +19,16 @@ public class MainWindowViewModel : INotifyPropertyChanged
 {
     private readonly IAssettoCorsaContentService _contentService;
     private readonly IAssettoCorsaLauncher _launcher;
+    private readonly DialogService _dialogService;
     private CarInfo? _selectedCar;
     private TrackInfo? _selectedTrack;
     private string _statusText = "Ready";
 
-    public MainWindowViewModel(IAssettoCorsaContentService contentService, IAssettoCorsaLauncher launcher)
+    public MainWindowViewModel(IAssettoCorsaContentService contentService, IAssettoCorsaLauncher launcher, DialogService dialogService)
     {
         _contentService = contentService;
         _launcher = launcher;
+        _dialogService = dialogService;
 
         // Initialize menu commands
         NewGameCommand = new RelayCommand(NewGame);
@@ -155,19 +159,21 @@ public class MainWindowViewModel : INotifyPropertyChanged
             else
             {
                 StatusText = $"Launch failed: {result.ErrorMessage}";
-                System.Windows.MessageBox.Show($"Failed to launch Assetto Corsa:\n\n{result.ErrorMessage}",
-                    "Launch Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                var errorDialog = new InformationDialogViewModel(
+                    _dialogService,
+                    $"Failed to launch Assetto Corsa:\n\n{result.ErrorMessage}",
+                    "Launch Error");
+                _dialogService.ShowDialog(errorDialog);
             }
         }
         catch (Exception ex)
         {
             StatusText = $"Launch failed: {ex.Message}";
-            System.Windows.MessageBox.Show($"Failed to launch Assetto Corsa:\n\n{ex.Message}",
-                "Launch Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            var errorDialog = new InformationDialogViewModel(
+                _dialogService,
+                $"Failed to launch Assetto Corsa:\n\n{ex.Message}",
+                "Launch Error");
+            _dialogService.ShowDialog(errorDialog);
         }
     }
 
@@ -189,10 +195,11 @@ public class MainWindowViewModel : INotifyPropertyChanged
         catch (Exception ex)
         {
             StatusText = $"Failed to open 3D viewer: {ex.Message}";
-            System.Windows.MessageBox.Show($"Failed to open 3D viewer:\n\n{ex.Message}",
-                "3D Viewer Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            var errorDialog = new InformationDialogViewModel(
+                _dialogService,
+                $"Failed to open 3D viewer:\n\n{ex.Message}",
+                "3D Viewer Error");
+            _dialogService.ShowDialog(errorDialog);
         }
     }
 
@@ -200,20 +207,22 @@ public class MainWindowViewModel : INotifyPropertyChanged
     {
         StatusText = "New Game started";
         // TODO: Implement new game logic
-        System.Windows.MessageBox.Show("New Game - To be implemented",
-            "New Game",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        var infoDialog = new InformationDialogViewModel(
+            _dialogService,
+            "New Game - To be implemented",
+            "New Game");
+        _dialogService.ShowDialog(infoDialog);
     }
 
     private void LoadGame()
     {
         StatusText = "Load Game selected";
         // TODO: Implement load game logic
-        System.Windows.MessageBox.Show("Load Game - To be implemented",
-            "Load Game",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        var infoDialog = new InformationDialogViewModel(
+            _dialogService,
+            "Load Game - To be implemented",
+            "Load Game");
+        _dialogService.ShowDialog(infoDialog);
     }
 
     private void Exit()

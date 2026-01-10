@@ -12,6 +12,7 @@ namespace Street_Rod_AC.Screens.Game
         private readonly Models.GameState.GameState _gameState;
 
         public RelayCommand BackCommand { get; }
+        public RelayCommand ExitCommand { get; }
         public RelayCommand NewspaperCommand { get; }
         public RelayCommand GarageCommand { get; }
 
@@ -24,6 +25,7 @@ namespace Street_Rod_AC.Screens.Game
             _gameState = gameState;
 
             BackCommand = new RelayCommand(OnBack);
+            ExitCommand = new RelayCommand(OnExit);
             NewspaperCommand = new RelayCommand(OnNewspaper);
             GarageCommand = new RelayCommand(OnGarage);
         }
@@ -54,6 +56,24 @@ namespace Street_Rod_AC.Screens.Game
                     {
                         var mainMenuViewModel = new MainMenu.MainMenuScreenViewModel(_navigationService, _dialogService);
                         _navigationService.NavigateTo(mainMenuViewModel);
+                    }
+                });
+
+            _dialogService.ShowDialog(confirmDialog);
+        }
+
+        private void OnExit()
+        {
+            // Show confirmation dialog
+            var confirmDialog = new ConfirmationDialogViewModel(
+                _dialogService,
+                "Are you sure you want to exit? Your current game will remain saved.",
+                "Exit Game?",
+                confirmed =>
+                {
+                    if (confirmed)
+                    {
+                        System.Windows.Application.Current.Shutdown();
                     }
                 });
 

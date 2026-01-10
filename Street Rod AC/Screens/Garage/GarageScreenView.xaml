@@ -52,6 +52,32 @@
             </Button.Triggers>
         </Button>
 
+        <!-- Exit Button -->
+        <Button x:Name="ExitButton"
+                Grid.Row="0"
+                Style="{StaticResource ExitButtonStyle}"
+                Background="{StaticResource ExitButtonBrush}"
+                Command="{Binding ExitCommand}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Margin="20,94,0,0"
+                Opacity="0">
+            <Button.Triggers>
+                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <!-- Fade in -->
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                           From="0.0"
+                                           To="1.0"
+                                           BeginTime="0:0:0.3"
+                                           Duration="0:0:0.5"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Button.Triggers>
+        </Button>
+
         <!-- Main Content -->
         <Grid Grid.Row="0">
             <Grid.RowDefinitions>

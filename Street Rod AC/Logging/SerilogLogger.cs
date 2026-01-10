@@ -7,14 +7,9 @@ namespace Street_Rod_AC.Logging
     /// Serilog-based implementation of IAppLogger.
     /// Wraps Serilog behind application abstraction.
     /// </summary>
-    internal class SerilogLogger : IAppLogger
+    internal class SerilogLogger(ILogger logger) : IAppLogger
     {
-        private readonly ILogger _logger;
-
-        public SerilogLogger(ILogger logger)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
+        private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         public void Debug(string messageTemplate, params object?[] propertyValues)
         {

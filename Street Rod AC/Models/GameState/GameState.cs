@@ -61,8 +61,10 @@ namespace Street_Rod_AC.Models.GameState
 
         public static GameState CreateNew(string playerName)
         {
-            var state = new GameState();
-            state.Player = new Player(playerName);
+            var state = new GameState
+            {
+                Player = new Player(playerName)
+            };
 
             // TODO: Initialize used car market
             // TODO: Initialize used parts market

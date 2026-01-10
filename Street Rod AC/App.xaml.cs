@@ -64,12 +64,12 @@ namespace Street_Rod_AC
                 logger.Error("Assetto Corsa installation not found at path: {ACPath}",
                     AppSettings.Instance.AssettoCorsaPath);
 
-                System.Windows.MessageBox.Show(
+                var errorDialog = new Dialogs.Information.InformationDialogViewModel(
+                    DialogService,
                     $"Assetto Corsa installation not found at:\n{AppSettings.Instance.AssettoCorsaPath}\n\n" +
                     "Please verify the installation path in the configuration.",
-                    "Installation Not Found",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    "Installation Not Found");
+                DialogService.ShowDialog(errorDialog);
                 Shutdown();
                 return;
             }
@@ -106,11 +106,11 @@ namespace Street_Rod_AC
             {
                 logger.Critical(ex, "Critical error during car import");
 
-                System.Windows.MessageBox.Show(
+                var errorDialog = new Dialogs.Information.InformationDialogViewModel(
+                    DialogService,
                     $"Error importing Assetto Corsa content:\n{ex.Message}",
-                    "Import Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    "Import Error");
+                DialogService.ShowDialog(errorDialog);
                 Shutdown();
                 return;
             }

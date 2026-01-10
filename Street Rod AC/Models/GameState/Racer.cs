@@ -5,8 +5,8 @@ namespace Street_Rod_AC.Models.GameState
         public RacerType Type { get; set; } = type;
         public string Name { get; set; } = name;
         public RacerStats Stats { get; set; } = new RacerStats();
-        public List<Car> Cars { get; set; } = new List<Car>();
-        public List<Part> Parts { get; set; } = new List<Part>();
+        public List<Car> Cars { get; set; } = [];
+        public List<Part> Parts { get; set; } = [];
         public decimal Money { get; set; } = 0m;
         public RacerStatus Status { get; set; } = RacerStatus.ReadyToRace;
 

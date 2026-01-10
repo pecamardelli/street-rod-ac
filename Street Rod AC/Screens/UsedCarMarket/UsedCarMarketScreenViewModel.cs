@@ -93,7 +93,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             _listings = new ObservableCollection<UsedCarListingViewModel>();
             _listingsView = CollectionViewSource.GetDefaultView(_listings);
 
-            DealerOptions = new ObservableCollection<string> { "All Dealers" };
+            DealerOptions = ["All Dealers"];
 
             InitializeMarket();
         }
@@ -287,7 +287,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             // Add to player's garage
             if (_gameState.Player.Cars == null)
             {
-                _gameState.Player.Cars = new List<Car>();
+                _gameState.Player.Cars = [];
             }
             _gameState.Player.Cars.Add(carInstance);
 

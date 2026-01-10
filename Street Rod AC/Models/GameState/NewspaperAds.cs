@@ -7,8 +7,8 @@ namespace Street_Rod_AC.Models.GameState
 
         public NewspaperAds()
         {
-            Cars = new List<CarAd>();
-            Parts = new List<PartAd>();
+            Cars = [];
+            Parts = [];
         }
     }
 

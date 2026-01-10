@@ -10,7 +10,6 @@ using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.ViewModels;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Windows;
 
 namespace Street_Rod_AC.Screens.Garage
 {
@@ -24,6 +23,7 @@ namespace Street_Rod_AC.Screens.Garage
         private readonly IAppLogger _logger;
 
         public RelayCommand BackCommand { get; }
+        public RelayCommand ExitCommand { get; }
         public AsyncRelayCommand LaunchShowroomCommand { get; }
 
         private ObservableCollection<CarDisplayViewModel> _cars;
@@ -80,6 +80,7 @@ namespace Street_Rod_AC.Screens.Garage
             _logger = AppLoggerFactory.CreateLogger("Garage");
 
             BackCommand = new RelayCommand(OnBack);
+            ExitCommand = new RelayCommand(OnExit);
             LaunchShowroomCommand = new AsyncRelayCommand(OnLaunchShowroom, CanLaunchShowroom);
 
             _cars = new ObservableCollection<CarDisplayViewModel>();
@@ -173,21 +174,21 @@ namespace Street_Rod_AC.Screens.Garage
                 else
                 {
                     _logger.Error("Showroom launch failed: {Error}", result.ErrorMessage);
-                    System.Windows.MessageBox.Show(
+                    var errorDialog = new Dialogs.Information.InformationDialogViewModel(
+                        _dialogService,
                         $"Failed to launch showroom:\n\n{result.ErrorMessage}",
-                        "Launch Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                        "Launch Error");
+                    _dialogService.ShowDialog(errorDialog);
                 }
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, "Exception during showroom launch");
-                System.Windows.MessageBox.Show(
+                var errorDialog = new Dialogs.Information.InformationDialogViewModel(
+                    _dialogService,
                     $"Failed to launch showroom:\n\n{ex.Message}",
-                    "Launch Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    "Launch Error");
+                _dialogService.ShowDialog(errorDialog);
             }
         }
 
@@ -196,6 +197,24 @@ namespace Street_Rod_AC.Screens.Garage
             _logger.Information("Navigating back to game screen");
             var gameViewModel = new Game.GameScreenViewModel(_navigationService, _dialogService, _gameState);
             _navigationService.NavigateTo(gameViewModel);
+        }
+
+        private void OnExit()
+        {
+            // Show confirmation dialog
+            var confirmDialog = new Dialogs.Confirmation.ConfirmationDialogViewModel(
+                _dialogService,
+                "Are you sure you want to exit? Your current game will remain saved.",
+                "Exit Game?",
+                confirmed =>
+                {
+                    if (confirmed)
+                    {
+                        System.Windows.Application.Current.Shutdown();
+                    }
+                });
+
+            _dialogService.ShowDialog(confirmDialog);
         }
 
         public override void Enter()

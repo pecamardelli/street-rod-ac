@@ -59,7 +59,7 @@ namespace Street_Rod_AC.Services.Catalog
         {
             using var db = new LiteDatabase(_databasePath);
             var collection = db.GetCollection<CarProfile>(ProfilesCollection);
-            return collection.FindAll().ToList();
+            return [.. collection.FindAll()];
         }
 
         public bool ProfileExists(string carDefinitionId)

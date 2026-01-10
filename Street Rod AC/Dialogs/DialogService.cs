@@ -34,7 +34,6 @@ namespace Street_Rod_AC.Dialogs
         {
             if (CurrentDialog != null)
             {
-                // According to guidelines: only one dialog at a time
                 // Close current dialog before opening new one
                 CloseDialog();
             }

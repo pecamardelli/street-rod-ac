@@ -3,11 +3,14 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
+using Street_Rod_AC.Dialogs;
+using Street_Rod_AC.Dialogs.Information;
 
 namespace Street_Rod_AC;
 
 public partial class ShowroomOverlay : Window
 {
+    private readonly DialogService _dialogService;
     private Process? _showroomProcess;
     private DispatcherTimer? _positionTimer;
     private IntPtr _showroomWindowHandle = IntPtr.Zero;
@@ -34,6 +37,9 @@ public partial class ShowroomOverlay : Window
     public ShowroomOverlay()
     {
         InitializeComponent();
+
+        var app = (App)System.Windows.Application.Current;
+        _dialogService = app.DialogService;
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -53,10 +59,11 @@ public partial class ShowroomOverlay : Window
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Failed to launch showroom:\n\n{ex.Message}",
-                "Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            var errorDialog = new InformationDialogViewModel(
+                _dialogService,
+                $"Failed to launch showroom:\n\n{ex.Message}",
+                "Error");
+            _dialogService.ShowDialog(errorDialog);
             Close();
         }
     }
@@ -134,10 +141,11 @@ public partial class ShowroomOverlay : Window
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Failed to close showroom:\n\n{ex.Message}",
-                "Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            var errorDialog = new InformationDialogViewModel(
+                _dialogService,
+                $"Failed to close showroom:\n\n{ex.Message}",
+                "Error");
+            _dialogService.ShowDialog(errorDialog);
         }
         finally
         {

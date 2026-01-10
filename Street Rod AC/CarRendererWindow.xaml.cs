@@ -4,6 +4,8 @@ using System.Windows.Threading;
 using AcTools.Render.Forward;
 using AcTools.Render.Kn5Specific.Objects;
 using AcTools.Render.Kn5SpecificForward;
+using Street_Rod_AC.Dialogs;
+using Street_Rod_AC.Dialogs.Information;
 using Street_Rod_AC.Models.AC;
 using WinForms = System.Windows.Forms;
 using WinFormsIntegration = System.Windows.Forms.Integration;
@@ -12,6 +14,7 @@ namespace Street_Rod_AC;
 
 public partial class CarRendererWindow : Window
 {
+    private readonly DialogService _dialogService;
     private ForwardKn5ObjectRenderer? _renderer;
     private WinForms.Panel? _renderPanel;
     private DispatcherTimer? _renderTimer;
@@ -26,6 +29,10 @@ public partial class CarRendererWindow : Window
     public CarRendererWindow(CarInfo carInfo)
     {
         InitializeComponent();
+
+        var app = (App)System.Windows.Application.Current;
+        _dialogService = app.DialogService;
+
         _baseTitle = $"Car Viewer - {carInfo.Brand} {carInfo.Name}";
         Title = _baseTitle;
 
@@ -44,10 +51,11 @@ public partial class CarRendererWindow : Window
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Failed to create renderer:\n\n{ex.Message}",
-                "Renderer Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            var errorDialog = new InformationDialogViewModel(
+                _dialogService,
+                $"Failed to create renderer:\n\n{ex.Message}",
+                "Renderer Error");
+            _dialogService.ShowDialog(errorDialog);
             Close();
         }
     }
@@ -132,10 +140,11 @@ public partial class CarRendererWindow : Window
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Failed to initialize renderer:\n\n{ex.Message}",
-                "Initialization Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            var errorDialog = new InformationDialogViewModel(
+                _dialogService,
+                $"Failed to initialize renderer:\n\n{ex.Message}",
+                "Initialization Error");
+            _dialogService.ShowDialog(errorDialog);
             Close();
         }
     }
@@ -155,10 +164,11 @@ public partial class CarRendererWindow : Window
         catch (Exception ex)
         {
             _renderTimer?.Stop();
-            System.Windows.MessageBox.Show($"Rendering error:\n\n{ex.Message}",
-                "Render Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            var errorDialog = new InformationDialogViewModel(
+                _dialogService,
+                $"Rendering error:\n\n{ex.Message}",
+                "Render Error");
+            _dialogService.ShowDialog(errorDialog);
         }
     }
 

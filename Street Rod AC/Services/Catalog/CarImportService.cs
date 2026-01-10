@@ -12,11 +12,11 @@ namespace Street_Rod_AC.Services.Catalog
     /// <summary>
     /// Implements car import pipeline following the Import System Guidelines
     /// </summary>
-    public class CarImportService : ICarImportService
+    public class CarImportService(IContentCatalogRepository catalog) : ICarImportService
     {
-        private readonly IContentCatalogRepository _catalog;
-        private readonly AppSettings _settings;
-        private readonly IAppLogger _logger;
+        private readonly IContentCatalogRepository _catalog = catalog;
+        private readonly AppSettings _settings = AppSettings.Instance;
+        private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger(LogCategory.Import);
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -29,13 +29,6 @@ namespace Street_Rod_AC.Services.Catalog
         private static readonly HashSet<string> KunosPrefix = ["ks_", "abarth_", "alfa_", "bmw_", "ferrari_",
             "ford_", "lamborghini_", "lotus_", "maserati_", "mazda_", "mclaren_", "mercedes_",
             "nissan_", "pagani_", "porsche_", "praga_", "ruf_", "scuderia_", "shelby_", "tatuusfa1_"];
-
-        public CarImportService(IContentCatalogRepository catalog)
-        {
-            _catalog = catalog;
-            _settings = AppSettings.Instance;
-            _logger = AppLoggerFactory.CreateLogger(LogCategory.Import);
-        }
 
         public async Task<ImportResult> ImportCarsAsync(IProgress<ImportProgress>? progress = null)
         {
@@ -125,7 +118,7 @@ namespace Street_Rod_AC.Services.Catalog
         public async Task<ImportResult> IncrementalUpdateAsync(IProgress<ImportProgress>? progress = null)
         {
             var stopwatch = Stopwatch.StartNew();
-            var result = new ImportResult();
+            _ = new ImportResult();
 
             // Mark all existing cars as legacy first
             // Only cars found during this scan will be marked active
@@ -218,11 +211,10 @@ namespace Street_Rod_AC.Services.Catalog
                 // Parse tags
                 if (root.TryGetProperty("tags", out var tagsElement) && tagsElement.ValueKind == JsonValueKind.Array)
                 {
-                    carDef.Tags = tagsElement.EnumerateArray()
+                    carDef.Tags = [.. tagsElement.EnumerateArray()
                         .Where(x => x.ValueKind == JsonValueKind.String)
                         .Select(x => x.GetString() ?? string.Empty)
-                        .Where(x => !string.IsNullOrEmpty(x))
-                        .ToList();
+                        .Where(x => !string.IsNullOrEmpty(x))];
                 }
 
                 // Parse specs

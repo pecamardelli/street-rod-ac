@@ -11,7 +11,7 @@ namespace Street_Rod_AC.Logging
     public static class AppLoggerFactory
     {
         private static bool _isInitialized = false;
-        private static readonly object _lock = new object();
+        private static readonly object _lock = new();
 
         /// <summary>
         /// Initializes the global logging infrastructure.
