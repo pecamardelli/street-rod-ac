@@ -134,7 +134,8 @@ namespace Street_Rod_AC.Screens.LoadGame
                     _navigationService,
                     _dialogService,
                     gameState,
-                    app.CatalogRepository);
+                    app.CatalogRepository,
+                    app.Launcher);
                 _navigationService.NavigateTo(gameViewModel);
             }
             catch (Exception ex)

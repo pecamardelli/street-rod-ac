@@ -27,9 +27,9 @@ namespace Street_Rod_AC.Services
         Task<LaunchResult> LaunchShowroomAsync(ShowroomLaunchIntent intent);
 
         /// <summary>
-        /// Launch a full race session with the specified intent
+        /// Launch a race session (any type) with the specified intent
         /// </summary>
-        Task<LaunchResult> LaunchRaceAsync(RaceLaunchIntent intent);
+        Task<LaunchResult> LaunchRaceAsync(LaunchIntent intent);
 
         /// <summary>
         /// Whether an execution is currently locked (AC is running or being prepared)

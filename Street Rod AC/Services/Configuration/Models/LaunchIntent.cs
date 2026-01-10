@@ -82,4 +82,35 @@ namespace Street_Rod_AC.Services.Configuration.Models
             // Future: Add DisableAssistsIntent, OpponentIntent, etc.
         }
     }
+
+    /// <summary>
+    /// Intent to launch a drag race (1v1 quarter mile)
+    /// </summary>
+    public class DragRaceLaunchIntent : LaunchIntent
+    {
+        public string PlayerCarId { get; set; } = string.Empty;
+        public string PlayerSkin { get; set; } = string.Empty;
+        public string PlayerName { get; set; } = string.Empty;
+        public string OpponentCarId { get; set; } = string.Empty;
+        public string OpponentSkin { get; set; } = string.Empty;
+        public string OpponentName { get; set; } = string.Empty;
+
+        public override string Executable => "acs.exe";
+
+        public override string Description =>
+            $"Launch drag race: {PlayerName} vs {OpponentName}";
+
+        public override IEnumerable<ModificationIntent> GetConfigurationIntents()
+        {
+            yield return new DragRaceIntent
+            {
+                PlayerCarId = this.PlayerCarId,
+                PlayerSkin = this.PlayerSkin,
+                PlayerName = this.PlayerName,
+                OpponentCarId = this.OpponentCarId,
+                OpponentSkin = this.OpponentSkin,
+                OpponentName = this.OpponentName
+            };
+        }
+    }
 }

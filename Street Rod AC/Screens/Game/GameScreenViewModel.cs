@@ -2,9 +2,11 @@ using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Dialogs;
 using Street_Rod_AC.Dialogs.Confirmation;
 using Street_Rod_AC.Dialogs.Information;
+using Street_Rod_AC.Logging;
 using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.Services.Race;
 using Street_Rod_AC.ViewModels;
 using System.Diagnostics;
@@ -19,6 +21,7 @@ namespace Street_Rod_AC.Screens.Game
         private readonly DialogService _dialogService;
         private readonly Models.GameState.GameState _gameState;
         private readonly IContentCatalogRepository _catalogRepository;
+        private readonly IAssettoCorsaLauncher _launcher;
         private readonly DragRaceService _dragRaceService;
 
         public RelayCommand BackCommand { get; }
@@ -33,12 +36,14 @@ namespace Street_Rod_AC.Screens.Game
             NavigationService navigationService,
             DialogService dialogService,
             Models.GameState.GameState gameState,
-            IContentCatalogRepository catalogRepository)
+            IContentCatalogRepository catalogRepository,
+            IAssettoCorsaLauncher launcher)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
             _gameState = gameState;
             _catalogRepository = catalogRepository;
+            _launcher = launcher;
             _dragRaceService = new DragRaceService(catalogRepository);
 
             BackCommand = new RelayCommand(OnBack);
@@ -101,10 +106,10 @@ namespace Street_Rod_AC.Screens.Game
         private bool CanHitTheStreets()
         {
             // Player must have at least one car to race
-            return _gameState.Player.Cars.Count > 0;
+            return _gameState.Player.Cars.Count > 0 && !_launcher.IsExecutionLocked;
         }
 
-        private void OnHitTheStreets()
+        private async void OnHitTheStreets()
         {
             try
             {
@@ -152,14 +157,16 @@ namespace Street_Rod_AC.Screens.Game
                     return;
                 }
 
-                // Save race configuration using template
-                _dragRaceService.SaveRaceConfigurationFromTemplate(
-                    playerCarDef.Id,
-                    playerCar.SkinId,
-                    opponentCarDef.Id,
-                    opponentCar.SkinId,
-                    _gameState.Player.Name,
-                    opponentName);
+                // Create drag race launch intent
+                var dragRaceIntent = new DragRaceLaunchIntent
+                {
+                    PlayerCarId = playerCarDef.Id,
+                    PlayerSkin = playerCar.SkinId,
+                    PlayerName = _gameState.Player.Name,
+                    OpponentCarId = opponentCarDef.Id,
+                    OpponentSkin = opponentCar.SkinId,
+                    OpponentName = opponentName
+                };
 
                 var confirmMessage = $"Ready to race!\n\n" +
                     $"You: {playerCarDef?.Brand} {playerCarDef?.Name}\n" +
@@ -172,51 +179,25 @@ namespace Street_Rod_AC.Screens.Game
                     _dialogService,
                     confirmMessage,
                     "Drag Race",
-                    confirmed =>
+                    async confirmed =>
                     {
                         if (confirmed)
                         {
-                            // Launch AC directly
-                            try
+                            // Launch race through the proper pipeline
+                            var result = await _launcher.LaunchRaceAsync(dragRaceIntent);
+
+                            if (result.Success)
                             {
-                                var acPath = AppSettings.Instance.AssettoCorsaPath;
-                                if (string.IsNullOrEmpty(acPath))
-                                {
-                                    var launchErrorDialog = new InformationDialogViewModel(
-                                        _dialogService,
-                                        "Assetto Corsa installation path is not configured.",
-                                        "Configuration Error");
-                                    _dialogService.ShowDialog(launchErrorDialog);
-                                    return;
-                                }
-
-                                var acsExePath = Path.Combine(acPath, "acs.exe");
-                                if (!File.Exists(acsExePath))
-                                {
-                                    var launchErrorDialog = new InformationDialogViewModel(
-                                        _dialogService,
-                                        $"acs.exe not found at:\n{acsExePath}",
-                                        "Launch Error");
-                                    _dialogService.ShowDialog(launchErrorDialog);
-                                    return;
-                                }
-
-                                var processInfo = new ProcessStartInfo
-                                {
-                                    FileName = acsExePath,
-                                    WorkingDirectory = acPath,
-                                    UseShellExecute = false
-                                };
-
-                                Process.Start(processInfo);
+                                var logger = AppLoggerFactory.CreateLogger("GameScreenViewModel");
+                                logger.Information("Drag race completed successfully");
                             }
-                            catch (System.Exception launchEx)
+                            else
                             {
-                                var launchErrorDialog = new InformationDialogViewModel(
+                                var errorDialog = new InformationDialogViewModel(
                                     _dialogService,
-                                    $"Failed to launch Assetto Corsa:\n\n{launchEx.Message}",
+                                    $"Failed to launch drag race:\n\n{result.ErrorMessage}",
                                     "Launch Error");
-                                _dialogService.ShowDialog(launchErrorDialog);
+                                _dialogService.ShowDialog(errorDialog);
                             }
                         }
                     });

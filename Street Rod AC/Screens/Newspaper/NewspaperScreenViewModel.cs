@@ -58,7 +58,8 @@ namespace Street_Rod_AC.Screens.Newspaper
                 _navigationService,
                 _dialogService,
                 _gameState,
-                app.CatalogRepository);
+                app.CatalogRepository,
+                app.Launcher);
             _navigationService.NavigateTo(gameViewModel);
         }
 

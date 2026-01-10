@@ -67,4 +67,22 @@ namespace Street_Rod_AC.Services.Configuration.Models
 
         public override string TargetFile => "race.ini";
     }
+
+    /// <summary>
+    /// Intent to configure a drag race using the drag_race.ini template
+    /// </summary>
+    public class DragRaceIntent : ModificationIntent
+    {
+        public string PlayerCarId { get; set; } = string.Empty;
+        public string PlayerSkin { get; set; } = string.Empty;
+        public string PlayerName { get; set; } = string.Empty;
+        public string OpponentCarId { get; set; } = string.Empty;
+        public string OpponentSkin { get; set; } = string.Empty;
+        public string OpponentName { get; set; } = string.Empty;
+
+        public override string Description =>
+            $"Configure drag race: {PlayerName} ({PlayerCarId}) vs {OpponentName} ({OpponentCarId})";
+
+        public override string TargetFile => "race.ini";
+    }
 }

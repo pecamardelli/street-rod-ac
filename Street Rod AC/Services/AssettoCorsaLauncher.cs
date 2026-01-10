@@ -11,12 +11,12 @@ namespace Street_Rod_AC.Services
     /// Centralized service for launching Assetto Corsa.
     /// Implements the complete execution pipeline following the transaction model.
     /// </summary>
-    public class AssettoCorsaLauncher : IAssettoCorsaLauncher
+    public class AssettoCorsaLauncher(IIniModificationService iniService) : IAssettoCorsaLauncher
     {
-        private readonly IIniModificationService _iniService;
-        private readonly IAppLogger _logger;
-        private readonly SemaphoreSlim _executionLock;
-        private readonly List<string> _modifiedFiles;
+        private readonly IIniModificationService _iniService = iniService;
+        private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("ACLauncher");
+        private readonly SemaphoreSlim _executionLock = new SemaphoreSlim(1, 1);
+        private readonly List<string> _modifiedFiles = new List<string>();
 
         private Process? _currentProcess;
         private bool _isExecutionLocked;
@@ -27,20 +27,12 @@ namespace Street_Rod_AC.Services
         public event EventHandler<LaunchIntent>? ExecutionStarted;
         public event EventHandler<LaunchResult>? ExecutionEnded;
 
-        public AssettoCorsaLauncher(IIniModificationService iniService)
-        {
-            _iniService = iniService;
-            _logger = AppLoggerFactory.CreateLogger("ACLauncher");
-            _executionLock = new SemaphoreSlim(1, 1);
-            _modifiedFiles = new List<string>();
-        }
-
         public async Task<LaunchResult> LaunchShowroomAsync(ShowroomLaunchIntent intent)
         {
             return await ExecuteLaunchPipeline(intent);
         }
 
-        public async Task<LaunchResult> LaunchRaceAsync(RaceLaunchIntent intent)
+        public async Task<LaunchResult> LaunchRaceAsync(LaunchIntent intent)
         {
             return await ExecuteLaunchPipeline(intent);
         }

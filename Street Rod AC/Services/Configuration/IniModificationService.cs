@@ -47,6 +47,7 @@ namespace Street_Rod_AC.Services.Configuration
                 {
                     ShowroomIntent showroomIntent => ApplyShowroomIntent(showroomIntent),
                     DisableAssistsIntent assistsIntent => ApplyDisableAssistsIntent(assistsIntent),
+                    DragRaceIntent dragRaceIntent => ApplyDragRaceIntent(dragRaceIntent),
                     RaceConfigIntent raceIntent => ApplyRaceConfigIntent(raceIntent),
                     _ => throw new NotSupportedException($"Intent type not supported: {intent.GetType().Name}")
                 };
@@ -215,6 +216,89 @@ namespace Street_Rod_AC.Services.Configuration
                 intent.CarId, intent.SkinId, intent.TrackId, intent.TrackConfig ?? "(none)");
 
             return true;
+        }
+
+        private bool ApplyDragRaceIntent(DragRaceIntent intent)
+        {
+            var filePath = GetIniFilePath(intent.TargetFile);
+
+            // Template path (in application directory)
+            var templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Project Guidelines", "examples", "drag_race.ini");
+
+            _logger.Information("Applying drag race intent using template: {TemplatePath}", templatePath);
+
+            if (!File.Exists(templatePath))
+            {
+                _logger.Error("Drag race template not found at: {TemplatePath}", templatePath);
+                throw new FileNotFoundException($"Drag race template not found at: {templatePath}");
+            }
+
+            // Read template content
+            var templateContent = File.ReadAllText(templatePath);
+
+            // Replace values in template
+            // RACE section: MODEL and SKIN (for player car)
+            templateContent = ReplaceLine(templateContent, "[RACE]", "MODEL", intent.PlayerCarId);
+            templateContent = ReplaceLine(templateContent, "[RACE]", "SKIN", intent.PlayerSkin);
+
+            // CAR_0 section (player)
+            templateContent = ReplaceLine(templateContent, "[CAR_0]", "SKIN", intent.PlayerSkin);
+            templateContent = ReplaceLine(templateContent, "[CAR_0]", "DRIVER_NAME", intent.PlayerName);
+
+            // CAR_1 section (opponent)
+            templateContent = ReplaceLine(templateContent, "[CAR_1]", "MODEL", intent.OpponentCarId);
+            templateContent = ReplaceLine(templateContent, "[CAR_1]", "SKIN", intent.OpponentSkin);
+            templateContent = ReplaceLine(templateContent, "[CAR_1]", "DRIVER_NAME", intent.OpponentName);
+
+            // Write directly to race.ini (IniWriter will create backup automatically)
+            File.WriteAllText(filePath, templateContent);
+
+            _logger.Information("Applied drag race intent: Player={PlayerName} ({PlayerCarId}), Opponent={OpponentName} ({OpponentCarId})",
+                intent.PlayerName, intent.PlayerCarId, intent.OpponentName, intent.OpponentCarId);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Replace a specific key value in an INI section
+        /// </summary>
+        private string ReplaceLine(string content, string section, string key, string newValue)
+        {
+            var lines = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            var inSection = false;
+            var result = new List<string>();
+
+            foreach (var line in lines)
+            {
+                var trimmedLine = line.Trim();
+
+                // Check if we're entering the target section
+                if (trimmedLine.Equals(section, StringComparison.OrdinalIgnoreCase))
+                {
+                    inSection = true;
+                    result.Add(line);
+                    continue;
+                }
+
+                // Check if we're leaving the section
+                if (inSection && trimmedLine.StartsWith("[") && trimmedLine.EndsWith("]"))
+                {
+                    inSection = false;
+                }
+
+                // If we're in the target section and this line has the key
+                if (inSection && trimmedLine.StartsWith(key + "=", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Replace the value
+                    result.Add($"{key}={newValue}");
+                }
+                else
+                {
+                    result.Add(line);
+                }
+            }
+
+            return string.Join(Environment.NewLine, result);
         }
     }
 }

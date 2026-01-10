@@ -180,8 +180,9 @@ public class DragRaceService
 
     /// <summary>
     /// Save race configuration to Documents\Assetto Corsa\cfg\race.ini using template
+    /// Returns the backup file path if a backup was created, null otherwise
     /// </summary>
-    public void SaveRaceConfigurationFromTemplate(
+    public string? SaveRaceConfigurationFromTemplate(
         string playerCarId,
         string playerSkin,
         string opponentCarId,
@@ -208,9 +209,10 @@ public class DragRaceService
         }
 
         // Backup existing race.ini if it exists
+        string? backupPath = null;
         if (File.Exists(raceIniPath))
         {
-            var backupPath = Path.Combine(cfgPath, $"race.ini.backup.{DateTime.Now:yyyyMMddHHmmss}");
+            backupPath = Path.Combine(cfgPath, $"race.ini.backup.{DateTime.Now:yyyyMMddHHmmss}");
             File.Copy(raceIniPath, backupPath, true);
             _logger.Information("Backed up existing race.ini to {BackupPath}", backupPath);
         }
@@ -240,6 +242,41 @@ public class DragRaceService
         // Write to race.ini
         File.WriteAllText(raceIniPath, templateContent);
         _logger.Information("Race configuration saved successfully");
+
+        return backupPath;
+    }
+
+    /// <summary>
+    /// Restore the original race.ini from backup and delete the backup
+    /// </summary>
+    public void RestoreBackupAndCleanup(string? backupPath)
+    {
+        if (string.IsNullOrEmpty(backupPath) || !File.Exists(backupPath))
+        {
+            _logger.Warning("No backup file to restore: {BackupPath}", backupPath);
+            return;
+        }
+
+        try
+        {
+            // Get race.ini path
+            var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var acDocumentsPath = Path.Combine(documentsPath, "Assetto Corsa");
+            var cfgPath = Path.Combine(acDocumentsPath, "cfg");
+            var raceIniPath = Path.Combine(cfgPath, "race.ini");
+
+            // Restore backup to race.ini
+            File.Copy(backupPath, raceIniPath, true);
+            _logger.Information("Restored race.ini from backup: {BackupPath}", backupPath);
+
+            // Delete backup file
+            File.Delete(backupPath);
+            _logger.Information("Deleted backup file: {BackupPath}", backupPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failed to restore backup and cleanup: {BackupPath}", backupPath);
+        }
     }
 
     /// <summary>

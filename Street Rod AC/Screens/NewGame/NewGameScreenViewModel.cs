@@ -90,7 +90,8 @@ namespace Street_Rod_AC.Screens.NewGame
                                 _navigationService,
                                 _dialogService,
                                 gameState,
-                                theApp.CatalogRepository);
+                                theApp.CatalogRepository,
+                                theApp.Launcher);
                             _navigationService.NavigateTo(gameViewModel);
                         }
                     });
@@ -106,7 +107,8 @@ namespace Street_Rod_AC.Screens.NewGame
                     _navigationService,
                     _dialogService,
                     gameState,
-                    app.CatalogRepository);
+                    app.CatalogRepository,
+                    app.Launcher);
                 _navigationService.NavigateTo(gameViewModel);
             }
         }
