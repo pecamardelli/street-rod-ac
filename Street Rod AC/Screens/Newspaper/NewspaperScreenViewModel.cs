@@ -53,7 +53,12 @@ namespace Street_Rod_AC.Screens.Newspaper
 
         private void OnBack()
         {
-            var gameViewModel = new Game.GameScreenViewModel(_navigationService, _dialogService, _gameState);
+            var app = (App)System.Windows.Application.Current;
+            var gameViewModel = new Game.GameScreenViewModel(
+                _navigationService,
+                _dialogService,
+                _gameState,
+                app.CatalogRepository);
             _navigationService.NavigateTo(gameViewModel);
         }
 

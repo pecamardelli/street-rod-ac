@@ -118,12 +118,13 @@
                         Tag="Go to garage"/>
             </StackPanel>
 
-            <!-- Second Row: Garage Button -->
+            <!-- Second Row: Hit the Streets Button -->
             <StackPanel Orientation="Horizontal"
                        HorizontalAlignment="Center">
-                <!-- Garage Button -->
+                <!-- Hit the Streets Button -->
                 <Button Style="{StaticResource GameButtonStyle}"
                         Background="{StaticResource GarageButtonBrush}"
+                        Command="{Binding HitTheStreetsCommand}"
                         Tag="Hit the streets"/>
             </StackPanel>
         </StackPanel>

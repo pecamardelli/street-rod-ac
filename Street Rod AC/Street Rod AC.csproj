@@ -51,6 +51,10 @@
     <None Update="..\..\actools\Libraries\SlimDX-x64\SlimDX.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\Project Guidelines\examples\*.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Project Guidelines\examples\%(Filename)%(Extension)</Link>
+    </None>
   </ItemGroup>
 
 </Project>

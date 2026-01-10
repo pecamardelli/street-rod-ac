@@ -1,7 +1,15 @@
+using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Dialogs;
 using Street_Rod_AC.Dialogs.Confirmation;
+using Street_Rod_AC.Dialogs.Information;
 using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Services;
+using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Race;
 using Street_Rod_AC.ViewModels;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 
 namespace Street_Rod_AC.Screens.Game
 {
@@ -10,24 +18,34 @@ namespace Street_Rod_AC.Screens.Game
         private readonly NavigationService _navigationService;
         private readonly DialogService _dialogService;
         private readonly Models.GameState.GameState _gameState;
+        private readonly IContentCatalogRepository _catalogRepository;
+        private readonly DragRaceService _dragRaceService;
 
         public RelayCommand BackCommand { get; }
         public RelayCommand ExitCommand { get; }
         public RelayCommand NewspaperCommand { get; }
         public RelayCommand GarageCommand { get; }
+        public RelayCommand HitTheStreetsCommand { get; }
 
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
 
-        public GameScreenViewModel(NavigationService navigationService, DialogService dialogService, Models.GameState.GameState gameState)
+        public GameScreenViewModel(
+            NavigationService navigationService,
+            DialogService dialogService,
+            Models.GameState.GameState gameState,
+            IContentCatalogRepository catalogRepository)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
             _gameState = gameState;
+            _catalogRepository = catalogRepository;
+            _dragRaceService = new DragRaceService(catalogRepository);
 
             BackCommand = new RelayCommand(OnBack);
             ExitCommand = new RelayCommand(OnExit);
             NewspaperCommand = new RelayCommand(OnNewspaper);
             GarageCommand = new RelayCommand(OnGarage);
+            HitTheStreetsCommand = new RelayCommand(OnHitTheStreets, CanHitTheStreets);
         }
 
         private void OnNewspaper()
@@ -39,7 +57,7 @@ namespace Street_Rod_AC.Screens.Game
         private void OnGarage()
         {
             var app = (App)System.Windows.Application.Current;
-            var garageViewModel = new Garage.GarageScreenViewModel(_navigationService, _dialogService, _gameState, app.CatalogRepository, app.Launcher);
+            var garageViewModel = new Garage.GarageScreenViewModel(_navigationService, _dialogService, _gameState, _catalogRepository, app.Launcher);
             _navigationService.NavigateTo(garageViewModel);
         }
 
@@ -78,6 +96,141 @@ namespace Street_Rod_AC.Screens.Game
                 });
 
             _dialogService.ShowDialog(confirmDialog);
+        }
+
+        private bool CanHitTheStreets()
+        {
+            // Player must have at least one car to race
+            return _gameState.Player.Cars.Count > 0;
+        }
+
+        private void OnHitTheStreets()
+        {
+            try
+            {
+                // Check if player has a car
+                if (_gameState.Player.Cars.Count == 0)
+                {
+                    var errorDialog = new InformationDialogViewModel(
+                        _dialogService,
+                        "You need to own a car before you can race!\n\nVisit the newspaper to find cars for sale.",
+                        "No Car");
+                    _dialogService.ShowDialog(errorDialog);
+                    return;
+                }
+
+                // Get player's first car (we can add car selection later)
+                var playerCar = _gameState.Player.Cars[0];
+
+                // Select random opponent from used car market
+                var opponentCar = _dragRaceService.SelectRandomOpponent(_gameState);
+
+                if (opponentCar == null)
+                {
+                    var errorDialog = new InformationDialogViewModel(
+                        _dialogService,
+                        "No opponents available! The used car market needs to be populated.",
+                        "No Opponents");
+                    _dialogService.ShowDialog(errorDialog);
+                    return;
+                }
+
+                // Generate random opponent name
+                var opponentName = _dragRaceService.GenerateOpponentName();
+
+                // Get car definitions from catalog
+                var playerCarDef = _catalogRepository.GetCar(playerCar.DefinitionId);
+                var opponentCarDef = _catalogRepository.GetCar(opponentCar.CarDefinitionId);
+
+                if (playerCarDef == null || opponentCarDef == null)
+                {
+                    var errorDialog = new InformationDialogViewModel(
+                        _dialogService,
+                        "Failed to load car definitions from catalog.",
+                        "Error");
+                    _dialogService.ShowDialog(errorDialog);
+                    return;
+                }
+
+                // Save race configuration using template
+                _dragRaceService.SaveRaceConfigurationFromTemplate(
+                    playerCarDef.Id,
+                    playerCar.SkinId,
+                    opponentCarDef.Id,
+                    opponentCar.SkinId,
+                    _gameState.Player.Name,
+                    opponentName);
+
+                var confirmMessage = $"Ready to race!\n\n" +
+                    $"You: {playerCarDef?.Brand} {playerCarDef?.Name}\n" +
+                    $"Opponent: {opponentName}\n" +
+                    $"    {opponentCarDef?.Brand} {opponentCarDef?.Name}\n\n" +
+                    $"Track: Drag Strip (1/4 mile)\n\n" +
+                    $"Launch Assetto Corsa?";
+
+                var confirmDialog = new ConfirmationDialogViewModel(
+                    _dialogService,
+                    confirmMessage,
+                    "Drag Race",
+                    confirmed =>
+                    {
+                        if (confirmed)
+                        {
+                            // Launch AC directly
+                            try
+                            {
+                                var acPath = AppSettings.Instance.AssettoCorsaPath;
+                                if (string.IsNullOrEmpty(acPath))
+                                {
+                                    var launchErrorDialog = new InformationDialogViewModel(
+                                        _dialogService,
+                                        "Assetto Corsa installation path is not configured.",
+                                        "Configuration Error");
+                                    _dialogService.ShowDialog(launchErrorDialog);
+                                    return;
+                                }
+
+                                var acsExePath = Path.Combine(acPath, "acs.exe");
+                                if (!File.Exists(acsExePath))
+                                {
+                                    var launchErrorDialog = new InformationDialogViewModel(
+                                        _dialogService,
+                                        $"acs.exe not found at:\n{acsExePath}",
+                                        "Launch Error");
+                                    _dialogService.ShowDialog(launchErrorDialog);
+                                    return;
+                                }
+
+                                var processInfo = new ProcessStartInfo
+                                {
+                                    FileName = acsExePath,
+                                    WorkingDirectory = acPath,
+                                    UseShellExecute = false
+                                };
+
+                                Process.Start(processInfo);
+                            }
+                            catch (System.Exception launchEx)
+                            {
+                                var launchErrorDialog = new InformationDialogViewModel(
+                                    _dialogService,
+                                    $"Failed to launch Assetto Corsa:\n\n{launchEx.Message}",
+                                    "Launch Error");
+                                _dialogService.ShowDialog(launchErrorDialog);
+                            }
+                        }
+                    });
+
+                _dialogService.ShowDialog(confirmDialog);
+            }
+            catch (System.Exception ex)
+            {
+                var errorDialog = new InformationDialogViewModel(
+                    _dialogService,
+                    $"Failed to create drag race:\n\n{ex.Message}",
+                    "Error");
+                _dialogService.ShowDialog(errorDialog);
+            }
         }
 
         public override void Enter()

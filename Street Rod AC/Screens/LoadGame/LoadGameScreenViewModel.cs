@@ -130,7 +130,11 @@ namespace Street_Rod_AC.Screens.LoadGame
                 }
 
                 // Navigate to game screen with loaded state
-                var gameViewModel = new Game.GameScreenViewModel(_navigationService, _dialogService, gameState);
+                var gameViewModel = new Game.GameScreenViewModel(
+                    _navigationService,
+                    _dialogService,
+                    gameState,
+                    app.CatalogRepository);
                 _navigationService.NavigateTo(gameViewModel);
             }
             catch (Exception ex)

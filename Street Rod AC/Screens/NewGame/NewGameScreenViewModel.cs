@@ -85,7 +85,12 @@ namespace Street_Rod_AC.Screens.NewGame
                             // Create new save, overwriting the existing one
                             var gameState = repository.CreateNew(saveName, playerName);
                             // Navigate to game screen
-                            var gameViewModel = new Game.GameScreenViewModel(_navigationService, _dialogService, gameState);
+                            var theApp = (App)System.Windows.Application.Current;
+                            var gameViewModel = new Game.GameScreenViewModel(
+                                _navigationService,
+                                _dialogService,
+                                gameState,
+                                theApp.CatalogRepository);
                             _navigationService.NavigateTo(gameViewModel);
                         }
                     });
@@ -97,7 +102,11 @@ namespace Street_Rod_AC.Screens.NewGame
                 // Create new save
                 var gameState = repository.CreateNew(saveName, playerName);
                 // Navigate to game screen
-                var gameViewModel = new Game.GameScreenViewModel(_navigationService, _dialogService, gameState);
+                var gameViewModel = new Game.GameScreenViewModel(
+                    _navigationService,
+                    _dialogService,
+                    gameState,
+                    app.CatalogRepository);
                 _navigationService.NavigateTo(gameViewModel);
             }
         }

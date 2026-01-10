@@ -195,7 +195,12 @@ namespace Street_Rod_AC.Screens.Garage
         private void OnBack()
         {
             _logger.Information("Navigating back to game screen");
-            var gameViewModel = new Game.GameScreenViewModel(_navigationService, _dialogService, _gameState);
+            var app = (App)System.Windows.Application.Current;
+            var gameViewModel = new Game.GameScreenViewModel(
+                _navigationService,
+                _dialogService,
+                _gameState,
+                app.CatalogRepository);
             _navigationService.NavigateTo(gameViewModel);
         }
 
