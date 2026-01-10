@@ -157,7 +157,7 @@
                     <!-- Car Details Overlay -->
                     <Border Background="#00000088"
                            VerticalAlignment="Bottom"
-                           Padding="20"
+                           Padding="20,10"
                            Visibility="{Binding HasCars, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Grid>
                             <Grid.ColumnDefinitions>

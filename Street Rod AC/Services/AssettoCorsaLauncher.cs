@@ -85,6 +85,16 @@ namespace Street_Rod_AC.Services
 
                         // Restore and abort
                         await RestoreConfiguration();
+
+                        // Delete backups for showroom launches
+                        if (intent is ShowroomLaunchIntent)
+                        {
+                            foreach (var modifiedFile in _modifiedFiles)
+                            {
+                                _iniService.DeleteBackups(modifiedFile);
+                            }
+                        }
+
                         return LaunchResult.CreateFailure(error, startTime, DateTime.Now);
                     }
 
@@ -102,6 +112,16 @@ namespace Street_Rod_AC.Services
                     var error = $"Executable not found: {exePath}";
                     _logger.Error(error);
                     await RestoreConfiguration();
+
+                    // Delete backups for showroom launches
+                    if (intent is ShowroomLaunchIntent)
+                    {
+                        foreach (var modifiedFile in _modifiedFiles)
+                        {
+                            _iniService.DeleteBackups(modifiedFile);
+                        }
+                    }
+
                     return LaunchResult.CreateFailure(error, startTime, DateTime.Now);
                 }
 
@@ -126,6 +146,16 @@ namespace Street_Rod_AC.Services
                     var error = "Failed to start process";
                     _logger.Error(error);
                     await RestoreConfiguration();
+
+                    // Delete backups for showroom launches
+                    if (intent is ShowroomLaunchIntent)
+                    {
+                        foreach (var modifiedFile in _modifiedFiles)
+                        {
+                            _iniService.DeleteBackups(modifiedFile);
+                        }
+                    }
+
                     return LaunchResult.CreateFailure(error, startTime, DateTime.Now);
                 }
 
@@ -147,6 +177,16 @@ namespace Street_Rod_AC.Services
                 _logger.Information("PHASE: Cleanup");
                 await RestoreConfiguration();
 
+                // Delete backups for showroom launches
+                if (intent is ShowroomLaunchIntent)
+                {
+                    _logger.Information("Deleting showroom backup files");
+                    foreach (var modifiedFile in _modifiedFiles)
+                    {
+                        _iniService.DeleteBackups(modifiedFile);
+                    }
+                }
+
                 var result = LaunchResult.CreateSuccess(startTime, endTime, exitCode);
                 result.ModifiedFiles.AddRange(_modifiedFiles);
 
@@ -162,6 +202,16 @@ namespace Street_Rod_AC.Services
 
                 // Always restore on error
                 await RestoreConfiguration();
+
+                // Delete backups for showroom launches even on error
+                if (intent is ShowroomLaunchIntent)
+                {
+                    _logger.Information("Deleting showroom backup files after error");
+                    foreach (var modifiedFile in _modifiedFiles)
+                    {
+                        _iniService.DeleteBackups(modifiedFile);
+                    }
+                }
 
                 var result = LaunchResult.CreateFailure(ex.Message, startTime, endTime);
                 result.ModifiedFiles.AddRange(_modifiedFiles);

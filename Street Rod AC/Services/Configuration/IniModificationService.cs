@@ -128,6 +128,35 @@ namespace Street_Rod_AC.Services.Configuration
             }
         }
 
+        public void DeleteBackups(string fileName)
+        {
+            try
+            {
+                var filePath = GetIniFilePath(fileName);
+                var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
+                var fileNameOnly = Path.GetFileNameWithoutExtension(filePath);
+                var extension = Path.GetExtension(filePath);
+
+                var backupPattern = $"{fileNameOnly}.backup_*{extension}";
+                var backups = Directory.GetFiles(directory, backupPattern);
+
+                foreach (var backupFile in backups)
+                {
+                    File.Delete(backupFile);
+                    _logger.Debug("Deleted backup: {BackupFile}", Path.GetFileName(backupFile));
+                }
+
+                if (backups.Length > 0)
+                {
+                    _logger.Information("Deleted {Count} backup file(s) for {FileName}", backups.Length, fileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "Failed to delete backups for {FileName}", fileName);
+            }
+        }
+
         // ===== INTENT APPLICATION METHODS =====
 
         private bool ApplyShowroomIntent(ShowroomIntent intent)
