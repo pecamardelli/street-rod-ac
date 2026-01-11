@@ -48,6 +48,12 @@ namespace Street_Rod_AC.Screens.Game
             NewspaperCommand = new RelayCommand(OnNewspaper);
             GarageCommand = new RelayCommand(OnGarage);
             HitTheStreetsCommand = new RelayCommand(OnHitTheStreets, CanHitTheStreets);
+
+            // Auto-select first car if none selected
+            if (_gameState.Player.SelectedCarInstanceId == null && _gameState.Player.Cars.Count > 0)
+            {
+                _gameState.Player.SelectedCarInstanceId = _gameState.Player.Cars[0].InstanceId;
+            }
         }
 
         private void OnNewspaper()
@@ -61,6 +67,15 @@ namespace Street_Rod_AC.Screens.Game
             var app = (App)System.Windows.Application.Current;
             var garageViewModel = new Garage.GarageScreenViewModel(_navigationService, _dialogService, _gameState, _catalogRepository, app.Launcher);
             _navigationService.NavigateTo(garageViewModel);
+        }
+
+        private Models.GameState.Car? GetSelectedCar()
+        {
+            if (_gameState.Player.SelectedCarInstanceId == null)
+                return null;
+
+            return _gameState.Player.Cars.FirstOrDefault(c =>
+                c.InstanceId == _gameState.Player.SelectedCarInstanceId);
         }
 
         private void OnBack()
@@ -121,8 +136,17 @@ namespace Street_Rod_AC.Screens.Game
                     return;
                 }
 
-                // Get player's first car (we can add car selection later)
-                var playerCar = _gameState.Player.Cars[0];
+                // Get player's selected car
+                var playerCar = GetSelectedCar();
+                if (playerCar == null)
+                {
+                    var errorDialog = new InformationDialogViewModel(
+                        _dialogService,
+                        "No car selected! Please select a car first.",
+                        "No Car Selected");
+                    _dialogService.ShowDialog(errorDialog);
+                    return;
+                }
 
                 // Select first available opponent from used car market
                 var opponentCar = _gameState.UsedCarMarket.FirstOrDefault(c => !c.IsSold);

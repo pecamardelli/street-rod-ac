@@ -129,6 +129,9 @@ namespace Street_Rod_AC.Screens.LoadGame
                     return;
                 }
 
+                // Store current game state in App for saving on exit
+                app.CurrentGameState = gameState;
+
                 // Navigate to game screen with loaded state
                 var gameViewModel = new Game.GameScreenViewModel(
                     _navigationService,

@@ -85,25 +85,55 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Selected Car Display Bar (Upper Middle Section) -->
-            <Border Grid.Row="0"
-                    Background="#2A2A2A"
-                    BorderBrush="#404040"
-                    BorderThickness="2"
-                    CornerRadius="5"
-                    Margin="0,80,0,20"
+            <!-- Selected Car Display Bar (Clickable) -->
+            <Button Grid.Row="0"
+                    Command="{Binding SelectCarCommand}"
                     HorizontalAlignment="Center"
-                    Padding="30,15"
-                    Width="800"
+                    Margin="0,80,0,20"
+                    Cursor="Hand"
                     Opacity="0">
-                <Border.Effect>
-                    <DropShadowEffect Color="Black"
-                                    Direction="270"
-                                    ShadowDepth="3"
-                                    BlurRadius="10"
-                                    Opacity="0.5"/>
-                </Border.Effect>
-                <Border.Triggers>
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="CarDisplayBorder"
+                                           Background="#2A2A2A"
+                                           BorderBrush="#404040"
+                                           BorderThickness="2"
+                                           CornerRadius="5"
+                                           Padding="30,15"
+                                           Width="800">
+                                        <Border.Effect>
+                                            <DropShadowEffect Color="Black"
+                                                            Direction="270"
+                                                            ShadowDepth="3"
+                                                            BlurRadius="10"
+                                                            Opacity="0.5"/>
+                                        </Border.Effect>
+                                        <TextBlock Text="{Binding SelectedCarDisplay}"
+                                                  FontSize="24"
+                                                  FontWeight="Bold"
+                                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="CarDisplayBorder" Property="BorderBrush" Value="#606060"/>
+                                            <Setter TargetName="CarDisplayBorder" Property="Background" Value="#333333"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="CarDisplayBorder" Property="BorderBrush" Value="#808080"/>
+                                            <Setter TargetName="CarDisplayBorder" Property="Background" Value="#3A3A3A"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+                <Button.Triggers>
                     <EventTrigger RoutedEvent="FrameworkElement.Loaded">
                         <BeginStoryboard>
                             <Storyboard>
@@ -115,15 +145,8 @@
                             </Storyboard>
                         </BeginStoryboard>
                     </EventTrigger>
-                </Border.Triggers>
-
-                <TextBlock Text="{Binding SelectedCarDisplay}"
-                          FontSize="24"
-                          FontWeight="Bold"
-                          Foreground="{StaticResource TextPrimaryBrush}"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"/>
-            </Border>
+                </Button.Triggers>
+            </Button>
 
             <!-- Car Preview Container -->
             <Border Grid.Row="1"

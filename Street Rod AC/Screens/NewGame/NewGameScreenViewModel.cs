@@ -84,8 +84,12 @@ namespace Street_Rod_AC.Screens.NewGame
                         {
                             // Create new save, overwriting the existing one
                             var gameState = repository.CreateNew(saveName, playerName);
-                            // Navigate to game screen
+
+                            // Store current game state in App for saving on exit
                             var theApp = (App)System.Windows.Application.Current;
+                            theApp.CurrentGameState = gameState;
+
+                            // Navigate to game screen
                             var gameViewModel = new Game.GameScreenViewModel(
                                 _navigationService,
                                 _dialogService,
@@ -102,6 +106,10 @@ namespace Street_Rod_AC.Screens.NewGame
             {
                 // Create new save
                 var gameState = repository.CreateNew(saveName, playerName);
+
+                // Store current game state in App for saving on exit
+                app.CurrentGameState = gameState;
+
                 // Navigate to game screen
                 var gameViewModel = new Game.GameScreenViewModel(
                     _navigationService,

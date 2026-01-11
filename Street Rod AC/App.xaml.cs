@@ -31,6 +31,9 @@ namespace Street_Rod_AC
         public IUsedCarMarketService MarketService { get; private set; }
         public IIniModificationService IniModificationService { get; private set; }
 
+        // Current game state (set when a game is loaded or created)
+        public Models.GameState.GameState? CurrentGameState { get; set; }
+
         public App()
         {
             // Initialize logging FIRST
@@ -125,6 +128,22 @@ namespace Street_Rod_AC
         {
             var logger = AppLoggerFactory.CreateLogger(LogCategory.App);
             logger.Information("Application shutting down");
+
+            // Save current game state if one is loaded
+            if (CurrentGameState != null && !string.IsNullOrEmpty(CurrentGameState.SaveName))
+            {
+                try
+                {
+                    logger.Information("Saving game state on exit: {SaveName}", CurrentGameState.SaveName);
+                    GameStateRepository.Save(CurrentGameState, CurrentGameState.SaveName);
+                    logger.Information("Game state saved successfully");
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Failed to save game state on exit");
+                }
+            }
+
             AppLoggerFactory.Shutdown();
             base.OnExit(e);
         }

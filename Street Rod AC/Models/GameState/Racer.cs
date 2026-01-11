@@ -18,6 +18,8 @@ namespace Street_Rod_AC.Models.GameState
 
     public class Player : Racer
     {
+        public Guid? SelectedCarInstanceId { get; set; }
+
         public Player(string name) : base(RacerType.Player, name)
         {
             // Player starts with money

@@ -25,6 +25,7 @@ namespace Street_Rod_AC.Screens.Garage
         public RelayCommand BackCommand { get; }
         public RelayCommand ExitCommand { get; }
         public AsyncRelayCommand LaunchShowroomCommand { get; }
+        public RelayCommand SelectCarCommand { get; }
 
         private ObservableCollection<CarDisplayViewModel> _cars;
         public ObservableCollection<CarDisplayViewModel> Cars
@@ -82,6 +83,7 @@ namespace Street_Rod_AC.Screens.Garage
             BackCommand = new RelayCommand(OnBack);
             ExitCommand = new RelayCommand(OnExit);
             LaunchShowroomCommand = new AsyncRelayCommand(OnLaunchShowroom, CanLaunchShowroom);
+            SelectCarCommand = new RelayCommand(OnSelectCar);
 
             _cars = new ObservableCollection<CarDisplayViewModel>();
 
@@ -135,10 +137,19 @@ namespace Street_Rod_AC.Screens.Garage
                 Cars.Add(displayVm);
             }
 
-            // Select first car by default
+            // Select the car that matches the game state's selected car, or first car by default
             if (Cars.Count > 0)
             {
-                SelectedCar = Cars[0];
+                if (_gameState.Player.SelectedCarInstanceId != null)
+                {
+                    var selectedCarVm = Cars.FirstOrDefault(c =>
+                        c.CarInstance.InstanceId == _gameState.Player.SelectedCarInstanceId);
+                    SelectedCar = selectedCarVm ?? Cars[0];
+                }
+                else
+                {
+                    SelectedCar = Cars[0];
+                }
             }
 
             _logger.Information("Loaded {Count} cars into garage view", Cars.Count);
@@ -190,6 +201,19 @@ namespace Street_Rod_AC.Screens.Garage
                     "Launch Error");
                 _dialogService.ShowDialog(errorDialog);
             }
+        }
+
+        private void OnSelectCar()
+        {
+            _logger.Information("Navigating to car selection screen");
+            var app = (App)System.Windows.Application.Current;
+            var carSelectionViewModel = new CarSelection.CarSelectionScreenViewModel(
+                _navigationService,
+                _dialogService,
+                _gameState,
+                _catalogRepo,
+                app.GameStateRepository);
+            _navigationService.NavigateTo(carSelectionViewModel);
         }
 
         private void OnBack()
