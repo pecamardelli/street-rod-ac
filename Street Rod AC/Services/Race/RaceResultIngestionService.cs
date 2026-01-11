@@ -290,11 +290,21 @@ namespace Street_Rod_AC.Services.Race
 
         /// <summary>
         /// Get the archive path for a processed session
+        /// Organized by player name: %AppData%\StreetRodAC\RaceResults\{PlayerName}\{session_id}.json
         /// </summary>
         private string GetArchivePath(string sessionId)
         {
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            return Path.Combine(appDataPath, "StreetRodAC", "RaceResults", $"{sessionId}.json");
+
+            // Get player name from current game state
+            var app = System.Windows.Application.Current as App;
+            var playerName = app?.CurrentGameState?.Player?.Name ?? "Unknown";
+
+            // Sanitize player name for file system (remove invalid characters)
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var safePlayerName = string.Join("_", playerName.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
+
+            return Path.Combine(appDataPath, "StreetRodAC", "RaceResults", safePlayerName, $"{sessionId}.json");
         }
 
         /// <summary>
