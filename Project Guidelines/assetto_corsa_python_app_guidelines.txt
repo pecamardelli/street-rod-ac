@@ -190,13 +190,15 @@ Exactly one output file per session
 Written only once, at session end
 
 Stored in:
-Documents\Assetto Corsa\out\StreetRodAC
+Documents\Assetto Corsa\out\StreetRodRaceApp
 
 Filename format: {uuid}.json
 
-The script must create the StreetRodAC folder if it doesn't exist
+The script must create the StreetRodRaceApp folder if it doesn't exist
 
-The out\StreetRodAC folder is treated as a temporary drop zone.
+Files must be written atomically (temp file + rename) to prevent corruption
+
+The out\StreetRodRaceApp folder is treated as a temporary drop zone.
 
 OUTPUT DATA CONTENT
 
@@ -207,6 +209,7 @@ Top-level structure includes:
 metadata object containing:
   schema_version
   script_version
+  source (application identifier)
   generated_at timestamp
 
 session object containing:
@@ -347,6 +350,12 @@ script_version
 Type: string
 Description: Version of the Python race script
 Example: "1.2.0"
+
+source
+Type: string
+Description: Application identifier for file ownership validation
+Value: "StreetRodRaceApp"
+Required: Yes
 
 generated_at
 Type: string (ISO 8601 timestamp)
@@ -502,6 +511,7 @@ EXAMPLE STRUCTURE
   "metadata": {
     "schema_version": "1.0",
     "script_version": "1.0.0",
+    "source": "StreetRodRaceApp",
     "generated_at": "2025-01-11T12:34:56Z"
   },
   "session": {

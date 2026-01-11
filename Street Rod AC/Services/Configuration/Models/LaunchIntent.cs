@@ -95,6 +95,26 @@ namespace Street_Rod_AC.Services.Configuration.Models
         public string OpponentSkin { get; set; } = string.Empty;
         public string OpponentName { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Player's car instance ID (for result correlation)
+        /// </summary>
+        public Guid PlayerCarInstanceId { get; set; }
+
+        /// <summary>
+        /// Opponent's car instance ID (for result correlation)
+        /// </summary>
+        public Guid OpponentCarInstanceId { get; set; }
+
+        /// <summary>
+        /// Cash wager amount (0 if no wager)
+        /// </summary>
+        public decimal CashWager { get; set; }
+
+        /// <summary>
+        /// Whether this is a pink slip race (loser gives up their car)
+        /// </summary>
+        public bool IsPinkSlip { get; set; }
+
         public override string Executable => "acs.exe";
 
         public override string Description =>

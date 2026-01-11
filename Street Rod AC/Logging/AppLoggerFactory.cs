@@ -104,5 +104,6 @@ namespace Street_Rod_AC.Logging
         public const string Dialog = "Dialog";
         public const string Performance = "Performance";
         public const string Diagnostics = "Diagnostics";
+        public const string RaceIngestion = "RaceIngestion";
     }
 }

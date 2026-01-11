@@ -321,6 +321,7 @@ def write_session_output():
             "metadata": {
                 "schema_version": SCHEMA_VERSION,
                 "script_version": SCRIPT_VERSION,
+                "source": "StreetRodRaceApp",
                 "generated_at": datetime.utcnow().isoformat() + 'Z'
             },
             "session": {
@@ -336,18 +337,23 @@ def write_session_output():
 
         # Determine output directory
         documents_path = os.path.expanduser("~\\Documents")
-        output_dir = os.path.join(documents_path, "Assetto Corsa", "out", "StreetRodAC")
+        output_dir = os.path.join(documents_path, "Assetto Corsa", "out", "StreetRodRaceApp")
 
         # Create directory if it doesn't exist
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        # Write output file with UUID as filename
+        # Write output file with UUID as filename (atomic write)
         filename = "{0}.json".format(session_id)
         filepath = os.path.join(output_dir, filename)
+        temp_filepath = filepath + ".tmp"
 
-        with open(filepath, 'w') as f:
+        # Write to temporary file first
+        with open(temp_filepath, 'w') as f:
             json.dump(output_data, f, indent=2)
+
+        # Atomic rename (safe even if AC crashes during write)
+        os.replace(temp_filepath, filepath)
 
         ac.log("Street Rod Race App: Session data written to " + filepath)
 

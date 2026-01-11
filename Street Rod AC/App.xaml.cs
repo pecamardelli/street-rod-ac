@@ -30,6 +30,7 @@ namespace Street_Rod_AC
         public ICarProfileService ProfileService { get; private set; }
         public IUsedCarMarketService MarketService { get; private set; }
         public IIniModificationService IniModificationService { get; private set; }
+        public Services.Race.IRaceResultIngestionService RaceResultIngestionService { get; private set; }
 
         // Current game state (set when a game is loaded or created)
         public Models.GameState.GameState? CurrentGameState { get; set; }
@@ -43,7 +44,6 @@ namespace Street_Rod_AC
 
             ContentService = new AssettoCorsaContentService();
             IniModificationService = new IniModificationService();
-            Launcher = new AssettoCorsaLauncher(IniModificationService);
             NavigationService = new NavigationService();
             DialogService = new DialogService();
             GameStateRepository = new GameStateRepository();
@@ -52,6 +52,20 @@ namespace Street_Rod_AC
             ProfileRepository = new CarProfileRepository();
             ProfileService = new CarProfileService(CatalogRepository, ProfileRepository);
             MarketService = new UsedCarMarketService(CatalogRepository, ProfileRepository);
+
+            // Race result services
+            var raceResultValidator = new Services.Race.Validation.RaceResultValidator();
+            var sessionRepository = new Services.Race.RaceSessionRepository();
+            var sessionDeduplicator = new Services.Race.Validation.SessionDeduplicator(sessionRepository);
+            var raceResultProcessor = new Services.Race.RaceResultProcessor(GameStateRepository, sessionRepository);
+            RaceResultIngestionService = new Services.Race.RaceResultIngestionService(
+                raceResultValidator,
+                sessionDeduplicator,
+                raceResultProcessor,
+                sessionRepository);
+
+            // Pass race result service to launcher
+            Launcher = new AssettoCorsaLauncher(IniModificationService, RaceResultIngestionService);
         }
 
         protected override async void OnStartup(StartupEventArgs e)
@@ -116,6 +130,19 @@ namespace Street_Rod_AC
                 DialogService.ShowDialog(errorDialog);
                 Shutdown();
                 return;
+            }
+
+            // Process orphaned race results
+            try
+            {
+                logger.Information("Processing orphaned race result files");
+                var orphanedResult = await RaceResultIngestionService.ProcessOrphanedResultsAsync();
+                logger.Information("Orphaned results processed: {Processed} files, {Errors} errors",
+                    orphanedResult.FilesProcessed, orphanedResult.Errors.Count);
+            }
+            catch (Exception ex)
+            {
+                logger.Warning(ex, "Failed to process orphaned race results - continuing startup");
             }
 
             // Navigate to initial screen

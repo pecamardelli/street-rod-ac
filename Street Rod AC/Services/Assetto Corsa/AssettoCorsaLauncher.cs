@@ -11,9 +11,12 @@ namespace Street_Rod_AC.Services
     /// Centralized service for launching Assetto Corsa.
     /// Implements the complete execution pipeline following the transaction model.
     /// </summary>
-    public class AssettoCorsaLauncher(IIniModificationService iniService) : IAssettoCorsaLauncher
+    public class AssettoCorsaLauncher(
+        IIniModificationService iniService,
+        Race.IRaceResultIngestionService raceResultService) : IAssettoCorsaLauncher
     {
         private readonly IIniModificationService _iniService = iniService;
+        private readonly Race.IRaceResultIngestionService _raceResultService = raceResultService;
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("ACLauncher");
         private readonly SemaphoreSlim _executionLock = new(1, 1);
         private readonly List<string> _modifiedFiles = [];
@@ -164,6 +167,31 @@ namespace Street_Rod_AC.Services
 
                 _logger.Information("Assetto Corsa exited. ExitCode: {ExitCode}, Duration: {Duration}s",
                     exitCode, (endTime - startTime).TotalSeconds);
+
+                // PHASE 5.5: RACE RESULT INGESTION (only for race launches)
+                if (intent is DragRaceLaunchIntent dragIntent)
+                {
+                    _logger.Information("PHASE: Race Result Ingestion");
+
+                    // Extract race context from metadata
+                    Models.Race.RaceContext? context = null;
+                    if (intent.Metadata.TryGetValue("RaceContext", out var ctxObj))
+                        context = ctxObj as Models.Race.RaceContext;
+
+                    try
+                    {
+                        // Ingest results (blocks until complete)
+                        var ingestionResult = await _raceResultService.IngestResultsAsync(context);
+
+                        _logger.Information("Ingestion complete: Processed={Processed}, Duplicates={Duplicates}, Quarantined={Quarantined}, Errors={Errors}",
+                            ingestionResult.FilesProcessed, ingestionResult.FilesDuplicate,
+                            ingestionResult.FilesQuarantined, ingestionResult.Errors.Count);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, "Race result ingestion failed - continuing with cleanup");
+                    }
+                }
 
                 // PHASE 6: CLEANUP
                 _logger.Information("PHASE: Cleanup");

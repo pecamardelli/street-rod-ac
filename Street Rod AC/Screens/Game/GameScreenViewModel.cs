@@ -186,8 +186,29 @@ namespace Street_Rod_AC.Screens.Game
                     PlayerName = _gameState.Player.Name,
                     OpponentCarId = opponentCarDef.Id,
                     OpponentSkin = opponentCar.SkinId,
-                    OpponentName = opponentName
+                    OpponentName = opponentName,
+
+                    // New fields for race context
+                    PlayerCarInstanceId = playerCar.InstanceId,
+                    OpponentCarInstanceId = Guid.Empty,  // TODO: Need proper opponent car instance when opponent system is implemented
+                    CashWager = 100.00m,  // Hardcoded $100 wager for now
+                    IsPinkSlip = false    // Not a pink slip race by default
                 };
+
+                // Create race context and store in metadata
+                var raceContext = new Street_Rod_AC.Models.Race.RaceContext
+                {
+                    PlayerName = _gameState.Player.Name,
+                    OpponentName = opponentName,
+                    PlayerCarInstanceId = playerCar.InstanceId,
+                    OpponentCarInstanceId = Guid.Empty,  // TODO: Need proper opponent car instance
+                    CashWager = dragRaceIntent.CashWager,
+                    IsPinkSlip = dragRaceIntent.IsPinkSlip,
+                    TrackId = "drag_strip",  // TODO: Get from track selection
+                    RaceType = Street_Rod_AC.Models.Race.RaceType.DragRace
+                };
+
+                dragRaceIntent.Metadata["RaceContext"] = raceContext;
 
                 var confirmMessage = $"Ready to race!\n\n" +
                     $"You: {playerCarDef?.Brand} {playerCarDef?.Name}\n" +
