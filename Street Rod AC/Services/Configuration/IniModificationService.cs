@@ -233,6 +233,19 @@ namespace Street_Rod_AC.Services.Configuration
                 throw new FileNotFoundException($"Drag race template not found at: {templatePath}");
             }
 
+            // Create backup if file exists (before we modify it)
+            if (File.Exists(filePath))
+            {
+                var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
+                var fileName = Path.GetFileNameWithoutExtension(filePath);
+                var extension = Path.GetExtension(filePath);
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var backupPath = Path.Combine(directory, $"{fileName}.backup_{timestamp}{extension}");
+
+                File.Copy(filePath, backupPath, false);
+                _logger.Debug("Created backup: {BackupPath}", Path.GetFileName(backupPath));
+            }
+
             // Read template content
             var templateContent = File.ReadAllText(templatePath);
 
@@ -250,7 +263,7 @@ namespace Street_Rod_AC.Services.Configuration
             templateContent = ReplaceLine(templateContent, "[CAR_1]", "SKIN", intent.OpponentSkin);
             templateContent = ReplaceLine(templateContent, "[CAR_1]", "DRIVER_NAME", intent.OpponentName);
 
-            // Write directly to race.ini (IniWriter will create backup automatically)
+            // Write to race.ini
             File.WriteAllText(filePath, templateContent);
 
             _logger.Information("Applied drag race intent: Player={PlayerName} ({PlayerCarId}), Opponent={OpponentName} ({OpponentCarId})",

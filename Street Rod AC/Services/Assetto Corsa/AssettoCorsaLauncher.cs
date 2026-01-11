@@ -15,8 +15,8 @@ namespace Street_Rod_AC.Services
     {
         private readonly IIniModificationService _iniService = iniService;
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("ACLauncher");
-        private readonly SemaphoreSlim _executionLock = new SemaphoreSlim(1, 1);
-        private readonly List<string> _modifiedFiles = new List<string>();
+        private readonly SemaphoreSlim _executionLock = new(1, 1);
+        private readonly List<string> _modifiedFiles = [];
 
         private Process? _currentProcess;
         private bool _isExecutionLocked;

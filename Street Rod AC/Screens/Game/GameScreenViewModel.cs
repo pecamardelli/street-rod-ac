@@ -7,7 +7,6 @@ using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Configuration.Models;
-using Street_Rod_AC.Services.Race;
 using Street_Rod_AC.ViewModels;
 using System.Diagnostics;
 using System.IO;
@@ -22,7 +21,6 @@ namespace Street_Rod_AC.Screens.Game
         private readonly Models.GameState.GameState _gameState;
         private readonly IContentCatalogRepository _catalogRepository;
         private readonly IAssettoCorsaLauncher _launcher;
-        private readonly DragRaceService _dragRaceService;
 
         public RelayCommand BackCommand { get; }
         public RelayCommand ExitCommand { get; }
@@ -44,7 +42,6 @@ namespace Street_Rod_AC.Screens.Game
             _gameState = gameState;
             _catalogRepository = catalogRepository;
             _launcher = launcher;
-            _dragRaceService = new DragRaceService(catalogRepository);
 
             BackCommand = new RelayCommand(OnBack);
             ExitCommand = new RelayCommand(OnExit);
@@ -127,8 +124,8 @@ namespace Street_Rod_AC.Screens.Game
                 // Get player's first car (we can add car selection later)
                 var playerCar = _gameState.Player.Cars[0];
 
-                // Select random opponent from used car market
-                var opponentCar = _dragRaceService.SelectRandomOpponent(_gameState);
+                // Select first available opponent from used car market
+                var opponentCar = _gameState.UsedCarMarket.FirstOrDefault(c => !c.IsSold);
 
                 if (opponentCar == null)
                 {
@@ -140,8 +137,8 @@ namespace Street_Rod_AC.Screens.Game
                     return;
                 }
 
-                // Generate random opponent name
-                var opponentName = _dragRaceService.GenerateOpponentName();
+                // Hardcoded opponent name for now
+                var opponentName = "Street Racer";
 
                 // Get car definitions from catalog
                 var playerCarDef = _catalogRepository.GetCar(playerCar.DefinitionId);
