@@ -58,7 +58,7 @@ namespace Street_Rod_AC
 
             // Opponent services (must be initialized before GameStateRepository)
             OpponentRepository = new OpponentRepository();
-            OpponentInitializationService = new OpponentInitializationService(OpponentRepository);
+            OpponentInitializationService = new OpponentInitializationService(OpponentRepository, CatalogRepository, ProfileRepository);
             OpponentChallengeService = new OpponentChallengeService(CatalogRepository, ProfileRepository);
 
             // Game state repository (depends on opponent initialization service)

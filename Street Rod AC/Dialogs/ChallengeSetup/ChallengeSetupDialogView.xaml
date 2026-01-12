@@ -55,9 +55,9 @@
                             <TextBlock FontSize="20"
                                       FontWeight="Bold"
                                       Foreground="{StaticResource TextPrimaryBrush}">
-                                <Run Text="{Binding OpponentName}"/>
+                                <Run Text="{Binding OpponentName, Mode=OneWay}"/>
                                 <Run Text=" &quot;" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                <Run Text="{Binding OpponentNickname}" Foreground="#FFD700"/>
+                                <Run Text="{Binding OpponentNickname, Mode=OneWay}" Foreground="#FFD700"/>
                                 <Run Text="&quot;" Foreground="{StaticResource TextSecondaryBrush}"/>
                             </TextBlock>
 

@@ -173,6 +173,17 @@ namespace Street_Rod_AC.Services.Opponents
             Player player,
             decimal cashWager)
         {
+            // Check if opponent has any money at all (safety check)
+            if (opponent.Money <= 0)
+            {
+                return new ChallengeResponse
+                {
+                    Accepted = false,
+                    Message = GetInsufficientFundsMessage(opponent),
+                    DeclineReason = ChallengeDeclineReason.InsufficientFunds
+                };
+            }
+
             // Check if opponent has enough money
             if (cashWager > opponent.Money)
             {

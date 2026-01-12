@@ -122,11 +122,19 @@ namespace Street_Rod_AC.Screens.Diner
                     continue;
                 }
 
-                // Get portrait path
+                // Get portrait path and resolve to absolute path
                 var portraitPath = opponent.PortraitPath;
-                if (!string.IsNullOrEmpty(portraitPath) && !File.Exists(portraitPath))
+                if (!string.IsNullOrEmpty(portraitPath))
                 {
-                    portraitPath = null;
+                    // Remove leading slash if present and make it relative to app directory
+                    var relativePath = portraitPath.TrimStart('/', '\\');
+                    portraitPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativePath);
+
+                    if (!File.Exists(portraitPath))
+                    {
+                        _logger.Warning("Portrait not found for opponent {Name}: {Path}", opponent.Name, portraitPath);
+                        portraitPath = null;
+                    }
                 }
 
                 // Calculate difficulty relative to player

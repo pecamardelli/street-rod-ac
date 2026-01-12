@@ -151,7 +151,7 @@
                                                                         <TextBlock FontSize="16"
                                                                                   FontWeight="Bold"
                                                                                   Foreground="{StaticResource TextPrimaryBrush}">
-                                                                            <Run Text="{Binding Name}"/>
+                                                                            <Run Text="{Binding Name, Mode=OneWay}"/>
                                                                         </TextBlock>
 
                                                                         <!-- Nickname -->
@@ -159,7 +159,7 @@
                                                                                   Foreground="#FFD700"
                                                                                   Margin="0,2,0,5">
                                                                             <Run Text="&quot;"/>
-                                                                            <Run Text="{Binding Nickname}"/>
+                                                                            <Run Text="{Binding Nickname, Mode=OneWay}"/>
                                                                             <Run Text="&quot;"/>
                                                                         </TextBlock>
 
@@ -174,9 +174,9 @@
                                                                                 <TextBlock.Foreground>
                                                                                     <SolidColorBrush Color="{Binding DifficultyColor}"/>
                                                                                 </TextBlock.Foreground>
-                                                                                <Run Text="{Binding ReputationTier}"/>
+                                                                                <Run Text="{Binding ReputationTier, Mode=OneWay}"/>
                                                                                 <Run Text=" ("/>
-                                                                                <Run Text="{Binding Reputation}"/>
+                                                                                <Run Text="{Binding Reputation, Mode=OneWay}"/>
                                                                                 <Run Text=")"/>
                                                                             </TextBlock>
                                                                         </StackPanel>
@@ -261,7 +261,7 @@
                                   HorizontalAlignment="Center"
                                   Margin="0,0,0,10">
                             <Run Text="&quot;"/>
-                            <Run Text="{Binding SelectedOpponent.Nickname}"/>
+                            <Run Text="{Binding SelectedOpponent.Nickname, Mode=OneWay}"/>
                             <Run Text="&quot;"/>
                         </TextBlock>
 
@@ -281,9 +281,9 @@
                                 <TextBlock.Foreground>
                                     <SolidColorBrush Color="{Binding SelectedOpponent.DifficultyColor}"/>
                                 </TextBlock.Foreground>
-                                <Run Text="{Binding SelectedOpponent.ReputationTier}"/>
+                                <Run Text="{Binding SelectedOpponent.ReputationTier, Mode=OneWay}"/>
                                 <Run Text=" ("/>
-                                <Run Text="{Binding SelectedOpponent.Reputation}"/>
+                                <Run Text="{Binding SelectedOpponent.Reputation, Mode=OneWay}"/>
                                 <Run Text=")"/>
                             </TextBlock>
                         </Border>
