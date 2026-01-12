@@ -123,7 +123,7 @@
                        HorizontalAlignment="Center">
                 <!-- Hit the Streets Button -->
                 <Button Style="{StaticResource GameButtonStyle}"
-                        Background="{StaticResource GarageButtonBrush}"
+                        Background="{StaticResource HitTheStreetsButtonBrush}"
                         Command="{Binding HitTheStreetsCommand}"
                         Tag="Hit the streets"/>
             </StackPanel>
