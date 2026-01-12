@@ -16,6 +16,7 @@
              xmlns:diner="clr-namespace:Street_Rod_AC.Screens.Diner"
              xmlns:confirmation="clr-namespace:Street_Rod_AC.Dialogs.Confirmation"
              xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
+             xmlns:challengeSetup="clr-namespace:Street_Rod_AC.Dialogs.ChallengeSetup"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -91,6 +92,10 @@
 
             <DataTemplate DataType="{x:Type information:InformationDialogViewModel}">
                 <information:InformationDialogView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type challengeSetup:ChallengeSetupDialogViewModel}">
+                <challengeSetup:ChallengeSetupDialogView/>
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

@@ -52,6 +52,350 @@
             </Button.Triggers>
         </Button>
 
+        <!-- Main Content -->
+        <Grid Grid.Row="0" Margin="20,100,20,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="400"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Opponent List -->
+            <Border Grid.Column="0"
+                   Background="#2A2A2AA0"
+                   BorderBrush="#404040"
+                   BorderThickness="2"
+                   CornerRadius="5"
+                   Margin="0,0,10,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0"
+                           Background="#1A1A1A"
+                           BorderBrush="#404040"
+                           BorderThickness="0,0,0,1"
+                           Padding="15">
+                        <TextBlock Text="OPPONENTS AT THE DINER"
+                                  FontSize="16"
+                                  FontWeight="Bold"
+                                  Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </Border>
+
+                    <!-- List -->
+                    <ScrollViewer Grid.Row="1"
+                                 VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding Opponents}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- Opponent Card -->
+                                    <Button Command="{Binding DataContext.SelectOpponentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                           CommandParameter="{Binding}"
+                                           Background="Transparent"
+                                           BorderThickness="0"
+                                           Padding="0"
+                                           Margin="10"
+                                           HorizontalContentAlignment="Stretch"
+                                           Cursor="Hand">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="CardBorder"
+                                                                   Background="#1A1A1A"
+                                                                   BorderThickness="2"
+                                                                   CornerRadius="5"
+                                                                   Padding="10">
+                                                                <Border.BorderBrush>
+                                                                    <SolidColorBrush Color="{Binding DifficultyBorderColor}"/>
+                                                                </Border.BorderBrush>
+
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="80"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                    </Grid.ColumnDefinitions>
+
+                                                                    <!-- Portrait -->
+                                                                    <Border Grid.Column="0"
+                                                                           Width="70"
+                                                                           Height="70"
+                                                                           Background="#2A2A2A"
+                                                                           BorderBrush="#404040"
+                                                                           BorderThickness="1"
+                                                                           CornerRadius="5"
+                                                                           Margin="0,0,10,0">
+                                                                        <Grid>
+                                                                            <Image Source="{Binding PortraitPath}"
+                                                                                  Stretch="UniformToFill"
+                                                                                  Visibility="{Binding HasPortrait, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                                                                            <TextBlock Text="?"
+                                                                                      FontSize="32"
+                                                                                      FontWeight="Bold"
+                                                                                      Foreground="#404040"
+                                                                                      HorizontalAlignment="Center"
+                                                                                      VerticalAlignment="Center"
+                                                                                      Visibility="{Binding HasPortrait, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                                                                        </Grid>
+                                                                    </Border>
+
+                                                                    <!-- Info -->
+                                                                    <StackPanel Grid.Column="1"
+                                                                               VerticalAlignment="Center">
+                                                                        <!-- Name -->
+                                                                        <TextBlock FontSize="16"
+                                                                                  FontWeight="Bold"
+                                                                                  Foreground="{StaticResource TextPrimaryBrush}">
+                                                                            <Run Text="{Binding Name}"/>
+                                                                        </TextBlock>
+
+                                                                        <!-- Nickname -->
+                                                                        <TextBlock FontSize="12"
+                                                                                  Foreground="#FFD700"
+                                                                                  Margin="0,2,0,5">
+                                                                            <Run Text="&quot;"/>
+                                                                            <Run Text="{Binding Nickname}"/>
+                                                                            <Run Text="&quot;"/>
+                                                                        </TextBlock>
+
+                                                                        <!-- Reputation -->
+                                                                        <StackPanel Orientation="Horizontal"
+                                                                                   Margin="0,0,0,2">
+                                                                            <TextBlock Text="Reputation: "
+                                                                                      FontSize="11"
+                                                                                      Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                                            <TextBlock FontSize="11"
+                                                                                      FontWeight="Bold">
+                                                                                <TextBlock.Foreground>
+                                                                                    <SolidColorBrush Color="{Binding DifficultyColor}"/>
+                                                                                </TextBlock.Foreground>
+                                                                                <Run Text="{Binding ReputationTier}"/>
+                                                                                <Run Text=" ("/>
+                                                                                <Run Text="{Binding Reputation}"/>
+                                                                                <Run Text=")"/>
+                                                                            </TextBlock>
+                                                                        </StackPanel>
+
+                                                                        <!-- Record -->
+                                                                        <TextBlock Text="{Binding RecordDisplay}"
+                                                                                  FontSize="10"
+                                                                                  Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                                    </StackPanel>
+                                                                </Grid>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="CardBorder" Property="Background" Value="#2A2A2A"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Opponent Detail Panel -->
+            <Border Grid.Column="1"
+                   Background="#2A2A2AA0"
+                   BorderBrush="#404040"
+                   BorderThickness="2"
+                   CornerRadius="5"
+                   Margin="10,0,0,0"
+                   Visibility="{Binding HasSelectedOpponent, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <StackPanel Grid.Row="0">
+                        <!-- Portrait -->
+                        <Border Width="150"
+                               Height="150"
+                               Background="#1A1A1A"
+                               BorderBrush="#404040"
+                               BorderThickness="2"
+                               CornerRadius="5"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,15">
+                            <Grid>
+                                <Image Source="{Binding SelectedOpponent.PortraitPath}"
+                                      Stretch="UniformToFill"
+                                      Visibility="{Binding SelectedOpponent.HasPortrait, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                                <TextBlock Text="?"
+                                          FontSize="72"
+                                          FontWeight="Bold"
+                                          Foreground="#404040"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Visibility="{Binding SelectedOpponent.HasPortrait, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Name -->
+                        <TextBlock Text="{Binding SelectedOpponent.Name}"
+                                  FontSize="24"
+                                  FontWeight="Bold"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  HorizontalAlignment="Center"
+                                  Margin="0,0,0,5"/>
+
+                        <!-- Nickname -->
+                        <TextBlock FontSize="16"
+                                  Foreground="#FFD700"
+                                  HorizontalAlignment="Center"
+                                  Margin="0,0,0,10">
+                            <Run Text="&quot;"/>
+                            <Run Text="{Binding SelectedOpponent.Nickname}"/>
+                            <Run Text="&quot;"/>
+                        </TextBlock>
+
+                        <!-- Reputation Badge -->
+                        <Border Background="#1A1A1A"
+                               BorderThickness="2"
+                               CornerRadius="5"
+                               Padding="10,5"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,15">
+                            <Border.BorderBrush>
+                                <SolidColorBrush Color="{Binding SelectedOpponent.DifficultyBorderColor}"/>
+                            </Border.BorderBrush>
+                            <TextBlock FontSize="14"
+                                      FontWeight="Bold"
+                                      HorizontalAlignment="Center">
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="{Binding SelectedOpponent.DifficultyColor}"/>
+                                </TextBlock.Foreground>
+                                <Run Text="{Binding SelectedOpponent.ReputationTier}"/>
+                                <Run Text=" ("/>
+                                <Run Text="{Binding SelectedOpponent.Reputation}"/>
+                                <Run Text=")"/>
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Details -->
+                    <StackPanel Grid.Row="1"
+                               Margin="0,10,0,10">
+                        <!-- Record -->
+                        <Border Background="#1A1A1A"
+                               BorderBrush="#404040"
+                               BorderThickness="1"
+                               CornerRadius="5"
+                               Padding="10"
+                               Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="RECORD"
+                                          FontSize="12"
+                                          FontWeight="Bold"
+                                          Foreground="{StaticResource TextSecondaryBrush}"
+                                          Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding SelectedOpponent.RecordDisplay}"
+                                          FontSize="18"
+                                          FontWeight="Bold"
+                                          Foreground="{StaticResource TextPrimaryBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Car -->
+                        <Border Background="#1A1A1A"
+                               BorderBrush="#404040"
+                               BorderThickness="1"
+                               CornerRadius="5"
+                               Padding="10">
+                            <StackPanel>
+                                <TextBlock Text="CURRENT CAR"
+                                          FontSize="12"
+                                          FontWeight="Bold"
+                                          Foreground="{StaticResource TextSecondaryBrush}"
+                                          Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding SelectedOpponent.CarDisplay}"
+                                          FontSize="16"
+                                          FontWeight="Bold"
+                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                          TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Challenge Button -->
+                    <Button Grid.Row="2"
+                           Content="CHALLENGE TO A RACE"
+                           Command="{Binding ChallengeCommand}"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="#1A1A1A"
+                           Background="#FFD700"
+                           BorderThickness="0"
+                           Padding="20,15"
+                           Cursor="Hand"
+                           HorizontalAlignment="Stretch">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="ButtonBorder"
+                                                   Background="{TemplateBinding Background}"
+                                                   BorderBrush="{TemplateBinding BorderBrush}"
+                                                   BorderThickness="{TemplateBinding BorderThickness}"
+                                                   CornerRadius="5"
+                                                   Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="ButtonBorder" Property="Background" Value="#FFA500"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="ButtonBorder" Property="Background" Value="#FF8C00"/>
+                                                </Trigger>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter TargetName="ButtonBorder" Property="Background" Value="#404040"/>
+                                                    <Setter Property="Foreground" Value="#808080"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- No Opponent Selected Message -->
+            <Border Grid.Column="1"
+                   Background="#2A2A2AA0"
+                   BorderBrush="#404040"
+                   BorderThickness="2"
+                   CornerRadius="5"
+                   Margin="10,0,0,0"
+                   Visibility="{Binding HasSelectedOpponent, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                <TextBlock Text="Select an opponent from the list"
+                          FontSize="18"
+                          Foreground="{StaticResource TextSecondaryBrush}"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"/>
+            </Border>
+        </Grid>
+
         <!-- Bottom Nav Bar -->
         <Border Grid.Row="1"
                 Background="#404040"

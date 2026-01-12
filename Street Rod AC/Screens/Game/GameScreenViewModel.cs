@@ -122,7 +122,14 @@ namespace Street_Rod_AC.Screens.Game
 
         private void OnHitTheStreets()
         {
-            var dinerViewModel = new Diner.DinerScreenViewModel(_navigationService, _dialogService, _gameState);
+            var app = (App)System.Windows.Application.Current;
+            var dinerViewModel = new Diner.DinerScreenViewModel(
+                _navigationService,
+                _dialogService,
+                _gameState,
+                _catalogRepository,
+                app.OpponentChallengeService,
+                _launcher);
             _navigationService.NavigateTo(dinerViewModel);
         }
 

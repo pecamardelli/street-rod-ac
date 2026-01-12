@@ -51,6 +51,10 @@ namespace Street_Rod_AC.Services.Opponents
             // Create opponent
             var opponent = new Opponent(name, age, gender, skill, aggression);
 
+            // Initialize reputation based on age and skill
+            // Older, more skilled opponents should start with higher reputation
+            opponent.Stats.Reputation = CalculateInitialReputation(age, skill);
+
             return opponent;
         }
 
@@ -95,6 +99,64 @@ namespace Street_Rod_AC.Services.Opponents
                 Gender.Other => _random.Next(-3, 4),     // Neutral
                 _ => 0
             };
+        }
+
+        /// <summary>
+        /// Calculate initial reputation based on age and skill
+        /// Older, more experienced racers start with higher reputation
+        /// Higher skill indicates more natural talent, affecting initial reputation
+        /// </summary>
+        private int CalculateInitialReputation(int age, int skill)
+        {
+            // Base reputation starts at 40-60 range
+            var baseReputation = _random.Next(40, 61);
+
+            // Age factor: older racers are more established
+            // 18-25: -5 to 0 (rookies)
+            // 26-35: 0 to +5 (established)
+            // 36-45: +5 to +10 (veterans)
+            // 46+: +3 to +8 (legends or past their prime)
+            int ageBonus;
+            if (age < 26)
+            {
+                ageBonus = _random.Next(-5, 1);
+            }
+            else if (age < 36)
+            {
+                ageBonus = _random.Next(0, 6);
+            }
+            else if (age < 46)
+            {
+                ageBonus = _random.Next(5, 11);
+            }
+            else
+            {
+                ageBonus = _random.Next(3, 9);
+            }
+
+            // Skill factor: high skill means natural talent
+            // 80-85: -5 to 0
+            // 86-92: 0 to +5
+            // 93-100: +5 to +10
+            int skillBonus;
+            if (skill < 86)
+            {
+                skillBonus = _random.Next(-5, 1);
+            }
+            else if (skill < 93)
+            {
+                skillBonus = _random.Next(0, 6);
+            }
+            else
+            {
+                skillBonus = _random.Next(5, 11);
+            }
+
+            // Calculate final reputation
+            var reputation = baseReputation + ageBonus + skillBonus;
+
+            // Clamp to valid range (30-70 for new opponents, they need to prove themselves)
+            return Math.Max(30, Math.Min(70, reputation));
         }
     }
 }

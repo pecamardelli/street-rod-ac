@@ -83,7 +83,7 @@ namespace Street_Rod_AC.Services.Opponents
 
             // Shuffle and take first N
             var shuffled = allOpponents.OrderBy(x => _random.Next()).ToList();
-            return shuffled.Take(count).ToList();
+            return [.. shuffled.Take(count)];
         }
     }
 }

@@ -34,6 +34,7 @@ namespace Street_Rod_AC
         public Services.Race.IRaceResultIngestionService RaceResultIngestionService { get; private set; }
         public IOpponentRepository OpponentRepository { get; private set; }
         public IOpponentInitializationService OpponentInitializationService { get; private set; }
+        public IOpponentChallengeService OpponentChallengeService { get; private set; }
 
         // Current game state (set when a game is loaded or created)
         public Models.GameState.GameState? CurrentGameState { get; set; }
@@ -58,6 +59,7 @@ namespace Street_Rod_AC
             // Opponent services (must be initialized before GameStateRepository)
             OpponentRepository = new OpponentRepository();
             OpponentInitializationService = new OpponentInitializationService(OpponentRepository);
+            OpponentChallengeService = new OpponentChallengeService(CatalogRepository, ProfileRepository);
 
             // Game state repository (depends on opponent initialization service)
             GameStateRepository = new GameStateRepository(OpponentInitializationService);
