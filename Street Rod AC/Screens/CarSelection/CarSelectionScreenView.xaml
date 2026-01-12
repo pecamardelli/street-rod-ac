@@ -26,11 +26,11 @@
             </EventTrigger>
         </Grid.Triggers>
 
-        <!-- Back Button -->
-        <Button x:Name="BackButton"
+        <!-- Garage Button -->
+        <Button x:Name="GarageButton"
                 Grid.Row="0"
                 Style="{StaticResource ExitButtonStyle}"
-                Background="{StaticResource BackButtonBrush}"
+                Background="{StaticResource GarageIconButtonBrush}"
                 Command="{Binding BackCommand}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
