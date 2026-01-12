@@ -1,5 +1,6 @@
 using LiteDB;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Services.Opponents;
 using System.IO;
 
 namespace Street_Rod_AC.Services.Storage
@@ -7,9 +8,12 @@ namespace Street_Rod_AC.Services.Storage
     public class GameStateRepository : IGameStateRepository
     {
         private readonly string _savesDirectory;
+        private readonly IOpponentInitializationService? _opponentInitializationService;
 
-        public GameStateRepository()
+        public GameStateRepository(IOpponentInitializationService? opponentInitializationService = null)
         {
+            _opponentInitializationService = opponentInitializationService;
+
             // Saves directory in AppData
             _savesDirectory = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -110,6 +114,10 @@ namespace Street_Rod_AC.Services.Storage
         {
             var state = GameState.CreateNew(playerName);
             state.SaveName = saveName;
+
+            // Initialize opponents if service is available
+            _opponentInitializationService?.InitializeOpponents(state);
+
             Save(state, saveName);
             return state;
         }

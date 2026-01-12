@@ -1,0 +1,200 @@
+STREET ROD – OPPONENT DATA & AI SEPARATION GUIDELINES
+PURPOSE
+
+Define a clean separation between Street Rod opponent identity/personality data and Assetto Corsa engine-specific AI parameters.
+
+This separation ensures narrative consistency, long-term balance flexibility, engine independence, and save-file stability.
+
+CORE PRINCIPLE
+
+Opponent data represents who the racer is.
+Assetto Corsa AI parameters represent how the engine executes that racer.
+
+These two concerns must never be mixed.
+
+HIGH-LEVEL DATA LAYERS
+
+The opponent system is composed of two distinct layers:
+
+Street Rod Opponent Model (Engine-Agnostic)
+
+Assetto Corsa AI Adapter Model (Engine-Specific, Derived)
+
+Only the adapter layer may interact with Assetto Corsa configuration files.
+
+LAYER 1: STREET ROD OPPONENT MODEL
+
+This is the canonical, persistent definition of a racer.
+
+It describes identity, personality, and long-term evolution.
+
+Characteristics:
+
+Engine-independent
+
+Narrative-friendly
+
+Stable over time
+
+Human-readable
+
+Persisted in save data
+
+Typical Data (Conceptual, Not Exhaustive):
+
+Unique opponent ID (UUID)
+
+Name / nickname
+
+Portrait reference
+
+Age
+
+Location / neighborhood
+
+Background flavor or lore (optional)
+
+Conceptual Driving Traits:
+
+Skill (overall ability) - Range: 80-100
+Maps to AC AI Strength
+
+Aggression (risk appetite) - Range: 0-100
+Maps to AC AI Aggression
+
+These traits represent intent and personality, not engine values.
+
+They may:
+
+Evolve in small increments (±1-2 for skill)
+
+Be influenced by race outcomes (event-driven)
+
+Be affected by crashes or success
+
+They must:
+
+Remain engine-agnostic
+
+Never store Assetto Corsa AI parameters
+
+Evolution Modifiers:
+
+Age: Younger drivers tend toward higher aggression (+10-20), older drivers toward lower aggression (-10-20)
+
+Gender: Used as a slight tendency in random generation, not a hard rule - allows for individual personality variation
+
+Event-driven changes apply after each race based on performance and outcomes
+
+LAYER 2: ASSETTO CORSA AI ADAPTER MODEL
+
+This layer translates Street Rod traits into Assetto Corsa AI inputs.
+
+Characteristics:
+
+Generated at runtime
+
+Not persisted in save files
+
+Fully disposable
+
+Tunable independently
+
+Responsibilities:
+
+Convert conceptual traits into:
+
+AI strength
+
+AI aggression
+
+Mistake hints
+
+Other AC-specific parameters
+
+Clamp values to safe ranges
+
+Apply global balancing curves
+
+The adapter acts as a translator, not a data source.
+
+STRICT SEPARATION RULES
+
+Street Rod opponent data must never store AC AI values
+
+Assetto Corsa AI parameters must never be persisted
+
+AI parameters are recomputed every race
+
+Changes to AC AI mapping must not affect save files
+
+Opponent evolution operates only on conceptual traits
+
+Violating these rules tightly couples game design to the engine and is forbidden.
+
+MUTATION GUIDELINES
+
+Allowed (event-driven after each race):
+
+Skill growth or decline (small increments: ±1-2)
+
+Aggression shifts (based on race outcomes and experiences)
+
+Availability status
+
+Reputation or heat
+
+Not allowed:
+
+Direct mutation of engine AI parameters
+
+Hardcoding AC values into opponent data
+
+Permanent storage of derived values
+
+Changes outside the valid ranges (Skill: 80-100, Aggression: 0-100)
+
+All engine-specific values are ephemeral.
+
+BALANCING PHILOSOPHY
+
+Balancing must occur in the adapter layer, not in opponent definitions.
+
+This allows:
+
+Global difficulty tuning
+
+Per-track adjustments
+
+Game updates without save breaks
+
+Experimental AI behavior without data migration
+
+Street Rod data remains pure and stable.
+
+FUTURE-PROOFING BENEFITS
+
+This separation enables:
+
+AI rebalance patches
+
+New opponent behaviors
+
+CSP feature integration
+
+Alternative simulation engines
+
+Difficulty modes
+
+Career scaling
+
+Without touching existing saves.
+
+FINAL STREET ROD RULE
+
+Street Rod defines who the racer is.
+Assetto Corsa defines how the engine runs them.
+
+Never confuse the two.
+
+END OF GUIDELINES

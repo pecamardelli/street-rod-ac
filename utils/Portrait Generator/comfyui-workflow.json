@@ -1,0 +1,107 @@
+{
+  "8": {
+    "inputs": {
+      "ckpt_name": "juggernautXL_ragnarokBy.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "10": {
+    "inputs": {
+      "text": "1960s street racer portrait, placeholder prompt",
+      "clip": [
+        "8",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Positive Prompt"
+    }
+  },
+  "11": {
+    "inputs": {
+      "seed": 675576922707615,
+      "steps": 34,
+      "cfg": 6,
+      "sampler_name": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "model": [
+        "8",
+        0
+      ],
+      "positive": [
+        "10",
+        0
+      ],
+      "negative": [
+        "12",
+        0
+      ],
+      "latent_image": [
+        "22",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "12": {
+    "inputs": {
+      "text": "modern clothing, modern hairstyle, contemporary fashion, digital art, illustration, cartoon, anime, cgi, 3d render, unrealistic skin, plastic skin, oversharpened, overprocessed, glamour lighting, studio portrait, selfie, smartphone photo, celebrity, famous person, perfect symmetry, deformed face, extra limbs, extra fingers, missing fingers, distorted anatomy, warped face, low resolution, blurry, out of focus, watermark, text, logo",
+      "clip": [
+        "8",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Negative Prompt"
+    }
+  },
+  "15": {
+    "inputs": {
+      "samples": [
+        "11",
+        0
+      ],
+      "vae": [
+        "8",
+        2
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "21": {
+    "inputs": {
+      "filename_prefix": "street_rod_opponent",
+      "images": [
+        "15",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "22": {
+    "inputs": {
+      "width": 512,
+      "height": 512,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  }
+}

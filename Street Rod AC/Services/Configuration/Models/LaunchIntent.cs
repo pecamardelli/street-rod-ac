@@ -115,6 +115,18 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// </summary>
         public bool IsPinkSlip { get; set; }
 
+        /// <summary>
+        /// Opponent AI skill level (80-100)
+        /// Derived from Opponent model at runtime
+        /// </summary>
+        public int OpponentAILevel { get; set; } = 90;
+
+        /// <summary>
+        /// Opponent AI aggression (0-100)
+        /// Derived from Opponent model at runtime
+        /// </summary>
+        public int OpponentAIAggression { get; set; } = 50;
+
         public override string Executable => "acs.exe";
 
         public override string Description =>
@@ -129,7 +141,9 @@ namespace Street_Rod_AC.Services.Configuration.Models
                 PlayerName = this.PlayerName,
                 OpponentCarId = this.OpponentCarId,
                 OpponentSkin = this.OpponentSkin,
-                OpponentName = this.OpponentName
+                OpponentName = this.OpponentName,
+                OpponentAILevel = this.OpponentAILevel,
+                OpponentAIAggression = this.OpponentAIAggression
             };
         }
     }

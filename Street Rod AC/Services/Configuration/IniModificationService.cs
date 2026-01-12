@@ -262,12 +262,14 @@ namespace Street_Rod_AC.Services.Configuration
             templateContent = ReplaceLine(templateContent, "[CAR_1]", "MODEL", intent.OpponentCarId);
             templateContent = ReplaceLine(templateContent, "[CAR_1]", "SKIN", intent.OpponentSkin);
             templateContent = ReplaceLine(templateContent, "[CAR_1]", "DRIVER_NAME", intent.OpponentName);
+            templateContent = ReplaceLine(templateContent, "[CAR_1]", "AI_LEVEL", intent.OpponentAILevel.ToString());
+            templateContent = ReplaceLine(templateContent, "[CAR_1]", "AI_AGGRESSION", intent.OpponentAIAggression.ToString());
 
             // Write to race.ini
             File.WriteAllText(filePath, templateContent);
 
-            _logger.Information("Applied drag race intent: Player={PlayerName} ({PlayerCarId}), Opponent={OpponentName} ({OpponentCarId})",
-                intent.PlayerName, intent.PlayerCarId, intent.OpponentName, intent.OpponentCarId);
+            _logger.Information("Applied drag race intent: Player={PlayerName} ({PlayerCarId}), Opponent={OpponentName} ({OpponentCarId}), AI={AILevel}/{AIAggression}",
+                intent.PlayerName, intent.PlayerCarId, intent.OpponentName, intent.OpponentCarId, intent.OpponentAILevel, intent.OpponentAIAggression);
 
             return true;
         }

@@ -1,0 +1,251 @@
+{
+  "schema_version": "1.0",
+  "style_profile": "1960s_street_rod_portraits",
+  "drivers": [
+    {
+      "id": "drv_001",
+      "name": "Eddie Collins",
+      "nickname": "Flathead",
+      "gender": "male",
+      "age": 32,
+      "prompt": "1960s American street racer portrait, caucasian male early thirties, short slicked-back hair, light stubble, confident half-smile, leaning slightly toward the camera, dark garage background, leather jacket over white t-shirt, chrome reflections, cinematic low-key lighting, vintage film grain, gritty street rod atmosphere"
+    },
+    {
+      "id": "drv_002",
+      "name": "Raymond Turner",
+      "nickname": "Redline",
+      "gender": "male",
+      "age": 41,
+      "prompt": "1960s street racer portrait, caucasian male early forties, receding hairline, stern expression, arms crossed, standing straight facing camera, oil-stained mechanic shirt, dim garage interior, dramatic shadows, high contrast black and white, realistic mid-century photography"
+    },
+    {
+      "id": "drv_003",
+      "name": "Johnny Morales",
+      "nickname": "Torque",
+      "gender": "male",
+      "age": 27,
+      "prompt": "1960s Latino street racer portrait, male late twenties, thick dark hair, wide confident grin, head slightly tilted, cigarette between fingers, casual posture, concrete garage wall background, chrome highlights, moody lighting, authentic vintage look"
+    },
+    {
+      "id": "drv_004",
+      "name": "Franklin Doyle",
+      "nickname": "Iron",
+      "gender": "male",
+      "age": 52,
+      "prompt": "1960s veteran street racer portrait, caucasian male early fifties, weathered face, short gray hair, calm serious expression, looking slightly off-camera, worn leather jacket, dark workshop background, soft rim lighting, cinematic realism"
+    },
+    {
+      "id": "drv_005",
+      "name": "Billy Harper",
+      "nickname": "Knuckles",
+      "gender": "male",
+      "age": 24,
+      "prompt": "1960s young street racer portrait, caucasian male early twenties, messy hair, mischievous grin, leaning on a tool chest, denim jacket, dim garage lighting, shallow depth of field, subtle film grain"
+    },
+    {
+      "id": "drv_006",
+      "name": "Louise Bennett",
+      "nickname": "Lucky Lou",
+      "gender": "female",
+      "age": 29,
+      "prompt": "1960s female street racer portrait, caucasian woman late twenties, shoulder-length wavy hair, confident smile, hands on hips, fitted leather jacket, garage background with chrome reflections, cinematic low-key lighting, strong personality"
+    },
+    {
+      "id": "drv_007",
+      "name": "Margaret Collins",
+      "nickname": "Maggie",
+      "gender": "female",
+      "age": 38,
+      "prompt": "1960s female street racer portrait, caucasian woman late thirties, tied-back hair, calm determined expression, standing slightly sideways, work overalls, dim industrial garage background, realistic film photography style"
+    },
+    {
+      "id": "drv_008",
+      "name": "Tony Ricci",
+      "nickname": "Chrome",
+      "gender": "male",
+      "age": 34,
+      "prompt": "1960s Italian-American street racer portrait, male mid thirties, slick pompadour hairstyle, confident smirk, leaning against car fender, leather gloves, chrome-heavy garage environment, moody lighting, cinematic realism"
+    },
+    {
+      "id": "drv_009",
+      "name": "Walter Hughes",
+      "nickname": "Slow Burn",
+      "gender": "male",
+      "age": 46,
+      "prompt": "1960s street racer portrait, caucasian male mid forties, glasses, reserved expression, standing upright with hands in pockets, mechanic jacket, dark garage background, soft shadows, understated presence"
+    },
+    {
+      "id": "drv_010",
+      "name": "Sam Whitaker",
+      "nickname": "Dusty",
+      "gender": "male",
+      "age": 28,
+      "prompt": "1960s street racer portrait, caucasian male late twenties, windblown hair, relaxed grin, leaning forward slightly, denim shirt, gritty garage wall background, natural film grain, casual confident vibe"
+    },
+
+    {
+      "id": "drv_011",
+      "name": "Helen Parker",
+      "nickname": "Blue Flame",
+      "gender": "female",
+      "age": 35,
+      "prompt": "1960s female street racer portrait, caucasian woman mid thirties, short curled hair, subtle confident smile, arms crossed, leather jacket, dim garage lighting, cinematic contrast, strong presence"
+    },
+    {
+      "id": "drv_012",
+      "name": "Carlos Vega",
+      "nickname": "Midnight",
+      "gender": "male",
+      "age": 31,
+      "prompt": "1960s Latino street racer portrait, male early thirties, dark slick hair, serious focused expression, facing camera head-on, dark mechanic outfit, shadowy garage background, dramatic lighting"
+    },
+    {
+      "id": "drv_013",
+      "name": "Pete Lawson",
+      "nickname": "Clutch",
+      "gender": "male",
+      "age": 44,
+      "prompt": "1960s street racer portrait, caucasian male mid forties, thick mustache, relaxed grin, leaning back slightly, work jacket, warm low-key lighting, realistic vintage photo look"
+    },
+    {
+      "id": "drv_014",
+      "name": "Nancy Reed",
+      "nickname": "Quickstep",
+      "gender": "female",
+      "age": 26,
+      "prompt": "1960s female street racer portrait, caucasian woman mid twenties, long hair tied back, playful grin, slight lean toward camera, fitted jacket, industrial garage background, cinematic lighting"
+    },
+    {
+      "id": "drv_015",
+      "name": "George Miller",
+      "nickname": "Old Gear",
+      "gender": "male",
+      "age": 55,
+      "prompt": "1960s senior street racer portrait, caucasian male mid fifties, gray hair, deep wrinkles, calm knowing smile, seated posture, worn leather jacket, dark workshop background, soft moody lighting"
+    },
+
+    {
+      "id": "drv_016",
+      "name": "Ricky Thompson",
+      "nickname": "Needle",
+      "gender": "male",
+      "age": 22,
+      "prompt": "1960s young street racer portrait, caucasian male early twenties, thin build, intense stare, standing close to camera, denim jacket, gritty garage background, high contrast lighting"
+    },
+    {
+      "id": "drv_017",
+      "name": "Doris King",
+      "nickname": "Ace",
+      "gender": "female",
+      "age": 42,
+      "prompt": "1960s female street racer portrait, caucasian woman early forties, confident calm expression, short hair, standing upright, mechanic shirt, dim garage background, cinematic realism"
+    },
+    {
+      "id": "drv_018",
+      "name": "Leo Johnson",
+      "nickname": "Backfire",
+      "gender": "male",
+      "age": 36,
+      "prompt": "1960s street racer portrait, african-american male mid thirties, short hair, confident grin, slight shoulder turn, leather jacket, garage background, warm low-key lighting"
+    },
+    {
+      "id": "drv_019",
+      "name": "Harold Price",
+      "nickname": "Grinder",
+      "gender": "male",
+      "age": 48,
+      "prompt": "1960s street racer portrait, caucasian male late forties, rough features, stern expression, facing camera, heavy work jacket, industrial garage setting, dramatic shadows"
+    },
+    {
+      "id": "drv_020",
+      "name": "Betty Owens",
+      "nickname": "Red Queen",
+      "gender": "female",
+      "age": 33,
+      "prompt": "1960s female street racer portrait, caucasian woman early thirties, elegant but tough look, subtle smirk, standing angled to camera, leather gloves, dark garage background, cinematic lighting"
+    },
+
+    {
+      "id": "drv_021",
+      "name": "Tommy Blake",
+      "nickname": "Slip",
+      "gender": "male",
+      "age": 25,
+      "prompt": "1960s street racer portrait, caucasian male mid twenties, playful grin, leaning casually, denim jacket, dim garage lighting, natural film grain"
+    },
+    {
+      "id": "drv_022",
+      "name": "Arthur Collins",
+      "nickname": "Ledger",
+      "gender": "male",
+      "age": 50,
+      "prompt": "1960s street racer portrait, caucasian male early fifties, thin build, serious expression, standing straight, glasses, mechanic coat, moody workshop background"
+    },
+    {
+      "id": "drv_023",
+      "name": "Linda Moore",
+      "nickname": "Whisper",
+      "gender": "female",
+      "age": 28,
+      "prompt": "1960s female street racer portrait, caucasian woman late twenties, soft smile, calm eyes, facing camera, leather jacket, subtle chrome reflections, low-key lighting"
+    },
+    {
+      "id": "drv_024",
+      "name": "Earl Watkins",
+      "nickname": "Hammer",
+      "gender": "male",
+      "age": 39,
+      "prompt": "1960s street racer portrait, caucasian male late thirties, strong build, intense stare, arms crossed, dark garage environment, dramatic contrast lighting"
+    },
+    {
+      "id": "drv_025",
+      "name": "Joan Fisher",
+      "nickname": "Gearshift",
+      "gender": "female",
+      "age": 47,
+      "prompt": "1960s female street racer portrait, caucasian woman late forties, confident knowing smile, standing relaxed, work jacket, gritty garage background, realistic film look"
+    },
+
+    {
+      "id": "drv_026",
+      "name": "Mickey Russo",
+      "nickname": "Blue Note",
+      "gender": "male",
+      "age": 30,
+      "prompt": "1960s Italian-American street racer portrait, male early thirties, relaxed grin, leaning sideways, leather jacket, shadowy garage background, cinematic lighting"
+    },
+    {
+      "id": "drv_027",
+      "name": "Howard Lane",
+      "nickname": "Longshot",
+      "gender": "male",
+      "age": 54,
+      "prompt": "1960s street racer portrait, caucasian male mid fifties, tired but sharp eyes, seated pose, worn mechanic clothes, low light garage interior, subtle film grain"
+    },
+    {
+      "id": "drv_028",
+      "name": "Rose Martinez",
+      "nickname": "Firefly",
+      "gender": "female",
+      "age": 23,
+      "prompt": "1960s young female street racer portrait, Latina woman early twenties, bright confident smile, slight head tilt, fitted jacket, garage background, warm cinematic lighting"
+    },
+    {
+      "id": "drv_029",
+      "name": "Jack Reynolds",
+      "nickname": "Deadlock",
+      "gender": "male",
+      "age": 37,
+      "prompt": "1960s street racer portrait, caucasian male late thirties, hard stare, jaw clenched, facing camera, leather jacket, industrial garage shadows, dramatic contrast"
+    },
+    {
+      "id": "drv_030",
+      "name": "Vera Collins",
+      "nickname": "Switchblade",
+      "gender": "female",
+      "age": 45,
+      "prompt": "1960s female street racer portrait, caucasian woman mid forties, sharp confident grin, arms crossed, dark leather jacket, moody garage background, cinematic realism"
+    }
+  ],
+  "negative_prompt": "modern clothing, modern hairstyle, contemporary fashion, digital art, illustration, cartoon, anime, cgi, 3d render, unrealistic skin, plastic skin, oversharpened, overprocessed, glamour lighting, studio portrait, selfie, smartphone photo, celebrity, famous person, perfect symmetry, deformed face, extra limbs, extra fingers, missing fingers, distorted anatomy, warped face, low resolution, blurry, out of focus, watermark, text, logo"
+}

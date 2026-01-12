@@ -80,8 +80,18 @@ namespace Street_Rod_AC.Services.Configuration.Models
         public string OpponentSkin { get; set; } = string.Empty;
         public string OpponentName { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Opponent AI skill level (80-100)
+        /// </summary>
+        public int OpponentAILevel { get; set; } = 90;
+
+        /// <summary>
+        /// Opponent AI aggression (0-100)
+        /// </summary>
+        public int OpponentAIAggression { get; set; } = 50;
+
         public override string Description =>
-            $"Configure drag race: {PlayerName} ({PlayerCarId}) vs {OpponentName} ({OpponentCarId})";
+            $"Configure drag race: {PlayerName} ({PlayerCarId}) vs {OpponentName} ({OpponentCarId}) [AI: {OpponentAILevel}/{OpponentAIAggression}]";
 
         public override string TargetFile => "race.ini";
     }

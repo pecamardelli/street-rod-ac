@@ -10,6 +10,7 @@ using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Configuration;
 using Street_Rod_AC.Services.Market;
+using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Storage;
 
 namespace Street_Rod_AC
@@ -31,6 +32,8 @@ namespace Street_Rod_AC
         public IUsedCarMarketService MarketService { get; private set; }
         public IIniModificationService IniModificationService { get; private set; }
         public Services.Race.IRaceResultIngestionService RaceResultIngestionService { get; private set; }
+        public IOpponentRepository OpponentRepository { get; private set; }
+        public IOpponentInitializationService OpponentInitializationService { get; private set; }
 
         // Current game state (set when a game is loaded or created)
         public Models.GameState.GameState? CurrentGameState { get; set; }
@@ -46,12 +49,18 @@ namespace Street_Rod_AC
             IniModificationService = new IniModificationService();
             NavigationService = new NavigationService();
             DialogService = new DialogService();
-            GameStateRepository = new GameStateRepository();
             CatalogRepository = new ContentCatalogRepository();
             CarImportService = new CarImportService(CatalogRepository);
             ProfileRepository = new CarProfileRepository();
             ProfileService = new CarProfileService(CatalogRepository, ProfileRepository);
             MarketService = new UsedCarMarketService(CatalogRepository, ProfileRepository);
+
+            // Opponent services (must be initialized before GameStateRepository)
+            OpponentRepository = new OpponentRepository();
+            OpponentInitializationService = new OpponentInitializationService(OpponentRepository);
+
+            // Game state repository (depends on opponent initialization service)
+            GameStateRepository = new GameStateRepository(OpponentInitializationService);
 
             // Race result services
             var raceResultValidator = new Services.Race.Validation.RaceResultValidator();
