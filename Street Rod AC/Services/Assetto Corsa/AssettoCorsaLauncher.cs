@@ -98,6 +98,13 @@ namespace Street_Rod_AC.Services
 
                 _logger.Information("Configuration prepared successfully");
 
+                // PHASE 2.5: ENABLE STREET ROD RACE APP (only for races)
+                if (intent is DragRaceLaunchIntent or RaceLaunchIntent)
+                {
+                    _logger.Information("PHASE: Enable Street Rod Race App");
+                    EnableStreetRodRaceApp();
+                }
+
                 // PHASE 3: VALIDATE EXECUTABLE
                 _logger.Information("PHASE: Validate Executable");
                 var exePath = GetExecutablePath(intent.Executable);
@@ -191,6 +198,10 @@ namespace Street_Rod_AC.Services
                     {
                         _logger.Error(ex, "Race result ingestion failed - continuing with cleanup");
                     }
+
+                    // Disable Street Rod Race App after race completes
+                    _logger.Information("PHASE: Disable Street Rod Race App");
+                    DisableStreetRodRaceApp();
                 }
 
                 // PHASE 6: CLEANUP
@@ -287,6 +298,50 @@ namespace Street_Rod_AC.Services
         private string GetExecutablePath(string executable)
         {
             return Path.Combine(AppSettings.Instance.AssettoCorsaPath, executable);
+        }
+
+        /// <summary>
+        /// Enable the streetrodraceapp Python app
+        /// </summary>
+        private void EnableStreetRodRaceApp()
+        {
+            try
+            {
+                var intent = new Configuration.Models.PythonAppToggleIntent
+                {
+                    AppName = "streetrodraceapp",
+                    Enable = true
+                };
+
+                _iniService.ApplyIntent(intent);
+                _logger.Information("Street Rod Race App enabled");
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "Failed to enable Street Rod Race App - race will continue without it");
+            }
+        }
+
+        /// <summary>
+        /// Disable the streetrodraceapp Python app
+        /// </summary>
+        private void DisableStreetRodRaceApp()
+        {
+            try
+            {
+                var intent = new Configuration.Models.PythonAppToggleIntent
+                {
+                    AppName = "streetrodraceapp",
+                    Enable = false
+                };
+
+                _iniService.ApplyIntent(intent);
+                _logger.Information("Street Rod Race App disabled");
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "Failed to disable Street Rod Race App");
+            }
         }
     }
 }
