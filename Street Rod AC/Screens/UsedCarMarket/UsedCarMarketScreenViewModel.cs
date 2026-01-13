@@ -352,8 +352,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
         private void OnBack()
         {
             _logger.Information("Navigating back to newspaper");
-            var newspaperViewModel = new Newspaper.NewspaperScreenViewModel(_navigationService, _dialogService, _gameState);
-            _navigationService.NavigateTo(newspaperViewModel);
+            _navigationService.NavigateToNewspaper(_gameState);
         }
 
         private string GetConditionLabel(float condition)

@@ -30,37 +30,17 @@ namespace Street_Rod_AC.Screens.Newspaper
 
         private void OnUsedCars()
         {
-            var app = (App)System.Windows.Application.Current;
-            var usedCarMarketViewModel = new UsedCarMarket.UsedCarMarketScreenViewModel(
-                _navigationService,
-                _dialogService,
-                _gameState,
-                app.MarketService,
-                app.CatalogRepository,
-                app.ProfileRepository,
-                app.GameStateRepository);
-            _navigationService.NavigateTo(usedCarMarketViewModel);
+            _navigationService.NavigateToUsedCarMarket(_gameState);
         }
 
         private void OnUsedParts()
         {
-            var usedPartsViewModel = new UsedParts.UsedPartsScreenViewModel(
-                _navigationService,
-                _dialogService,
-                _gameState);
-            _navigationService.NavigateTo(usedPartsViewModel);
+            _navigationService.NavigateToUsedParts(_gameState);
         }
 
         private void OnBack()
         {
-            var app = (App)System.Windows.Application.Current;
-            var gameViewModel = new Game.GameScreenViewModel(
-                _navigationService,
-                _dialogService,
-                _gameState,
-                app.CatalogRepository,
-                app.Launcher);
-            _navigationService.NavigateTo(gameViewModel);
+            _navigationService.NavigateToGame(_gameState);
         }
 
         public override void Enter()

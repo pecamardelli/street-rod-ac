@@ -139,14 +139,7 @@ namespace Street_Rod_AC.Screens.CarSelection
         private void OnBack()
         {
             _logger.Information("Navigating back to garage screen");
-            var app = (App)System.Windows.Application.Current;
-            var garageViewModel = new Garage.GarageScreenViewModel(
-                _navigationService,
-                _dialogService,
-                _gameState,
-                _catalogRepo,
-                app.Launcher);
-            _navigationService.NavigateTo(garageViewModel);
+            _navigationService.NavigateToGarage(_gameState);
         }
 
         public override void Enter()

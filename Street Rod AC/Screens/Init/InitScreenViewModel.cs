@@ -20,8 +20,7 @@ namespace Street_Rod_AC.Screens.Init
 
         private void OnProceed()
         {
-            var mainMenuViewModel = new MainMenu.MainMenuScreenViewModel(_navigationService, _dialogService);
-            _navigationService.NavigateTo(mainMenuViewModel);
+            _navigationService.NavigateToMainMenu();
         }
 
         public override void Enter()

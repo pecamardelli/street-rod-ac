@@ -15,7 +15,9 @@
       "Bash(dotnet add:*)",
       "Bash(dir \"C:\\\\Users\\\\Administrator\\\\source\\\\repos\\\\Street Rod AC\\\\Project Guidelines\")",
       "Bash(dir \"C:\\\\Users\\\\Administrator\\\\source\\\\repos\\\\Street Rod AC\\\\Project Guidelines\\\\examples\")",
-      "Bash(del \"C:\\\\Users\\\\Administrator\\\\source\\\\repos\\\\Street Rod AC\\\\Street Rod AC\\\\Services\\\\Race\\\\DragRaceService.cs\")"
+      "Bash(del \"C:\\\\Users\\\\Administrator\\\\source\\\\repos\\\\Street Rod AC\\\\Street Rod AC\\\\Services\\\\Race\\\\DragRaceService.cs\")",
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ]
   }
 }

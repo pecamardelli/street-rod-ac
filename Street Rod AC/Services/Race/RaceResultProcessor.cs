@@ -72,6 +72,15 @@ namespace Street_Rod_AC.Services.Race
                     ApplyWagerTransfer(gameState, outcome, context);
                 }
 
+                // Update reputations based on race outcome
+                ApplyReputationUpdates(gameState, outcome, context);
+
+                // Handle opponent status changes (e.g., if they lost their only car)
+                if (context != null)
+                {
+                    UpdateOpponentStatus(gameState, context);
+                }
+
                 // Create and persist processed session record
                 var processedSession = CreateProcessedSession(result, outcome, context);
                 await _sessionRepository.SaveAsync(processedSession);
@@ -486,6 +495,78 @@ namespace Street_Rod_AC.Services.Race
                 if (racer.Name == racerName) return racer;
 
             return null;
+        }
+
+        /// <summary>
+        /// Update reputation for both racers based on race outcome
+        /// Winners gain reputation, losers lose reputation
+        /// </summary>
+        private void ApplyReputationUpdates(GameState gameState, RaceOutcome outcome, RaceContext? context)
+        {
+            // Skip reputation updates for inconclusive or both crashed
+            if (outcome.WinCondition == WinCondition.Inconclusive ||
+                outcome.WinCondition == WinCondition.BothCrashed)
+            {
+                _logger.Information("No reputation updates (inconclusive or both crashed)");
+                return;
+            }
+
+            // Calculate player reputation
+            var oldPlayerRep = gameState.Player.Stats.Reputation;
+            gameState.Player.Stats.Reputation = gameState.Player.Stats.CalculateReputation();
+            var playerRepChange = gameState.Player.Stats.Reputation - oldPlayerRep;
+
+            _logger.Information("Player reputation: {OldRep} -> {NewRep} ({Change:+#;-#;0})",
+                oldPlayerRep, gameState.Player.Stats.Reputation, playerRepChange);
+
+            // Calculate opponent reputation (if available)
+            if (context != null)
+            {
+                var opponent = FindRacer(gameState, context.OpponentName);
+                if (opponent != null)
+                {
+                    var oldOpponentRep = opponent.Stats.Reputation;
+                    opponent.Stats.Reputation = opponent.Stats.CalculateReputation();
+                    var opponentRepChange = opponent.Stats.Reputation - oldOpponentRep;
+
+                    _logger.Information("Opponent {Name} reputation: {OldRep} -> {NewRep} ({Change:+#;-#;0})",
+                        context.OpponentName, oldOpponentRep, opponent.Stats.Reputation, opponentRepChange);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Update opponent status based on race outcome
+        /// If opponent lost their only car in a pink slip race, move them to Inactive
+        /// </summary>
+        private void UpdateOpponentStatus(GameState gameState, RaceContext context)
+        {
+            var opponent = FindRacer(gameState, context.OpponentName) as Opponent;
+            if (opponent == null)
+            {
+                _logger.Warning("Cannot update opponent status: opponent {OpponentName} not found", context.OpponentName);
+                return;
+            }
+
+            // Check if opponent has no cars left
+            if (opponent.Cars.Count == 0)
+            {
+                // Opponent lost their only car - move to Inactive
+                gameState.Racers.ReadyToRace.Remove(opponent.Name);
+                gameState.Racers.Inactive[opponent.Name] = opponent;
+                opponent.Status = RacerStatus.Inactive;
+
+                _logger.Information("Opponent {Name} moved to Inactive (no cars remaining)", opponent.Name);
+            }
+            else if (opponent.Status == RacerStatus.Inactive && opponent.Cars.Count > 0)
+            {
+                // Opponent gained a car (won pink slip) and is now active again
+                gameState.Racers.Inactive.Remove(opponent.Name);
+                gameState.Racers.ReadyToRace[opponent.Name] = opponent;
+                opponent.Status = RacerStatus.ReadyToRace;
+
+                _logger.Information("Opponent {Name} moved to ReadyToRace (now has a car)", opponent.Name);
+            }
         }
     }
 

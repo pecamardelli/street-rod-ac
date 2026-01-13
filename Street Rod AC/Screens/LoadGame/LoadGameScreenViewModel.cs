@@ -133,13 +133,7 @@ namespace Street_Rod_AC.Screens.LoadGame
                 app.CurrentGameState = gameState;
 
                 // Navigate to game screen with loaded state
-                var gameViewModel = new Game.GameScreenViewModel(
-                    _navigationService,
-                    _dialogService,
-                    gameState,
-                    app.CatalogRepository,
-                    app.Launcher);
-                _navigationService.NavigateTo(gameViewModel);
+                _navigationService.NavigateToGame(gameState);
             }
             catch (Exception ex)
             {
@@ -181,8 +175,7 @@ namespace Street_Rod_AC.Screens.LoadGame
 
         private void OnBack()
         {
-            var mainMenuViewModel = new MainMenu.MainMenuScreenViewModel(_navigationService, _dialogService);
-            _navigationService.NavigateTo(mainMenuViewModel);
+            _navigationService.NavigateToMainMenu();
         }
 
         public override void Enter()

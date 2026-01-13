@@ -27,14 +27,12 @@ namespace Street_Rod_AC.Screens.MainMenu
 
         private void OnNewGame()
         {
-            var newGameScreen = new NewGame.NewGameScreenViewModel(_navigationService, _dialogService);
-            _navigationService.NavigateTo(newGameScreen);
+            _navigationService.NavigateToNewGame();
         }
 
         private void OnLoadGame()
         {
-            var loadGameScreen = new LoadGame.LoadGameScreenViewModel(_navigationService, _dialogService);
-            _navigationService.NavigateTo(loadGameScreen);
+            _navigationService.NavigateToLoadGame();
         }
 
         private void OnExit()

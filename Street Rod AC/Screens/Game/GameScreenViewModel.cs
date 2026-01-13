@@ -58,15 +58,12 @@ namespace Street_Rod_AC.Screens.Game
 
         private void OnNewspaper()
         {
-            var newspaperViewModel = new Newspaper.NewspaperScreenViewModel(_navigationService, _dialogService, _gameState);
-            _navigationService.NavigateTo(newspaperViewModel);
+            _navigationService.NavigateToNewspaper(_gameState);
         }
 
         private void OnGarage()
         {
-            var app = (App)System.Windows.Application.Current;
-            var garageViewModel = new Garage.GarageScreenViewModel(_navigationService, _dialogService, _gameState, _catalogRepository, app.Launcher);
-            _navigationService.NavigateTo(garageViewModel);
+            _navigationService.NavigateToGarage(_gameState);
         }
 
         private Models.GameState.Car? GetSelectedCar()
@@ -89,8 +86,7 @@ namespace Street_Rod_AC.Screens.Game
                 {
                     if (confirmed)
                     {
-                        var mainMenuViewModel = new MainMenu.MainMenuScreenViewModel(_navigationService, _dialogService);
-                        _navigationService.NavigateTo(mainMenuViewModel);
+                        _navigationService.NavigateToMainMenu();
                     }
                 });
 
@@ -122,15 +118,7 @@ namespace Street_Rod_AC.Screens.Game
 
         private void OnHitTheStreets()
         {
-            var app = (App)System.Windows.Application.Current;
-            var dinerViewModel = new Diner.DinerScreenViewModel(
-                _navigationService,
-                _dialogService,
-                _gameState,
-                _catalogRepository,
-                app.OpponentChallengeService,
-                _launcher);
-            _navigationService.NavigateTo(dinerViewModel);
+            _navigationService.NavigateToDiner(_gameState);
         }
 
         public override void Enter()

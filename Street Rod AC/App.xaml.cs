@@ -48,7 +48,6 @@ namespace Street_Rod_AC
 
             ContentService = new AssettoCorsaContentService();
             IniModificationService = new IniModificationService();
-            NavigationService = new NavigationService();
             DialogService = new DialogService();
             CatalogRepository = new ContentCatalogRepository();
             CarImportService = new CarImportService(CatalogRepository);
@@ -77,6 +76,16 @@ namespace Street_Rod_AC
 
             // Pass race result service to launcher
             Launcher = new AssettoCorsaLauncher(IniModificationService, RaceResultIngestionService);
+
+            // NavigationService (must be created after all its dependencies)
+            NavigationService = new NavigationService(
+                DialogService,
+                CatalogRepository,
+                ProfileRepository,
+                Launcher,
+                OpponentChallengeService,
+                GameStateRepository,
+                MarketService);
         }
 
         protected override async void OnStartup(StartupEventArgs e)
@@ -158,8 +167,7 @@ namespace Street_Rod_AC
 
             // Navigate to initial screen
             logger.Information("Navigating to initial screen");
-            var initScreen = new InitScreenViewModel(NavigationService, DialogService);
-            NavigationService.NavigateTo(initScreen);
+            NavigationService.NavigateToInit();
         }
 
         protected override void OnExit(ExitEventArgs e)

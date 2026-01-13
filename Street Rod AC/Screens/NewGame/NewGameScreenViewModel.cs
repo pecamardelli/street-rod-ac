@@ -90,13 +90,7 @@ namespace Street_Rod_AC.Screens.NewGame
                             theApp.CurrentGameState = gameState;
 
                             // Navigate to game screen
-                            var gameViewModel = new Game.GameScreenViewModel(
-                                _navigationService,
-                                _dialogService,
-                                gameState,
-                                theApp.CatalogRepository,
-                                theApp.Launcher);
-                            _navigationService.NavigateTo(gameViewModel);
+                            _navigationService.NavigateToGame(gameState);
                         }
                     });
 
@@ -111,13 +105,7 @@ namespace Street_Rod_AC.Screens.NewGame
                 app.CurrentGameState = gameState;
 
                 // Navigate to game screen
-                var gameViewModel = new Game.GameScreenViewModel(
-                    _navigationService,
-                    _dialogService,
-                    gameState,
-                    app.CatalogRepository,
-                    app.Launcher);
-                _navigationService.NavigateTo(gameViewModel);
+                _navigationService.NavigateToGame(gameState);
             }
         }
 
@@ -136,8 +124,7 @@ namespace Street_Rod_AC.Screens.NewGame
 
         private void OnBack()
         {
-            var mainMenuViewModel = new MainMenu.MainMenuScreenViewModel(_navigationService, _dialogService);
-            _navigationService.NavigateTo(mainMenuViewModel);
+            _navigationService.NavigateToMainMenu();
         }
 
         public override void Enter()

@@ -206,27 +206,13 @@ namespace Street_Rod_AC.Screens.Garage
         private void OnSelectCar()
         {
             _logger.Information("Navigating to car selection screen");
-            var app = (App)System.Windows.Application.Current;
-            var carSelectionViewModel = new CarSelection.CarSelectionScreenViewModel(
-                _navigationService,
-                _dialogService,
-                _gameState,
-                _catalogRepo,
-                app.GameStateRepository);
-            _navigationService.NavigateTo(carSelectionViewModel);
+            _navigationService.NavigateToCarSelection(_gameState);
         }
 
         private void OnBack()
         {
             _logger.Information("Navigating back to game screen");
-            var app = (App)System.Windows.Application.Current;
-            var gameViewModel = new Game.GameScreenViewModel(
-                _navigationService,
-                _dialogService,
-                _gameState,
-                app.CatalogRepository,
-                app.Launcher);
-            _navigationService.NavigateTo(gameViewModel);
+            _navigationService.NavigateToGame(_gameState);
         }
 
         private void OnExit()

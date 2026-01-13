@@ -334,7 +334,9 @@ namespace Street_Rod_AC.Screens.Diner
                     PlayerCarInstanceId = setup.PlayerCar.InstanceId,
                     OpponentCarInstanceId = setup.OpponentCar.InstanceId,
                     CashWager = setup.CashWager,
-                    IsPinkSlip = setup.IsPinkSlip
+                    IsPinkSlip = setup.IsPinkSlip,
+                    OpponentAILevel = setup.Opponent.Skill,
+                    OpponentAIAggression = setup.Opponent.Aggression
                 };
 
                 // Create race context and store in metadata
@@ -382,14 +384,7 @@ namespace Street_Rod_AC.Screens.Diner
         private void OnGarage()
         {
             _logger.Information("Navigating to garage");
-            var app = (App)System.Windows.Application.Current;
-            var garageViewModel = new Garage.GarageScreenViewModel(
-                _navigationService,
-                _dialogService,
-                _gameState,
-                app.CatalogRepository,
-                app.Launcher);
-            _navigationService.NavigateTo(garageViewModel);
+            _navigationService.NavigateToGarage(_gameState);
         }
 
         public override void Enter()
