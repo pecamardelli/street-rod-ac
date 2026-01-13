@@ -278,7 +278,9 @@ namespace Street_Rod_AC.Screens.Diner
                 return;
             }
 
-            // Opponent accepted - show acceptance message and proceed to race
+            // Opponent accepted - launch race directly
+            _logger.Information("Opponent accepted challenge - launching race directly");
+
             var opponentCarDef = _catalogRepository.GetCar(setup.OpponentCar.DefinitionId);
             if (opponentCarDef == null)
             {
@@ -286,43 +288,19 @@ namespace Street_Rod_AC.Screens.Diner
                 return;
             }
 
-            var raceMessage = $"{setup.Opponent.Name} accepted your challenge!\n\n" +
-                $"\"{response.Message}\"\n\n" +
-                $"You: {playerCarDef.Brand} {playerCarDef.Name}\n" +
-                $"{setup.Opponent.Name}: {opponentCarDef.Brand} {opponentCarDef.Name}\n\n";
-
-            if (setup.IsPinkSlip)
-            {
-                raceMessage += "Stakes: PINK SLIPS (loser hands over their car)\n\n";
-            }
-            else
-            {
-                raceMessage += $"Stakes: ${setup.CashWager:N0}\n\n";
-            }
-
-            raceMessage += "Track: Drag Strip (1/4 mile)\n\n" +
-                "Launch Assetto Corsa?";
-
-            var confirmDialog = new Dialogs.Confirmation.ConfirmationDialogViewModel(
-                _dialogService,
-                raceMessage,
-                "Race Confirmed",
-                async confirmed =>
-                {
-                    if (confirmed)
-                    {
-                        await LaunchRace(setup, playerCarDef, opponentCarDef);
-                    }
-                });
-
-            _dialogService.ShowDialog(confirmDialog);
+            // Launch the race immediately
+            await LaunchRace(setup, playerCarDef, opponentCarDef);
         }
 
         private async Task LaunchRace(ChallengeSetup setup, CarDefinition playerCarDef, CarDefinition opponentCarDef)
         {
+            _logger.Information("LaunchRace called - Player: {PlayerCar}, Opponent: {OpponentName} in {OpponentCar}",
+                playerCarDef.Id, setup.Opponent.Name, opponentCarDef.Id);
+
             try
             {
                 // Create drag race launch intent
+                _logger.Debug("Creating DragRaceLaunchIntent");
                 var dragRaceIntent = new DragRaceLaunchIntent
                 {
                     PlayerCarId = playerCarDef.Id,
@@ -355,7 +333,13 @@ namespace Street_Rod_AC.Screens.Diner
                 dragRaceIntent.Metadata["RaceContext"] = raceContext;
 
                 // Launch race
+                _logger.Information("Calling launcher.LaunchRaceAsync with intent: Player={PlayerCar}, Opponent={OpponentCar}, Track={Track}",
+                    dragRaceIntent.PlayerCarId, dragRaceIntent.OpponentCarId, raceContext.TrackId);
+
                 var result = await _launcher.LaunchRaceAsync(dragRaceIntent);
+
+                _logger.Information("LaunchRaceAsync returned: Success={Success}, Error={Error}",
+                    result.Success, result.ErrorMessage ?? "none");
 
                 if (result.Success)
                 {

@@ -39,6 +39,16 @@ namespace Street_Rod_AC.Services.Opponents
             _logger.Information("Evaluating challenge: {OpponentName} vs {PlayerName}, PinkSlip: {IsPinkSlip}, Wager: {Wager}",
                 opponent.Name, player.Name, isPinkSlip, cashWager);
 
+            // TEMPORARY: Always accept challenges for testing
+            _logger.Warning("Challenge acceptance bypassed for testing - opponent automatically accepts");
+            return new ChallengeResponse
+            {
+                Accepted = true,
+                Message = $"{opponent.Name}: You're on! Let's race!",
+                DeclineReason = null
+            };
+
+            /* COMMENTED OUT FOR TESTING - RESTORE THIS LATER
             // Get car definitions for value comparison
             var playerCarDef = _catalogRepository.GetCar(playerCar.DefinitionId);
             var opponentCarDef = _catalogRepository.GetCar(opponentCar.DefinitionId);
@@ -63,6 +73,7 @@ namespace Street_Rod_AC.Services.Opponents
             {
                 return EvaluateCashChallenge(opponent, player, cashWager);
             }
+            */
         }
 
         /// <summary>
