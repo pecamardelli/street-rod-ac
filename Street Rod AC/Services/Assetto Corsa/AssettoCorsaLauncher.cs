@@ -29,6 +29,7 @@ namespace Street_Rod_AC.Services
 
         public event EventHandler<LaunchIntent>? ExecutionStarted;
         public event EventHandler<LaunchResult>? ExecutionEnded;
+        public event EventHandler? RaceCompleted;
 
         public async Task<LaunchResult> LaunchShowroomAsync(ShowroomLaunchIntent intent)
         {
@@ -176,6 +177,7 @@ namespace Street_Rod_AC.Services
                     exitCode, (endTime - startTime).TotalSeconds);
 
                 // PHASE 5.5: RACE RESULT INGESTION (only for race launches)
+                var raceCompleted = false;
                 if (intent is DragRaceLaunchIntent dragIntent)
                 {
                     _logger.Information("PHASE: Race Result Ingestion");
@@ -193,6 +195,8 @@ namespace Street_Rod_AC.Services
                         _logger.Information("Ingestion complete: Processed={Processed}, Duplicates={Duplicates}, Quarantined={Quarantined}, Errors={Errors}",
                             ingestionResult.FilesProcessed, ingestionResult.FilesDuplicate,
                             ingestionResult.FilesQuarantined, ingestionResult.Errors.Count);
+
+                        raceCompleted = true;
                     }
                     catch (Exception ex)
                     {
@@ -224,6 +228,14 @@ namespace Street_Rod_AC.Services
                 _logger.Information("=== LAUNCH PIPELINE COMPLETED SUCCESSFULLY ===");
 
                 ExecutionEnded?.Invoke(this, result);
+
+                // Signal that race completed (game state has been updated)
+                if (raceCompleted)
+                {
+                    _logger.Information("Raising RaceCompleted event");
+                    RaceCompleted?.Invoke(this, EventArgs.Empty);
+                }
+
                 return result;
             }
             catch (Exception ex)

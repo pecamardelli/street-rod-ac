@@ -99,6 +99,7 @@ namespace Street_Rod_AC.Screens.Diner
             if (readyOpponents.Count == 0)
             {
                 _logger.Information("No opponents available at diner");
+                OnPropertyChanged(nameof(BankrollDisplay));
                 return;
             }
 
@@ -158,6 +159,9 @@ namespace Street_Rod_AC.Screens.Diner
             {
                 SelectedOpponent = Opponents[0];
             }
+
+            // Update bankroll display
+            OnPropertyChanged(nameof(BankrollDisplay));
         }
 
         private OpponentDifficulty CalculateDifficulty(Opponent opponent)
@@ -371,16 +375,31 @@ namespace Street_Rod_AC.Screens.Diner
             _navigationService.NavigateToGarage(_gameState);
         }
 
+        private void OnRaceCompleted(object? sender, EventArgs e)
+        {
+            _logger.Information("Race completed - refreshing diner display");
+            LoadOpponents();
+        }
+
         public override void Enter()
         {
             base.Enter();
             _logger.Information("Entered diner screen");
+
+            // Subscribe to race completion events when screen becomes active
+            _launcher.RaceCompleted += OnRaceCompleted;
+
+            // Refresh the diner view (in case state changed while screen was inactive)
+            LoadOpponents();
         }
 
         public override void Exit()
         {
             base.Exit();
             _logger.Information("Exited diner screen");
+
+            // Unsubscribe from race completion events when screen becomes inactive
+            _launcher.RaceCompleted -= OnRaceCompleted;
         }
     }
 

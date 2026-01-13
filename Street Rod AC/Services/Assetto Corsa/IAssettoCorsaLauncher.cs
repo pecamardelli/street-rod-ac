@@ -50,5 +50,10 @@ namespace Street_Rod_AC.Services
         /// Event fired when Assetto Corsa execution ends
         /// </summary>
         event EventHandler<LaunchResult>? ExecutionEnded;
+
+        /// <summary>
+        /// Event fired when a race completes and results are successfully ingested
+        /// </summary>
+        event EventHandler? RaceCompleted;
     }
 }
