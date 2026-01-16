@@ -15,6 +15,7 @@
     <Color x:Key="AccentPrimary">#D32F2F</Color>
     <Color x:Key="AccentHover">#F44336</Color>
     <Color x:Key="AccentPressed">#B71C1C</Color>
+    <Color x:Key="AccentSuccess">#90EE90</Color>
 
     <!-- Border Colors -->
     <Color x:Key="BorderDark">#101010</Color>

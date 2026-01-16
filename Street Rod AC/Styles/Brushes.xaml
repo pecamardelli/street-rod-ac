@@ -20,6 +20,7 @@
     <SolidColorBrush x:Key="AccentPrimaryBrush" Color="{StaticResource AccentPrimary}"/>
     <SolidColorBrush x:Key="AccentHoverBrush" Color="{StaticResource AccentHover}"/>
     <SolidColorBrush x:Key="AccentPressedBrush" Color="{StaticResource AccentPressed}"/>
+    <SolidColorBrush x:Key="AccentSuccessBrush" Color="{StaticResource AccentSuccess}"/>
 
     <!-- Border Brushes -->
     <SolidColorBrush x:Key="BorderDarkBrush" Color="{StaticResource BorderDark}"/>
