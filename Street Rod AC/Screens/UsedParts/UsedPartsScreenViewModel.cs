@@ -36,7 +36,7 @@ namespace Street_Rod_AC.Screens.UsedParts
         private void OnBack()
         {
             _logger.Information("Navigating back to newspaper");
-            _navigationService.NavigateToNewspaper(_gameState);
+            _navigationService.NavigateToNewspaper(_gameState, skipAnimation: true);
         }
 
         public override void Enter()

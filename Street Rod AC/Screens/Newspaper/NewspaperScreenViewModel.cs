@@ -16,12 +16,14 @@ namespace Street_Rod_AC.Screens.Newspaper
         public RelayCommand UsedPartsCommand { get; }
 
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
+        public bool SkipEnterAnimation { get; }
 
-        public NewspaperScreenViewModel(NavigationService navigationService, DialogService dialogService, Models.GameState.GameState gameState)
+        public NewspaperScreenViewModel(NavigationService navigationService, DialogService dialogService, Models.GameState.GameState gameState, bool skipAnimation = false)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
             _gameState = gameState;
+            SkipEnterAnimation = skipAnimation;
 
             BackCommand = new RelayCommand(OnBack);
             UsedCarsCommand = new RelayCommand(OnUsedCars);

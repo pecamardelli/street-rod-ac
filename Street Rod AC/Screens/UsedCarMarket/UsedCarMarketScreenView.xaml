@@ -5,27 +5,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Background="{StaticResource NewspaperBackgroundBrush}"
-          Opacity="0">
+    <Grid Background="{StaticResource NewspaperBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
-        <Grid.Triggers>
-            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                <BeginStoryboard>
-                    <Storyboard>
-                        <!-- Background fade in -->
-                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                       From="0.0"
-                                       To="1.0"
-                                       Duration="0:0:0.5"/>
-                    </Storyboard>
-                </BeginStoryboard>
-            </EventTrigger>
-        </Grid.Triggers>
 
         <!-- Back Button -->
         <Button x:Name="BackButton"
@@ -35,44 +20,14 @@
                 Command="{Binding BackCommand}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Margin="20,20,0,0"
-                Opacity="0">
-            <Button.Triggers>
-                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <!-- Fade in -->
-                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                           From="0.0"
-                                           To="1.0"
-                                           BeginTime="0:0:0.3"
-                                           Duration="0:0:0.5"/>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </Button.Triggers>
-        </Button>
+                Margin="20,20,0,0"/>
+
 
         <!-- Header -->
         <StackPanel Grid.Row="0"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Top"
-                    Margin="0,30,0,20"
-                    Opacity="0">
-            <StackPanel.Triggers>
-                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                           From="0.0"
-                                           To="1.0"
-                                           BeginTime="0:0:0.3"
-                                           Duration="0:0:0.5"/>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </StackPanel.Triggers>
-
+                    Margin="0,30,0,20">
             <TextBlock Text="USED CAR MARKET"
                       FontSize="32"
                       FontWeight="Bold"

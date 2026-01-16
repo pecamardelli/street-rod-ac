@@ -147,12 +147,13 @@ namespace Street_Rod_AC.Navigation
             NavigateTo(screen);
         }
 
-        public void NavigateToNewspaper(GameState gameState)
+        public void NavigateToNewspaper(GameState gameState, bool skipAnimation = false)
         {
             var screen = new Screens.Newspaper.NewspaperScreenViewModel(
                 this,
                 _dialogService,
-                gameState);
+                gameState,
+                skipAnimation);
             NavigateTo(screen);
         }
 
