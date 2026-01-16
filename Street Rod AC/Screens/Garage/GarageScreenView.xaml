@@ -206,7 +206,7 @@
                     <!-- Car Details Overlay -->
                     <Border Background="#00000088"
                            VerticalAlignment="Bottom"
-                           Padding="20,10"
+                           Padding="20,8"
                            Visibility="{Binding HasCars, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -250,7 +250,7 @@
                                     Content="Preview in Showroom"
                                     Command="{Binding LaunchShowroomCommand}"
                                     Style="{StaticResource DialogPrimaryButtonStyle}"
-                                    Padding="15,8"
+                                    Padding="15,5"
                                     FontSize="14"
                                     VerticalAlignment="Center"/>
                         </Grid>
