@@ -1,12 +1,11 @@
 using System.Windows;
-using System.Windows.Controls;
 
 namespace Street_Rod_AC.Components.BottomBar
 {
     /// <summary>
     /// Reusable bottom bar component that displays bankroll information
     /// </summary>
-    public partial class BottomBarView : UserControl
+    public partial class BottomBarView : System.Windows.Controls.UserControl
     {
         public static readonly DependencyProperty BankrollDisplayProperty =
             DependencyProperty.Register(
