@@ -23,7 +23,7 @@
                     BorderBrush="{StaticResource BorderLightBrush}"
                     BorderThickness="2"
                     CornerRadius="8"
-                    MaxWidth="600"
+                    MaxWidth="750"
                     MaxHeight="400"
                     Padding="0"
                     HorizontalAlignment="Center"
