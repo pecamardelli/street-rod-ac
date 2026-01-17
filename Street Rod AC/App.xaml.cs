@@ -1,6 +1,8 @@
 ﻿using System.Configuration;
 using System.Data;
+using System.Globalization;
 using System.Windows;
+using System.Windows.Markup;
 using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Dialogs;
 using Street_Rod_AC.Logging;
@@ -79,6 +81,18 @@ namespace Street_Rod_AC
 
         public App()
         {
+            // Force English culture for the entire application
+            var englishCulture = new CultureInfo("en-US");
+            CultureInfo.DefaultThreadCurrentCulture = englishCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = englishCulture;
+            Thread.CurrentThread.CurrentCulture = englishCulture;
+            Thread.CurrentThread.CurrentUICulture = englishCulture;
+
+            // Set WPF language for XAML bindings (dates, numbers, etc.)
+            FrameworkElement.LanguageProperty.OverrideMetadata(
+                typeof(FrameworkElement),
+                new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(englishCulture.IetfLanguageTag)));
+
             // Initialize logging FIRST
             AppLoggerFactory.Initialize();
 

@@ -188,81 +188,200 @@
                 </Border.Triggers>
 
                 <Grid>
-                    <!-- Car Preview Image -->
-                    <Image Source="{Binding SelectedCar.PreviewImagePath}"
-                          Stretch="Uniform"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"
-                          Visibility="{Binding SelectedCar.HasPreviewImage, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <!-- ==================== CAR PREVIEW PANEL ==================== -->
+                    <Grid Visibility="{Binding ActivePanel, Converter={StaticResource GaragePanelToVisibilityConverter}, ConverterParameter=CarPreview}">
+                        <!-- Car Preview Image -->
+                        <Image Source="{Binding SelectedCar.PreviewImagePath}"
+                              Stretch="Uniform"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Visibility="{Binding SelectedCar.HasPreviewImage, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                    <!-- Placeholder when no image -->
-                    <StackPanel VerticalAlignment="Center"
-                               HorizontalAlignment="Center"
-                               Visibility="{Binding SelectedCar.HasPreviewImage, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
-                        <TextBlock Text="NO PREVIEW IMAGE"
-                                  FontSize="32"
-                                  FontWeight="Bold"
-                                  Foreground="#404040"
-                                  HorizontalAlignment="Center"
-                                  Margin="0,0,0,10"/>
-                        <TextBlock Text="(preview.jpg not found)"
-                                  FontSize="16"
-                                  Foreground="#606060"
-                                  HorizontalAlignment="Center"/>
-                    </StackPanel>
+                        <!-- Placeholder when no image -->
+                        <StackPanel VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding SelectedCar.HasPreviewImage, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                            <TextBlock Text="NO PREVIEW IMAGE"
+                                      FontSize="32"
+                                      FontWeight="Bold"
+                                      Foreground="#404040"
+                                      HorizontalAlignment="Center"
+                                      Margin="0,0,0,10"/>
+                            <TextBlock Text="(preview.jpg not found)"
+                                      FontSize="16"
+                                      Foreground="#606060"
+                                      HorizontalAlignment="Center"/>
+                        </StackPanel>
 
-                    <!-- Car Details Overlay -->
-                    <Border Background="#00000088"
-                           VerticalAlignment="Bottom"
-                           Padding="20,8"
-                           Visibility="{Binding HasCars, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
+                        <!-- Car Details Overlay -->
+                        <Border Background="#00000088"
+                               VerticalAlignment="Bottom"
+                               Padding="20,8"
+                               Visibility="{Binding HasCars, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
 
-                            <!-- Condition -->
-                            <TextBlock Grid.Column="0"
-                                      Text="Condition:"
-                                      FontSize="14"
-                                      Foreground="{StaticResource TextSecondaryBrush}"
-                                      Margin="0,0,10,0"
-                                      VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1"
-                                      Text="{Binding SelectedCar.ConditionDisplay}"
-                                      FontSize="14"
-                                      Foreground="{StaticResource TextPrimaryBrush}"
-                                      Margin="0,0,20,0"
-                                      VerticalAlignment="Center"/>
+                                <!-- Condition -->
+                                <TextBlock Grid.Column="0"
+                                          Text="Condition:"
+                                          FontSize="14"
+                                          Foreground="{StaticResource TextSecondaryBrush}"
+                                          Margin="0,0,10,0"
+                                          VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                          Text="{Binding SelectedCar.ConditionDisplay}"
+                                          FontSize="14"
+                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                          Margin="0,0,20,0"
+                                          VerticalAlignment="Center"/>
 
-                            <!-- Mileage -->
-                            <TextBlock Grid.Column="2"
-                                      Text="Mileage:"
-                                      FontSize="14"
-                                      Foreground="{StaticResource TextSecondaryBrush}"
-                                      Margin="0,0,10,0"
-                                      VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="3"
-                                      Text="{Binding SelectedCar.MileageDisplay}"
-                                      FontSize="14"
-                                      Foreground="{StaticResource TextPrimaryBrush}"
-                                      Margin="0,0,20,0"
-                                      VerticalAlignment="Center"/>
+                                <!-- Mileage -->
+                                <TextBlock Grid.Column="2"
+                                          Text="Mileage:"
+                                          FontSize="14"
+                                          Foreground="{StaticResource TextSecondaryBrush}"
+                                          Margin="0,0,10,0"
+                                          VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="3"
+                                          Text="{Binding SelectedCar.MileageDisplay}"
+                                          FontSize="14"
+                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                          Margin="0,0,20,0"
+                                          VerticalAlignment="Center"/>
 
-                            <!-- Showroom Button -->
-                            <Button Grid.Column="4"
-                                    Content="Preview in Showroom"
-                                    Command="{Binding LaunchShowroomCommand}"
-                                    Style="{StaticResource DialogPrimaryButtonStyle}"
-                                    Padding="15,5"
-                                    FontSize="14"
-                                    VerticalAlignment="Center"/>
+                                <!-- Showroom Button -->
+                                <Button Grid.Column="4"
+                                        Content="Preview in Showroom"
+                                        Command="{Binding LaunchShowroomCommand}"
+                                        Style="{StaticResource DialogPrimaryButtonStyle}"
+                                        Padding="15,5"
+                                        FontSize="14"
+                                        VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- ==================== CALENDAR PANEL ==================== -->
+                    <Grid Visibility="{Binding ActivePanel, Converter={StaticResource GaragePanelToVisibilityConverter}, ConverterParameter=Calendar}"
+                          Margin="40">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Month/Year Header -->
+                        <TextBlock Grid.Row="0"
+                                   Text="{Binding CurrentMonthYear}"
+                                   FontSize="36"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,10"/>
+
+                        <!-- Current Time Display -->
+                        <StackPanel Grid.Row="1"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,0,20">
+                            <TextBlock Text="{Binding CurrentDayOfWeek}"
+                                       FontSize="18"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Margin="0,0,15,0"/>
+                            <TextBlock Text="{Binding CurrentTimeDisplay}"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentPrimaryBrush}"/>
+                        </StackPanel>
+
+                        <!-- Calendar Grid -->
+                        <Grid Grid.Row="2"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Top">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Day of Week Headers -->
+                            <ItemsControl Grid.Row="0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="1" Columns="7"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <TextBlock Text="Sun" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
+                                <TextBlock Text="Mon" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
+                                <TextBlock Text="Tue" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
+                                <TextBlock Text="Wed" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
+                                <TextBlock Text="Thu" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
+                                <TextBlock Text="Fri" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
+                                <TextBlock Text="Sat" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
+                            </ItemsControl>
+
+                            <!-- Days Grid -->
+                            <ItemsControl Grid.Row="1"
+                                          ItemsSource="{Binding CalendarDays}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="6" Columns="7"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="70"
+                                                Height="50"
+                                                Margin="5"
+                                                CornerRadius="5"
+                                                BorderThickness="2">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#2A2A2A"/>
+                                                    <Setter Property="BorderBrush" Value="#404040"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCurrentDay}" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource AccentPrimaryBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentPrimaryBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsEmpty}" Value="True">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                            <Setter Property="BorderBrush" Value="Transparent"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding Day}"
+                                                       FontSize="18"
+                                                       FontWeight="SemiBold"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsCurrentDay}" Value="True">
+                                                                <Setter Property="Foreground" Value="White"/>
+                                                                <Setter Property="FontWeight" Value="Bold"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsEmpty}" Value="True">
+                                                                <Setter Property="Visibility" Value="Hidden"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </Grid>
-                    </Border>
+                    </Grid>
                 </Grid>
             </Border>
             </Grid>
@@ -270,6 +389,7 @@
             <!-- Calendar Button -->
             <Button x:Name="CalendarButton"
                     Grid.Column="2"
+                    Command="{Binding ShowCalendarCommand}"
                     Width="128"
                     Height="128"
                     HorizontalAlignment="Center"

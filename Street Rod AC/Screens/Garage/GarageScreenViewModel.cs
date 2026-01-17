@@ -26,6 +26,7 @@ namespace Street_Rod_AC.Screens.Garage
         public RelayCommand ExitCommand { get; }
         public AsyncRelayCommand LaunchShowroomCommand { get; }
         public RelayCommand SelectCarCommand { get; }
+        public RelayCommand ShowCalendarCommand { get; }
 
         private ObservableCollection<CarDisplayViewModel> _cars;
         public ObservableCollection<CarDisplayViewModel> Cars
@@ -66,6 +67,56 @@ namespace Street_Rod_AC.Screens.Garage
 
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
 
+        // Panel System
+        private GaragePanel _activePanel = GaragePanel.CarPreview;
+        public GaragePanel ActivePanel
+        {
+            get => _activePanel;
+            set
+            {
+                _activePanel = value;
+                OnPropertyChanged(nameof(ActivePanel));
+            }
+        }
+
+        // Calendar Properties
+        public DateTime CurrentGameDate => _gameState.Date;
+        public string CurrentMonthYear => _gameState.Date.ToString("MMMM yyyy");
+        public int CurrentDay => _gameState.Date.Day;
+        public string CurrentDayOfWeek => _gameState.Date.ToString("dddd");
+        public string CurrentTimeDisplay => _gameState.Date.ToString("h:mm tt");
+
+        public List<CalendarDayViewModel> CalendarDays
+        {
+            get
+            {
+                var days = new List<CalendarDayViewModel>();
+                var date = _gameState.Date;
+                var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
+                var daysInMonth = DateTime.DaysInMonth(date.Year, date.Month);
+
+                // Add empty slots for days before the first day of the month
+                var startDayOfWeek = (int)firstDayOfMonth.DayOfWeek;
+                for (int i = 0; i < startDayOfWeek; i++)
+                {
+                    days.Add(new CalendarDayViewModel { Day = 0, IsCurrentDay = false, IsEmpty = true });
+                }
+
+                // Add days of the month
+                for (int day = 1; day <= daysInMonth; day++)
+                {
+                    days.Add(new CalendarDayViewModel
+                    {
+                        Day = day,
+                        IsCurrentDay = day == date.Day,
+                        IsEmpty = false
+                    });
+                }
+
+                return days;
+            }
+        }
+
         public GarageScreenViewModel(
             NavigationService navigationService,
             DialogService dialogService,
@@ -84,6 +135,7 @@ namespace Street_Rod_AC.Screens.Garage
             ExitCommand = new RelayCommand(OnExit);
             LaunchShowroomCommand = new AsyncRelayCommand(OnLaunchShowroom, CanLaunchShowroom);
             SelectCarCommand = new RelayCommand(OnSelectCar);
+            ShowCalendarCommand = new RelayCommand(OnShowCalendar);
 
             _cars = new ObservableCollection<CarDisplayViewModel>();
 
@@ -209,6 +261,16 @@ namespace Street_Rod_AC.Screens.Garage
             _navigationService.NavigateToCarSelection(_gameState);
         }
 
+        private void OnShowCalendar()
+        {
+            // Toggle between calendar and car preview
+            ActivePanel = ActivePanel == GaragePanel.Calendar
+                ? GaragePanel.CarPreview
+                : GaragePanel.Calendar;
+
+            _logger.Debug("Active panel changed to {Panel}", ActivePanel);
+        }
+
         private void OnBack()
         {
             _logger.Information("Navigating back to game screen");
@@ -260,5 +322,15 @@ namespace Street_Rod_AC.Screens.Garage
         public string ConditionDisplay => $"{(int)(CarInstance.EngineHealth * 100)}%";
         public string MileageDisplay => $"{CarInstance.OdometerKM:N0} km";
         public bool HasPreviewImage => !string.IsNullOrEmpty(PreviewImagePath);
+    }
+
+    /// <summary>
+    /// View model for a single day in the calendar grid
+    /// </summary>
+    public class CalendarDayViewModel
+    {
+        public int Day { get; set; }
+        public bool IsCurrentDay { get; set; }
+        public bool IsEmpty { get; set; }
     }
 }
