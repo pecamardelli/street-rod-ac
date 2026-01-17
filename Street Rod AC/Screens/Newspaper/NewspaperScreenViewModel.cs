@@ -1,5 +1,6 @@
 using Street_Rod_AC.Dialogs;
 using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
 using System.Windows;
 
@@ -48,6 +49,12 @@ namespace Street_Rod_AC.Screens.Newspaper
         public override void Enter()
         {
             base.Enter();
+
+            // Only spend time when actually visiting (not returning from sub-screens)
+            if (!SkipEnterAnimation)
+            {
+                _ = ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.VisitNewspaper);
+            }
         }
 
         public override void Exit()

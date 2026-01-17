@@ -10,6 +10,7 @@ using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.Services.Opponents;
+using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -378,6 +379,11 @@ namespace Street_Rod_AC.Screens.Diner
         private void OnRaceCompleted(object? sender, EventArgs e)
         {
             _logger.Information("Race completed - refreshing diner display");
+
+            // Spend time for the drag race (30 min)
+            // TODO: Support road races (1 hour) when implemented
+            _ = ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.DragRace);
+
             LoadOpponents();
         }
 
@@ -385,6 +391,9 @@ namespace Street_Rod_AC.Screens.Diner
         {
             base.Enter();
             _logger.Information("Entered diner screen");
+
+            // Spend time for visiting the diner (30 min)
+            _ = ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.VisitDiner);
 
             // Subscribe to race completion events when screen becomes active
             _launcher.RaceCompleted += OnRaceCompleted;

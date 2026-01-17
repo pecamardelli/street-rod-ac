@@ -6,6 +6,7 @@ using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Storage;
+using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -115,11 +116,20 @@ namespace Street_Rod_AC.Screens.CarSelection
             if (selectedCar == null)
                 return;
 
+            // Only spend time if actually switching to a different car
+            var isActuallySwitching = _gameState.Player.SelectedCarInstanceId != selectedCar.CarInstance.InstanceId;
+
             _logger.Information("Selected car {CarId} (Instance: {InstanceId})",
                 selectedCar.CarDefinition.Id, selectedCar.CarInstance.InstanceId);
 
             // Update game state
             _gameState.Player.SelectedCarInstanceId = selectedCar.CarInstance.InstanceId;
+
+            // Spend time for switching cars (15 min)
+            if (isActuallySwitching)
+            {
+                _ = ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.SwitchCar);
+            }
 
             // Save game state to persist the selection
             try

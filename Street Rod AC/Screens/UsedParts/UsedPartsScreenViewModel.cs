@@ -1,6 +1,7 @@
 using Street_Rod_AC.Dialogs;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
 
 namespace Street_Rod_AC.Screens.UsedParts
@@ -43,6 +44,9 @@ namespace Street_Rod_AC.Screens.UsedParts
         {
             base.Enter();
             _logger.Information("Entered used parts screen");
+
+            // Spend time for visiting the used parts shop (30 min)
+            _ = ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.VisitUsedParts);
         }
 
         public override void Exit()

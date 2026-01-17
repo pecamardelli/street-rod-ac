@@ -5,7 +5,7 @@ namespace Street_Rod_AC.Models.GameState
     public class GameState
     {
         // Game time constants
-        public const int StartingYear = 1963;
+        public const int StartingYear = 1970;
         public const int StartingMonth = 6;  // June
         public const int StartingDay = 1;
         public const int DayStartHour = 8;   // 8:00 AM

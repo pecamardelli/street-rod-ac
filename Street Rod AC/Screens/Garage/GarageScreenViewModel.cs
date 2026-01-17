@@ -7,6 +7,7 @@ using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Configuration.Models;
+using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -233,6 +234,9 @@ namespace Street_Rod_AC.Screens.Garage
                 if (result.Success)
                 {
                     _logger.Information("Showroom launched successfully");
+
+                    // Spend time for viewing the showroom (15 min)
+                    await ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.ViewShowroom);
                 }
                 else
                 {
@@ -299,6 +303,28 @@ namespace Street_Rod_AC.Screens.Garage
         {
             base.Enter();
             _logger.Information("Entered garage screen");
+
+            // Refresh calendar properties to reflect current game time
+            RefreshCalendarDisplay();
+
+            // Refresh bankroll display in case money changed
+            OnPropertyChanged(nameof(BankrollDisplay));
+
+            // Reload player cars in case the collection changed
+            LoadPlayerCars();
+        }
+
+        /// <summary>
+        /// Notifies the UI that all calendar-related properties should be refreshed
+        /// </summary>
+        private void RefreshCalendarDisplay()
+        {
+            OnPropertyChanged(nameof(CurrentGameDate));
+            OnPropertyChanged(nameof(CurrentMonthYear));
+            OnPropertyChanged(nameof(CurrentDay));
+            OnPropertyChanged(nameof(CurrentDayOfWeek));
+            OnPropertyChanged(nameof(CurrentTimeDisplay));
+            OnPropertyChanged(nameof(CalendarDays));
         }
 
         public override void Exit()

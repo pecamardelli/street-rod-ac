@@ -8,6 +8,7 @@ using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Storage;
+using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -300,6 +301,9 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
 
             _logger.Information("Purchase completed: {CarName} for ${Price}, new bankroll: ${Bankroll}",
                 carDef.Name, listing.Price, _gameState.Player.Money);
+
+            // Spend time for buying a car (2 hours)
+            _ = ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.BuyCar);
 
             // Save game state
             try
