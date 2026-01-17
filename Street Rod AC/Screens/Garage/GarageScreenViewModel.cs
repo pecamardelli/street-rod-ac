@@ -11,6 +11,7 @@ using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows.Media.Imaging;
 
 namespace Street_Rod_AC.Screens.Garage
 {
@@ -88,6 +89,19 @@ namespace Street_Rod_AC.Screens.Garage
         public int CurrentDay => _gameState.Date.Day;
         public string CurrentDayOfWeek => _gameState.Date.ToString("dddd");
         public string CurrentTimeDisplay => _gameState.Date.ToString("h:mm tt");
+        public BitmapImage CalendarImage1 => GetRandomCalendarImage(0);
+        public BitmapImage CalendarImage2 => GetRandomCalendarImage(1);
+        public BitmapImage CalendarImage3 => GetRandomCalendarImage(2);
+
+        private BitmapImage GetRandomCalendarImage(int index)
+        {
+            // Seed random with year and month so images are consistent for each month but different between months
+            var seed = _gameState.Date.Year * 100 + _gameState.Date.Month + index * 17;
+            var random = new Random(seed);
+            var imageNumber = random.Next(1, 13); // 1-12
+            var uri = new Uri($"pack://application:,,,/Assets/Images/Misc/Calendar/calendar{imageNumber:D2}.png", UriKind.Absolute);
+            return new BitmapImage(uri);
+        }
 
         public List<CalendarDayViewModel> CalendarDays
         {
@@ -328,6 +342,9 @@ namespace Street_Rod_AC.Screens.Garage
             OnPropertyChanged(nameof(CurrentDay));
             OnPropertyChanged(nameof(CurrentDayOfWeek));
             OnPropertyChanged(nameof(CurrentTimeDisplay));
+            OnPropertyChanged(nameof(CalendarImage1));
+            OnPropertyChanged(nameof(CalendarImage2));
+            OnPropertyChanged(nameof(CalendarImage3));
             OnPropertyChanged(nameof(CalendarDays));
         }
 

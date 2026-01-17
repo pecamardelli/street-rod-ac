@@ -201,42 +201,67 @@
                     </Grid>
 
                     <!-- ==================== CALENDAR PANEL ==================== -->
-                    <Grid Visibility="{Binding ActivePanel, Converter={StaticResource GaragePanelToVisibilityConverter}, ConverterParameter=Calendar}"
-                          Margin="40">
+                    <Grid Visibility="{Binding ActivePanel, Converter={StaticResource GaragePanelToVisibilityConverter}, ConverterParameter=Calendar}">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Month/Year Header -->
-                        <TextBlock Grid.Row="0"
-                                   Text="{Binding CurrentMonthYear}"
-                                   FontSize="36"
-                                   FontWeight="Bold"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,10"/>
-
-                        <!-- Current Time Display -->
-                        <StackPanel Grid.Row="1"
+                        <!-- Calendar Images (Top) -->
+                        <StackPanel Grid.Row="0"
                                     Orientation="Horizontal"
                                     HorizontalAlignment="Center"
-                                    Margin="0,0,0,20">
-                            <TextBlock Text="{Binding CurrentDayOfWeek}"
-                                       FontSize="18"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
-                                       Margin="0,0,15,0"/>
-                            <TextBlock Text="{Binding CurrentTimeDisplay}"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       Foreground="{StaticResource AccentPrimaryBrush}"/>
+                                    Margin="0,5,0,5">
+                            <Image Source="{Binding CalendarImage1}"
+                                   Stretch="Uniform"
+                                   Height="120"
+                                   Margin="5,0"/>
+                            <Image Source="{Binding CalendarImage2}"
+                                   Stretch="Uniform"
+                                   Height="120"
+                                   Margin="5,0"/>
+                            <Image Source="{Binding CalendarImage3}"
+                                   Stretch="Uniform"
+                                   Height="120"
+                                   Margin="5,0"/>
                         </StackPanel>
 
-                        <!-- Calendar Grid -->
-                        <Grid Grid.Row="2"
-                              HorizontalAlignment="Center"
-                              VerticalAlignment="Top">
+                        <!-- Bottom: Date/Time and Calendar Grid -->
+                        <Grid Grid.Row="1" Margin="20,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Month/Year Header -->
+                            <TextBlock Grid.Row="0"
+                                       Text="{Binding CurrentMonthYear}"
+                                       FontSize="28"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,5"/>
+
+                            <!-- Current Time Display -->
+                            <StackPanel Grid.Row="1"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,0,0,10">
+                                <TextBlock Text="{Binding CurrentDayOfWeek}"
+                                           FontSize="16"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Margin="0,0,15,0"/>
+                                <TextBlock Text="{Binding CurrentTimeDisplay}"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource AccentPrimaryBrush}"/>
+                            </StackPanel>
+
+                            <!-- Calendar Grid -->
+                            <Grid Grid.Row="2"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Top">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
@@ -249,13 +274,13 @@
                                         <UniformGrid Rows="1" Columns="7"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
-                                <TextBlock Text="Sun" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
-                                <TextBlock Text="Mon" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
-                                <TextBlock Text="Tue" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
-                                <TextBlock Text="Wed" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
-                                <TextBlock Text="Thu" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
-                                <TextBlock Text="Fri" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
-                                <TextBlock Text="Sat" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="5"/>
+                                <TextBlock Text="Sun" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="3"/>
+                                <TextBlock Text="Mon" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="3"/>
+                                <TextBlock Text="Tue" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="3"/>
+                                <TextBlock Text="Wed" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="3"/>
+                                <TextBlock Text="Thu" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="3"/>
+                                <TextBlock Text="Fri" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="3"/>
+                                <TextBlock Text="Sat" Width="70" TextAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="3"/>
                             </ItemsControl>
 
                             <!-- Days Grid -->
@@ -269,8 +294,8 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border Width="70"
-                                                Height="50"
-                                                Margin="5"
+                                                Height="45"
+                                                Margin="3"
                                                 CornerRadius="5"
                                                 BorderThickness="2">
                                             <Border.Style>
@@ -314,6 +339,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </Grid>
+                    </Grid>
                     </Grid>
                 </Grid>
             </Border>

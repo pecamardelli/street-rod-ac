@@ -18,7 +18,8 @@
       "Bash(del \"C:\\\\Users\\\\Administrator\\\\source\\\\repos\\\\Street Rod AC\\\\Street Rod AC\\\\Services\\\\Race\\\\DragRaceService.cs\")",
       "Bash(grep:*)",
       "Bash(find:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(ls \"C:\\\\Users\\\\Administrator\\\\source\\\\repos\\\\Street Rod AC\\\\Street Rod AC\\\\Assets\\\\Images\\\\Misc\\\\Calendar\"\" 2>/dev/null || ls \"C:UsersAdministratorsourcereposStreet Rod ACStreet Rod ACMiscCalendar\"\")"
     ]
   }
 }

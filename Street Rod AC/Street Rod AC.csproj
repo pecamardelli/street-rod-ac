@@ -41,6 +41,7 @@
     <Resource Include="Assets\Images\UI\*.png" />
     <Resource Include="Assets\Images\Text\*.png" />
     <Resource Include="Assets\Images\Misc\*.png" />
+    <Resource Include="Assets\Images\Misc\Calendar\*.png" />
   </ItemGroup>
 
   <ItemGroup>
