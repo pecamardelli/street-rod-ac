@@ -149,7 +149,7 @@ namespace Street_Rod_AC.Screens.CarSelection
         private void OnBack()
         {
             _logger.Information("Navigating back to garage screen");
-            _navigationService.NavigateToGarage(_gameState);
+            _navigationService.NavigateToGarage(_gameState, skipAnimation: true);
         }
 
         public override void Enter()

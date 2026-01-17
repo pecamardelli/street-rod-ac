@@ -68,6 +68,8 @@ namespace Street_Rod_AC.Screens.Garage
 
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
 
+        public bool SkipEnterAnimation { get; }
+
         // Panel System
         private GaragePanel _activePanel = GaragePanel.CarPreview;
         public GaragePanel ActivePanel
@@ -123,7 +125,8 @@ namespace Street_Rod_AC.Screens.Garage
             DialogService dialogService,
             Models.GameState.GameState gameState,
             IContentCatalogRepository catalogRepo,
-            IAssettoCorsaLauncher launcher)
+            IAssettoCorsaLauncher launcher,
+            bool skipAnimation = false)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
@@ -131,6 +134,7 @@ namespace Street_Rod_AC.Screens.Garage
             _catalogRepo = catalogRepo;
             _launcher = launcher;
             _logger = AppLoggerFactory.CreateLogger("Garage");
+            SkipEnterAnimation = skipAnimation;
 
             BackCommand = new RelayCommand(OnBack);
             ExitCommand = new RelayCommand(OnExit);

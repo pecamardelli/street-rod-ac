@@ -5,26 +5,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Background="{StaticResource MainBackgroundBrush}"
-          Opacity="0">
+    <Grid Background="{StaticResource MainBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
-        <Grid.Triggers>
-            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                <BeginStoryboard>
-                    <Storyboard>
-                        <!-- Background fade in -->
-                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                       From="0.0"
-                                       To="1.0"
-                                       Duration="0:0:0.5"/>
-                    </Storyboard>
-                </BeginStoryboard>
-            </EventTrigger>
-        </Grid.Triggers>
 
         <!-- Garage Button -->
         <Button x:Name="GarageButton"
@@ -34,23 +19,7 @@
                 Command="{Binding BackCommand}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Margin="20,20,0,0"
-                Opacity="0">
-            <Button.Triggers>
-                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <!-- Fade in -->
-                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                           From="0.0"
-                                           To="1.0"
-                                           BeginTime="0:0:0.3"
-                                           Duration="0:0:0.5"/>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </Button.Triggers>
-        </Button>
+                Margin="20,20,0,0"/>
 
         <!-- Main Content -->
         <Grid Grid.Row="0" Margin="0,100,0,20">
@@ -66,42 +35,12 @@
                       FontWeight="Bold"
                       Foreground="{StaticResource TextPrimaryBrush}"
                       HorizontalAlignment="Center"
-                      Margin="0,0,0,30"
-                      Opacity="0">
-                <TextBlock.Triggers>
-                    <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                               From="0.0"
-                                               To="1.0"
-                                               BeginTime="0:0:0.3"
-                                               Duration="0:0:0.5"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </TextBlock.Triggers>
-            </TextBlock>
+                      Margin="0,0,0,30"/>
 
             <!-- Scrollable Car List -->
             <ScrollViewer Grid.Row="1"
                          VerticalScrollBarVisibility="Auto"
-                         HorizontalScrollBarVisibility="Disabled"
-                         Opacity="0">
-                <ScrollViewer.Triggers>
-                    <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                               From="0.0"
-                                               To="1.0"
-                                               BeginTime="0:0:0.4"
-                                               Duration="0:0:0.5"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </ScrollViewer.Triggers>
-
+                         HorizontalScrollBarVisibility="Disabled">
                 <ItemsControl ItemsSource="{Binding Cars}"
                              HorizontalAlignment="Center">
                     <ItemsControl.ItemTemplate>

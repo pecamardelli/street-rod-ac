@@ -113,14 +113,15 @@ namespace Street_Rod_AC.Navigation
             NavigateTo(screen);
         }
 
-        public void NavigateToGarage(GameState gameState)
+        public void NavigateToGarage(GameState gameState, bool skipAnimation = false)
         {
             var screen = new Screens.Garage.GarageScreenViewModel(
                 this,
                 _dialogService,
                 gameState,
                 _catalogRepository,
-                _launcher);
+                _launcher,
+                skipAnimation);
             NavigateTo(screen);
         }
 
