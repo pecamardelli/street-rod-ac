@@ -11,7 +11,10 @@ using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Configuration;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Opponents;
+using Street_Rod_AC.Services.Scheduler;
+using Street_Rod_AC.Services.Scheduler.Tasks;
 using Street_Rod_AC.Services.Storage;
+using Street_Rod_AC.Services.Time;
 
 namespace Street_Rod_AC
 {
@@ -35,9 +38,44 @@ namespace Street_Rod_AC
         public IOpponentRepository OpponentRepository { get; private set; }
         public IOpponentInitializationService OpponentInitializationService { get; private set; }
         public IOpponentChallengeService OpponentChallengeService { get; private set; }
+        public IGameTimeScheduler Scheduler { get; private set; }
+        public IGameTimeService GameTimeService { get; private set; }
 
         // Current game state (set when a game is loaded or created)
         public Models.GameState.GameState? CurrentGameState { get; set; }
+
+        /// <summary>
+        /// Spends game time for an action. Handles day transitions and scheduled tasks.
+        /// </summary>
+        public async Task<TimeSpendResult> SpendTimeAsync(GameAction action)
+        {
+            if (CurrentGameState == null)
+                return new TimeSpendResult { NewDayStarted = false, DaysPassed = 0 };
+
+            return await GameTimeService.SpendTimeAsync(CurrentGameState, action);
+        }
+
+        /// <summary>
+        /// Spends a custom amount of game time in minutes.
+        /// </summary>
+        public async Task<TimeSpendResult> SpendTimeAsync(int minutes)
+        {
+            if (CurrentGameState == null)
+                return new TimeSpendResult { NewDayStarted = false, DaysPassed = 0 };
+
+            return await GameTimeService.SpendTimeAsync(CurrentGameState, minutes);
+        }
+
+        /// <summary>
+        /// Ends the current game day and advances to next morning.
+        /// </summary>
+        public async Task<TimeSpendResult> EndDayAsync()
+        {
+            if (CurrentGameState == null)
+                return new TimeSpendResult { NewDayStarted = false, DaysPassed = 0 };
+
+            return await GameTimeService.EndDayAsync(CurrentGameState);
+        }
 
         public App()
         {
@@ -54,6 +92,11 @@ namespace Street_Rod_AC
             ProfileRepository = new CarProfileRepository();
             ProfileService = new CarProfileService(CatalogRepository, ProfileRepository);
             MarketService = new UsedCarMarketService(CatalogRepository, ProfileRepository);
+
+            // Scheduler and Time Service
+            Scheduler = new GameTimeScheduler();
+            Scheduler.RegisterTask(new MarketRefreshTask(MarketService));
+            GameTimeService = new GameTimeService(Scheduler);
 
             // Opponent services (must be initialized before GameStateRepository)
             OpponentRepository = new OpponentRepository();

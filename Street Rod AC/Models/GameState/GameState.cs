@@ -4,10 +4,23 @@ namespace Street_Rod_AC.Models.GameState
 {
     public class GameState
     {
+        // Game time constants
+        public const int StartingYear = 1963;
+        public const int StartingMonth = 6;  // June
+        public const int StartingDay = 1;
+        public const int DayStartHour = 8;   // 8:00 AM
+        public const int DayEndHour = 22;    // 10:00 PM
+
+        /// <summary>
+        /// Gets the default starting date/time for a new game
+        /// </summary>
+        public static DateTime GetStartingDateTime() =>
+            new DateTime(StartingYear, StartingMonth, StartingDay, DayStartHour, 0, 0);
+
         [BsonId]
         public int Id { get; set; } = 1; // Single record per save file
 
-        // Time System (matching GameMaker)
+        // Time System - Game world time (starts in 1963)
         public DateTime Date { get; set; }
         public int LastHour { get; set; }
         public int LastDay { get; set; }
@@ -28,6 +41,9 @@ namespace Street_Rod_AC.Models.GameState
         public List<UsedCarListing> UsedCarMarket { get; set; }
         public List<DealerLocation> DealerLocations { get; set; }
 
+        // Scheduled Tasks
+        public List<ScheduledTaskState> ScheduledTasks { get; set; }
+
         // Metadata
         public int CatalogVersion { get; set; }
         public DateTime CreatedDate { get; set; }
@@ -39,11 +55,14 @@ namespace Street_Rod_AC.Models.GameState
 
         public GameState()
         {
+            var gameStart = GetStartingDateTime();
             var now = DateTime.Now;
-            Date = now;
-            LastHour = now.Hour;
-            LastDay = now.DayOfYear;
-            LastWeek = GetWeekOfYear(now);
+
+            // Game world time (1963)
+            Date = gameStart;
+            LastHour = gameStart.Hour;
+            LastDay = gameStart.DayOfYear;
+            LastWeek = GetWeekOfYear(gameStart);
 
             Player = new Player("Player");
             Racers = new RacerCollection();
@@ -53,8 +72,10 @@ namespace Street_Rod_AC.Models.GameState
 
             UsedCarMarket = [];
             DealerLocations = [];
+            ScheduledTasks = [];
 
             CatalogVersion = 1;
+            // Real-world timestamps for save file metadata
             CreatedDate = now;
             LastPlayedDate = now;
         }
@@ -63,7 +84,8 @@ namespace Street_Rod_AC.Models.GameState
         {
             var state = new GameState
             {
-                Player = new Player(playerName)
+                Player = new Player(playerName),
+                Date = GetStartingDateTime()
             };
 
             // TODO: Initialize used car market
