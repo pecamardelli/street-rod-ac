@@ -80,13 +80,21 @@
 
         <!-- Main Content -->
         <Grid Grid.Row="0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-            <!-- Selected Car Display Bar (Clickable) -->
-            <Button Grid.Row="0"
+            <!-- Center Content (Car Name + Preview) -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Selected Car Display Bar (Clickable) -->
+                <Button Grid.Row="0"
                     Command="{Binding SelectCarCommand}"
                     HorizontalAlignment="Center"
                     Margin="0,80,0,20"
@@ -257,6 +265,82 @@
                     </Border>
                 </Grid>
             </Border>
+            </Grid>
+
+            <!-- Calendar Button -->
+            <Button x:Name="CalendarButton"
+                    Grid.Column="2"
+                    Width="128"
+                    Height="128"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Margin="0,80,0,0"
+                    Cursor="Hand"
+                    Opacity="0">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Grid>
+                                        <Border x:Name="border"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="#404040"
+                                                BorderThickness="2"
+                                                CornerRadius="5">
+                                            <Border.Clip>
+                                                <RectangleGeometry RadiusX="5" RadiusY="5">
+                                                    <RectangleGeometry.Rect>
+                                                        <Rect Width="128" Height="128"/>
+                                                    </RectangleGeometry.Rect>
+                                                </RectangleGeometry>
+                                            </Border.Clip>
+                                        </Border>
+                                        <TextBlock x:Name="hoverLabel"
+                                                   Text="Calendar"
+                                                   FontFamily="Courier New"
+                                                   FontSize="14"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Bottom"
+                                                   Margin="0,0,0,10"
+                                                   Opacity="0"/>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="border" Property="Opacity" Value="0.8"/>
+                                            <Setter TargetName="hoverLabel" Property="Opacity" Value="1"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="border" Property="Opacity" Value="0.6"/>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter TargetName="border" Property="Opacity" Value="0.3"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+                <Button.Background>
+                    <ImageBrush ImageSource="/Assets/Images/Buttons/calendar.png" Stretch="Uniform"/>
+                </Button.Background>
+                <Button.Triggers>
+                    <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                               From="0.0"
+                                               To="1.0"
+                                               BeginTime="0:0:0.3"
+                                               Duration="0:0:0.5"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Button.Triggers>
+            </Button>
         </Grid>
 
         <!-- Bottom Nav Bar -->
