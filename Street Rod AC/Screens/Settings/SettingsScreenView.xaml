@@ -58,18 +58,14 @@
             </Button.Triggers>
         </Button>
 
-        <!-- Settings Title -->
-        <TextBlock Text="SETTINGS"
-                   FontSize="48"
-                   FontWeight="Bold"
-                   Foreground="{StaticResource TextPrimaryBrush}"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   Opacity="0">
-            <TextBlock.RenderTransform>
+        <!-- Settings Content -->
+        <StackPanel HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Opacity="0">
+            <StackPanel.RenderTransform>
                 <TranslateTransform Y="30"/>
-            </TextBlock.RenderTransform>
-            <TextBlock.Triggers>
+            </StackPanel.RenderTransform>
+            <StackPanel.Triggers>
                 <EventTrigger RoutedEvent="FrameworkElement.Loaded">
                     <BeginStoryboard>
                         <Storyboard>
@@ -86,7 +82,24 @@
                         </Storyboard>
                     </BeginStoryboard>
                 </EventTrigger>
-            </TextBlock.Triggers>
-        </TextBlock>
+            </StackPanel.Triggers>
+
+            <!-- Settings Title -->
+            <TextBlock Text="SETTINGS"
+                       FontSize="48"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,40"/>
+
+            <!-- Edit Car Catalog Button -->
+            <Button Content="Edit Car Catalog"
+                    Command="{Binding OpenCatalogEditorCommand}"
+                    Style="{StaticResource DialogPrimaryButtonStyle}"
+                    Width="200"
+                    Height="45"
+                    FontSize="16"
+                    HorizontalAlignment="Center"/>
+        </StackPanel>
     </Grid>
 </UserControl>

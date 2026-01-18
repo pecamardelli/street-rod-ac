@@ -26,6 +26,7 @@ namespace Street_Rod_AC.Navigation
         private readonly IGameStateRepository _gameStateRepository;
         private readonly IUsedCarMarketService _marketService;
         private readonly GameSettingsService _gameSettingsService;
+        private readonly ICarProfileService _profileService;
 
         public IScreen CurrentScreen
         {
@@ -50,7 +51,8 @@ namespace Street_Rod_AC.Navigation
             IOpponentChallengeService opponentChallengeService,
             IGameStateRepository gameStateRepository,
             IUsedCarMarketService marketService,
-            GameSettingsService gameSettingsService)
+            GameSettingsService gameSettingsService,
+            ICarProfileService profileService)
         {
             _dialogService = dialogService;
             _catalogRepository = catalogRepository;
@@ -60,6 +62,7 @@ namespace Street_Rod_AC.Navigation
             _gameStateRepository = gameStateRepository;
             _marketService = marketService;
             _gameSettingsService = gameSettingsService;
+            _profileService = profileService;
         }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -187,6 +190,17 @@ namespace Street_Rod_AC.Navigation
                 this,
                 _dialogService,
                 gameState);
+            NavigateTo(screen);
+        }
+
+        public void NavigateToCarCatalogEditor()
+        {
+            var screen = new Screens.CarCatalogEditor.CarCatalogEditorScreenViewModel(
+                this,
+                _dialogService,
+                _catalogRepository,
+                _profileRepository,
+                _profileService);
             NavigateTo(screen);
         }
     }

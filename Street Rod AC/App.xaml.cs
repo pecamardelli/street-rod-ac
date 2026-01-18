@@ -147,7 +147,8 @@ namespace Street_Rod_AC
                 OpponentChallengeService,
                 GameStateRepository,
                 MarketService,
-                GameSettingsService);
+                GameSettingsService,
+                ProfileService);
         }
 
         protected override async void OnStartup(StartupEventArgs e)

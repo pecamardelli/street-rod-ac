@@ -16,6 +16,7 @@ namespace Street_Rod_AC.Screens.Settings
         public RelayCommand BackCommand { get; }
         public RelayCommand SaveCommand { get; }
         public RelayCommand ResetCommand { get; }
+        public RelayCommand OpenCatalogEditorCommand { get; }
 
         public GameSettings Settings => _settingsService.Current;
 
@@ -32,6 +33,7 @@ namespace Street_Rod_AC.Screens.Settings
             BackCommand = new RelayCommand(OnBack);
             SaveCommand = new RelayCommand(OnSave);
             ResetCommand = new RelayCommand(OnReset);
+            OpenCatalogEditorCommand = new RelayCommand(OnOpenCatalogEditor);
         }
 
         public override void Enter()
@@ -57,6 +59,12 @@ namespace Street_Rod_AC.Screens.Settings
             _settingsService.ResetToDefaults();
             OnPropertyChanged(nameof(Settings));
             _logger.Information("Settings reset to defaults");
+        }
+
+        private void OnOpenCatalogEditor()
+        {
+            _logger.Information("Navigating to car catalog editor");
+            _navigationService.NavigateToCarCatalogEditor();
         }
     }
 }
