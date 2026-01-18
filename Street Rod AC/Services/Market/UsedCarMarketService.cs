@@ -8,28 +8,21 @@ namespace Street_Rod_AC.Services.Market
     /// <summary>
     /// Implements used car market spawning and management
     /// </summary>
-    public class UsedCarMarketService : IUsedCarMarketService
+    public class UsedCarMarketService(IContentCatalogRepository catalogRepo, ICarProfileRepository profileRepo) : IUsedCarMarketService
     {
-        private readonly IContentCatalogRepository _catalogRepo;
-        private readonly ICarProfileRepository _profileRepo;
-        private readonly IAppLogger _logger;
-        private readonly Random _random = new Random();
+        private readonly IContentCatalogRepository _catalogRepo = catalogRepo;
+        private readonly ICarProfileRepository _profileRepo = profileRepo;
+        private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("Market");
+        private readonly Random _random = new();
 
         // Market configuration
         private const int MinMarketSize = 30;
         private const int MaxMarketSize = 50;
-        private const float MinCondition = 0.3f;
+        private const float MinCondition = 0.6f;
         private const float MaxCondition = 0.95f;
         private const int MinMileage = 5000;
-        private const int MaxMileage = 200000;
+        private const int MaxMileage = 60000;
         private const float PriceVariationPercent = 0.2f; // ±20%
-
-        public UsedCarMarketService(IContentCatalogRepository catalogRepo, ICarProfileRepository profileRepo)
-        {
-            _catalogRepo = catalogRepo;
-            _profileRepo = profileRepo;
-            _logger = AppLoggerFactory.CreateLogger("Market");
-        }
 
         public List<UsedCarListing> SpawnListings(List<DealerLocation> dealers, DateTime currentDate)
         {
@@ -127,11 +120,11 @@ namespace Street_Rod_AC.Services.Market
         {
             return new List<DealerLocation>
             {
-                new DealerLocation { Id = "downtown_motors", Name = "Downtown Motors", Region = "Downtown" },
-                new DealerLocation { Id = "eastside_garage", Name = "Eastside Garage", Region = "Eastside" },
-                new DealerLocation { Id = "suburban_autos", Name = "Suburban Autos", Region = "Suburbs" },
-                new DealerLocation { Id = "riverside_cars", Name = "Riverside Cars", Region = "Riverside" },
-                new DealerLocation { Id = "industrial_motors", Name = "Industrial Motors", Region = "Industrial District" }
+                new() { Id = "downtown_motors", Name = "Downtown Motors", Region = "Downtown" },
+                new() { Id = "eastside_garage", Name = "Eastside Garage", Region = "Eastside" },
+                new() { Id = "suburban_autos", Name = "Suburban Autos", Region = "Suburbs" },
+                new() { Id = "riverside_cars", Name = "Riverside Cars", Region = "Riverside" },
+                new() { Id = "industrial_motors", Name = "Industrial Motors", Region = "Industrial District" }
             };
         }
 
