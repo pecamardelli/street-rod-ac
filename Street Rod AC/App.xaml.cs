@@ -110,6 +110,7 @@ namespace Street_Rod_AC
             // Scheduler and Time Service
             Scheduler = new GameTimeScheduler();
             Scheduler.RegisterTask(new MarketRefreshTask(MarketService));
+            Scheduler.RegisterTask(new Services.Scheduler.Tasks.RaceSimulatorTask(new Services.Simulation.RaceSimulatorService()));
             GameTimeService = new GameTimeService(Scheduler);
 
             // Opponent services (must be initialized before GameStateRepository)
