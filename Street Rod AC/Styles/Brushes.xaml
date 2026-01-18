@@ -46,6 +46,10 @@
                 ImageSource="pack://application:,,,/Assets/Images/Backgrounds/diner_background.png"
                 Stretch="UniformToFill"/>
 
+    <ImageBrush x:Key="SettingsBackgroundBrush"
+                ImageSource="pack://application:,,,/Assets/Images/Backgrounds/settings_background.png"
+                Stretch="UniformToFill"/>
+
     <!-- Button Images -->
     <ImageBrush x:Key="NewGameButtonBrush"
                 ImageSource="pack://application:,,,/Assets/Images/Buttons/new_game.png"
@@ -53,6 +57,10 @@
 
     <ImageBrush x:Key="LoadGameButtonBrush"
                 ImageSource="pack://application:,,,/Assets/Images/Buttons/load_game.png"
+                Stretch="Fill"/>
+
+    <ImageBrush x:Key="SettingsButtonBrush"
+                ImageSource="pack://application:,,,/Assets/Images/Buttons/settings.png"
                 Stretch="Fill"/>
 
     <ImageBrush x:Key="ExitButtonBrush"

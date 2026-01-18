@@ -15,6 +15,7 @@ using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Scheduler;
 using Street_Rod_AC.Services.Scheduler.Tasks;
+using Street_Rod_AC.Services.Settings;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
 
@@ -42,6 +43,7 @@ namespace Street_Rod_AC
         public IOpponentChallengeService OpponentChallengeService { get; private set; }
         public IGameTimeScheduler Scheduler { get; private set; }
         public IGameTimeService GameTimeService { get; private set; }
+        public GameSettingsService GameSettingsService { get; private set; }
 
         // Current game state (set when a game is loaded or created)
         public Models.GameState.GameState? CurrentGameState { get; set; }
@@ -101,6 +103,7 @@ namespace Street_Rod_AC
             ContentService = new AssettoCorsaContentService();
             IniModificationService = new IniModificationService();
             DialogService = new DialogService();
+            GameSettingsService = new GameSettingsService();
             CatalogRepository = new ContentCatalogRepository();
             CarImportService = new CarImportService(CatalogRepository);
             ProfileRepository = new CarProfileRepository();
@@ -143,7 +146,8 @@ namespace Street_Rod_AC
                 Launcher,
                 OpponentChallengeService,
                 GameStateRepository,
-                MarketService);
+                MarketService,
+                GameSettingsService);
         }
 
         protected override async void OnStartup(StartupEventArgs e)

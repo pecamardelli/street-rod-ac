@@ -14,6 +14,7 @@
              xmlns:garage="clr-namespace:Street_Rod_AC.Screens.Garage"
              xmlns:carSelection="clr-namespace:Street_Rod_AC.Screens.CarSelection"
              xmlns:diner="clr-namespace:Street_Rod_AC.Screens.Diner"
+             xmlns:settings="clr-namespace:Street_Rod_AC.Screens.Settings"
              xmlns:confirmation="clr-namespace:Street_Rod_AC.Dialogs.Confirmation"
              xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
              xmlns:challengeSetup="clr-namespace:Street_Rod_AC.Dialogs.ChallengeSetup"
@@ -84,6 +85,10 @@
 
             <DataTemplate DataType="{x:Type diner:DinerScreenViewModel}">
                 <diner:DinerScreenView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type settings:SettingsScreenViewModel}">
+                <settings:SettingsScreenView/>
             </DataTemplate>
 
             <!-- Dialog DataTemplates -->

@@ -6,6 +6,7 @@ using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Opponents;
+using Street_Rod_AC.Services.Settings;
 using Street_Rod_AC.Services.Storage;
 
 namespace Street_Rod_AC.Navigation
@@ -24,6 +25,7 @@ namespace Street_Rod_AC.Navigation
         private readonly IOpponentChallengeService _opponentChallengeService;
         private readonly IGameStateRepository _gameStateRepository;
         private readonly IUsedCarMarketService _marketService;
+        private readonly GameSettingsService _gameSettingsService;
 
         public IScreen CurrentScreen
         {
@@ -47,7 +49,8 @@ namespace Street_Rod_AC.Navigation
             IAssettoCorsaLauncher launcher,
             IOpponentChallengeService opponentChallengeService,
             IGameStateRepository gameStateRepository,
-            IUsedCarMarketService marketService)
+            IUsedCarMarketService marketService,
+            GameSettingsService gameSettingsService)
         {
             _dialogService = dialogService;
             _catalogRepository = catalogRepository;
@@ -56,6 +59,7 @@ namespace Street_Rod_AC.Navigation
             _opponentChallengeService = opponentChallengeService;
             _gameStateRepository = gameStateRepository;
             _marketService = marketService;
+            _gameSettingsService = gameSettingsService;
         }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -87,6 +91,12 @@ namespace Street_Rod_AC.Navigation
         public void NavigateToMainMenu()
         {
             var screen = new Screens.MainMenu.MainMenuScreenViewModel(this, _dialogService);
+            NavigateTo(screen);
+        }
+
+        public void NavigateToSettings()
+        {
+            var screen = new Screens.Settings.SettingsScreenViewModel(this, _dialogService, _gameSettingsService);
             NavigateTo(screen);
         }
 

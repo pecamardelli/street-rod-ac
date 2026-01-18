@@ -13,6 +13,7 @@ namespace Street_Rod_AC.Screens.MainMenu
 
         public RelayCommand NewGameCommand { get; }
         public RelayCommand LoadGameCommand { get; }
+        public RelayCommand SettingsCommand { get; }
         public RelayCommand ExitCommand { get; }
 
         public MainMenuScreenViewModel(NavigationService navigationService, DialogService dialogService)
@@ -22,6 +23,7 @@ namespace Street_Rod_AC.Screens.MainMenu
 
             NewGameCommand = new RelayCommand(OnNewGame);
             LoadGameCommand = new RelayCommand(OnLoadGame);
+            SettingsCommand = new RelayCommand(OnSettings);
             ExitCommand = new RelayCommand(OnExit);
         }
 
@@ -33,6 +35,11 @@ namespace Street_Rod_AC.Screens.MainMenu
         private void OnLoadGame()
         {
             _navigationService.NavigateToLoadGame();
+        }
+
+        private void OnSettings()
+        {
+            _navigationService.NavigateToSettings();
         }
 
         private void OnExit()
