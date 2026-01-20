@@ -223,16 +223,7 @@ namespace Street_Rod_AC.Services.Configuration
         {
             var filePath = GetIniFilePath(intent.TargetFile);
 
-            // Template path (in application directory)
-            var templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Project Guidelines", "examples", "drag_race.ini");
-
-            _logger.Information("Applying drag race intent using template: {TemplatePath}", templatePath);
-
-            if (!File.Exists(templatePath))
-            {
-                _logger.Error("Drag race template not found at: {TemplatePath}", templatePath);
-                throw new FileNotFoundException($"Drag race template not found at: {templatePath}");
-            }
+            _logger.Information("Applying drag race intent (generating INI from code)");
 
             // Create backup if file exists (before we modify it)
             if (File.Exists(filePath))
@@ -247,32 +238,178 @@ namespace Street_Rod_AC.Services.Configuration
                 _logger.Debug("Created backup: {BackupPath}", Path.GetFileName(backupPath));
             }
 
-            // Read template content
-            var templateContent = File.ReadAllText(templatePath);
-
-            // Replace values in template
-            // RACE section: MODEL and SKIN (for player car)
-            templateContent = ReplaceLine(templateContent, "[RACE]", "MODEL", intent.PlayerCarId);
-            templateContent = ReplaceLine(templateContent, "[RACE]", "SKIN", intent.PlayerSkin);
-
-            // CAR_0 section (player)
-            templateContent = ReplaceLine(templateContent, "[CAR_0]", "SKIN", intent.PlayerSkin);
-            templateContent = ReplaceLine(templateContent, "[CAR_0]", "DRIVER_NAME", intent.PlayerName);
-
-            // CAR_1 section (opponent)
-            templateContent = ReplaceLine(templateContent, "[CAR_1]", "MODEL", intent.OpponentCarId);
-            templateContent = ReplaceLine(templateContent, "[CAR_1]", "SKIN", intent.OpponentSkin);
-            templateContent = ReplaceLine(templateContent, "[CAR_1]", "DRIVER_NAME", intent.OpponentName);
-            templateContent = ReplaceLine(templateContent, "[CAR_1]", "AI_LEVEL", intent.OpponentAILevel.ToString());
-            templateContent = ReplaceLine(templateContent, "[CAR_1]", "AI_AGGRESSION", intent.OpponentAIAggression.ToString());
+            // Build the race.ini content from scratch
+            var content = BuildDragRaceIni(intent);
 
             // Write to race.ini
-            File.WriteAllText(filePath, templateContent);
+            File.WriteAllText(filePath, content);
 
             _logger.Information("Applied drag race intent: Player={PlayerName} ({PlayerCarId}), Opponent={OpponentName} ({OpponentCarId}), AI={AILevel}/{AIAggression}",
                 intent.PlayerName, intent.PlayerCarId, intent.OpponentName, intent.OpponentCarId, intent.OpponentAILevel, intent.OpponentAIAggression);
 
             return true;
+        }
+
+        /// <summary>
+        /// Builds the complete drag race INI file content with all required sections
+        /// </summary>
+        private string BuildDragRaceIni(DragRaceIntent intent)
+        {
+            var sb = new System.Text.StringBuilder();
+
+            // [BENCHMARK]
+            sb.AppendLine("[BENCHMARK]");
+            sb.AppendLine("ACTIVE=0");
+            sb.AppendLine();
+
+            // [DYNAMIC_TRACK]
+            sb.AppendLine("[DYNAMIC_TRACK]");
+            sb.AppendLine("LAP_GAIN=1");
+            sb.AppendLine("RANDOMNESS=0");
+            sb.AppendLine("SESSION_START=100");
+            sb.AppendLine("SESSION_TRANSFER=100");
+            sb.AppendLine("PRESET=5");
+            sb.AppendLine();
+
+            // [GHOST_CAR]
+            sb.AppendLine("[GHOST_CAR]");
+            sb.AppendLine("ENABLED=0");
+            sb.AppendLine("FILE=");
+            sb.AppendLine("LOAD=0");
+            sb.AppendLine("PLAYING=0");
+            sb.AppendLine("RECORDING=0");
+            sb.AppendLine("SECONDS_ADVANTAGE=0");
+            sb.AppendLine();
+
+            // [GROOVE]
+            sb.AppendLine("[GROOVE]");
+            sb.AppendLine("VIRTUAL_LAPS=10");
+            sb.AppendLine("MAX_LAPS=30");
+            sb.AppendLine("STARTING_LAPS=0");
+            sb.AppendLine();
+
+            // [HEADER]
+            sb.AppendLine("[HEADER]");
+            sb.AppendLine("VERSION=1");
+            sb.AppendLine("__CM_FEATURE_SET=2");
+            sb.AppendLine();
+
+            // [LAP_INVALIDATOR]
+            sb.AppendLine("[LAP_INVALIDATOR]");
+            sb.AppendLine("ALLOWED_TYRES_OUT=-1");
+            sb.AppendLine();
+
+            // [LIGHTING]
+            sb.AppendLine("[LIGHTING]");
+            sb.AppendLine("CLOUD_SPEED=0.200");
+            sb.AppendLine("SUN_ANGLE=-16.00");
+            sb.AppendLine("TIME_MULT=1.0");
+            sb.AppendLine("__CM_WEATHER_TYPE=19");
+            sb.AppendLine("__TRACK_GEOTAG_LONG=0.231944444444444");
+            sb.AppendLine("__TRACK_TIMEZONE_BASE_OFFSET=3600");
+            sb.AppendLine("__TRACK_TIMEZONE_DTS=0");
+            sb.AppendLine("__TRACK_TIMEZONE_OFFSET=3600");
+            sb.AppendLine("__TRACK_GEOTAG_LAT=47.9602777777778");
+            sb.AppendLine("__CM_WEATHER_CONTROLLER=base");
+            sb.AppendLine();
+
+            // [OPTIONS]
+            sb.AppendLine("[OPTIONS]");
+            sb.AppendLine("USE_MPH=0");
+            sb.AppendLine();
+
+            // [RACE] - Player car info and track
+            sb.AppendLine("[RACE]");
+            sb.AppendLine("AI_LEVEL=100");
+            sb.AppendLine("CARS=2");
+            sb.AppendLine("CONFIG_TRACK=drag1000");
+            sb.AppendLine("DRIFT_MODE=0");
+            sb.AppendLine("FIXED_SETUP=0");
+            sb.AppendLine("JUMP_START_PENALTY=1");
+            sb.AppendLine($"MODEL={intent.PlayerCarId}");
+            sb.AppendLine("MODEL_CONFIG=");
+            sb.AppendLine("PENALTIES=0");
+            sb.AppendLine("RACE_LAPS=1");
+            sb.AppendLine($"SKIN={intent.PlayerSkin}");
+            sb.AppendLine("TRACK=ks_drag");
+            sb.AppendLine();
+
+            // [REMOTE]
+            sb.AppendLine("[REMOTE]");
+            sb.AppendLine("ACTIVE=0");
+            sb.AppendLine("GUID=");
+            sb.AppendLine("NAME=");
+            sb.AppendLine("PASSWORD=");
+            sb.AppendLine("REQUESTED_CAR=");
+            sb.AppendLine("SERVER_IP=");
+            sb.AppendLine("SERVER_PORT=");
+            sb.AppendLine("TEAM=");
+            sb.AppendLine();
+
+            // [REPLAY]
+            sb.AppendLine("[REPLAY]");
+            sb.AppendLine("ACTIVE=0");
+            sb.AppendLine("FILENAME=");
+            sb.AppendLine();
+
+            // [RESTART]
+            sb.AppendLine("[RESTART]");
+            sb.AppendLine("ACTIVE=0");
+            sb.AppendLine();
+
+            // [TEMPERATURE]
+            sb.AppendLine("[TEMPERATURE]");
+            sb.AppendLine("AMBIENT=12");
+            sb.AppendLine("ROAD=13");
+            sb.AppendLine();
+
+            // [WEATHER]
+            sb.AppendLine("[WEATHER]");
+            sb.AppendLine("NAME=4_mid_clear");
+            sb.AppendLine();
+
+            // [WIND]
+            sb.AppendLine("[WIND]");
+            sb.AppendLine("DIRECTION_DEG=-1");
+            sb.AppendLine("SPEED_KMH_MAX=40");
+            sb.AppendLine("SPEED_KMH_MIN=2");
+            sb.AppendLine();
+
+            // [__PREVIEW_GENERATION]
+            sb.AppendLine("[__PREVIEW_GENERATION]");
+            sb.AppendLine("ACTIVE=0");
+            sb.AppendLine();
+
+            // [SESSION_0] - Drag race session
+            sb.AppendLine("[SESSION_0]");
+            sb.AppendLine("NAME=Drag Race");
+            sb.AppendLine("TYPE=7");
+            sb.AppendLine("SPAWN_SET=START");
+            sb.AppendLine("MATCHES=10");
+            sb.AppendLine();
+
+            // [CAR_0] - Player
+            sb.AppendLine("[CAR_0]");
+            sb.AppendLine("MODEL=-");
+            sb.AppendLine("MODEL_CONFIG=");
+            sb.AppendLine($"SKIN={intent.PlayerSkin}");
+            sb.AppendLine($"DRIVER_NAME={intent.PlayerName}");
+            sb.AppendLine("NATIONALITY=");
+            sb.AppendLine("NATION_CODE=");
+            sb.AppendLine();
+
+            // [CAR_1] - Opponent (AI)
+            sb.AppendLine("[CAR_1]");
+            sb.AppendLine($"MODEL={intent.OpponentCarId}");
+            sb.AppendLine("MODEL_CONFIG=");
+            sb.AppendLine($"AI_LEVEL={intent.OpponentAILevel}");
+            sb.AppendLine($"AI_AGGRESSION={intent.OpponentAIAggression}");
+            sb.AppendLine($"SKIN={intent.OpponentSkin}");
+            sb.AppendLine($"DRIVER_NAME={intent.OpponentName}");
+            sb.AppendLine("NATIONALITY=");
+            sb.AppendLine("NATION_CODE=");
+
+            return sb.ToString();
         }
 
         /// <summary>

@@ -164,11 +164,20 @@ namespace Street_Rod_AC.Services
 
                 _logger.Information("Process started. PID: {ProcessId}", _currentProcess.Id);
 
-                // PHASE 5: MONITOR (PASSIVE)
-                _logger.Information("PHASE: Monitor (passive)");
+                // PHASE 5: MONITOR (with quit signal detection for races)
+                _logger.Information("PHASE: Monitor");
                 _logger.Information("Waiting for Assetto Corsa to exit...");
 
-                await _currentProcess.WaitForExitAsync();
+                if (intent is DragRaceLaunchIntent or RaceLaunchIntent)
+                {
+                    // For races, monitor for quit signal from the Python app
+                    await WaitForExitOrQuitSignalAsync(_currentProcess);
+                }
+                else
+                {
+                    // For showroom, just wait normally
+                    await _currentProcess.WaitForExitAsync();
+                }
 
                 var exitCode = _currentProcess.ExitCode;
                 var endTime = DateTime.Now;
@@ -270,6 +279,64 @@ namespace Street_Rod_AC.Services
                 _currentProcess = null;
                 _isExecutionLocked = false;
                 _executionLock.Release();
+            }
+        }
+
+        /// <summary>
+        /// Wait for AC to exit or for the Python app to signal quit
+        /// </summary>
+        private async Task WaitForExitOrQuitSignalAsync(Process process)
+        {
+            var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var signalPath = Path.Combine(documentsPath, "Assetto Corsa", "out", "StreetRodRaceApp", "quit_signal");
+
+            // Delete any existing signal file from previous runs
+            if (File.Exists(signalPath))
+            {
+                try { File.Delete(signalPath); } catch { }
+            }
+
+            _logger.Information("Monitoring for quit signal at: {SignalPath}", signalPath);
+
+            // Poll for either process exit or quit signal
+            while (!process.HasExited)
+            {
+                // Check for quit signal file
+                if (File.Exists(signalPath))
+                {
+                    _logger.Information("Quit signal detected! Terminating Assetto Corsa...");
+
+                    try
+                    {
+                        // Give AC a moment to finish writing files
+                        await Task.Delay(500);
+
+                        // Kill the process
+                        if (!process.HasExited)
+                        {
+                            process.Kill(entireProcessTree: true);
+                            _logger.Information("Assetto Corsa process terminated");
+                        }
+
+                        // Clean up the signal file
+                        File.Delete(signalPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warning(ex, "Error during quit signal handling");
+                    }
+
+                    break;
+                }
+
+                // Small delay before next check
+                await Task.Delay(250);
+            }
+
+            // Ensure process has fully exited
+            if (!process.HasExited)
+            {
+                await process.WaitForExitAsync();
             }
         }
 

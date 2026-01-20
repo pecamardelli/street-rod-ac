@@ -24,8 +24,27 @@ CRASH_COOLDOWN_SECONDS = 5.0    # Prevent duplicate detections
 # Fixed-rate sampling interval (seconds)
 SAMPLING_INTERVAL = 0.1  # Sample at 10Hz instead of per-frame
 
+# Dialog settings
+DIALOG_WIDTH = 400
+DIALOG_HEIGHT = 150
+
+# Reset detection settings
+RESET_SPLINE_THRESHOLD = 0.1  # If spline position drops below this, car was reset to start
+
+# Messages
+MSG_WIN = "You won a few bucks, not bad!"
+MSG_LOSE = "You lost, sucker!"
+MSG_CRASH = "Lucky you weren't killed!\nBetter luck next time!"
+
 # App window
 appWindow = 0
+
+# Dialog window
+dialogWindow = 0
+dialogLabel = None
+dialogStatsLabel = None
+dialogVisible = False
+dialogShowTime = None
 
 # Session state
 session_id = None
@@ -38,6 +57,10 @@ accumulated_delta = 0.0
 # Player tracking
 player_car_id = 0
 player_crashed = False
+player_finished = False
+race_ended = False
+waiting_for_reset = False
+last_spline_position = 0.0
 
 # Car data storage
 car_data = {}
@@ -97,6 +120,7 @@ class CarData:
 def acMain(ac_version):
     """Initialize the app"""
     global appWindow, session_id, session_start_time, status_label
+    global dialogWindow, dialogLabel, dialogStatsLabel
 
     try:
         # Generate unique session ID
@@ -113,6 +137,39 @@ def acMain(ac_version):
         ac.setPosition(status_label, 10, 30)
         ac.setFontSize(status_label, 16)
 
+        # Create dialog window (hidden initially)
+        dialogWindow = ac.newApp("StreetRodDialog")
+        ac.setSize(dialogWindow, DIALOG_WIDTH, DIALOG_HEIGHT)
+        ac.setTitle(dialogWindow, "")
+        ac.setIconPosition(dialogWindow, 0, -10000)  # Hide icon
+        ac.setTitlePosition(dialogWindow, 0, -10000)  # Hide title
+        ac.setBackgroundOpacity(dialogWindow, 0.9)
+
+        # Center dialog horizontally, position near top
+        try:
+            # Try to get screen resolution
+            screen_width = ac.getResolution()[0] if hasattr(ac, 'getResolution') else 1920
+        except:
+            screen_width = 1920  # Default fallback
+        dialog_x = (screen_width - DIALOG_WIDTH) / 2
+        dialog_y = 150  # Near top of screen
+        ac.setPosition(dialogWindow, dialog_x, dialog_y)
+
+        # Main message label (centered in dialog)
+        dialogLabel = ac.addLabel(dialogWindow, "")
+        ac.setPosition(dialogLabel, DIALOG_WIDTH / 2, 40)
+        ac.setFontSize(dialogLabel, 24)
+        ac.setFontAlignment(dialogLabel, "center")
+
+        # Stats label (time and speed, below main message)
+        dialogStatsLabel = ac.addLabel(dialogWindow, "")
+        ac.setPosition(dialogStatsLabel, DIALOG_WIDTH / 2, 90)
+        ac.setFontSize(dialogStatsLabel, 18)
+        ac.setFontAlignment(dialogStatsLabel, "center")
+
+        # Hide dialog initially
+        ac.setVisible(dialogWindow, 0)
+
         ac.log("Street Rod Race App: Initialized - Session ID: " + session_id)
 
         return "StreetRodRaceApp"
@@ -124,7 +181,8 @@ def acMain(ac_version):
 def acUpdate(deltaT):
     """Called every frame - fixed-rate sampling for performance"""
     global session_active, accumulated_delta, session_duration_seconds
-    global car_data, player_car_id
+    global car_data, player_car_id, dialogVisible, dialogShowTime, race_ended
+    global waiting_for_reset, last_spline_position
 
     try:
         # Initialize session on first update
@@ -158,9 +216,17 @@ def acUpdate(deltaT):
             update_all_telemetry(accumulated_delta)
             accumulated_delta = 0.0
 
+        # Check for race finish (if not already ended)
+        if not race_ended and not player_crashed:
+            check_race_finish()
+
         # Enforce crash mode if player crashed (every frame for responsive control lock)
         if player_crashed:
             enforce_crash_mode()
+
+        # Monitor for AC reset (car teleported back to start line)
+        if waiting_for_reset:
+            check_for_reset()
 
     except Exception as e:
         ac.log("Street Rod Race App ERROR in acUpdate: " + str(e))
@@ -221,7 +287,8 @@ def update_all_telemetry(deltaT):
 
 def detect_crash_for_car(car_id, data, current_time_seconds):
     """Detect hard crashes using G-force delta for a specific car"""
-    global player_crashed, status_label, player_car_id
+    global player_crashed, status_label, player_car_id, race_ended
+    global waiting_for_reset, last_spline_position
 
     try:
         # Get G-force values [lateral, vertical, longitudinal]
@@ -247,13 +314,22 @@ def detect_crash_for_car(car_id, data, current_time_seconds):
             data.crash_timestamp = datetime.utcnow().isoformat() + 'Z'
             data.last_crash_check_time = current_time_seconds
 
-            # If this is the player, activate crash mode
+            # If this is the player, activate crash mode and show dialog
             if car_id == player_car_id:
                 player_crashed = True
+                race_ended = True
 
-                # Update UI
-                ac.setText(status_label, "RACE OVER - Hard crash detected")
+                # Update status label
+                ac.setText(status_label, "CRASHED!")
                 ac.setFontColor(status_label, 1.0, 0.0, 0.0, 1.0)  # Red
+
+                # Show crash dialog
+                ac.setFontColor(dialogLabel, 1.0, 0.5, 0.0, 1.0)  # Orange
+                show_result_dialog(MSG_CRASH)
+
+                # Start monitoring for AC reset
+                waiting_for_reset = True
+                last_spline_position = ac.getCarState(player_car_id, acsys.CS.NormalizedSplinePosition)
 
             ac.log("Street Rod Race App: HARD CRASH - {0} - Intensity: {1:.1f}G".format(data.driver_name, g_change))
 
@@ -273,6 +349,144 @@ def enforce_crash_mode():
 
     except Exception as e:
         ac.log("Street Rod Race App ERROR in enforce_crash_mode: " + str(e))
+
+
+def show_result_dialog(message, stats_text=""):
+    """Show the result dialog with a message"""
+    global dialogVisible, dialogShowTime, session_duration_seconds
+
+    try:
+        ac.setText(dialogLabel, message)
+        ac.setText(dialogStatsLabel, stats_text)
+        ac.setVisible(dialogWindow, 1)
+        dialogVisible = True
+        dialogShowTime = session_duration_seconds
+
+        ac.log("Street Rod Race App: Showing dialog - " + message)
+
+    except Exception as e:
+        ac.log("Street Rod Race App ERROR in show_result_dialog: " + str(e))
+
+
+def check_race_finish():
+    """Check if player has finished the race and determine win/lose"""
+    global player_finished, race_ended, car_data, player_car_id
+    global waiting_for_reset, last_spline_position
+
+    try:
+        player_data = car_data.get(player_car_id)
+        if not player_data or player_finished:
+            return
+
+        # Check if player completed a lap (crossed finish line)
+        if player_data.laps_completed >= 1:
+            player_finished = True
+            race_ended = True
+
+            # Get player's finish time and speed
+            player_time_ms = ac.getCarState(player_car_id, acsys.CS.LastLap)
+            player_time_s = player_time_ms / 1000.0 if player_time_ms > 0 else player_data.total_race_time_ms / 1000.0
+            player_speed = player_data.max_speed_kmh
+
+            # Determine win/lose by checking positions
+            player_position = ac.getCarLeaderboardPosition(player_car_id)
+
+            # Player wins if they're in position 1
+            if player_position == 1:
+                message = MSG_WIN
+                ac.setFontColor(dialogLabel, 0.2, 1.0, 0.2, 1.0)  # Green
+            else:
+                message = MSG_LOSE
+                ac.setFontColor(dialogLabel, 1.0, 0.2, 0.2, 1.0)  # Red
+
+            stats_text = "ET: {0:.3f}s  |  {1:.0f} km/h".format(player_time_s, player_speed)
+            ac.setFontColor(dialogStatsLabel, 1.0, 1.0, 1.0, 1.0)  # White
+
+            show_result_dialog(message, stats_text)
+
+            # Start monitoring for AC reset
+            waiting_for_reset = True
+            last_spline_position = ac.getCarState(player_car_id, acsys.CS.NormalizedSplinePosition)
+
+            ac.log("Street Rod Race App: Race finished - Position: {0}".format(player_position))
+
+    except Exception as e:
+        ac.log("Street Rod Race App ERROR in check_race_finish: " + str(e))
+
+
+def check_for_reset():
+    """Monitor for AC resetting the car back to start line"""
+    global waiting_for_reset, last_spline_position, player_car_id
+    global dialogShowTime, session_duration_seconds
+
+    try:
+        # Wait at least 2 seconds after dialog shown before checking for reset
+        # This avoids false positives right after crossing finish line
+        if dialogShowTime is not None:
+            time_since_dialog = session_duration_seconds - dialogShowTime
+            if time_since_dialog < 2.0:
+                return
+
+        current_spline = ac.getCarState(player_car_id, acsys.CS.NormalizedSplinePosition)
+        current_speed = ac.getCarState(player_car_id, acsys.CS.SpeedMS)
+
+        # Detect reset: car is at start line (spline < 0.1) and nearly stopped
+        # After finishing a drag race, AC teleports the car back to start
+        if current_spline < RESET_SPLINE_THRESHOLD and current_speed < 5.0:
+            ac.log("Street Rod Race App: Reset detected! SplinePos: {0:.3f}, Speed: {1:.1f}".format(
+                current_spline, current_speed))
+            waiting_for_reset = False
+            quit_assetto_corsa()
+
+    except Exception as e:
+        ac.log("Street Rod Race App ERROR in check_for_reset: " + str(e))
+
+
+def quit_assetto_corsa():
+    """Signal the launcher to quit Assetto Corsa"""
+    global session_end_time
+
+    try:
+        ac.log("Street Rod Race App: Requesting AC quit...")
+
+        # Write session output before quitting
+        session_end_time = datetime.utcnow().isoformat() + 'Z'
+        write_session_output()
+
+        # Write quit signal file for the C# launcher to detect
+        write_quit_signal()
+
+        # Try CSP's quit function as backup
+        if hasattr(ac, 'ext_quitAC'):
+            ac.log("Street Rod Race App: Calling ext_quitAC()")
+            ac.ext_quitAC()
+        else:
+            ac.log("Street Rod Race App: ext_quitAC not available, quit signal written")
+
+    except Exception as e:
+        ac.log("Street Rod Race App ERROR in quit_assetto_corsa: " + str(e))
+
+
+def write_quit_signal():
+    """Write a signal file that tells the launcher to close AC"""
+    try:
+        # Write to the same output directory as race results
+        documents_path = os.path.expanduser("~\\Documents")
+        output_dir = os.path.join(documents_path, "Assetto Corsa", "out", "StreetRodRaceApp")
+
+        # Create directory if it doesn't exist
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        # Write quit signal file
+        signal_path = os.path.join(output_dir, "quit_signal")
+        with open(signal_path, 'w') as f:
+            f.write(session_id or "unknown")
+
+        ac.log("Street Rod Race App: Quit signal written to " + signal_path)
+
+    except Exception as e:
+        ac.log("Street Rod Race App ERROR in write_quit_signal: " + str(e))
 
 
 def acShutdown():
