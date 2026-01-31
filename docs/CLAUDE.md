@@ -72,6 +72,20 @@ NavigationService.NavigateTo[ScreenName](dependencies)
 - Daily refresh: remove old listings, spawn new based on precedence
 - Condition affects price (better condition = higher price)
 
+## AC-Side Components (Outside C# Project)
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| SR Race Mode | `C:\GAMES\Street Rod AC\extension\lua\new-modes\sr_race\` | Auto-start + auto-quit via CSP |
+| Crash Penalty Mode | `C:\GAMES\Street Rod AC\extension\lua\new-modes\crash-penalty-tournament\` | Penalty tracking (unused) |
+| FFB Limiter | `C:\GAMES\Street Rod AC\extension\lua\ffb-postprocess\upper-limit\` | Direct drive protection |
+| Python Race App | `apps\python\StreetRodRaceApp\` | Crash detection, race results JSON |
+
+**Key Integration Points**:
+- SR Race Mode uses `ac.endSession()` for clean quit after finish
+- Python App writes results to `Documents/Assetto Corsa/out/StreetRodRaceApp/*.json`
+- Launcher reads JSON results after AC process exits
+
 ## Quick Reference - Adding Features
 
 **New Screen:**
@@ -98,4 +112,6 @@ NavigationService.NavigateTo[ScreenName](dependencies)
 - [Market System](systems/market-system.md)
 - [Opponent System](systems/opponent-system.md)
 - [AC Launcher](ac-integration/launcher.md)
+- [CSP Lua Scripts](ac-integration/csp-lua-scripts.md)
+- [Python Race App](ac-integration/python-app.md)
 - [Screens Index](screens/index.md)

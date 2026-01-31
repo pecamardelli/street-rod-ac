@@ -8,7 +8,6 @@ import ac
 import acsys
 import os
 import json
-import sys
 import math
 import uuid
 from datetime import datetime
@@ -26,10 +25,7 @@ SAMPLING_INTERVAL = 0.1  # Sample at 10Hz instead of per-frame
 
 # Dialog settings
 DIALOG_WIDTH = 400
-DIALOG_HEIGHT = 150
-
-# Reset detection settings
-RESET_SPLINE_THRESHOLD = 0.1  # If spline position drops below this, car was reset to start
+DIALOG_HEIGHT = 120
 
 # Messages
 MSG_WIN = "You won a few bucks, not bad!"
@@ -41,10 +37,10 @@ appWindow = 0
 
 # Dialog window
 dialogWindow = 0
+dialogBackdrop = 0
 dialogLabel = None
 dialogStatsLabel = None
 dialogVisible = False
-dialogShowTime = None
 
 # Session state
 session_id = None
@@ -60,7 +56,11 @@ player_crashed = False
 player_finished = False
 race_ended = False
 waiting_for_reset = False
-last_spline_position = 0.0
+reset_check_start_time = None
+
+# Reset detection settings
+RESET_SPLINE_THRESHOLD = 0.15  # If spline position drops below this, car was reset to start
+RESET_CHECK_DELAY = 2.0        # Seconds to wait after finish before checking for reset
 
 # Car data storage
 car_data = {}
@@ -120,7 +120,7 @@ class CarData:
 def acMain(ac_version):
     """Initialize the app"""
     global appWindow, session_id, session_start_time, status_label
-    global dialogWindow, dialogLabel, dialogStatsLabel
+    global dialogWindow, dialogBackdrop, dialogLabel, dialogStatsLabel
 
     try:
         # Generate unique session ID
@@ -137,33 +137,50 @@ def acMain(ac_version):
         ac.setPosition(status_label, 10, 30)
         ac.setFontSize(status_label, 16)
 
+        # Get screen resolution for centering (use large values to ensure full coverage)
+        try:
+            screen_width = ac.getResolution()[0] if hasattr(ac, 'getResolution') else 1920
+            screen_height = ac.getResolution()[1] if hasattr(ac, 'getResolution') else 1080
+        except:
+            screen_width = 1920
+            screen_height = 1080
+
+        # Use larger values to ensure full screen coverage
+        backdrop_width = max(screen_width, 3840)
+        backdrop_height = max(screen_height, 2160)
+
+        # Create semi-transparent backdrop (covers entire screen)
+        dialogBackdrop = ac.newApp("StreetRodBackdrop")
+        ac.setSize(dialogBackdrop, backdrop_width, backdrop_height)
+        ac.setPosition(dialogBackdrop, 0, 0)
+        ac.setTitle(dialogBackdrop, "")
+        ac.setIconPosition(dialogBackdrop, 0, -10000)  # Hide icon
+        ac.setTitlePosition(dialogBackdrop, 0, -10000)  # Hide title
+        ac.setBackgroundOpacity(dialogBackdrop, 0.7)  # Semi-transparent
+        ac.setVisible(dialogBackdrop, 0)
+
         # Create dialog window (hidden initially)
         dialogWindow = ac.newApp("StreetRodDialog")
         ac.setSize(dialogWindow, DIALOG_WIDTH, DIALOG_HEIGHT)
         ac.setTitle(dialogWindow, "")
         ac.setIconPosition(dialogWindow, 0, -10000)  # Hide icon
         ac.setTitlePosition(dialogWindow, 0, -10000)  # Hide title
-        ac.setBackgroundOpacity(dialogWindow, 0.9)
+        ac.setBackgroundOpacity(dialogWindow, 0.95)
 
-        # Center dialog horizontally, position near top
-        try:
-            # Try to get screen resolution
-            screen_width = ac.getResolution()[0] if hasattr(ac, 'getResolution') else 1920
-        except:
-            screen_width = 1920  # Default fallback
+        # Center dialog on screen
         dialog_x = (screen_width - DIALOG_WIDTH) / 2
-        dialog_y = 150  # Near top of screen
+        dialog_y = (screen_height - DIALOG_HEIGHT) / 2
         ac.setPosition(dialogWindow, dialog_x, dialog_y)
 
         # Main message label (centered in dialog)
         dialogLabel = ac.addLabel(dialogWindow, "")
-        ac.setPosition(dialogLabel, DIALOG_WIDTH / 2, 40)
+        ac.setPosition(dialogLabel, DIALOG_WIDTH / 2, 30)
         ac.setFontSize(dialogLabel, 24)
         ac.setFontAlignment(dialogLabel, "center")
 
         # Stats label (time and speed, below main message)
         dialogStatsLabel = ac.addLabel(dialogWindow, "")
-        ac.setPosition(dialogStatsLabel, DIALOG_WIDTH / 2, 90)
+        ac.setPosition(dialogStatsLabel, DIALOG_WIDTH / 2, 75)
         ac.setFontSize(dialogStatsLabel, 18)
         ac.setFontAlignment(dialogStatsLabel, "center")
 
@@ -181,8 +198,7 @@ def acMain(ac_version):
 def acUpdate(deltaT):
     """Called every frame - fixed-rate sampling for performance"""
     global session_active, accumulated_delta, session_duration_seconds
-    global car_data, player_car_id, dialogVisible, dialogShowTime, race_ended
-    global waiting_for_reset, last_spline_position
+    global car_data, player_car_id, race_ended, waiting_for_reset
 
     try:
         # Initialize session on first update
@@ -224,7 +240,7 @@ def acUpdate(deltaT):
         if player_crashed:
             enforce_crash_mode()
 
-        # Monitor for AC reset (car teleported back to start line)
+        # Monitor for AC session reset (car teleported back to start line)
         if waiting_for_reset:
             check_for_reset()
 
@@ -288,7 +304,7 @@ def update_all_telemetry(deltaT):
 def detect_crash_for_car(car_id, data, current_time_seconds):
     """Detect hard crashes using G-force delta for a specific car"""
     global player_crashed, status_label, player_car_id, race_ended
-    global waiting_for_reset, last_spline_position
+    global waiting_for_reset, reset_check_start_time, session_duration_seconds
 
     try:
         # Get G-force values [lateral, vertical, longitudinal]
@@ -327,9 +343,9 @@ def detect_crash_for_car(car_id, data, current_time_seconds):
                 ac.setFontColor(dialogLabel, 1.0, 0.5, 0.0, 1.0)  # Orange
                 show_result_dialog(MSG_CRASH)
 
-                # Start monitoring for AC reset
+                # Start monitoring for AC session reset
                 waiting_for_reset = True
-                last_spline_position = ac.getCarState(player_car_id, acsys.CS.NormalizedSplinePosition)
+                reset_check_start_time = session_duration_seconds
 
             ac.log("Street Rod Race App: HARD CRASH - {0} - Intensity: {1:.1f}G".format(data.driver_name, g_change))
 
@@ -353,14 +369,16 @@ def enforce_crash_mode():
 
 def show_result_dialog(message, stats_text=""):
     """Show the result dialog with a message"""
-    global dialogVisible, dialogShowTime, session_duration_seconds
+    global dialogVisible, dialogBackdrop, dialogWindow
 
     try:
         ac.setText(dialogLabel, message)
         ac.setText(dialogStatsLabel, stats_text)
+
+        # Show backdrop first, then dialog on top
+        ac.setVisible(dialogBackdrop, 1)
         ac.setVisible(dialogWindow, 1)
         dialogVisible = True
-        dialogShowTime = session_duration_seconds
 
         ac.log("Street Rod Race App: Showing dialog - " + message)
 
@@ -371,7 +389,7 @@ def show_result_dialog(message, stats_text=""):
 def check_race_finish():
     """Check if player has finished the race and determine win/lose"""
     global player_finished, race_ended, car_data, player_car_id
-    global waiting_for_reset, last_spline_position
+    global waiting_for_reset, reset_check_start_time, session_duration_seconds
 
     try:
         player_data = car_data.get(player_car_id)
@@ -404,9 +422,9 @@ def check_race_finish():
 
             show_result_dialog(message, stats_text)
 
-            # Start monitoring for AC reset
+            # Start monitoring for AC session reset
             waiting_for_reset = True
-            last_spline_position = ac.getCarState(player_car_id, acsys.CS.NormalizedSplinePosition)
+            reset_check_start_time = session_duration_seconds
 
             ac.log("Street Rod Race App: Race finished - Position: {0}".format(player_position))
 
@@ -415,56 +433,38 @@ def check_race_finish():
 
 
 def check_for_reset():
-    """Monitor for AC resetting the car back to start line"""
-    global waiting_for_reset, last_spline_position, player_car_id
-    global dialogShowTime, session_duration_seconds
+    """Monitor for AC resetting the session (car teleported back to start line)"""
+    global waiting_for_reset, reset_check_start_time, session_duration_seconds, player_car_id
 
     try:
-        # Wait at least 2 seconds after dialog shown before checking for reset
+        # Wait a bit after finish before checking for reset
         # This avoids false positives right after crossing finish line
-        if dialogShowTime is not None:
-            time_since_dialog = session_duration_seconds - dialogShowTime
-            if time_since_dialog < 2.0:
+        if reset_check_start_time is not None:
+            time_since_finish = session_duration_seconds - reset_check_start_time
+            if time_since_finish < RESET_CHECK_DELAY:
                 return
 
+        # Get current car state
         current_spline = ac.getCarState(player_car_id, acsys.CS.NormalizedSplinePosition)
         current_speed = ac.getCarState(player_car_id, acsys.CS.SpeedMS)
 
-        # Detect reset: car is at start line (spline < 0.1) and nearly stopped
+        # Detect reset: car is at start line (spline < threshold) and nearly stopped
         # After finishing a drag race, AC teleports the car back to start
         if current_spline < RESET_SPLINE_THRESHOLD and current_speed < 5.0:
-            ac.log("Street Rod Race App: Reset detected! SplinePos: {0:.3f}, Speed: {1:.1f}".format(
+            ac.log("Street Rod Race App: Session reset detected! SplinePos: {0:.3f}, Speed: {1:.1f}".format(
                 current_spline, current_speed))
             waiting_for_reset = False
-            quit_assetto_corsa()
+
+            # Write session results BEFORE quit signal (acShutdown won't be called when AC is killed)
+            global session_end_time
+            session_end_time = datetime.utcnow().isoformat() + 'Z'
+            write_session_output()
+
+            # Now write quit signal to trigger AC shutdown
+            write_quit_signal()
 
     except Exception as e:
         ac.log("Street Rod Race App ERROR in check_for_reset: " + str(e))
-
-
-def quit_assetto_corsa():
-    """Signal the launcher to quit Assetto Corsa"""
-    global session_end_time
-
-    try:
-        ac.log("Street Rod Race App: Requesting AC quit...")
-
-        # Write session output before quitting
-        session_end_time = datetime.utcnow().isoformat() + 'Z'
-        write_session_output()
-
-        # Write quit signal file for the C# launcher to detect
-        write_quit_signal()
-
-        # Try CSP's quit function as backup
-        if hasattr(ac, 'ext_quitAC'):
-            ac.log("Street Rod Race App: Calling ext_quitAC()")
-            ac.ext_quitAC()
-        else:
-            ac.log("Street Rod Race App: ext_quitAC not available, quit signal written")
-
-    except Exception as e:
-        ac.log("Street Rod Race App ERROR in quit_assetto_corsa: " + str(e))
 
 
 def write_quit_signal():

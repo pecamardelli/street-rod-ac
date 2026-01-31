@@ -292,6 +292,7 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("[HEADER]");
             sb.AppendLine("VERSION=1");
             sb.AppendLine("__CM_FEATURE_SET=2");
+            sb.AppendLine("__CM_NEW_MODE_USED=sr_race");  // CSP new-mode identifier
             sb.AppendLine();
 
             // [LAP_INVALIDATOR]
@@ -332,6 +333,7 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("RACE_LAPS=1");
             sb.AppendLine($"SKIN={intent.PlayerSkin}");
             sb.AppendLine("TRACK=ks_drag");
+            sb.AppendLine("MODE=sr_race");  // CSP new-mode for auto-start and auto-quit
             sb.AppendLine();
 
             // [REMOTE]

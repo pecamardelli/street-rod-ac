@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
 using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Services.Configuration;
@@ -15,6 +17,17 @@ namespace Street_Rod_AC.Services
         IIniModificationService iniService,
         Race.IRaceResultIngestionService raceResultService) : IAssettoCorsaLauncher
     {
+        // Windows API for input simulation
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        private const byte VK_RETURN = 0x0D;  // Enter key
+        private const byte VK_ESCAPE = 0x1B;  // Escape key
+        private const uint KEYEVENTF_KEYUP = 0x0002;
+
         private readonly IIniModificationService _iniService = iniService;
         private readonly Race.IRaceResultIngestionService _raceResultService = raceResultService;
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("ACLauncher");
@@ -99,11 +112,12 @@ namespace Street_Rod_AC.Services
 
                 _logger.Information("Configuration prepared successfully");
 
-                // PHASE 2.5: ENABLE STREET ROD RACE APP (only for races)
+                // PHASE 2.5: ENABLE STREET ROD RACE MODE (only for races)
                 if (intent is DragRaceLaunchIntent or RaceLaunchIntent)
                 {
-                    _logger.Information("PHASE: Enable Street Rod Race App");
+                    _logger.Information("PHASE: Enable Street Rod Race Mode");
                     EnableStreetRodRaceApp();
+                    EnableCspRaceMode();
                 }
 
                 // PHASE 3: VALIDATE EXECUTABLE
@@ -212,9 +226,10 @@ namespace Street_Rod_AC.Services
                         _logger.Error(ex, "Race result ingestion failed - continuing with cleanup");
                     }
 
-                    // Disable Street Rod Race App after race completes
-                    _logger.Information("PHASE: Disable Street Rod Race App");
+                    // Disable Street Rod Race Mode after race completes
+                    _logger.Information("PHASE: Disable Street Rod Race Mode");
                     DisableStreetRodRaceApp();
+                    DisableCspRaceMode();
                 }
 
                 // PHASE 6: CLEANUP
@@ -283,6 +298,45 @@ namespace Street_Rod_AC.Services
         }
 
         /// <summary>
+        /// Send a keystroke to AC to auto-start the race
+        /// </summary>
+        private async Task AutoStartRaceAsync(Process process)
+        {
+            try
+            {
+                // Wait for AC to fully load (adjust delay as needed)
+                _logger.Information("Waiting for AC to load before auto-start...");
+                await Task.Delay(5000);  // 5 seconds for AC to load
+
+                if (process.HasExited)
+                {
+                    _logger.Warning("AC exited before auto-start could be sent");
+                    return;
+                }
+
+                // Bring AC window to foreground
+                var mainWindow = process.MainWindowHandle;
+                if (mainWindow != IntPtr.Zero)
+                {
+                    SetForegroundWindow(mainWindow);
+                    await Task.Delay(100);
+                }
+
+                // Send Enter key to start the race
+                _logger.Information("Sending Enter key to auto-start race");
+                keybd_event(VK_RETURN, 0, 0, UIntPtr.Zero);  // Key down
+                await Task.Delay(50);
+                keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);  // Key up
+
+                _logger.Information("Auto-start keystroke sent");
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "Auto-start failed - user will need to start manually");
+            }
+        }
+
+        /// <summary>
         /// Wait for AC to exit or for the Python app to signal quit
         /// </summary>
         private async Task WaitForExitOrQuitSignalAsync(Process process)
@@ -308,10 +362,7 @@ namespace Street_Rod_AC.Services
 
                     try
                     {
-                        // Give AC a moment to finish writing files
-                        await Task.Delay(500);
-
-                        // Kill the process
+                        // Kill the process immediately (session output already written by Python app)
                         if (!process.HasExited)
                         {
                             process.Kill(entireProcessTree: true);
@@ -329,8 +380,8 @@ namespace Street_Rod_AC.Services
                     break;
                 }
 
-                // Small delay before next check
-                await Task.Delay(250);
+                // Small delay before next check (fast polling for responsive quit)
+                await Task.Delay(50);
             }
 
             // Ensure process has fully exited
@@ -420,6 +471,66 @@ namespace Street_Rod_AC.Services
             catch (Exception ex)
             {
                 _logger.Warning(ex, "Failed to disable Street Rod Race App");
+            }
+        }
+
+        /// <summary>
+        /// Enable the CSP sr_race mode by writing csp_extra_options.ini
+        /// This enables auto-start and auto-quit functionality via CSP Lua script
+        /// </summary>
+        private void EnableCspRaceMode()
+        {
+            try
+            {
+                // CSP reads csp_extra_options.ini from Documents/Assetto Corsa/cfg folder
+                var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                var cspOptionsPath = Path.Combine(
+                    documentsPath,
+                    "Assetto Corsa",
+                    "cfg",
+                    "csp_extra_options.ini");
+
+                var sb = new StringBuilder();
+                sb.AppendLine("; Street Rod Race - CSP Extra Options");
+                sb.AppendLine("; Auto-generated by Street Rod AC launcher");
+                sb.AppendLine("; This enables the sr_race mode for auto-start and auto-quit");
+                sb.AppendLine();
+                sb.AppendLine("[NEW_MODE]");
+                sb.AppendLine("NAME=sr_race");
+
+                File.WriteAllText(cspOptionsPath, sb.ToString());
+                _logger.Information("CSP race mode enabled: {Path}", cspOptionsPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "Failed to enable CSP race mode - race will continue without auto-start/quit");
+            }
+        }
+
+        /// <summary>
+        /// Disable the CSP sr_race mode by removing csp_extra_options.ini
+        /// </summary>
+        private void DisableCspRaceMode()
+        {
+            try
+            {
+                // CSP reads csp_extra_options.ini from Documents/Assetto Corsa/cfg folder
+                var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                var cspOptionsPath = Path.Combine(
+                    documentsPath,
+                    "Assetto Corsa",
+                    "cfg",
+                    "csp_extra_options.ini");
+
+                if (File.Exists(cspOptionsPath))
+                {
+                    File.Delete(cspOptionsPath);
+                    _logger.Information("CSP race mode disabled (file removed)");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "Failed to disable CSP race mode");
             }
         }
     }
