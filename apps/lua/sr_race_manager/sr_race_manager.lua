@@ -15,8 +15,8 @@ local SCRIPT_VERSION = "2.1.0"
 local SCHEMA_VERSION = "1.0"
 
 -- Crash detection parameters
-local HARD_CRASH_THRESHOLD_G = 50.0
-local CRASH_COOLDOWN_SECONDS = 5.0
+local HARD_CRASH_THRESHOLD_G = 25.0
+local CRASH_COOLDOWN_SECONDS = 8.0
 
 -- Sampling interval (seconds)
 local SAMPLING_INTERVAL = 0.1
@@ -129,6 +129,16 @@ local function endSession(result)
     resultMessage = MSG_LOSE
   elseif result == "CRASH" then
     resultMessage = MSG_CRASH
+    -- Lock controls and force brakes
+    physics.lockUserControlsFor(20)
+    physics.forceUserBrakesFor(20, 1.0)
+    showResultOverlay = true
+    -- Quit after 5 seconds
+    setTimeout(function()
+      ac.log('[SR Race Manager] Quitting AC after crash...')
+      ac.shutdownAssettoCorsa()
+    end, 5.0)
+    return
   else
     -- TELEPORTED - no overlay, quit immediately
     ac.log('[SR Race Manager] Quitting AC...')
@@ -410,7 +420,10 @@ end)
 
 -- Detect car teleport (jump start, lane violation, or post-race reset)
 ac.onCarJumped(0, function()
-  -- Race ended normally - just quit now
+  -- Crash already being handled with its own quit timer
+  if playerCrashed then return end
+
+  -- Race ended normally (WIN/LOSE) - just quit now
   if raceEnded then
     ac.log('[SR Race Manager] Car teleported after race end - Quitting AC')
     ac.shutdownAssettoCorsa()
