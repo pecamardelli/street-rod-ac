@@ -7,23 +7,19 @@
   - Crash detection via G-force monitoring
   - Race finish detection with win/lose determination
   - Session data output to JSON
-  - Quit signal for launcher integration
+  - Auto-quit via ac.shutdownAssettoCorsa()
 ]]
 
 -- Version info
-local SCRIPT_VERSION = "2.0.0"
+local SCRIPT_VERSION = "2.1.0"
 local SCHEMA_VERSION = "1.0"
 
 -- Crash detection parameters
-local HARD_CRASH_THRESHOLD_G = 100.0
+local HARD_CRASH_THRESHOLD_G = 50.0
 local CRASH_COOLDOWN_SECONDS = 5.0
 
 -- Sampling interval (seconds)
 local SAMPLING_INTERVAL = 0.1
-
--- Reset detection
-local RESET_SPLINE_THRESHOLD = 0.15
-local RESET_CHECK_DELAY = 2.0
 
 -- Messages
 local MSG_WIN = "You won a few bucks, not bad!"
@@ -50,8 +46,10 @@ local autoStartAttempted = false
 local playerCrashed = false
 local playerFinished = false
 local raceEnded = false
-local waitingForReset = false
-local resetCheckStartTime = nil
+
+-- Overlay state
+local showResultOverlay = false
+local resultMessage = ""
 
 -- Car data storage
 local carData = {}
@@ -113,6 +111,33 @@ local function initializeSession()
   ac.log('[SR Race Manager] Session started: ' .. sessionId .. ' with ' .. totalCars .. ' cars')
 end
 
+-- End session: write results and show overlay (quit handled by jump detector)
+local function endSession(result)
+  if not sessionActive then return end
+  sessionActive = false
+
+  ac.log('[SR Race Manager] Ending session: ' .. result)
+
+  -- Write session results
+  sessionEndTime = getISOTimestamp()
+  writeSessionOutput()
+
+  -- Set overlay message (jump detector will quit when car is teleported)
+  if result == "WIN" then
+    resultMessage = MSG_WIN
+  elseif result == "LOSE" then
+    resultMessage = MSG_LOSE
+  elseif result == "CRASH" then
+    resultMessage = MSG_CRASH
+  else
+    -- TELEPORTED - no overlay, quit immediately
+    ac.log('[SR Race Manager] Quitting AC...')
+    ac.shutdownAssettoCorsa()
+    return
+  end
+  showResultOverlay = true
+end
+
 -- Detect crash for a car
 local function detectCrashForCar(carIndex, data)
   local car = ac.getCar(carIndex)
@@ -139,9 +164,8 @@ local function detectCrashForCar(carIndex, data)
     if carIndex == 0 then
       playerCrashed = true
       raceEnded = true
-      waitingForReset = true
-      resetCheckStartTime = sessionDuration
       ac.log(string.format('[SR Race Manager] PLAYER CRASHED! Intensity: %.1fG', gChange))
+      endSession("CRASH")
     else
       ac.log(string.format('[SR Race Manager] Car %d crashed - Intensity: %.1fG', carIndex, gChange))
     end
@@ -214,40 +238,7 @@ local function checkRaceFinish()
     local result = playerPosition == 1 and "WIN" or "LOSE"
 
     ac.log(string.format('[SR Race Manager] Race finished - Position: %d (%s)', playerPosition, result))
-
-    -- Start monitoring for reset
-    waitingForReset = true
-    resetCheckStartTime = sessionDuration
-  end
-end
-
--- Check for session reset (car teleported back to start)
-local function checkForReset()
-  if not waitingForReset then return end
-
-  -- Wait before checking
-  if resetCheckStartTime and (sessionDuration - resetCheckStartTime) < RESET_CHECK_DELAY then
-    return
-  end
-
-  local car = ac.getCar(0)
-  if not car then return end
-
-  local currentSpline = car.splinePosition
-  local currentSpeed = car.speedKmh
-
-  -- Detect reset: car at start and nearly stopped
-  if currentSpline < RESET_SPLINE_THRESHOLD and currentSpeed < 5.0 then
-    ac.log(string.format('[SR Race Manager] Session reset detected! Spline: %.3f, Speed: %.1f', currentSpline, currentSpeed))
-    waitingForReset = false
-
-    -- Write session results
-    sessionEndTime = getISOTimestamp()
-    writeSessionOutput()
-
-    -- Quit Assetto Corsa
-    ac.log('[SR Race Manager] Shutting down Assetto Corsa...')
-    ac.shutdownAssettoCorsa()
+    endSession(result)
   end
 end
 
@@ -378,15 +369,60 @@ setInterval(function()
   updateAllTelemetry(SAMPLING_INTERVAL)
 
   -- Check for race finish
-  if not raceEnded and not playerCrashed then
+  if not raceEnded then
     checkRaceFinish()
   end
 
-  -- Check for session reset
-  if waitingForReset then
-    checkForReset()
+end, SAMPLING_INTERVAL)
+
+-- Register HUD callback for drawing result overlay
+ui.onExclusiveHUD(function(mode)
+  if not showResultOverlay then return end
+  if mode ~= 'game' then return end
+
+  local uiState = ac.getUI()
+  local screenSize = vec2(uiState.windowSize.x, uiState.windowSize.y)
+
+  -- Draw fullscreen dim overlay
+  ui.beginTransparentWindow('srDimOverlay', vec2(0, 0), screenSize)
+  ui.drawRectFilled(vec2(0, 0), screenSize, rgbm(0, 0, 0, 0.5))
+  ui.endTransparentWindow()
+
+  -- Draw dialog box
+  local boxSize = vec2(600, 200)
+  local boxPos = vec2((screenSize.x - boxSize.x) / 2, (screenSize.y - boxSize.y) / 2 - 50)
+
+  ui.beginTransparentWindow('srResultOverlay', boxPos, boxSize)
+
+  -- Draw background
+  ui.drawRectFilled(vec2(0, 0), boxSize, rgbm(0, 0, 0, 0.85), 10)
+  ui.drawRect(vec2(0, 0), boxSize, rgbm(1, 1, 1, 0.3), 10, 2)
+
+  -- Title
+  ui.dwriteTextAligned("Race Over", 40, ui.Alignment.Center, ui.Alignment.Center, vec2(boxSize.x, 80), false, rgbm.colors.white)
+
+  -- Message
+  ui.setCursor(vec2(0, 90))
+  ui.dwriteTextAligned(resultMessage, 24, ui.Alignment.Center, ui.Alignment.Center, vec2(boxSize.x, 90), true, rgbm.colors.white)
+
+  ui.endTransparentWindow()
+end)
+
+-- Detect car teleport (jump start, lane violation, or post-race reset)
+ac.onCarJumped(0, function()
+  -- Race ended normally - just quit now
+  if raceEnded then
+    ac.log('[SR Race Manager] Car teleported after race end - Quitting AC')
+    ac.shutdownAssettoCorsa()
+    return
   end
 
-end, SAMPLING_INTERVAL)
+  -- Race hasn't ended - this is a jump start or lane violation
+  if not sessionActive then return end
+
+  ac.log('[SR Race Manager] Car was teleported to pits - Quitting race')
+  raceEnded = true
+  endSession("TELEPORTED")
+end)
 
 ac.log('[SR Race Manager] Script loaded')
