@@ -297,77 +297,49 @@ namespace Street_Rod_AC.Screens.Diner
             await LaunchRace(setup, playerCarDef, opponentCarDef);
         }
 
-        private async Task LaunchRace(ChallengeSetup setup, CarDefinition playerCarDef, CarDefinition opponentCarDef)
+        private Task LaunchRace(ChallengeSetup setup, CarDefinition playerCarDef, CarDefinition opponentCarDef)
         {
             _logger.Information("LaunchRace called - Player: {PlayerCar}, Opponent: {OpponentName} in {OpponentCar}",
                 playerCarDef.Id, setup.Opponent.Name, opponentCarDef.Id);
 
-            try
+            // Create drag race launch intent
+            _logger.Debug("Creating DragRaceLaunchIntent");
+            var dragRaceIntent = new DragRaceLaunchIntent
             {
-                // Create drag race launch intent
-                _logger.Debug("Creating DragRaceLaunchIntent");
-                var dragRaceIntent = new DragRaceLaunchIntent
-                {
-                    PlayerCarId = playerCarDef.Id,
-                    PlayerSkin = setup.PlayerCar.SkinId,
-                    PlayerName = _gameState.Player.Name,
-                    OpponentCarId = opponentCarDef.Id,
-                    OpponentSkin = setup.OpponentCar.SkinId,
-                    OpponentName = setup.Opponent.Name,
-                    PlayerCarInstanceId = setup.PlayerCar.InstanceId,
-                    OpponentCarInstanceId = setup.OpponentCar.InstanceId,
-                    CashWager = setup.CashWager,
-                    IsPinkSlip = setup.IsPinkSlip,
-                    OpponentAILevel = setup.Opponent.Skill,
-                    OpponentAIAggression = setup.Opponent.Aggression
-                };
+                PlayerCarId = playerCarDef.Id,
+                PlayerSkin = setup.PlayerCar.SkinId,
+                PlayerName = _gameState.Player.Name,
+                OpponentCarId = opponentCarDef.Id,
+                OpponentSkin = setup.OpponentCar.SkinId,
+                OpponentName = setup.Opponent.Name,
+                PlayerCarInstanceId = setup.PlayerCar.InstanceId,
+                OpponentCarInstanceId = setup.OpponentCar.InstanceId,
+                CashWager = setup.CashWager,
+                IsPinkSlip = setup.IsPinkSlip,
+                OpponentAILevel = setup.Opponent.Skill,
+                OpponentAIAggression = setup.Opponent.Aggression
+            };
 
-                // Create race context and store in metadata
-                var raceContext = new Street_Rod_AC.Models.Race.RaceContext
-                {
-                    PlayerName = _gameState.Player.Name,
-                    OpponentName = setup.Opponent.Name,
-                    PlayerCarInstanceId = setup.PlayerCar.InstanceId,
-                    OpponentCarInstanceId = setup.OpponentCar.InstanceId,
-                    CashWager = setup.CashWager,
-                    IsPinkSlip = setup.IsPinkSlip,
-                    TrackId = setup.TrackId,
-                    RaceType = Street_Rod_AC.Models.Race.RaceType.DragRace
-                };
-
-                dragRaceIntent.Metadata["RaceContext"] = raceContext;
-
-                // Launch race
-                _logger.Information("Calling launcher.LaunchRaceAsync with intent: Player={PlayerCar}, Opponent={OpponentCar}, Track={Track}",
-                    dragRaceIntent.PlayerCarId, dragRaceIntent.OpponentCarId, raceContext.TrackId);
-
-                var result = await _launcher.LaunchRaceAsync(dragRaceIntent);
-
-                _logger.Information("LaunchRaceAsync returned: Success={Success}, Error={Error}",
-                    result.Success, result.ErrorMessage ?? "none");
-
-                if (result.Success)
-                {
-                    _logger.Information("Drag race launched successfully");
-                }
-                else
-                {
-                    var errorDialog = new InformationDialogViewModel(
-                        _dialogService,
-                        $"Failed to launch drag race:\n\n{result.ErrorMessage}",
-                        "Launch Error");
-                    _dialogService.ShowDialog(errorDialog);
-                }
-            }
-            catch (Exception ex)
+            // Create race context and store in metadata
+            var raceContext = new Street_Rod_AC.Models.Race.RaceContext
             {
-                _logger.Error(ex, "Exception during race launch");
-                var errorDialog = new InformationDialogViewModel(
-                    _dialogService,
-                    $"Failed to launch race:\n\n{ex.Message}",
-                    "Error");
-                _dialogService.ShowDialog(errorDialog);
-            }
+                PlayerName = _gameState.Player.Name,
+                OpponentName = setup.Opponent.Name,
+                PlayerCarInstanceId = setup.PlayerCar.InstanceId,
+                OpponentCarInstanceId = setup.OpponentCar.InstanceId,
+                CashWager = setup.CashWager,
+                IsPinkSlip = setup.IsPinkSlip,
+                TrackId = setup.TrackId,
+                RaceType = Street_Rod_AC.Models.Race.RaceType.DragRace
+            };
+
+            dragRaceIntent.Metadata["RaceContext"] = raceContext;
+
+            // Navigate to loading screen (it will launch the race and return when done)
+            _logger.Information("Navigating to race loading screen");
+            _navigationService.NavigateToRaceLoading(_gameState, dragRaceIntent);
+
+            return Task.CompletedTask;
         }
 
         private void OnGarage()

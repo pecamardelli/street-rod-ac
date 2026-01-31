@@ -16,6 +16,7 @@
              xmlns:diner="clr-namespace:Street_Rod_AC.Screens.Diner"
              xmlns:settings="clr-namespace:Street_Rod_AC.Screens.Settings"
              xmlns:carCatalogEditor="clr-namespace:Street_Rod_AC.Screens.CarCatalogEditor"
+             xmlns:raceLoading="clr-namespace:Street_Rod_AC.Screens.RaceLoading"
              xmlns:confirmation="clr-namespace:Street_Rod_AC.Dialogs.Confirmation"
              xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
              xmlns:challengeSetup="clr-namespace:Street_Rod_AC.Dialogs.ChallengeSetup"
@@ -94,6 +95,10 @@
 
             <DataTemplate DataType="{x:Type carCatalogEditor:CarCatalogEditorScreenViewModel}">
                 <carCatalogEditor:CarCatalogEditorScreenView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type raceLoading:RaceLoadingScreenViewModel}">
+                <raceLoading:RaceLoadingScreenView/>
             </DataTemplate>
 
             <!-- Dialog DataTemplates -->

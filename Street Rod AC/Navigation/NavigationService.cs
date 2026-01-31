@@ -7,6 +7,7 @@ using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Settings;
+using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.Services.Storage;
 
 namespace Street_Rod_AC.Navigation
@@ -201,6 +202,17 @@ namespace Street_Rod_AC.Navigation
                 _catalogRepository,
                 _profileRepository,
                 _profileService);
+            NavigateTo(screen);
+        }
+
+        public void NavigateToRaceLoading(GameState gameState, DragRaceLaunchIntent launchIntent)
+        {
+            var screen = new Screens.RaceLoading.RaceLoadingScreenViewModel(
+                this,
+                _dialogService,
+                gameState,
+                _launcher,
+                launchIntent);
             NavigateTo(screen);
         }
     }
