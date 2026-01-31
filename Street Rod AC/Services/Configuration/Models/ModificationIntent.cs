@@ -95,18 +95,4 @@ namespace Street_Rod_AC.Services.Configuration.Models
 
         public override string TargetFile => "race.ini";
     }
-
-    /// <summary>
-    /// Intent to enable or disable a Python app in python.ini
-    /// </summary>
-    public class PythonAppToggleIntent : ModificationIntent
-    {
-        public string AppName { get; set; } = string.Empty;
-        public bool Enable { get; set; }
-
-        public override string Description =>
-            $"{(Enable ? "Enable" : "Disable")} Python app '{AppName}'";
-
-        public override string TargetFile => "python.ini";
-    }
 }

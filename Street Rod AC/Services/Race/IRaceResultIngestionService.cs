@@ -3,7 +3,7 @@ using Street_Rod_AC.Models.Race;
 namespace Street_Rod_AC.Services.Race
 {
     /// <summary>
-    /// Service for ingesting race result files from AC Python app
+    /// Service for ingesting race result files from AC Lua app (sr_race_manager)
     /// Implements the 8-step ingestion pipeline from guidelines
     /// </summary>
     public interface IRaceResultIngestionService

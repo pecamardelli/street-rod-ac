@@ -8,7 +8,7 @@ namespace Street_Rod_AC.Services.Race.Validation
 {
     /// <summary>
     /// Validator for race result JSON files
-    /// Implements strict validation rules from assetto_corsa_python_app_result_ingestion_guidelines.txt
+    /// Implements strict validation rules for race result JSON files
     /// </summary>
     public class RaceResultValidator : IRaceResultValidator
     {
@@ -137,13 +137,13 @@ namespace Street_Rod_AC.Services.Race.Validation
                     "Missing metadata.schema_version field");
             }
 
-            // Check metadata.source (must be exactly "StreetRodRaceApp")
-            if (raceResult.Metadata.Source != "StreetRodRaceApp")
+            // Check metadata.source (must be exactly "sr_race_manager")
+            if (raceResult.Metadata.Source != "sr_race_manager")
             {
                 _logger.Debug("File has wrong source identifier: {Source} - ignoring", raceResult.Metadata.Source);
                 return ValidationResult.Failure(
                     ValidationFailureReason.WrongSource,
-                    $"Wrong source identifier: '{raceResult.Metadata.Source}' (expected 'StreetRodRaceApp')");
+                    $"Wrong source identifier: '{raceResult.Metadata.Source}' (expected 'sr_race_manager')");
             }
 
             // Check session.session_id

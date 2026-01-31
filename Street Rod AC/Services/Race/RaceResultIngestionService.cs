@@ -7,7 +7,7 @@ namespace Street_Rod_AC.Services.Race
 {
     /// <summary>
     /// Main orchestrator for race result ingestion pipeline
-    /// Implements 8-step pipeline from assetto_corsa_python_app_result_ingestion_guidelines.txt
+    /// Implements 8-step pipeline for race result ingestion
     /// </summary>
     public class RaceResultIngestionService : IRaceResultIngestionService
     {
@@ -115,7 +115,7 @@ namespace Street_Rod_AC.Services.Race
 
                 if (!validation.IsValid)
                 {
-                    HandleValidationFailure(file, validation, result);
+                    await HandleValidationFailureAsync(file, validation, result);
                     return;
                 }
 
@@ -202,7 +202,7 @@ namespace Street_Rod_AC.Services.Race
         /// <summary>
         /// Handle validation failure according to failure reason
         /// </summary>
-        private void HandleValidationFailure(FileInfo file, ValidationResult validation, IngestionResult result)
+        private async Task HandleValidationFailureAsync(FileInfo file, ValidationResult validation, IngestionResult result)
         {
             var reason = validation.FailureReason;
 
@@ -233,7 +233,7 @@ namespace Street_Rod_AC.Services.Race
                 case ValidationFailureReason.InvalidParticipantCount:
                     // Quarantine - looks like our file but invalid
                     _logger.Warning("File {FileName} failed content validation - quarantining", file.Name);
-                    QuarantineFileAsync(file, validation).Wait();
+                    await QuarantineFileAsync(file, validation);
                     result.FilesQuarantined++;
                     break;
 
@@ -280,12 +280,12 @@ namespace Street_Rod_AC.Services.Race
         }
 
         /// <summary>
-        /// Get the inbox path (Python app output folder)
+        /// Get the inbox path (Lua app output folder)
         /// </summary>
         private string GetInboxPath()
         {
             var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            return Path.Combine(documentsPath, "Assetto Corsa", "out", "StreetRodRaceApp");
+            return Path.Combine(documentsPath, "Assetto Corsa", "out", "sr_race_manager");
         }
 
         /// <summary>
@@ -313,7 +313,7 @@ namespace Street_Rod_AC.Services.Race
         private string GetQuarantinePath()
         {
             var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            return Path.Combine(documentsPath, "Assetto Corsa", "out", "StreetRodRaceApp_quarantine");
+            return Path.Combine(documentsPath, "Assetto Corsa", "out", "sr_race_manager_quarantine");
         }
     }
 }

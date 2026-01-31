@@ -111,7 +111,7 @@ namespace Street_Rod_AC.Services.Race.Validation
         MissingSchemaVersion,
 
         /// <summary>
-        /// metadata.source is not "StreetRodRaceApp"
+        /// metadata.source is not "sr_race_manager"
         /// Action: Completely ignore (not our file)
         /// </summary>
         WrongSource,

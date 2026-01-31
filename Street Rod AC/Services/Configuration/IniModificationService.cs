@@ -49,7 +49,6 @@ namespace Street_Rod_AC.Services.Configuration
                     DisableAssistsIntent assistsIntent => ApplyDisableAssistsIntent(assistsIntent),
                     DragRaceIntent dragRaceIntent => ApplyDragRaceIntent(dragRaceIntent),
                     RaceConfigIntent raceIntent => ApplyRaceConfigIntent(raceIntent),
-                    PythonAppToggleIntent pythonAppIntent => ApplyPythonAppToggleIntent(pythonAppIntent),
                     _ => throw new NotSupportedException($"Intent type not supported: {intent.GetType().Name}")
                 };
             }
@@ -454,48 +453,6 @@ namespace Street_Rod_AC.Services.Configuration
             }
 
             return string.Join(Environment.NewLine, result);
-        }
-
-        /// <summary>
-        /// Apply Python app toggle intent
-        /// Enables or disables a Python app in python.ini
-        /// </summary>
-        private bool ApplyPythonAppToggleIntent(PythonAppToggleIntent intent)
-        {
-            var filePath = GetIniFilePath(intent.TargetFile);
-
-            _logger.Information("Applying Python app toggle: {AppName} = {State}", intent.AppName, intent.Enable ? "enabled" : "disabled");
-
-            if (!File.Exists(filePath))
-            {
-                _logger.Error("python.ini not found at: {FilePath}", filePath);
-                return false;
-            }
-
-            // Create backup
-            var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
-            var fileName = Path.GetFileNameWithoutExtension(filePath);
-            var extension = Path.GetExtension(filePath);
-            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var backupPath = Path.Combine(directory, $"{fileName}.backup_{timestamp}{extension}");
-
-            File.Copy(filePath, backupPath, false);
-            _logger.Debug("Created backup: {BackupPath}", Path.GetFileName(backupPath));
-
-            // Read python.ini content
-            var content = File.ReadAllText(filePath);
-
-            // Find the section for this app and modify the ACTIVE value
-            var section = $"[{intent.AppName.ToUpperInvariant()}]";
-            var modifiedContent = ReplaceLine(content, section, "ACTIVE", intent.Enable ? "1" : "0");
-
-            // Write modified content
-            File.WriteAllText(filePath, modifiedContent);
-
-            _logger.Information("Python app toggle applied: {AppName} is now {State}",
-                intent.AppName, intent.Enable ? "enabled" : "disabled");
-
-            return true;
         }
     }
 }

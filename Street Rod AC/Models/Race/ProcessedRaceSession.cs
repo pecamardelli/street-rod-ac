@@ -10,7 +10,7 @@ namespace Street_Rod_AC.Models.Race
     public class ProcessedRaceSession
     {
         /// <summary>
-        /// Session ID from Python app (UUID) - used as primary key
+        /// Session ID from Lua app (UUID) - used as primary key
         /// This is the authoritative unique identifier for deduplication
         /// </summary>
         [BsonId]
@@ -63,7 +63,7 @@ namespace Street_Rod_AC.Models.Race
         public string RawResultJson { get; set; } = string.Empty;
 
         /// <summary>
-        /// Session start timestamp from Python app
+        /// Session start timestamp from Lua app
         /// </summary>
         public DateTime SessionStartTime { get; set; }
 

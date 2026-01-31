@@ -3,8 +3,8 @@ using Newtonsoft.Json;
 namespace Street_Rod_AC.Models.Race
 {
     /// <summary>
-    /// Root schema for race result JSON files from StreetRodRaceApp.py
-    /// Mirrors the Python app output structure for deserialization
+    /// Root schema for race result JSON files from sr_race_manager (Lua app)
+    /// Mirrors the Lua app output structure for deserialization
     /// </summary>
     public class RaceResultJson
     {
@@ -31,7 +31,7 @@ namespace Street_Rod_AC.Models.Race
         public string ScriptVersion { get; set; } = string.Empty;
 
         [JsonProperty("source")]
-        public string Source { get; set; } = string.Empty;  // Must be "StreetRodRaceApp"
+        public string Source { get; set; } = string.Empty;  // Must be "sr_race_manager"
 
         [JsonProperty("generated_at")]
         public string GeneratedAt { get; set; } = string.Empty;
