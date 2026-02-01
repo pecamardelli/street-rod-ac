@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Street_Rod_AC.Logging;
+using Street_Rod_AC.Models.Career.Milestones;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Models.Race;
 using Street_Rod_AC.Services.Storage;
@@ -74,6 +75,9 @@ namespace Street_Rod_AC.Services.Race
 
                 // Update reputations based on race outcome
                 ApplyReputationUpdates(gameState, outcome, context);
+
+                // Update career milestone counters
+                UpdateMilestoneCounters(gameState, outcome, context);
 
                 // Handle opponent status changes (e.g., if they lost their only car)
                 if (context != null)
@@ -533,6 +537,72 @@ namespace Street_Rod_AC.Services.Race
                         context.OpponentName, oldOpponentRep, opponent.Stats.Reputation, opponentRepChange);
                 }
             }
+        }
+
+        /// <summary>
+        /// Update career milestone counters based on race outcome
+        /// </summary>
+        private void UpdateMilestoneCounters(GameState gameState, RaceOutcome outcome, RaceContext? context)
+        {
+            // Skip milestone updates for inconclusive or both crashed
+            if (outcome.WinCondition == WinCondition.Inconclusive ||
+                outcome.WinCondition == WinCondition.BothCrashed)
+            {
+                return;
+            }
+
+            var career = gameState.Career;
+
+            if (outcome.PlayerWon)
+            {
+                // Update total wins
+                career.IncrementCounter(MilestoneTrigger.TotalWins);
+
+                // Update race-type specific wins
+                if (context != null)
+                {
+                    switch (context.RaceType)
+                    {
+                        case RaceType.DragRace:
+                            career.IncrementCounter(MilestoneTrigger.DragWins);
+                            break;
+                        case RaceType.Circuit:
+                        case RaceType.Sprint:
+                            career.IncrementCounter(MilestoneTrigger.RoadWins);
+                            break;
+                    }
+
+                    // Update pink slip wins
+                    if (context.IsPinkSlip)
+                    {
+                        career.IncrementCounter(MilestoneTrigger.PinkSlipWins);
+                    }
+
+                    // Track defeated opponent
+                    if (!string.IsNullOrEmpty(context.OpponentName))
+                    {
+                        career.RecordDefeatedOpponent(context.OpponentName);
+                    }
+
+                    // Update money earned (from wager)
+                    if (context.CashWager > 0)
+                    {
+                        career.IncrementCounter(MilestoneTrigger.MoneyEarned, (int)context.CashWager);
+                    }
+                }
+            }
+
+            // Update current cars owned count (not cumulative)
+            career.SetCounter(MilestoneTrigger.CarsOwned, gameState.Player.Cars.Count);
+
+            // Update current reputation (not cumulative)
+            career.SetCounter(MilestoneTrigger.ReputationReached, gameState.Player.Stats.Reputation);
+
+            _logger.Debug("Milestone counters updated: TotalWins={Wins}, PinkSlipWins={PinkSlips}, CarsOwned={Cars}, Reputation={Rep}",
+                career.GetCounter(MilestoneTrigger.TotalWins),
+                career.GetCounter(MilestoneTrigger.PinkSlipWins),
+                career.GetCounter(MilestoneTrigger.CarsOwned),
+                career.GetCounter(MilestoneTrigger.ReputationReached));
         }
 
         /// <summary>

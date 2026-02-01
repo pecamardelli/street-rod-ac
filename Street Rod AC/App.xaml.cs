@@ -18,6 +18,7 @@ using Street_Rod_AC.Services.Scheduler.Tasks;
 using Street_Rod_AC.Services.Settings;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
+using Street_Rod_AC.Services.Career;
 
 namespace Street_Rod_AC
 {
@@ -44,6 +45,12 @@ namespace Street_Rod_AC
         public IGameTimeScheduler Scheduler { get; private set; }
         public IGameTimeService GameTimeService { get; private set; }
         public GameSettingsService GameSettingsService { get; private set; }
+
+        // Career services
+        public ICarFilterService CarFilterService { get; private set; }
+        public IMilestoneService MilestoneService { get; private set; }
+        public IVictoryConditionService VictoryConditionService { get; private set; }
+        public IRaceEventService RaceEventService { get; private set; }
 
         // Current game state (set when a game is loaded or created)
         public Models.GameState.GameState? CurrentGameState { get; set; }
@@ -123,6 +130,18 @@ namespace Street_Rod_AC
 
             // Game state repository (depends on opponent initialization service)
             GameStateRepository = new GameStateRepository(OpponentInitializationService);
+
+            // Career services
+            CarFilterService = new CarFilterService();
+            MilestoneService = new MilestoneService();
+            VictoryConditionService = new VictoryConditionService(
+                getTotalOpponents: gs => gs.Racers.TotalCount,
+                playerHasMostWins: gs => IsPlayerSeasonChampion(gs)
+            );
+            RaceEventService = new RaceEventService(
+                CarFilterService,
+                carDefId => CatalogRepository.GetCar(carDefId)
+            );
 
             // Race result services
             var raceResultValidator = new Services.Race.Validation.RaceResultValidator();
@@ -231,6 +250,35 @@ namespace Street_Rod_AC
             // Navigate to initial screen
             logger.Information("Navigating to initial screen");
             NavigationService.NavigateToInit();
+        }
+
+        /// <summary>
+        /// Check if the player has the most wins for Season Champion victory
+        /// </summary>
+        private static bool IsPlayerSeasonChampion(Models.GameState.GameState gameState)
+        {
+            var playerWins = gameState.Player.Stats.Wins;
+
+            // Check all opponents
+            foreach (var racer in gameState.Racers.ReadyToRace.Values)
+            {
+                if (racer.Stats.Wins > playerWins)
+                    return false;
+            }
+
+            foreach (var racer in gameState.Racers.Inactive.Values)
+            {
+                if (racer.Stats.Wins > playerWins)
+                    return false;
+            }
+
+            foreach (var racer in gameState.Racers.Retired.Values)
+            {
+                if (racer.Stats.Wins > playerWins)
+                    return false;
+            }
+
+            return true;
         }
 
         protected override void OnExit(ExitEventArgs e)

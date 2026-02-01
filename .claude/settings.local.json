@@ -21,7 +21,8 @@
       "Bash(dir:*)",
       "Bash(ls \"C:\\\\Users\\\\Administrator\\\\source\\\\repos\\\\Street Rod AC\\\\Street Rod AC\\\\Assets\\\\Images\\\\Misc\\\\Calendar\"\" 2>/dev/null || ls \"C:UsersAdministratorsourcereposStreet Rod ACStreet Rod ACMiscCalendar\"\")",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:acstuff.club)"
+      "WebFetch(domain:acstuff.club)",
+      "Bash(cd:*)"
     ]
   }
 }

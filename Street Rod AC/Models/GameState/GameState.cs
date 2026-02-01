@@ -44,6 +44,9 @@ namespace Street_Rod_AC.Models.GameState
         // Scheduled Tasks
         public List<ScheduledTaskState> ScheduledTasks { get; set; }
 
+        // Career Progression
+        public CareerState Career { get; set; }
+
         // Metadata
         public int CatalogVersion { get; set; }
         public DateTime CreatedDate { get; set; }
@@ -73,6 +76,7 @@ namespace Street_Rod_AC.Models.GameState
             UsedCarMarket = [];
             DealerLocations = [];
             ScheduledTasks = [];
+            Career = CareerState.CreateNew();
 
             CatalogVersion = 1;
             // Real-world timestamps for save file metadata
