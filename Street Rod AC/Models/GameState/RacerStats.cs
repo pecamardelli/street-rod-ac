@@ -18,6 +18,12 @@ namespace Street_Rod_AC.Models.GameState
         /// </summary>
         public int Reputation { get; set; }
 
+        /// <summary>
+        /// Bonus reputation earned from event victories
+        /// Added on top of calculated reputation
+        /// </summary>
+        public int EventReputationBonus { get; set; }
+
         public RacerStats()
         {
             Wins = 0;
@@ -73,6 +79,9 @@ namespace Street_Rod_AC.Models.GameState
                     reputation += 10;
                 }
             }
+
+            // Add event reputation bonus
+            reputation += EventReputationBonus;
 
             // Clamp to valid range
             return Math.Max(0, Math.Min(100, reputation));

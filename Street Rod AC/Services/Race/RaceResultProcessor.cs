@@ -3,6 +3,7 @@ using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Career.Milestones;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Models.Race;
+using Street_Rod_AC.Services.Career;
 using Street_Rod_AC.Services.Storage;
 
 namespace Street_Rod_AC.Services.Race
@@ -15,6 +16,7 @@ namespace Street_Rod_AC.Services.Race
     {
         private readonly IGameStateRepository _gameStateRepository;
         private readonly IRaceSessionRepository _sessionRepository;
+        private readonly ICareerProgressService _careerProgressService;
         private readonly IAppLogger _logger;
 
         // Car health degradation constants (per race)
@@ -31,10 +33,12 @@ namespace Street_Rod_AC.Services.Race
 
         public RaceResultProcessor(
             IGameStateRepository gameStateRepository,
-            IRaceSessionRepository sessionRepository)
+            IRaceSessionRepository sessionRepository,
+            ICareerProgressService careerProgressService)
         {
             _gameStateRepository = gameStateRepository;
             _sessionRepository = sessionRepository;
+            _careerProgressService = careerProgressService;
             _logger = AppLoggerFactory.CreateLogger(LogCategory.RaceIngestion);
         }
 
@@ -78,6 +82,16 @@ namespace Street_Rod_AC.Services.Race
 
                 // Update career milestone counters
                 UpdateMilestoneCounters(gameState, outcome, context);
+
+                // Complete event and apply rewards (if this is an event race)
+                if (context?.EventId != null)
+                {
+                    ProcessEventCompletion(gameState, outcome, context);
+                }
+
+                // Check for career progress (milestones, victory unlocks, game victory)
+                // Note: Notifications are shown after this call via dialogs
+                _careerProgressService.CheckProgressAfterRace(gameState);
 
                 // Handle opponent status changes (e.g., if they lost their only car)
                 if (context != null)
@@ -252,7 +266,8 @@ namespace Street_Rod_AC.Services.Race
             _logger.Debug("Player total races: {Races}", playerStats.Races);
 
             // Update opponent stats (if we can find them in game state)
-            if (context != null)
+            // Skip for event-only opponents as they're not tracked in game state
+            if (context != null && !context.IsEventOnlyOpponent)
             {
                 var opponent = FindRacer(gameState, context.OpponentName);
                 if (opponent != null)
@@ -278,6 +293,10 @@ namespace Street_Rod_AC.Services.Race
                 {
                     _logger.Warning("Could not find opponent {OpponentName} in game state", context.OpponentName);
                 }
+            }
+            else if (context?.IsEventOnlyOpponent == true)
+            {
+                _logger.Debug("Skipping opponent stats update for event-only opponent {OpponentName}", context.OpponentName);
             }
         }
 
@@ -603,6 +622,103 @@ namespace Street_Rod_AC.Services.Race
                 career.GetCounter(MilestoneTrigger.PinkSlipWins),
                 career.GetCounter(MilestoneTrigger.CarsOwned),
                 career.GetCounter(MilestoneTrigger.ReputationReached));
+        }
+
+        /// <summary>
+        /// Process event completion and apply rewards
+        /// </summary>
+        private void ProcessEventCompletion(GameState gameState, RaceOutcome outcome, RaceContext context)
+        {
+            if (string.IsNullOrEmpty(context.EventId))
+                return;
+
+            var app = (App)System.Windows.Application.Current;
+            var eventService = app.RaceEventService;
+
+            // Find the event instance by matching event ID in active events
+            var eventState = gameState.Career.ActiveEvents.FirstOrDefault(e =>
+                e.EventDefinitionId == context.EventId &&
+                !e.IsCompleted);
+
+            if (eventState == null)
+            {
+                _logger.Warning("Could not find active event {EventId} for completion", context.EventId);
+                return;
+            }
+
+            // Complete the event and get reward
+            var reward = eventService.CompleteEvent(
+                Guid.Empty, // Instance ID not used in current implementation
+                outcome.PlayerWon,
+                gameState.Career,
+                DateTime.Now);
+
+            _logger.Information("Event {EventId} completed. Player won: {PlayerWon}",
+                context.EventId, outcome.PlayerWon);
+
+            // Apply rewards if player won
+            if (reward != null && outcome.PlayerWon)
+            {
+                // Apply cash reward
+                if (reward.Cash > 0)
+                {
+                    gameState.Player.Money += reward.Cash;
+                    gameState.Player.Stats.TotalEarnings += reward.Cash;
+                    _logger.Information("Event reward: ${Cash} added to player", reward.Cash);
+                }
+
+                // Apply reputation reward
+                if (reward.Reputation > 0)
+                {
+                    // Reputation is calculated from stats, so we need to add a bonus
+                    // For now, we log it - reputation will be recalculated from stats
+                    _logger.Information("Event reward: +{Rep} reputation bonus", reward.Reputation);
+
+                    // Add reputation directly to stats (temporary bonus tracking)
+                    gameState.Player.Stats.EventReputationBonus += reward.Reputation;
+                }
+
+                // Handle special item reward (log for now - parts system integration later)
+                if (!string.IsNullOrEmpty(reward.SpecialItem))
+                {
+                    _logger.Information("Event reward: Special item '{Item}' - {Description}",
+                        reward.SpecialItem, reward.SpecialItemDescription ?? "No description");
+                    // TODO: Add to player's parts inventory when parts system is implemented
+                }
+
+                // Show reward notification
+                ShowEventRewardNotification(reward, app.DialogService);
+            }
+        }
+
+        /// <summary>
+        /// Show a notification dialog for event rewards
+        /// </summary>
+        private void ShowEventRewardNotification(Models.Career.Events.EventReward reward, Dialogs.DialogService dialogService)
+        {
+            var rewardParts = new List<string>();
+
+            if (reward.Cash > 0)
+                rewardParts.Add($"${reward.Cash:N0}");
+
+            if (reward.Reputation > 0)
+                rewardParts.Add($"+{reward.Reputation} reputation");
+
+            if (!string.IsNullOrEmpty(reward.SpecialItemDescription))
+                rewardParts.Add(reward.SpecialItemDescription);
+            else if (!string.IsNullOrEmpty(reward.SpecialItem))
+                rewardParts.Add($"Special item: {reward.SpecialItem}");
+
+            if (rewardParts.Count == 0)
+                return; // No rewards to show
+
+            var message = "You won the event!\n\nRewards:\n" + string.Join("\n", rewardParts.Select(r => $"  {r}"));
+
+            var dialog = new Dialogs.Information.InformationDialogViewModel(
+                dialogService,
+                message,
+                "Event Complete!");
+            dialogService.ShowDialog(dialog);
         }
 
         /// <summary>
