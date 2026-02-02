@@ -85,8 +85,11 @@ namespace Street_Rod_AC.Screens.NewGame
                             // Create new save, overwriting the existing one
                             var gameState = repository.CreateNew(saveName, playerName);
 
-                            // Store current game state in App for saving on exit
+                            // Generate initial race events
                             var theApp = (App)System.Windows.Application.Current;
+                            theApp.RaceEventService.GenerateEvents(gameState.Career, gameState.Date);
+
+                            // Store current game state in App for saving on exit
                             theApp.CurrentGameState = gameState;
 
                             // Navigate to game screen
@@ -100,6 +103,9 @@ namespace Street_Rod_AC.Screens.NewGame
             {
                 // Create new save
                 var gameState = repository.CreateNew(saveName, playerName);
+
+                // Generate initial race events
+                app.RaceEventService.GenerateEvents(gameState.Career, gameState.Date);
 
                 // Store current game state in App for saving on exit
                 app.CurrentGameState = gameState;

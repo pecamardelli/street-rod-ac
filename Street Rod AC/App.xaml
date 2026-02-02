@@ -17,9 +17,11 @@
              xmlns:settings="clr-namespace:Street_Rod_AC.Screens.Settings"
              xmlns:carCatalogEditor="clr-namespace:Street_Rod_AC.Screens.CarCatalogEditor"
              xmlns:raceLoading="clr-namespace:Street_Rod_AC.Screens.RaceLoading"
+             xmlns:career="clr-namespace:Street_Rod_AC.Screens.Career"
              xmlns:confirmation="clr-namespace:Street_Rod_AC.Dialogs.Confirmation"
              xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
              xmlns:challengeSetup="clr-namespace:Street_Rod_AC.Dialogs.ChallengeSetup"
+             xmlns:eventEntry="clr-namespace:Street_Rod_AC.Dialogs.EventEntry"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -35,6 +37,7 @@
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
             <converters:GaragePanelToVisibilityConverter x:Key="GaragePanelToVisibilityConverter"/>
+            <converters:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
 
             <!-- Effects -->
             <DropShadowEffect x:Key="DropShadowEffect"
@@ -101,6 +104,10 @@
                 <raceLoading:RaceLoadingScreenView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type career:CareerScreenViewModel}">
+                <career:CareerScreenView/>
+            </DataTemplate>
+
             <!-- Dialog DataTemplates -->
             <DataTemplate DataType="{x:Type confirmation:ConfirmationDialogViewModel}">
                 <confirmation:ConfirmationDialogView/>
@@ -112,6 +119,10 @@
 
             <DataTemplate DataType="{x:Type challengeSetup:ChallengeSetupDialogViewModel}">
                 <challengeSetup:ChallengeSetupDialogView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type eventEntry:EventEntryDialogViewModel}">
+                <eventEntry:EventEntryDialogView/>
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

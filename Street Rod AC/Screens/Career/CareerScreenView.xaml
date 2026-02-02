@@ -1,0 +1,556 @@
+<UserControl x:Class="Street_Rod_AC.Screens.Career.CareerScreenView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:bottomBar="clr-namespace:Street_Rod_AC.Components.BottomBar"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="1000">
+    <Grid Background="{StaticResource MainBackgroundBrush}"
+          Opacity="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid.Triggers>
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                        From="0.0"
+                                        To="1.0"
+                                        Duration="0:0:0.5"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Grid.Triggers>
+
+        <!-- Back Button -->
+        <Button x:Name="BackButton"
+                Grid.Row="0"
+                Style="{StaticResource ExitButtonStyle}"
+                Background="{StaticResource BackButtonBrush}"
+                Command="{Binding BackCommand}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Margin="20,20,0,0"
+                Opacity="0">
+            <Button.Triggers>
+                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                            From="0.0"
+                                            To="1.0"
+                                            BeginTime="0:0:0.3"
+                                            Duration="0:0:0.5"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Button.Triggers>
+        </Button>
+
+        <!-- Title -->
+        <TextBlock Text="CAREER"
+                   Grid.Row="0"
+                   FontSize="28"
+                   FontWeight="Bold"
+                   Foreground="{StaticResource TextPrimaryBrush}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Top"
+                   Margin="0,25,0,0"
+                   Opacity="0">
+            <TextBlock.Triggers>
+                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                            From="0.0"
+                                            To="1.0"
+                                            BeginTime="0:0:0.2"
+                                            Duration="0:0:0.5"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </TextBlock.Triggers>
+        </TextBlock>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="0" Margin="20,80,20,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Victory Progress Panel -->
+            <Border Grid.Column="0" Grid.Row="0"
+                    Background="#DF1B1B1B"
+                    BorderBrush="#404040"
+                    BorderThickness="2"
+                    CornerRadius="5"
+                    Margin="0,0,10,10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0"
+                            Background="#1A1A1A"
+                            BorderBrush="#404040"
+                            BorderThickness="0,0,0,1"
+                            Padding="15">
+                        <TextBlock Text="VICTORY PROGRESS"
+                                   FontSize="16"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </Border>
+
+                    <!-- Victory List -->
+                    <ScrollViewer Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding Victories}"
+                                      Margin="10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- Victory Card -->
+                                    <Border Margin="0,0,0,10"
+                                            CornerRadius="5"
+                                            Padding="12"
+                                            Opacity="{Binding Opacity}">
+                                        <Border.Background>
+                                            <SolidColorBrush Color="{Binding BackgroundColor}"/>
+                                        </Border.Background>
+                                        <Border.BorderThickness>2</Border.BorderThickness>
+                                        <Border.BorderBrush>
+                                            <SolidColorBrush Color="{Binding BorderColor}"/>
+                                        </Border.BorderBrush>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Status Icon -->
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding StatusIcon}"
+                                                       FontSize="24"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,12,0">
+                                                <TextBlock.Foreground>
+                                                    <SolidColorBrush Color="{Binding StatusColor}"/>
+                                                </TextBlock.Foreground>
+                                            </TextBlock>
+
+                                            <!-- Victory Info -->
+                                            <StackPanel Grid.Column="1"
+                                                        VerticalAlignment="Center">
+                                                <!-- Name -->
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontSize="16"
+                                                           FontWeight="Bold"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                                                <!-- Description -->
+                                                <TextBlock Text="{Binding Description}"
+                                                           FontSize="12"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           TextWrapping="Wrap"
+                                                           Margin="0,4,0,8"/>
+
+                                                <!-- Progress Bar -->
+                                                <Grid Height="20">
+                                                    <Border Background="#1A1A1A"
+                                                            CornerRadius="3"
+                                                            BorderBrush="#404040"
+                                                            BorderThickness="1"/>
+                                                    <Border Background="#4A90D9"
+                                                            CornerRadius="3"
+                                                            HorizontalAlignment="Left"
+                                                            Margin="2">
+                                                        <Border.Width>
+                                                            <MultiBinding Converter="{StaticResource PercentageToWidthConverter}">
+                                                                <Binding Path="ProgressPercentage"/>
+                                                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=Grid}"/>
+                                                            </MultiBinding>
+                                                        </Border.Width>
+                                                    </Border>
+                                                    <TextBlock Text="{Binding ProgressText}"
+                                                               FontSize="11"
+                                                               FontWeight="Bold"
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"/>
+                                                </Grid>
+
+                                                <!-- Completed Steps -->
+                                                <ItemsControl ItemsSource="{Binding CompletedSteps}"
+                                                              Margin="0,6,0,0">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="✓ "
+                                                                           Foreground="#90EE90"
+                                                                           FontSize="11"/>
+                                                                <TextBlock Text="{Binding}"
+                                                                           Foreground="#90EE90"
+                                                                           FontSize="11"/>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+
+                                                <!-- Remaining Steps -->
+                                                <ItemsControl ItemsSource="{Binding RemainingSteps}"
+                                                              Margin="0,2,0,0">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="○ "
+                                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                                           FontSize="11"/>
+                                                                <TextBlock Text="{Binding}"
+                                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                                           FontSize="11"/>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+
+                                            <!-- Set Active Button -->
+                                            <Button Grid.Column="2"
+                                                    Content="PURSUE"
+                                                    Command="{Binding DataContext.SetActiveVictoryCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding VictoryType}"
+                                                    Visibility="{Binding CanSetActive, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                    VerticalAlignment="Top"
+                                                    Margin="10,0,0,0"
+                                                    Padding="10,5"
+                                                    FontSize="11"
+                                                    FontWeight="Bold"
+                                                    Foreground="#1A1A1A"
+                                                    Background="#FFD700"
+                                                    BorderThickness="0"
+                                                    Cursor="Hand">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border x:Name="Bd"
+                                                                            Background="{TemplateBinding Background}"
+                                                                            CornerRadius="3"
+                                                                            Padding="{TemplateBinding Padding}">
+                                                                        <ContentPresenter HorizontalAlignment="Center"
+                                                                                          VerticalAlignment="Center"/>
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter TargetName="Bd" Property="Background" Value="#FFA500"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Stats Panel -->
+            <Border Grid.Column="1" Grid.Row="0"
+                    Background="#DF1B1B1B"
+                    BorderBrush="#404040"
+                    BorderThickness="2"
+                    CornerRadius="5"
+                    Margin="10,0,0,10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0"
+                            Background="#1A1A1A"
+                            BorderBrush="#404040"
+                            BorderThickness="0,0,0,1"
+                            Padding="15">
+                        <TextBlock Text="YOUR STATS"
+                                   FontSize="16"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </Border>
+
+                    <!-- Stats List -->
+                    <ScrollViewer Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="15">
+                            <!-- Reputation -->
+                            <Border Background="#1A1A1A"
+                                    BorderBrush="#404040"
+                                    BorderThickness="1"
+                                    CornerRadius="5"
+                                    Padding="12"
+                                    Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="REPUTATION"
+                                               FontSize="11"
+                                               FontWeight="Bold"
+                                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                        <TextBlock Text="{Binding Reputation}"
+                                                   FontSize="28"
+                                                   FontWeight="Bold"
+                                                   Foreground="#FFD700"/>
+                                        <TextBlock Text="{Binding ReputationTier}"
+                                                   FontSize="14"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   VerticalAlignment="Bottom"
+                                                   Margin="10,0,0,5"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Race Record -->
+                            <Border Background="#1A1A1A"
+                                    BorderBrush="#404040"
+                                    BorderThickness="1"
+                                    CornerRadius="5"
+                                    Padding="12"
+                                    Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="RACE RECORD"
+                                               FontSize="11"
+                                               FontWeight="Bold"
+                                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding TotalWins}"
+                                                       FontSize="24"
+                                                       FontWeight="Bold"
+                                                       Foreground="#90EE90"/>
+                                            <TextBlock Text="Wins"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding TotalLosses}"
+                                                       FontSize="24"
+                                                       FontWeight="Bold"
+                                                       Foreground="#FF6B6B"/>
+                                            <TextBlock Text="Losses"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Margin="0,8,0,0">
+                                        <Run Text="Win Rate: " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <Run Text="{Binding WinRate, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Pink Slips -->
+                            <Border Background="#1A1A1A"
+                                    BorderBrush="#404040"
+                                    BorderThickness="1"
+                                    CornerRadius="5"
+                                    Padding="12"
+                                    Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="PINK SLIPS"
+                                               FontSize="11"
+                                               FontWeight="Bold"
+                                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding PinkSlipsWon}"
+                                                       FontSize="20"
+                                                       FontWeight="Bold"
+                                                       Foreground="#90EE90"/>
+                                            <TextBlock Text="Won"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding PinkSlipsLost}"
+                                                       FontSize="20"
+                                                       FontWeight="Bold"
+                                                       Foreground="#FF6B6B"/>
+                                            <TextBlock Text="Lost"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Other Stats -->
+                            <Border Background="#1A1A1A"
+                                    BorderBrush="#404040"
+                                    BorderThickness="1"
+                                    CornerRadius="5"
+                                    Padding="12"
+                                    Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="OTHER"
+                                               FontSize="11"
+                                               FontWeight="Bold"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               Margin="0,0,0,8"/>
+                                    <TextBlock Margin="0,0,0,4">
+                                        <Run Text="Cars Owned: " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <Run Text="{Binding CarsOwned, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    </TextBlock>
+                                    <TextBlock Margin="0,0,0,4">
+                                        <Run Text="Opponents Defeated: " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <Run Text="{Binding OpponentsDefeated, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    </TextBlock>
+                                    <TextBlock Margin="0,0,0,4">
+                                        <Run Text="Total Earnings: " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <Run Text="{Binding TotalEarnings, Mode=OneWay}" FontWeight="Bold" Foreground="#90EE90"/>
+                                    </TextBlock>
+                                    <TextBlock>
+                                        <Run Text="Net Profit: " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <Run Text="{Binding NetEarnings, Mode=OneWay}" FontWeight="Bold" Foreground="#90EE90"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Milestones Panel -->
+            <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1"
+                    Background="#DF1B1B1B"
+                    BorderBrush="#404040"
+                    BorderThickness="2"
+                    CornerRadius="5"
+                    Margin="0,10,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0"
+                            Background="#1A1A1A"
+                            BorderBrush="#404040"
+                            BorderThickness="0,0,0,1"
+                            Padding="15">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="MILESTONES"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding MilestoneProgressText}"
+                                       FontSize="14"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       Margin="15,0,0,0"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Milestone Grid -->
+                    <ScrollViewer Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding Milestones}"
+                                      Margin="10">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- Milestone Badge -->
+                                    <Border Width="180"
+                                            Margin="5"
+                                            CornerRadius="5"
+                                            Padding="10"
+                                            Opacity="{Binding Opacity}"
+                                            ToolTip="{Binding TooltipText}">
+                                        <Border.Background>
+                                            <SolidColorBrush Color="{Binding BackgroundColor}"/>
+                                        </Border.Background>
+                                        <Border.BorderThickness>1</Border.BorderThickness>
+                                        <Border.BorderBrush>
+                                            <SolidColorBrush Color="{Binding BorderColor}"/>
+                                        </Border.BorderBrush>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Status Icon -->
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding StatusIcon}"
+                                                       FontSize="18"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,8,0">
+                                                <TextBlock.Foreground>
+                                                    <SolidColorBrush Color="{Binding StatusColor}"/>
+                                                </TextBlock.Foreground>
+                                            </TextBlock>
+
+                                            <!-- Milestone Info -->
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontSize="12"
+                                                           FontWeight="Bold"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding ProgressText}"
+                                                           FontSize="10"
+                                                           Margin="0,2,0,0">
+                                                    <TextBlock.Foreground>
+                                                        <SolidColorBrush Color="{Binding StatusColor}"/>
+                                                    </TextBlock.Foreground>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Bottom Nav Bar -->
+        <bottomBar:BottomBarView Grid.Row="1"
+                                  BankrollDisplay="{Binding BankrollDisplay}"/>
+    </Grid>
+</UserControl>

@@ -56,6 +56,16 @@ namespace Street_Rod_AC.Models.Race
         /// When this context was created
         /// </summary>
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        /// <summary>
+        /// Event ID if this is an event race (null for regular races)
+        /// </summary>
+        public string? EventId { get; set; }
+
+        /// <summary>
+        /// True if opponent is event-only (don't track their stats)
+        /// </summary>
+        public bool IsEventOnlyOpponent { get; set; }
     }
 
     /// <summary>

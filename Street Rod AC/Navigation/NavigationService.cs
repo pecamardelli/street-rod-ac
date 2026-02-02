@@ -164,10 +164,15 @@ namespace Street_Rod_AC.Navigation
 
         public void NavigateToNewspaper(GameState gameState, bool skipAnimation = false)
         {
+            var app = (App)System.Windows.Application.Current;
             var screen = new Screens.Newspaper.NewspaperScreenViewModel(
                 this,
                 _dialogService,
                 gameState,
+                app.RaceEventService,
+                app.CarFilterService,
+                _catalogRepository,
+                app.EventOpponentService,
                 skipAnimation);
             NavigateTo(screen);
         }
@@ -213,6 +218,18 @@ namespace Street_Rod_AC.Navigation
                 gameState,
                 _launcher,
                 launchIntent);
+            NavigateTo(screen);
+        }
+
+        public void NavigateToCareer(GameState gameState)
+        {
+            var app = (App)System.Windows.Application.Current;
+            var screen = new Screens.Career.CareerScreenViewModel(
+                this,
+                _dialogService,
+                app.VictoryConditionService,
+                app.MilestoneService,
+                gameState);
             NavigateTo(screen);
         }
     }

@@ -70,6 +70,16 @@ namespace Street_Rod_AC.Models.Career.Events
         public bool IsPinkSlip { get; set; }
 
         /// <summary>
+        /// Special opponents for this event (if set, uses these instead of pool)
+        /// </summary>
+        public List<EventOpponent>? SpecialOpponents { get; set; }
+
+        /// <summary>
+        /// If true, only use special opponents (no pool mixing)
+        /// </summary>
+        public bool ExclusiveOpponents { get; set; }
+
+        /// <summary>
         /// Get a human-readable entry requirements description
         /// </summary>
         public string GetEntryRequirementsDescription()
@@ -115,5 +125,46 @@ namespace Street_Rod_AC.Models.Career.Events
         /// Always available
         /// </summary>
         Permanent
+    }
+
+    /// <summary>
+    /// Special opponent for events only - not tracked in game state
+    /// </summary>
+    public class EventOpponent
+    {
+        /// <summary>
+        /// Display name of the opponent
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Nickname/title for the opponent
+        /// </summary>
+        public string? Nickname { get; set; }
+
+        /// <summary>
+        /// AC AI skill level (80-100)
+        /// </summary>
+        public int Skill { get; set; } = 90;
+
+        /// <summary>
+        /// AC AI aggression level (0-100)
+        /// </summary>
+        public int Aggression { get; set; } = 50;
+
+        /// <summary>
+        /// Car definition ID for the opponent's car
+        /// </summary>
+        public string CarDefinitionId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Car skin ID (optional)
+        /// </summary>
+        public string? CarSkin { get; set; }
+
+        /// <summary>
+        /// Path to opponent portrait (optional)
+        /// </summary>
+        public string? PortraitPath { get; set; }
     }
 }

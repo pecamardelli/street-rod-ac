@@ -26,22 +26,193 @@
                 Opacity="0"/>
 
 
-        <!-- Content: Market Buttons -->
-        <StackPanel x:Name="ContentPanel"
-                    Grid.Row="0"
-                    Orientation="Vertical"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Center"
-                    Opacity="0">
-            <!-- Row: Used Parts and Used Cars Buttons -->
-            <StackPanel Orientation="Horizontal"
-                       HorizontalAlignment="Center">
+        <!-- Content Area -->
+        <Grid Grid.Row="0" Margin="20,80,20,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Race Invitations Panel (Left Side) -->
+            <Border x:Name="RaceInvitationsPanel"
+                    Grid.Column="0"
+                    Background="#DF1B1B1B"
+                    BorderBrush="#404040"
+                    BorderThickness="2"
+                    CornerRadius="5"
+                    Margin="0,0,20,0"
+                    Opacity="0"
+                    Visibility="{Binding HasRaceInvitations, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0"
+                            Background="#1A1A1A"
+                            BorderBrush="#404040"
+                            BorderThickness="0,0,0,1"
+                            Padding="15">
+                        <TextBlock Text="RACE INVITATIONS"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </Border>
+
+                    <!-- Events List -->
+                    <ScrollViewer Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding RaceInvitations}"
+                                      Margin="10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- Event Card -->
+                                    <Border Background="#2A2A2A"
+                                            BorderBrush="#404040"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="12"
+                                            Margin="0,0,0,10"
+                                            Opacity="{Binding Opacity}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0">
+                                                <!-- Event name and type -->
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Name}"
+                                                               FontWeight="Bold"
+                                                               FontSize="16"
+                                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                    <Border Background="#404040"
+                                                            CornerRadius="3"
+                                                            Padding="6,2"
+                                                            Margin="10,0,0,0"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding RaceTypeDisplay}"
+                                                                   FontSize="10"
+                                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                    </Border>
+                                                </StackPanel>
+
+                                                <!-- Description -->
+                                                <TextBlock Text="{Binding Description}"
+                                                           FontSize="12"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           TextWrapping="Wrap"
+                                                           Margin="0,4,0,0"/>
+
+                                                <!-- Requirements -->
+                                                <TextBlock Margin="0,6,0,0">
+                                                    <Run Text="Requirements: " Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                                    <Run Text="{Binding RequirementsDescription, Mode=OneWay}" Foreground="{StaticResource TextPrimaryBrush}" FontSize="11"/>
+                                                </TextBlock>
+
+                                                <!-- Reward -->
+                                                <TextBlock Margin="0,2,0,0">
+                                                    <Run Text="Reward: " Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                                    <Run Text="{Binding RewardDescription, Mode=OneWay}" Foreground="#90EE90" FontSize="11" FontWeight="Bold"/>
+                                                </TextBlock>
+
+                                                <!-- Pink Slip Warning -->
+                                                <TextBlock Text="{Binding PinkSlipWarning}"
+                                                           FontSize="11"
+                                                           FontWeight="Bold"
+                                                           Foreground="#FF6B6B"
+                                                           Margin="0,4,0,0"
+                                                           Visibility="{Binding ShowPinkSlipWarning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                                                <!-- Footer: Expiry and Eligibility -->
+                                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                                    <TextBlock Text="{Binding ExpiresInText}"
+                                                               FontSize="11"
+                                                               FontStyle="Italic">
+                                                        <TextBlock.Foreground>
+                                                            <SolidColorBrush Color="{Binding ExpiryColor}"/>
+                                                        </TextBlock.Foreground>
+                                                    </TextBlock>
+                                                    <TextBlock Text=" | "
+                                                               FontSize="11"
+                                                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                    <TextBlock Text="{Binding EligibilityText}"
+                                                               FontSize="11"
+                                                               FontStyle="Italic">
+                                                        <TextBlock.Foreground>
+                                                            <SolidColorBrush Color="{Binding EligibilityColor}"/>
+                                                        </TextBlock.Foreground>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <!-- Enter button -->
+                                            <Button Grid.Column="1"
+                                                    Content="ENTER"
+                                                    Command="{Binding DataContext.EnterEventCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    IsEnabled="{Binding CanEnter}"
+                                                    VerticalAlignment="Center"
+                                                    Margin="15,0,0,0"
+                                                    Padding="15,10"
+                                                    FontSize="12"
+                                                    FontWeight="Bold"
+                                                    Foreground="#1A1A1A"
+                                                    Cursor="Hand">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Background" Value="#90EE90"/>
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border x:Name="Bd"
+                                                                            Background="{TemplateBinding Background}"
+                                                                            CornerRadius="4"
+                                                                            Padding="{TemplateBinding Padding}">
+                                                                        <ContentPresenter HorizontalAlignment="Center"
+                                                                                          VerticalAlignment="Center"/>
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter TargetName="Bd" Property="Background" Value="#7CCD7C"/>
+                                                                        </Trigger>
+                                                                        <Trigger Property="IsEnabled" Value="False">
+                                                                            <Setter TargetName="Bd" Property="Background" Value="#505050"/>
+                                                                            <Setter Property="Foreground" Value="#808080"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Market Buttons (Right Side) -->
+            <StackPanel x:Name="ContentPanel"
+                        Grid.Column="1"
+                        Orientation="Vertical"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Opacity="0">
                 <!-- Used Parts Button -->
                 <Button Style="{StaticResource GameButtonStyle}"
                         Background="{StaticResource UsedPartsButtonBrush}"
                         Command="{Binding UsedPartsCommand}"
                         Tag="Browse used parts"
-                        Margin="0,0,50,0"/>
+                        Margin="0,0,0,20"/>
 
                 <!-- Used Cars Button -->
                 <Button Style="{StaticResource GameButtonStyle}"
@@ -49,7 +220,7 @@
                         Command="{Binding UsedCarsCommand}"
                         Tag="Browse used cars"/>
             </StackPanel>
-        </StackPanel>
+        </Grid>
 
         <!-- Bottom Nav Bar -->
         <bottomBar:BottomBarView Grid.Row="1"

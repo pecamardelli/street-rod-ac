@@ -51,6 +51,7 @@ namespace Street_Rod_AC
         public IMilestoneService MilestoneService { get; private set; }
         public IVictoryConditionService VictoryConditionService { get; private set; }
         public IRaceEventService RaceEventService { get; private set; }
+        public IEventOpponentService EventOpponentService { get; private set; }
 
         // Current game state (set when a game is loaded or created)
         public Models.GameState.GameState? CurrentGameState { get; set; }
@@ -121,6 +122,7 @@ namespace Street_Rod_AC
             Scheduler = new GameTimeScheduler();
             Scheduler.RegisterTask(new MarketRefreshTask(MarketService));
             Scheduler.RegisterTask(new Services.Scheduler.Tasks.RaceSimulatorTask(new Services.Simulation.RaceSimulatorService()));
+            // Note: EventGenerationTask registered after RaceEventService is created
             GameTimeService = new GameTimeService(Scheduler);
 
             // Opponent services (must be initialized before GameStateRepository)
@@ -142,6 +144,10 @@ namespace Street_Rod_AC
                 CarFilterService,
                 carDefId => CatalogRepository.GetCar(carDefId)
             );
+            EventOpponentService = new EventOpponentService(CarFilterService, CatalogRepository);
+
+            // Register event generation task (must be after RaceEventService is created)
+            Scheduler.RegisterTask(new Services.Scheduler.Tasks.EventGenerationTask(RaceEventService));
 
             // Race result services
             var raceResultValidator = new Services.Race.Validation.RaceResultValidator();

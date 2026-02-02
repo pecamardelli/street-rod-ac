@@ -26,6 +26,7 @@ namespace Street_Rod_AC.Screens.Game
         public RelayCommand ExitCommand { get; }
         public RelayCommand NewspaperCommand { get; }
         public RelayCommand GarageCommand { get; }
+        public RelayCommand CareerCommand { get; }
         public RelayCommand HitTheStreetsCommand { get; }
 
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
@@ -47,6 +48,7 @@ namespace Street_Rod_AC.Screens.Game
             ExitCommand = new RelayCommand(OnExit);
             NewspaperCommand = new RelayCommand(OnNewspaper);
             GarageCommand = new RelayCommand(OnGarage);
+            CareerCommand = new RelayCommand(OnCareer);
             HitTheStreetsCommand = new RelayCommand(OnHitTheStreets, CanHitTheStreets);
 
             // Auto-select first car if none selected
@@ -64,6 +66,11 @@ namespace Street_Rod_AC.Screens.Game
         private void OnGarage()
         {
             _navigationService.NavigateToGarage(_gameState);
+        }
+
+        private void OnCareer()
+        {
+            _navigationService.NavigateToCareer(_gameState);
         }
 
         private Models.GameState.Car? GetSelectedCar()

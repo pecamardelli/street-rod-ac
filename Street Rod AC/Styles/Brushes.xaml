@@ -95,6 +95,11 @@
                 ImageSource="pack://application:,,,/Assets/Images/Buttons/used_parts.png"
                 Stretch="Fill"/>
 
+    <!-- Career Button -->
+    <ImageBrush x:Key="CareerButtonBrush"
+                ImageSource="pack://application:,,,/Assets/Images/Buttons/career_button.png"
+                Stretch="Fill"/>
+
     <!-- Text Images -->
     <ImageBrush x:Key="StreetRodLogoTextBrush"
                 ImageSource="pack://application:,,,/Assets/Images/Text/street_rod_powered_by_ac.png"

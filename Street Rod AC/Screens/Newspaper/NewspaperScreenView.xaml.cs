@@ -22,6 +22,7 @@ namespace Street_Rod_AC.Screens.Newspaper
                     RootGrid.Opacity = 1;
                     BackButton.Opacity = 1;
                     ContentPanel.Opacity = 1;
+                    RaceInvitationsPanel.Opacity = 1;
                 }
                 else
                 {
@@ -51,6 +52,7 @@ namespace Street_Rod_AC.Screens.Newspaper
                         BeginTime = TimeSpan.FromSeconds(0.3)
                     };
                     ContentPanel.BeginAnimation(OpacityProperty, contentFade);
+                    RaceInvitationsPanel.BeginAnimation(OpacityProperty, contentFade);
                 }
             }
         }
