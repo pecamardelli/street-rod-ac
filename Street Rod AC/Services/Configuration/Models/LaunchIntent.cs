@@ -1,3 +1,4 @@
+using Street_Rod_AC.Models.Race;
 using Street_Rod_AC.Services.Configuration.Models;
 
 namespace Street_Rod_AC.Services.Configuration.Models
@@ -137,10 +138,15 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// </summary>
         public int OpponentAIAggression { get; set; } = 50;
 
+        /// <summary>
+        /// Type of race (drag or circuit)
+        /// </summary>
+        public RaceType RaceType { get; set; } = RaceType.DragRace;
+
         public override string Executable => "acs.exe";
 
         public override string Description =>
-            $"Launch drag race: {PlayerName} vs {OpponentName}";
+            $"Launch race: {PlayerName} vs {OpponentName}";
 
         public override IEnumerable<ModificationIntent> GetConfigurationIntents()
         {
@@ -155,7 +161,8 @@ namespace Street_Rod_AC.Services.Configuration.Models
                 TrackId = this.TrackId,
                 TrackConfig = this.TrackConfig,
                 OpponentAILevel = this.OpponentAILevel,
-                OpponentAIAggression = this.OpponentAIAggression
+                OpponentAIAggression = this.OpponentAIAggression,
+                RaceType = this.RaceType
             };
         }
     }

@@ -1,3 +1,5 @@
+using Street_Rod_AC.Models.Race;
+
 namespace Street_Rod_AC.Services.Configuration.Models
 {
     /// <summary>
@@ -99,6 +101,11 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// Opponent AI aggression (0-100)
         /// </summary>
         public int OpponentAIAggression { get; set; } = 50;
+
+        /// <summary>
+        /// Type of race (drag or circuit)
+        /// </summary>
+        public RaceType RaceType { get; set; } = RaceType.DragRace;
 
         public override string Description =>
             $"Configure drag race: {PlayerName} ({PlayerCarId}) vs {OpponentName} ({OpponentCarId}) [AI: {OpponentAILevel}/{OpponentAIAggression}]";

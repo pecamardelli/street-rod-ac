@@ -1,4 +1,5 @@
 using Street_Rod_AC.Logging;
+using Street_Rod_AC.Models.Race;
 using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.Services.Configuration.Parsers;
 using System.IO;
@@ -210,6 +211,9 @@ namespace Street_Rod_AC.Services.Configuration
             iniFile.SetValue("RACE", "TRACK", intent.TrackId);
             iniFile.SetValue("RACE", "CONFIG_TRACK", intent.TrackConfig ?? string.Empty);
 
+            // Configure [SESSION_0] section
+            iniFile.SetValue("SESSION_0", "NAME", "Quick Race");
+
             _writer.Write(iniFile);
 
             _logger.Information("Applied race config intent: Car={CarId}, Skin={SkinId}, Track={TrackId}, Config={TrackConfig}",
@@ -381,12 +385,25 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("ACTIVE=0");
             sb.AppendLine();
 
-            // [SESSION_0] - Drag race session
+            // [SESSION_0] - Race session
+            var isDrag = intent.RaceType == RaceType.DragRace;
             sb.AppendLine("[SESSION_0]");
-            sb.AppendLine("NAME=Drag Race");
-            sb.AppendLine("TYPE=7");
-            sb.AppendLine("SPAWN_SET=START");
-            sb.AppendLine("MATCHES=10");
+            if (isDrag)
+            {
+                sb.AppendLine("NAME=Drag Race");
+                sb.AppendLine("TYPE=7");
+                sb.AppendLine("SPAWN_SET=START");
+                sb.AppendLine("MATCHES=10");
+            }
+            else
+            {
+                sb.AppendLine("STARTING_POSITION=1");
+                sb.AppendLine("NAME=Quick Race");
+                sb.AppendLine("TYPE=3");
+                sb.AppendLine("LAPS=1");
+                sb.AppendLine("DURATION_MINUTES=0");
+                sb.AppendLine("SPAWN_SET=START");
+            }
             sb.AppendLine();
 
             // [CAR_0] - Player

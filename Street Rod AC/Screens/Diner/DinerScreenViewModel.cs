@@ -325,7 +325,8 @@ namespace Street_Rod_AC.Screens.Diner
                 CashWager = setup.CashWager,
                 IsPinkSlip = setup.IsPinkSlip,
                 OpponentAILevel = setup.Opponent.Skill,
-                OpponentAIAggression = setup.Opponent.Aggression
+                OpponentAIAggression = setup.Opponent.Aggression,
+                RaceType = setup.RaceType
             };
 
             // Create race context and store in metadata
