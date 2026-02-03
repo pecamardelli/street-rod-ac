@@ -84,81 +84,6 @@ namespace Street_Rod_AC.Services.Configuration
             return Path.Combine(_cfgDirectory, fileName);
         }
 
-        public bool RestoreFromBackup(string fileName, string? backupTimestamp = null)
-        {
-            try
-            {
-                var filePath = GetIniFilePath(fileName);
-                var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
-                var fileNameOnly = Path.GetFileNameWithoutExtension(filePath);
-                var extension = Path.GetExtension(filePath);
-
-                var backupPattern = $"{fileNameOnly}.backup_*{extension}";
-                var backups = Directory.GetFiles(directory, backupPattern)
-                    .Select(f => new FileInfo(f))
-                    .OrderByDescending(f => f.CreationTime)
-                    .ToList();
-
-                if (backups.Count == 0)
-                {
-                    _logger.Warning("No backups found for {FileName}", fileName);
-                    return false;
-                }
-
-                FileInfo backupToRestore;
-
-                if (backupTimestamp != null)
-                {
-                    backupToRestore = backups.FirstOrDefault(b => b.Name.Contains(backupTimestamp))
-                        ?? throw new FileNotFoundException($"Backup with timestamp {backupTimestamp} not found");
-                }
-                else
-                {
-                    backupToRestore = backups.First(); // Most recent
-                }
-
-                File.Copy(backupToRestore.FullName, filePath, true);
-                _logger.Information("Restored {FileName} from backup: {BackupFile}",
-                    fileName, backupToRestore.Name);
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Failed to restore {FileName} from backup", fileName);
-                return false;
-            }
-        }
-
-        public void DeleteBackups(string fileName)
-        {
-            try
-            {
-                var filePath = GetIniFilePath(fileName);
-                var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
-                var fileNameOnly = Path.GetFileNameWithoutExtension(filePath);
-                var extension = Path.GetExtension(filePath);
-
-                var backupPattern = $"{fileNameOnly}.backup_*{extension}";
-                var backups = Directory.GetFiles(directory, backupPattern);
-
-                foreach (var backupFile in backups)
-                {
-                    File.Delete(backupFile);
-                    _logger.Debug("Deleted backup: {BackupFile}", Path.GetFileName(backupFile));
-                }
-
-                if (backups.Length > 0)
-                {
-                    _logger.Information("Deleted {Count} backup file(s) for {FileName}", backups.Length, fileName);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Warning(ex, "Failed to delete backups for {FileName}", fileName);
-            }
-        }
-
         // ===== INTENT APPLICATION METHODS =====
 
         private bool ApplyShowroomIntent(ShowroomIntent intent)
@@ -227,19 +152,6 @@ namespace Street_Rod_AC.Services.Configuration
             var filePath = GetIniFilePath(intent.TargetFile);
 
             _logger.Information("Applying drag race intent (generating INI from code)");
-
-            // Create backup if file exists (before we modify it)
-            if (File.Exists(filePath))
-            {
-                var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
-                var fileName = Path.GetFileNameWithoutExtension(filePath);
-                var extension = Path.GetExtension(filePath);
-                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                var backupPath = Path.Combine(directory, $"{fileName}.backup_{timestamp}{extension}");
-
-                File.Copy(filePath, backupPath, false);
-                _logger.Debug("Created backup: {BackupPath}", Path.GetFileName(backupPath));
-            }
 
             // Build the race.ini content from scratch
             var content = BuildDragRaceIni(intent);

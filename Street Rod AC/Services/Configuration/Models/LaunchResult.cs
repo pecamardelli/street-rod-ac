@@ -36,16 +36,6 @@ namespace Street_Rod_AC.Services.Configuration.Models
         public int? ExitCode { get; set; }
 
         /// <summary>
-        /// Whether configuration was restored after execution
-        /// </summary>
-        public bool ConfigurationRestored { get; set; }
-
-        /// <summary>
-        /// Files that were modified during preparation
-        /// </summary>
-        public List<string> ModifiedFiles { get; set; } = new();
-
-        /// <summary>
         /// Any additional diagnostic information
         /// </summary>
         public Dictionary<string, object> Diagnostics { get; set; } = new();
@@ -60,8 +50,7 @@ namespace Street_Rod_AC.Services.Configuration.Models
                 Success = true,
                 StartTime = startTime,
                 EndTime = endTime,
-                ExitCode = exitCode,
-                ConfigurationRestored = true
+                ExitCode = exitCode
             };
         }
 
@@ -75,8 +64,7 @@ namespace Street_Rod_AC.Services.Configuration.Models
                 Success = false,
                 ErrorMessage = errorMessage,
                 StartTime = startTime,
-                EndTime = endTime,
-                ConfigurationRestored = true
+                EndTime = endTime
             };
         }
     }

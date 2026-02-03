@@ -19,7 +19,6 @@ namespace Street_Rod_AC.Services
         private readonly Race.IRaceResultIngestionService _raceResultService = raceResultService;
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("ACLauncher");
         private readonly SemaphoreSlim _executionLock = new(1, 1);
-        private readonly List<string> _modifiedFiles = [];
 
         private Process? _currentProcess;
         private bool _isExecutionLocked;
@@ -60,7 +59,6 @@ namespace Street_Rod_AC.Services
             }
 
             _isExecutionLocked = true;
-            _modifiedFiles.Clear();
 
             try
             {
@@ -78,23 +76,8 @@ namespace Street_Rod_AC.Services
                     {
                         var error = $"Failed to apply configuration intent: {configIntent.Description}";
                         _logger.Error(error);
-
-                        // Restore and abort
-                        await RestoreConfiguration();
-
-                        // Delete backups for showroom launches
-                        if (intent is ShowroomLaunchIntent)
-                        {
-                            foreach (var modifiedFile in _modifiedFiles)
-                            {
-                                _iniService.DeleteBackups(modifiedFile);
-                            }
-                        }
-
                         return LaunchResult.CreateFailure(error, startTime, DateTime.Now);
                     }
-
-                    _modifiedFiles.Add(configIntent.TargetFile);
                 }
 
                 _logger.Information("Configuration prepared successfully");
@@ -107,17 +90,6 @@ namespace Street_Rod_AC.Services
                 {
                     var error = $"Executable not found: {exePath}";
                     _logger.Error(error);
-                    await RestoreConfiguration();
-
-                    // Delete backups for showroom launches
-                    if (intent is ShowroomLaunchIntent)
-                    {
-                        foreach (var modifiedFile in _modifiedFiles)
-                        {
-                            _iniService.DeleteBackups(modifiedFile);
-                        }
-                    }
-
                     return LaunchResult.CreateFailure(error, startTime, DateTime.Now);
                 }
 
@@ -141,17 +113,6 @@ namespace Street_Rod_AC.Services
                 {
                     var error = "Failed to start process";
                     _logger.Error(error);
-                    await RestoreConfiguration();
-
-                    // Delete backups for showroom launches
-                    if (intent is ShowroomLaunchIntent)
-                    {
-                        foreach (var modifiedFile in _modifiedFiles)
-                        {
-                            _iniService.DeleteBackups(modifiedFile);
-                        }
-                    }
-
                     return LaunchResult.CreateFailure(error, startTime, DateTime.Now);
                 }
 
@@ -198,22 +159,7 @@ namespace Street_Rod_AC.Services
                     }
                 }
 
-                // PHASE 6: CLEANUP
-                _logger.Information("PHASE: Cleanup");
-                await RestoreConfiguration();
-
-                // Delete backups for showroom launches
-                if (intent is ShowroomLaunchIntent)
-                {
-                    _logger.Information("Deleting showroom backup files");
-                    foreach (var modifiedFile in _modifiedFiles)
-                    {
-                        _iniService.DeleteBackups(modifiedFile);
-                    }
-                }
-
                 var result = LaunchResult.CreateSuccess(startTime, endTime, exitCode);
-                result.ModifiedFiles.AddRange(_modifiedFiles);
 
                 _logger.Information("=== LAUNCH PIPELINE COMPLETED SUCCESSFULLY ===");
 
@@ -233,21 +179,7 @@ namespace Street_Rod_AC.Services
                 var endTime = DateTime.Now;
                 _logger.Error(ex, "Launch pipeline failed with exception");
 
-                // Always restore on error
-                await RestoreConfiguration();
-
-                // Delete backups for showroom launches even on error
-                if (intent is ShowroomLaunchIntent)
-                {
-                    _logger.Information("Deleting showroom backup files after error");
-                    foreach (var modifiedFile in _modifiedFiles)
-                    {
-                        _iniService.DeleteBackups(modifiedFile);
-                    }
-                }
-
                 var result = LaunchResult.CreateFailure(ex.Message, startTime, endTime);
-                result.ModifiedFiles.AddRange(_modifiedFiles);
 
                 _logger.Information("=== LAUNCH PIPELINE FAILED ===");
 
@@ -261,37 +193,6 @@ namespace Street_Rod_AC.Services
                 _isExecutionLocked = false;
                 _executionLock.Release();
             }
-        }
-
-        /// <summary>
-        /// Restore all modified configuration files from backup
-        /// </summary>
-        private async Task RestoreConfiguration()
-        {
-            _logger.Information("Restoring configuration from backups");
-
-            foreach (var modifiedFile in _modifiedFiles)
-            {
-                try
-                {
-                    var success = _iniService.RestoreFromBackup(modifiedFile);
-                    if (success)
-                    {
-                        _logger.Debug("Restored: {FileName}", modifiedFile);
-                    }
-                    else
-                    {
-                        _logger.Warning("Failed to restore: {FileName}", modifiedFile);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.Warning(ex, "Error restoring {FileName}", modifiedFile);
-                }
-            }
-
-            _logger.Information("Configuration restoration completed");
-            await Task.CompletedTask;
         }
 
         /// <summary>

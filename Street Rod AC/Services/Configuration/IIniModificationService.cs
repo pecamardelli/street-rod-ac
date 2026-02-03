@@ -39,18 +39,5 @@ namespace Street_Rod_AC.Services.Configuration
         /// </summary>
         /// <param name="fileName">File name</param>
         string GetIniFilePath(string fileName);
-
-        /// <summary>
-        /// Restore a file from backup
-        /// </summary>
-        /// <param name="fileName">File name to restore</param>
-        /// <param name="backupTimestamp">Specific backup timestamp, or null for most recent</param>
-        bool RestoreFromBackup(string fileName, string? backupTimestamp = null);
-
-        /// <summary>
-        /// Delete all backup files for a specific INI file
-        /// </summary>
-        /// <param name="fileName">File name whose backups should be deleted</param>
-        void DeleteBackups(string fileName);
     }
 }
