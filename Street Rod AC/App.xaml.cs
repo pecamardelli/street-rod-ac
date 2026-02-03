@@ -229,10 +229,17 @@ namespace Street_Rod_AC
                 await ProfileService.EnsureProfilesExistAsync();
                 logger.Information("Car profiles ready. Total profiles: {ProfileCount}",
                     ProfileRepository.GetProfileCount());
+
+                // Load track content
+                logger.Information("Loading track content");
+                var tracks = await ContentService.LoadTracksAsync();
+                logger.Information("Loaded {TrackCount} tracks with {ConfigCount} total configurations",
+                    tracks.Count,
+                    tracks.Sum(t => t.Configurations.Count));
             }
             catch (Exception ex)
             {
-                logger.Critical(ex, "Critical error during car import");
+                logger.Critical(ex, "Critical error during content import");
 
                 var errorDialog = new Dialogs.Information.InformationDialogViewModel(
                     DialogService,

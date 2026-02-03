@@ -188,6 +188,12 @@
                                 <Setter Property="Padding" Value="10,8"/>
                             </Style>
                         </ComboBox.Style>
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="ComboBoxItem">
+                                <Setter Property="Foreground" Value="#1A1A1A"/>
+                                <Setter Property="Padding" Value="8,6"/>
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
                     </ComboBox>
 
                     <!-- Bet Type -->

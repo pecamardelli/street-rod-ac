@@ -231,7 +231,8 @@ namespace Street_Rod_AC.Dialogs.ChallengeSetup
                         {
                             TrackInfo = track,
                             Configuration = config,
-                            DisplayName = $"{track.Name} - {config.Name}"
+                            // Use just the configuration name since it's more descriptive
+                            DisplayName = config.Name
                         });
                     }
                 }
