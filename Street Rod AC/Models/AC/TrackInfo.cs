@@ -3,6 +3,16 @@ using System.Text.Json.Serialization;
 namespace Street_Rod_AC.Models.AC;
 
 /// <summary>
+/// Defines the type of racing a track supports
+/// </summary>
+public enum TrackType
+{
+    Unknown,
+    Dragstrip,
+    Circuit
+}
+
+/// <summary>
 /// Represents track metadata from Assetto Corsa's ui_track.json file
 /// </summary>
 public class TrackInfo
@@ -35,6 +45,17 @@ public class TrackInfo
     public string Run { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets the track type based on the Run property
+    /// </summary>
+    [JsonIgnore]
+    public TrackType Type => Run?.ToLowerInvariant() switch
+    {
+        "dragstrip" => TrackType.Dragstrip,
+        "clockwise" or "anticlockwise" => TrackType.Circuit,
+        _ => TrackType.Unknown
+    };
+
+    /// <summary>
     /// The track's folder ID (e.g., "ks_brands_hatch")
     /// </summary>
     public string TrackId { get; set; } = string.Empty;
@@ -55,8 +76,18 @@ public class TrackInfo
 /// </summary>
 public class TrackConfiguration
 {
+    [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The folder name for this configuration (e.g., "drag200", "gp")
+    /// </summary>
+    [JsonIgnore]
     public string FolderName { get; set; } = string.Empty;
+
+    [JsonPropertyName("length")]
     public string Length { get; set; } = string.Empty;
+
+    [JsonPropertyName("pitboxes")]
     public string Pitboxes { get; set; } = string.Empty;
 }

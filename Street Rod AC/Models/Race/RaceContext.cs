@@ -48,6 +48,11 @@ namespace Street_Rod_AC.Models.Race
         public string TrackId { get; set; } = string.Empty;
 
         /// <summary>
+        /// Track configuration/layout (e.g., "drag1000", "gp")
+        /// </summary>
+        public string? TrackConfig { get; set; }
+
+        /// <summary>
         /// Race type (drag, circuit, etc.)
         /// </summary>
         public RaceType RaceType { get; set; }

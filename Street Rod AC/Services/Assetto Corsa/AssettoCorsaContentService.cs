@@ -205,6 +205,31 @@ public class AssettoCorsaContentService : IAssettoCorsaContentService
                 // Skip invalid config files
             }
         }
+
+        // Look for variant subfolders (e.g., ui/drag200/ui_track.json, ui/drag400/ui_track.json)
+        foreach (var subDir in Directory.GetDirectories(uiFolder))
+        {
+            var variantJsonPath = Path.Combine(subDir, "ui_track.json");
+            if (!File.Exists(variantJsonPath))
+                continue;
+
+            try
+            {
+                var folderName = Path.GetFileName(subDir);
+                var jsonContent = File.ReadAllText(variantJsonPath);
+                var configData = JsonSerializer.Deserialize<TrackConfiguration>(jsonContent, JsonOptions);
+
+                if (configData != null)
+                {
+                    configData.FolderName = folderName;
+                    trackInfo.Configurations.Add(configData);
+                }
+            }
+            catch
+            {
+                // Skip invalid variant folders
+            }
+        }
     }
 
     public List<CarInfo> GetCars() => _cars;

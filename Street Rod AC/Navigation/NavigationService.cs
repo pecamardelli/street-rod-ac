@@ -23,6 +23,7 @@ namespace Street_Rod_AC.Navigation
         private readonly IContentCatalogRepository _catalogRepository;
         private readonly ICarProfileRepository _profileRepository;
         private readonly IAssettoCorsaLauncher _launcher;
+        private readonly IAssettoCorsaContentService _contentService;
         private readonly IOpponentChallengeService _opponentChallengeService;
         private readonly IGameStateRepository _gameStateRepository;
         private readonly IUsedCarMarketService _marketService;
@@ -49,6 +50,7 @@ namespace Street_Rod_AC.Navigation
             IContentCatalogRepository catalogRepository,
             ICarProfileRepository profileRepository,
             IAssettoCorsaLauncher launcher,
+            IAssettoCorsaContentService contentService,
             IOpponentChallengeService opponentChallengeService,
             IGameStateRepository gameStateRepository,
             IUsedCarMarketService marketService,
@@ -59,6 +61,7 @@ namespace Street_Rod_AC.Navigation
             _catalogRepository = catalogRepository;
             _profileRepository = profileRepository;
             _launcher = launcher;
+            _contentService = contentService;
             _opponentChallengeService = opponentChallengeService;
             _gameStateRepository = gameStateRepository;
             _marketService = marketService;
@@ -158,7 +161,8 @@ namespace Street_Rod_AC.Navigation
                 gameState,
                 _catalogRepository,
                 _opponentChallengeService,
-                _launcher);
+                _launcher,
+                _contentService);
             NavigateTo(screen);
         }
 

@@ -81,6 +81,16 @@ namespace Street_Rod_AC.Services.Configuration.Models
         public string OpponentName { get; set; } = string.Empty;
 
         /// <summary>
+        /// Track folder ID (e.g., "ks_drag")
+        /// </summary>
+        public string TrackId { get; set; } = "ks_drag";
+
+        /// <summary>
+        /// Track configuration/layout (e.g., "drag1000")
+        /// </summary>
+        public string? TrackConfig { get; set; } = "drag1000";
+
+        /// <summary>
         /// Opponent AI skill level (80-100)
         /// </summary>
         public int OpponentAILevel { get; set; } = 90;

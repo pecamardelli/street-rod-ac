@@ -1,7 +1,11 @@
 using Street_Rod_AC.Dialogs;
+using Street_Rod_AC.Models.AC;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Models.Race;
+using Street_Rod_AC.Services;
 using Street_Rod_AC.ViewModels;
+using System.Collections.ObjectModel;
 
 namespace Street_Rod_AC.Dialogs.ChallengeSetup
 {
@@ -11,6 +15,7 @@ namespace Street_Rod_AC.Dialogs.ChallengeSetup
     public class ChallengeSetupDialogViewModel : BaseDialogViewModel
     {
         private readonly DialogService _dialogService;
+        private readonly IAssettoCorsaContentService _contentService;
         private readonly Player _player;
         private readonly Opponent _opponent;
         private readonly Car _playerCar;
@@ -91,11 +96,62 @@ namespace Street_Rod_AC.Dialogs.ChallengeSetup
             }
         }
 
-        // Track selection (for now just one track)
-        public string SelectedTrack => "Drag Strip";
+        // Race type selection
+        private bool _isDragRace = true;
+        public bool IsDragRace
+        {
+            get => _isDragRace;
+            set
+            {
+                if (_isDragRace != value)
+                {
+                    _isDragRace = value;
+                    OnPropertyChanged(nameof(IsDragRace));
+                    OnPropertyChanged(nameof(IsRoadRace));
+                    OnPropertyChanged(nameof(SelectedRaceType));
+                    UpdateAvailableTracks();
+                    UpdateMinMaxWager();
+                }
+            }
+        }
+
+        public bool IsRoadRace
+        {
+            get => !_isDragRace;
+            set => IsDragRace = !value;
+        }
+
+        public RaceType SelectedRaceType => IsDragRace ? RaceType.DragRace : RaceType.Circuit;
+
+        // Track selection
+        private ObservableCollection<TrackDisplayItem> _availableTracks = new();
+        public ObservableCollection<TrackDisplayItem> AvailableTracks
+        {
+            get => _availableTracks;
+            set
+            {
+                _availableTracks = value;
+                OnPropertyChanged(nameof(AvailableTracks));
+            }
+        }
+
+        private TrackDisplayItem? _selectedTrack;
+        public TrackDisplayItem? SelectedTrack
+        {
+            get => _selectedTrack;
+            set
+            {
+                _selectedTrack = value;
+                OnPropertyChanged(nameof(SelectedTrack));
+                OnPropertyChanged(nameof(SelectedTrackDisplay));
+            }
+        }
+
+        public string SelectedTrackDisplay => SelectedTrack?.DisplayName ?? "No tracks available";
 
         public ChallengeSetupDialogViewModel(
             DialogService dialogService,
+            IAssettoCorsaContentService contentService,
             Player player,
             Opponent opponent,
             Car playerCar,
@@ -105,6 +161,7 @@ namespace Street_Rod_AC.Dialogs.ChallengeSetup
             Action<ChallengeSetup?> callback)
         {
             _dialogService = dialogService;
+            _contentService = contentService;
             _player = player;
             _opponent = opponent;
             _playerCar = playerCar;
@@ -116,7 +173,8 @@ namespace Street_Rod_AC.Dialogs.ChallengeSetup
             ConfirmCommand = new RelayCommand(OnConfirm);
             CancelCommand = new RelayCommand(OnCancel);
 
-            // Initialize wager settings
+            // Initialize track selection and wager settings
+            UpdateAvailableTracks();
             UpdateMinMaxWager();
         }
 
@@ -124,13 +182,25 @@ namespace Street_Rod_AC.Dialogs.ChallengeSetup
         {
             if (IsCashBet)
             {
-                // Cash bet: minimum $100, max is lesser of player bankroll or opponent money
-                MinWager = 100m;
-                MaxWager = Math.Min(_player.Money, _opponent.Money);
+                // Wager limits vary by race type
+                // Drag: $10-$100, Road: $25-$250
+                var baseMin = IsDragRace ? 10m : 25m;
+                var baseMax = IsDragRace ? 100m : 250m;
 
-                // Set default to 10% of max or $500, whichever is higher
-                var defaultWager = Math.Max(500m, MaxWager * 0.1m);
-                WagerAmount = Math.Min(defaultWager, MaxWager);
+                MinWager = baseMin;
+                // Max is capped by both racers' money
+                var maxAvailable = Math.Min(_player.Money, _opponent.Money);
+                MaxWager = Math.Min(baseMax, maxAvailable);
+
+                // Ensure min doesn't exceed max
+                if (MinWager > MaxWager)
+                {
+                    MinWager = MaxWager;
+                }
+
+                // Set default wager (middle of range)
+                var defaultWager = (MinWager + MaxWager) / 2m;
+                WagerAmount = Math.Max(MinWager, Math.Min(defaultWager, MaxWager));
             }
             else
             {
@@ -139,6 +209,46 @@ namespace Street_Rod_AC.Dialogs.ChallengeSetup
                 MaxWager = 0m;
                 WagerAmount = 0m;
             }
+        }
+
+        private void UpdateAvailableTracks()
+        {
+            var trackType = IsDragRace ? TrackType.Dragstrip : TrackType.Circuit;
+            var tracks = _contentService.GetTracks()
+                .Where(t => t.Type == trackType)
+                .ToList();
+
+            AvailableTracks.Clear();
+
+            foreach (var track in tracks)
+            {
+                if (track.Configurations.Count > 0)
+                {
+                    // Add each configuration as a separate selectable item
+                    foreach (var config in track.Configurations)
+                    {
+                        AvailableTracks.Add(new TrackDisplayItem
+                        {
+                            TrackInfo = track,
+                            Configuration = config,
+                            DisplayName = $"{track.Name} - {config.Name}"
+                        });
+                    }
+                }
+                else
+                {
+                    // Track has no configurations, add as-is
+                    AvailableTracks.Add(new TrackDisplayItem
+                    {
+                        TrackInfo = track,
+                        Configuration = null,
+                        DisplayName = track.Name
+                    });
+                }
+            }
+
+            // Select the first track by default
+            SelectedTrack = AvailableTracks.FirstOrDefault();
         }
 
         private void OnConfirm()
@@ -150,7 +260,9 @@ namespace Street_Rod_AC.Dialogs.ChallengeSetup
                 OpponentCar = _opponentCar,
                 IsPinkSlip = IsPinkSlipBet,
                 CashWager = IsCashBet ? WagerAmount : 0m,
-                TrackId = "drag_strip" // TODO: Make this selectable
+                TrackId = SelectedTrack?.TrackInfo.TrackId ?? "ks_drag",
+                TrackConfig = SelectedTrack?.Configuration?.FolderName,
+                RaceType = SelectedRaceType
             };
 
             _callback?.Invoke(setup);
@@ -174,6 +286,18 @@ namespace Street_Rod_AC.Dialogs.ChallengeSetup
         public Car OpponentCar { get; set; } = null!;
         public bool IsPinkSlip { get; set; }
         public decimal CashWager { get; set; }
-        public string TrackId { get; set; } = "drag_strip";
+        public string TrackId { get; set; } = "ks_drag";
+        public string? TrackConfig { get; set; } = "drag1000";
+        public RaceType RaceType { get; set; } = RaceType.DragRace;
+    }
+
+    /// <summary>
+    /// Display item for track selection combining track and configuration
+    /// </summary>
+    public class TrackDisplayItem
+    {
+        public TrackInfo TrackInfo { get; set; } = null!;
+        public TrackConfiguration? Configuration { get; set; }
+        public string DisplayName { get; set; } = string.Empty;
     }
 }

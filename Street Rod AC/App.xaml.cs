@@ -171,6 +171,7 @@ namespace Street_Rod_AC
                 CatalogRepository,
                 ProfileRepository,
                 Launcher,
+                ContentService,
                 OpponentChallengeService,
                 GameStateRepository,
                 MarketService,

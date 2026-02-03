@@ -96,6 +96,16 @@ namespace Street_Rod_AC.Services.Configuration.Models
         public string OpponentName { get; set; } = string.Empty;
 
         /// <summary>
+        /// Track folder ID (e.g., "ks_drag")
+        /// </summary>
+        public string TrackId { get; set; } = "ks_drag";
+
+        /// <summary>
+        /// Track configuration/layout (e.g., "drag1000")
+        /// </summary>
+        public string? TrackConfig { get; set; } = "drag1000";
+
+        /// <summary>
         /// Player's car instance ID (for result correlation)
         /// </summary>
         public Guid PlayerCarInstanceId { get; set; }
@@ -142,6 +152,8 @@ namespace Street_Rod_AC.Services.Configuration.Models
                 OpponentCarId = this.OpponentCarId,
                 OpponentSkin = this.OpponentSkin,
                 OpponentName = this.OpponentName,
+                TrackId = this.TrackId,
+                TrackConfig = this.TrackConfig,
                 OpponentAILevel = this.OpponentAILevel,
                 OpponentAIAggression = this.OpponentAIAggression
             };

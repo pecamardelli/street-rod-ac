@@ -322,7 +322,7 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("[RACE]");
             sb.AppendLine("AI_LEVEL=100");
             sb.AppendLine("CARS=2");
-            sb.AppendLine("CONFIG_TRACK=drag1000");
+            sb.AppendLine($"CONFIG_TRACK={intent.TrackConfig ?? string.Empty}");
             sb.AppendLine("DRIFT_MODE=0");
             sb.AppendLine("FIXED_SETUP=0");
             sb.AppendLine("JUMP_START_PENALTY=1");
@@ -331,7 +331,7 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("PENALTIES=0");
             sb.AppendLine("RACE_LAPS=1");
             sb.AppendLine($"SKIN={intent.PlayerSkin}");
-            sb.AppendLine("TRACK=ks_drag");
+            sb.AppendLine($"TRACK={intent.TrackId}");
             sb.AppendLine("MODE=sr_race");  // CSP new-mode for auto-start and auto-quit
             sb.AppendLine();
 

@@ -5,6 +5,7 @@ using Street_Rod_AC.Dialogs.Information;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Models.Race;
 using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
@@ -25,6 +26,7 @@ namespace Street_Rod_AC.Screens.Diner
         private readonly IContentCatalogRepository _catalogRepository;
         private readonly IOpponentChallengeService _challengeService;
         private readonly IAssettoCorsaLauncher _launcher;
+        private readonly IAssettoCorsaContentService _contentService;
         private readonly IAppLogger _logger;
 
         public RelayCommand GarageCommand { get; }
@@ -69,7 +71,8 @@ namespace Street_Rod_AC.Screens.Diner
             Models.GameState.GameState gameState,
             IContentCatalogRepository catalogRepository,
             IOpponentChallengeService challengeService,
-            IAssettoCorsaLauncher launcher)
+            IAssettoCorsaLauncher launcher,
+            IAssettoCorsaContentService contentService)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
@@ -77,6 +80,7 @@ namespace Street_Rod_AC.Screens.Diner
             _catalogRepository = catalogRepository;
             _challengeService = challengeService;
             _launcher = launcher;
+            _contentService = contentService;
             _logger = AppLoggerFactory.CreateLogger("Diner");
 
             GarageCommand = new RelayCommand(OnGarage);
@@ -234,6 +238,7 @@ namespace Street_Rod_AC.Screens.Diner
             // Show challenge setup dialog
             var challengeDialog = new ChallengeSetupDialogViewModel(
                 _dialogService,
+                _contentService,
                 _gameState.Player,
                 SelectedOpponent.Opponent,
                 playerCar,
@@ -299,11 +304,12 @@ namespace Street_Rod_AC.Screens.Diner
 
         private Task LaunchRace(ChallengeSetup setup, CarDefinition playerCarDef, CarDefinition opponentCarDef)
         {
-            _logger.Information("LaunchRace called - Player: {PlayerCar}, Opponent: {OpponentName} in {OpponentCar}",
-                playerCarDef.Id, setup.Opponent.Name, opponentCarDef.Id);
+            _logger.Information("LaunchRace called - Player: {PlayerCar}, Opponent: {OpponentName} in {OpponentCar}, RaceType: {RaceType}",
+                playerCarDef.Id, setup.Opponent.Name, opponentCarDef.Id, setup.RaceType);
 
             // Create drag race launch intent
-            _logger.Debug("Creating DragRaceLaunchIntent");
+            _logger.Debug("Creating DragRaceLaunchIntent with Track: {TrackId}, Config: {TrackConfig}",
+                setup.TrackId, setup.TrackConfig ?? "(none)");
             var dragRaceIntent = new DragRaceLaunchIntent
             {
                 PlayerCarId = playerCarDef.Id,
@@ -312,6 +318,8 @@ namespace Street_Rod_AC.Screens.Diner
                 OpponentCarId = opponentCarDef.Id,
                 OpponentSkin = setup.OpponentCar.SkinId,
                 OpponentName = setup.Opponent.Name,
+                TrackId = setup.TrackId,
+                TrackConfig = setup.TrackConfig,
                 PlayerCarInstanceId = setup.PlayerCar.InstanceId,
                 OpponentCarInstanceId = setup.OpponentCar.InstanceId,
                 CashWager = setup.CashWager,
@@ -330,7 +338,8 @@ namespace Street_Rod_AC.Screens.Diner
                 CashWager = setup.CashWager,
                 IsPinkSlip = setup.IsPinkSlip,
                 TrackId = setup.TrackId,
-                RaceType = Street_Rod_AC.Models.Race.RaceType.DragRace
+                TrackConfig = setup.TrackConfig,
+                RaceType = setup.RaceType
             };
 
             dragRaceIntent.Metadata["RaceContext"] = raceContext;
