@@ -28,7 +28,7 @@ namespace Street_Rod_AC.Models.GameState
         public Gender Gender { get; set; }
 
         /// <summary>
-        /// Driving skill level (80-100)
+        /// Driving skill level (90-100)
         /// Maps to AC AI Strength
         /// </summary>
         public int Skill { get; set; }
@@ -94,11 +94,11 @@ namespace Street_Rod_AC.Models.GameState
         }
 
         /// <summary>
-        /// Clamp skill to valid range (80-100)
+        /// Clamp skill to valid range (90-100)
         /// </summary>
         private static int ClampSkill(int value)
         {
-            return Math.Max(80, Math.Min(100, value));
+            return Math.Max(90, Math.Min(100, value));
         }
 
         /// <summary>

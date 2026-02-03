@@ -111,7 +111,7 @@ local function initializeSession()
   ac.log('[SR Race Manager] Session started: ' .. sessionId .. ' with ' .. totalCars .. ' cars')
 end
 
--- End session: write results and show overlay (quit handled by jump detector)
+-- End session: write results, show overlay, and schedule quit
 local function endSession(result)
   if not sessionActive then return end
   sessionActive = false
@@ -122,7 +122,7 @@ local function endSession(result)
   sessionEndTime = getISOTimestamp()
   writeSessionOutput()
 
-  -- Set overlay message (jump detector will quit when car is teleported)
+  -- Set overlay message and schedule quit
   if result == "WIN" then
     resultMessage = MSG_WIN
   elseif result == "LOSE" then
@@ -133,7 +133,6 @@ local function endSession(result)
     physics.lockUserControlsFor(20)
     physics.forceUserBrakesFor(20, 1.0)
     showResultOverlay = true
-    -- Quit after 5 seconds
     setTimeout(function()
       ac.log('[SR Race Manager] Quitting AC after crash...')
       ac.shutdownAssettoCorsa()
@@ -145,7 +144,15 @@ local function endSession(result)
     ac.shutdownAssettoCorsa()
     return
   end
+
   showResultOverlay = true
+
+  -- Schedule quit after showing result (for road races without teleport)
+  -- Drag races will quit earlier via onCarJumped
+  setTimeout(function()
+    ac.log('[SR Race Manager] Quitting AC after result timeout...')
+    ac.shutdownAssettoCorsa()
+  end, 5.0)
 end
 
 -- Detect crash for a car
