@@ -847,6 +847,17 @@ namespace Street_Rod_AC.Screens.Diner
         public int Reputation => Opponent.Stats.Reputation;
         public string ReputationTier => Opponent.Stats.GetReputationTier();
         public string RecordDisplay => $"{Opponent.Stats.Wins}W - {Opponent.Stats.Losses}L";
+
+        // Drag race record display
+        public string DragRecordDisplay => Opponent.Stats.DragRaces > 0
+            ? $"{Opponent.Stats.DragWins}W - {Opponent.Stats.DragLosses}L"
+            : "No races";
+
+        // Road race record display
+        public string RoadRecordDisplay => Opponent.Stats.RoadRaces > 0
+            ? $"{Opponent.Stats.RoadWins}W - {Opponent.Stats.RoadLosses}L"
+            : "No races";
+
         public bool HasPortrait => !string.IsNullOrEmpty(PortraitPath);
 
         // Additional record stats

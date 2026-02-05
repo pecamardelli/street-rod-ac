@@ -397,18 +397,30 @@
                                               FontSize="18"
                                               FontWeight="Bold"
                                               Foreground="{StaticResource TextPrimaryBrush}"
-                                              Margin="0,0,0,6"/>
+                                              Margin="0,0,0,8"/>
 
-                                    <!-- Win Rate -->
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                        <TextBlock Text="WIN RATE"
-                                                  FontSize="10"
-                                                  Foreground="{StaticResource TextSecondaryBrush}"
-                                                  Margin="0,0,5,0"/>
-                                        <TextBlock Text="{Binding SelectedOpponent.WinRateDisplay}"
-                                                  FontSize="10"
+                                    <!-- Drag Race Record -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="DRAG"
+                                                  FontSize="9"
+                                                  Foreground="#FFA500"
+                                                  Width="28"/>
+                                        <TextBlock Text="{Binding SelectedOpponent.DragRecordDisplay}"
+                                                  FontSize="9"
                                                   FontWeight="Bold"
-                                                  Foreground="#90EE90"/>
+                                                  Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+
+                                    <!-- Road Race Record -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <TextBlock Text="ROAD"
+                                                  FontSize="9"
+                                                  Foreground="#4169E1"
+                                                  Width="28"/>
+                                        <TextBlock Text="{Binding SelectedOpponent.RoadRecordDisplay}"
+                                                  FontSize="9"
+                                                  FontWeight="Bold"
+                                                  Foreground="{StaticResource TextPrimaryBrush}"/>
                                     </StackPanel>
 
                                     <!-- Pink Slips -->

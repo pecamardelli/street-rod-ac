@@ -5,6 +5,16 @@ namespace Street_Rod_AC.Models.GameState
         public int Wins { get; set; }
         public int Losses { get; set; }
         public int Races { get; set; }
+
+        // Drag race specific stats
+        public int DragWins { get; set; }
+        public int DragLosses { get; set; }
+        public int DragRaces { get; set; }
+
+        // Road race specific stats
+        public int RoadWins { get; set; }
+        public int RoadLosses { get; set; }
+        public int RoadRaces { get; set; }
         public decimal TotalEarnings { get; set; }
         public decimal TotalLosses { get; set; }
         public int PinkSlipsWon { get; set; }
@@ -36,6 +46,16 @@ namespace Street_Rod_AC.Models.GameState
             CarsOwned = 0;
             CarsSold = 0;
             Reputation = 50; // Start at neutral reputation
+
+            // Initialize drag race stats
+            DragWins = 0;
+            DragLosses = 0;
+            DragRaces = 0;
+
+            // Initialize road race stats
+            RoadWins = 0;
+            RoadLosses = 0;
+            RoadRaces = 0;
         }
 
         public double WinRate => Races > 0 ? (double)Wins / Races : 0.0;
