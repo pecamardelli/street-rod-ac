@@ -364,3 +364,4 @@ FodyWeavers.xsd
 
 # Claude Code temporary files
 tmpclaude-*
+.aider*

@@ -18,6 +18,7 @@ using Street_Rod_AC.Services.Scheduler.Tasks;
 using Street_Rod_AC.Services.Settings;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
+using Street_Rod_AC.Services.Talk;
 using Street_Rod_AC.Services.Career;
 
 namespace Street_Rod_AC
@@ -53,6 +54,7 @@ namespace Street_Rod_AC
         public IRaceEventService RaceEventService { get; private set; }
         public IEventOpponentService EventOpponentService { get; private set; }
         public ICareerProgressService CareerProgressService { get; private set; }
+        public ITalkService TalkService { get; private set; }
 
         // Current game state (set when a game is loaded or created)
         public Models.GameState.GameState? CurrentGameState { get; set; }
@@ -148,6 +150,9 @@ namespace Street_Rod_AC
             EventOpponentService = new EventOpponentService(CarFilterService, CatalogRepository);
             CareerProgressService = new CareerProgressService(MilestoneService, VictoryConditionService, DialogService);
 
+            // Talk service for opponent dialogue
+            TalkService = new StaticTalkService();
+
             // Register event generation task (must be after RaceEventService is created)
             Scheduler.RegisterTask(new Services.Scheduler.Tasks.EventGenerationTask(RaceEventService));
 
@@ -176,7 +181,8 @@ namespace Street_Rod_AC
                 GameStateRepository,
                 MarketService,
                 GameSettingsService,
-                ProfileService);
+                ProfileService,
+                TalkService);
         }
 
         protected override async void OnStartup(StartupEventArgs e)

@@ -241,4 +241,24 @@ public class AssettoCorsaContentService : IAssettoCorsaContentService
         await LoadCarsAsync();
         await LoadTracksAsync();
     }
+
+    public string? GetTrackPreviewPath(string trackId)
+    {
+        if (string.IsNullOrEmpty(_settings.TracksPath))
+            return null;
+
+        // AC stores track previews at: content/tracks/{trackId}/ui/preview.png
+        var previewPath = Path.Combine(_settings.TracksPath, trackId, "ui", "preview.png");
+
+        if (File.Exists(previewPath))
+            return previewPath;
+
+        // Some tracks use outline.png as fallback
+        var outlinePath = Path.Combine(_settings.TracksPath, trackId, "ui", "outline.png");
+
+        if (File.Exists(outlinePath))
+            return outlinePath;
+
+        return null;
+    }
 }

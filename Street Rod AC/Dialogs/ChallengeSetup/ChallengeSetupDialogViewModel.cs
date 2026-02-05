@@ -10,8 +10,11 @@ using System.Collections.ObjectModel;
 namespace Street_Rod_AC.Dialogs.ChallengeSetup
 {
     /// <summary>
-    /// View model for setting up a race challenge
+    /// View model for setting up a race challenge.
+    /// DEPRECATED: Race setup is now done directly in DinerScreenViewModel.
+    /// This class is kept for reference but is no longer used.
     /// </summary>
+    [System.Obsolete("Race setup is now handled directly in DinerScreenViewModel. This dialog is no longer shown.")]
     public class ChallengeSetupDialogViewModel : BaseDialogViewModel
     {
         private readonly DialogService _dialogService;

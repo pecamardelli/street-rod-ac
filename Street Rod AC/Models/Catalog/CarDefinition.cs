@@ -118,6 +118,7 @@ namespace Street_Rod_AC.Models.Catalog
         public string? TopSpeed { get; set; }
         public string? Acceleration { get; set; }
         public string? PwRatio { get; set; }
+        public string? Drivetrain { get; set; }
     }
 
     /// <summary>

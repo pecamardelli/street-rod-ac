@@ -7,6 +7,7 @@ using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Settings;
+using Street_Rod_AC.Services.Talk;
 using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.Services.Storage;
 
@@ -29,6 +30,7 @@ namespace Street_Rod_AC.Navigation
         private readonly IUsedCarMarketService _marketService;
         private readonly GameSettingsService _gameSettingsService;
         private readonly ICarProfileService _profileService;
+        private readonly ITalkService _talkService;
 
         public IScreen CurrentScreen
         {
@@ -55,7 +57,8 @@ namespace Street_Rod_AC.Navigation
             IGameStateRepository gameStateRepository,
             IUsedCarMarketService marketService,
             GameSettingsService gameSettingsService,
-            ICarProfileService profileService)
+            ICarProfileService profileService,
+            ITalkService talkService)
         {
             _dialogService = dialogService;
             _catalogRepository = catalogRepository;
@@ -67,6 +70,7 @@ namespace Street_Rod_AC.Navigation
             _marketService = marketService;
             _gameSettingsService = gameSettingsService;
             _profileService = profileService;
+            _talkService = talkService;
         }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -162,7 +166,8 @@ namespace Street_Rod_AC.Navigation
                 _catalogRepository,
                 _opponentChallengeService,
                 _launcher,
-                _contentService);
+                _contentService,
+                _talkService);
             NavigateTo(screen);
         }
 

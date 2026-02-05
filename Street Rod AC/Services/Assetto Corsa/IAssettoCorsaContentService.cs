@@ -31,4 +31,11 @@ public interface IAssettoCorsaContentService
     /// Reloads all content from disk
     /// </summary>
     Task ReloadContentAsync();
+
+    /// <summary>
+    /// Gets the path to a track's preview image
+    /// </summary>
+    /// <param name="trackId">The track identifier</param>
+    /// <returns>Full path to preview.png if it exists, null otherwise</returns>
+    string? GetTrackPreviewPath(string trackId);
 }
