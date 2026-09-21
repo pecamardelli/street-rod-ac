@@ -197,6 +197,115 @@
         </Setter>
     </Style>
 
+    <!-- Overlay Tile Button Style (image tiles floating over the 3D garage, animated hover) -->
+    <Style x:Key="OverlayTileButtonStyle" TargetType="Button">
+        <Setter Property="Width" Value="128"/>
+        <Setter Property="Height" Value="128"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="root" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <ScaleTransform x:Name="scale" ScaleX="1" ScaleY="1"/>
+                        </Grid.RenderTransform>
+
+                        <!-- Glow (separate element so the blur is not applied to the image) -->
+                        <Border CornerRadius="10" Background="#01000000">
+                            <Border.Effect>
+                                <DropShadowEffect x:Name="glow"
+                                                  Color="#FFC107"
+                                                  ShadowDepth="0"
+                                                  BlurRadius="28"
+                                                  Opacity="0"/>
+                            </Border.Effect>
+                        </Border>
+
+                        <!-- Image tile -->
+                        <Border x:Name="tile"
+                                Background="{TemplateBinding Background}"
+                                BorderThickness="2"
+                                CornerRadius="10"
+                                Opacity="0.85">
+                            <Border.BorderBrush>
+                                <SolidColorBrush x:Name="tileBorder" Color="#404040"/>
+                            </Border.BorderBrush>
+                        </Border>
+
+                        <!-- Label strip, slides up on hover -->
+                        <Border x:Name="labelStrip"
+                                VerticalAlignment="Bottom"
+                                CornerRadius="0,0,8,8"
+                                Margin="2"
+                                Padding="4,14,4,8"
+                                Opacity="0"
+                                IsHitTestVisible="False">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#00000000" Offset="0"/>
+                                    <GradientStop Color="#E6000000" Offset="0.6"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Border.RenderTransform>
+                                <TranslateTransform x:Name="labelShift" Y="10"/>
+                            </Border.RenderTransform>
+                            <TextBlock Text="{TemplateBinding Tag}"
+                                       FontFamily="Courier New"
+                                       FontSize="14"
+                                       FontWeight="Bold"
+                                       Foreground="White"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"/>
+                        </Border>
+
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition GeneratedDuration="0:0:0.22">
+                                        <VisualTransition.GeneratedEasingFunction>
+                                            <CubicEase EasingMode="EaseOut"/>
+                                        </VisualTransition.GeneratedEasingFunction>
+                                    </VisualTransition>
+                                    <VisualTransition To="Pressed" GeneratedDuration="0:0:0.06"/>
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="Normal"/>
+                                <VisualState x:Name="MouseOver">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleX" To="1.08" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleY" To="1.08" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="tile" Storyboard.TargetProperty="Opacity" To="1" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="glow" Storyboard.TargetProperty="Opacity" To="0.85" Duration="0"/>
+                                        <ColorAnimation Storyboard.TargetName="tileBorder" Storyboard.TargetProperty="Color" To="#FFC107" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="labelStrip" Storyboard.TargetProperty="Opacity" To="1" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="labelShift" Storyboard.TargetProperty="Y" To="0" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="tile" Storyboard.TargetProperty="Opacity" To="1" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="glow" Storyboard.TargetProperty="Opacity" To="0.5" Duration="0"/>
+                                        <ColorAnimation Storyboard.TargetName="tileBorder" Storyboard.TargetProperty="Color" To="#FFC107" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="labelStrip" Storyboard.TargetProperty="Opacity" To="1" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="labelShift" Storyboard.TargetProperty="Y" To="0" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="tile" Storyboard.TargetProperty="Opacity" To="0.3" Duration="0"/>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- License Name Input Style -->
     <Style x:Key="LicenseNameInputStyle" TargetType="TextBox">
         <Setter Property="Background" Value="White"/>

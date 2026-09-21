@@ -428,70 +428,57 @@
                 </Border>
             </StackPanel>
             </Grid>
+        </Grid>
 
-            <!-- Calendar Button -->
-            <Button x:Name="CalendarButton"
-                    Grid.Column="2"
-                    Command="{Binding ShowCalendarCommand}"
-                    Width="128"
-                    Height="128"
-                    HorizontalAlignment="Center"
+        <!-- ==================== OVERLAY NAVIGATION ==================== -->
+
+        <!-- Hit the Streets (mid left) -->
+        <Button x:Name="HitTheStreetsButton"
+                Grid.Row="0"
+                Style="{StaticResource OverlayTileButtonStyle}"
+                Background="{StaticResource HitTheStreetsButtonBrush}"
+                Command="{Binding HitTheStreetsCommand}"
+                Tag="Hit the streets"
+                Width="168"
+                Height="168"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Margin="30,0,0,0"
+                Opacity="0"/>
+
+        <!-- Newspaper (bottom left) -->
+        <Button x:Name="NewspaperButton"
+                Grid.Row="0"
+                Style="{StaticResource OverlayTileButtonStyle}"
+                Background="{StaticResource NewspaperButtonBrush}"
+                Command="{Binding NewspaperCommand}"
+                Tag="Newspaper"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Margin="30,0,0,30"
+                Opacity="0"/>
+
+        <!-- Career + Calendar (top right) -->
+        <StackPanel x:Name="RightButtons"
+                    Grid.Row="0"
+                    HorizontalAlignment="Right"
                     VerticalAlignment="Top"
-                    Margin="0,80,0,0"
-                    Cursor="Hand"
+                    Margin="0,30,30,0"
                     Opacity="0">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Grid>
-                                        <Border x:Name="border"
-                                                Background="{TemplateBinding Background}"
-                                                BorderBrush="#404040"
-                                                BorderThickness="2"
-                                                CornerRadius="5">
-                                            <Border.Clip>
-                                                <RectangleGeometry RadiusX="5" RadiusY="5">
-                                                    <RectangleGeometry.Rect>
-                                                        <Rect Width="128" Height="128"/>
-                                                    </RectangleGeometry.Rect>
-                                                </RectangleGeometry>
-                                            </Border.Clip>
-                                        </Border>
-                                        <TextBlock x:Name="hoverLabel"
-                                                   Text="Calendar"
-                                                   FontFamily="Courier New"
-                                                   FontSize="14"
-                                                   FontWeight="Bold"
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Bottom"
-                                                   Margin="0,0,0,10"
-                                                   Opacity="0"/>
-                                    </Grid>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="border" Property="Opacity" Value="0.8"/>
-                                            <Setter TargetName="hoverLabel" Property="Opacity" Value="1"/>
-                                        </Trigger>
-                                        <Trigger Property="IsPressed" Value="True">
-                                            <Setter TargetName="border" Property="Opacity" Value="0.6"/>
-                                        </Trigger>
-                                        <Trigger Property="IsEnabled" Value="False">
-                                            <Setter TargetName="border" Property="Opacity" Value="0.3"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </Button.Style>
+            <Button Style="{StaticResource OverlayTileButtonStyle}"
+                    Background="{StaticResource CareerButtonBrush}"
+                    Command="{Binding CareerCommand}"
+                    Tag="Career stats"/>
+            <Button x:Name="CalendarButton"
+                    Style="{StaticResource OverlayTileButtonStyle}"
+                    Command="{Binding ShowCalendarCommand}"
+                    Tag="Calendar"
+                    Margin="0,24,0,0">
                 <Button.Background>
                     <ImageBrush ImageSource="/Assets/Images/Buttons/calendar.png" Stretch="Uniform"/>
                 </Button.Background>
             </Button>
-        </Grid>
+        </StackPanel>
 
         <!-- Bottom Nav Bar -->
         <Border Grid.Row="1"

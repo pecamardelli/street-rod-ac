@@ -168,7 +168,7 @@ namespace Street_Rod_AC.Screens.Career
 
         private void OnBack()
         {
-            _navigationService.NavigateToGame(_gameState);
+            _navigationService.NavigateToGarage(_gameState);
         }
 
         public override void Enter()

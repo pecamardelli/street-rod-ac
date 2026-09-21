@@ -93,7 +93,7 @@ namespace Street_Rod_AC.Screens.NewGame
                             theApp.CurrentGameState = gameState;
 
                             // Navigate to game screen
-                            _navigationService.NavigateToGame(gameState);
+                            _navigationService.NavigateToGarage(gameState);
                         }
                     });
 
@@ -111,7 +111,7 @@ namespace Street_Rod_AC.Screens.NewGame
                 app.CurrentGameState = gameState;
 
                 // Navigate to game screen
-                _navigationService.NavigateToGame(gameState);
+                _navigationService.NavigateToGarage(gameState);
             }
         }
 

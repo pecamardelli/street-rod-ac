@@ -7,7 +7,6 @@
              xmlns:mainMenu="clr-namespace:Street_Rod_AC.Screens.MainMenu"
              xmlns:newGame="clr-namespace:Street_Rod_AC.Screens.NewGame"
              xmlns:loadGame="clr-namespace:Street_Rod_AC.Screens.LoadGame"
-             xmlns:game="clr-namespace:Street_Rod_AC.Screens.Game"
              xmlns:newspaper="clr-namespace:Street_Rod_AC.Screens.Newspaper"
              xmlns:usedCarMarket="clr-namespace:Street_Rod_AC.Screens.UsedCarMarket"
              xmlns:usedParts="clr-namespace:Street_Rod_AC.Screens.UsedParts"
@@ -61,10 +60,6 @@
 
             <DataTemplate DataType="{x:Type loadGame:LoadGameScreenViewModel}">
                 <loadGame:LoadGameScreenView/>
-            </DataTemplate>
-
-            <DataTemplate DataType="{x:Type game:GameScreenViewModel}">
-                <game:GameScreenView/>
             </DataTemplate>
 
             <DataTemplate DataType="{x:Type newspaper:NewspaperScreenViewModel}">

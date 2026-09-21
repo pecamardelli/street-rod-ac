@@ -69,7 +69,7 @@ namespace Street_Rod_AC.Screens.Newspaper
 
         private void OnBack()
         {
-            _navigationService.NavigateToGame(_gameState);
+            _navigationService.NavigateToGarage(_gameState);
         }
 
         private void LoadRaceInvitations()
