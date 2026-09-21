@@ -41,6 +41,7 @@ Street Rod-style career mode manager for Assetto Corsa. WPF app manages game log
 | Time | GameTimeScheduler, IScheduledTask | Time-based task execution |
 | Race | AssettoCorsaLauncher, IniModificationService | Launch AC, modify configs |
 | Dialogs | DialogService | Modal overlays |
+| Parts | PartsCatalog, PartScriptRuntime, EngineDyno, AcEngineData | SLRR parts: run their scripts on the player's build, dyno, AC data (see `docs/systems/parts-system.md`) |
 
 ## File Structure
 ```
@@ -112,6 +113,7 @@ NavigationService.NavigateTo[ScreenName](dependencies)
 - [Catalog System](systems/catalog-system.md)
 - [Market System](systems/market-system.md)
 - [Opponent System](systems/opponent-system.md)
+- [Parts System](systems/parts-system.md)
 - [AC Launcher](ac-integration/launcher.md)
 - [CSP Lua Scripts](ac-integration/csp-lua-scripts.md)
 - [Python Race App (legacy)](ac-integration/python-app.md)

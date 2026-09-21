@@ -1,5 +1,6 @@
 using System.Globalization;
 using Street_Rod_AC.Parts;
+using Street_Rod_AC.Parts.Export;
 using Street_Rod_AC.Parts.Logic;
 
 namespace Street_Rod_AC;
@@ -17,7 +18,8 @@ public static class Program
 
         if (args.Length < 2)
         {
-            Console.WriteLine("Usage: EngineBench <parts folder> list | rated | all | show <build id>");
+            Console.WriteLine("Usage: EngineBench <parts folder> list | rated | all | inputs | show <build id>");
+            Console.WriteLine("       EngineBench <parts folder> export <build id> <car data folder> <output folder>");
             return 1;
         }
 
@@ -41,6 +43,9 @@ public static class Program
 
             case "show" when args.Length > 2:
                 return Show(catalog, args[2]);
+
+            case "export" when args.Length > 4:
+                return Export(catalog, args[2], args[3], args[4]);
 
             default:
                 Console.WriteLine("Unknown command");
@@ -139,6 +144,32 @@ public static class Program
                 Console.WriteLine($"  {rpm,6:0} rpm {torque,6:0} Nm {dyno.PowerHpAt(rpm),6:0} hp  {new string('#', (int)(torque / 12))}");
         }
 
+        return 0;
+    }
+
+    /// <summary>Writes the Assetto Corsa data files a build changes, made from an unpacked car data folder</summary>
+    private static int Export(PartsCatalog catalog, string id, string carData, string output)
+    {
+        var build = catalog.EngineBuilds.FirstOrDefault(b => b.Id.Contains(id, StringComparison.OrdinalIgnoreCase));
+        var tree = build == null ? null : PartTreeBuilder.BuildEngine(catalog, build);
+        if (build == null || tree == null)
+        {
+            Console.WriteLine($"No usable build '{id}'");
+            return 1;
+        }
+
+        var report = EngineEvaluator.Evaluate(catalog, tree);
+        if (!report.Runs)
+        {
+            Console.WriteLine($"{build.Name} does not run: {report.Problem}");
+            return 1;
+        }
+
+        var files = AcEngineData.Generate(report, name => File.Exists(Path.Combine(carData, name)) ? File.ReadAllText(Path.Combine(carData, name)) : null);
+        Directory.CreateDirectory(output);
+        foreach (var (name, content) in files) File.WriteAllText(Path.Combine(output, name), content);
+
+        Console.WriteLine($"{build.Name}: {report.Dyno!.MaxPowerHp:0} hp, {report.GearRatios.Count} gears -> {string.Join(", ", files.Keys)} in {output}");
         return 0;
     }
 
