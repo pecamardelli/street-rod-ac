@@ -59,6 +59,18 @@ engine model is checked against. A title names and rates only the first list und
 A run with a pack filter adds that pack's script classes to `_scripts`; only a full run replaces the folder and
 writes `engine_builds.json`, `script_constants.json` and `part_aliases.json`.
 
+### Meshes with too many triangles (`SlrrMeshSimplifier`)
+
+Parts are modelled by hand with a few thousand triangles, the most detailed with some ten thousand. A mesh far
+beyond that (Fireful0's hood scoops and air cleaner in the Chrysler pack: 25,000 to 90,000) came out of a CAD program
+and carries triangles its shape does not need. `SlrrKn5Builder` hands anything above 20,000 to the simplifier, which
+collapses edges in the order of the error they cause (quadric error metric) down to 10,000 or until a vertex would
+end up more than about a millimetre from the surfaces it stands in for. Vertices only ever move onto neighbours, so
+normals and texture coordinates are untouched; a vertex on a texture seam, a material border or a rim only moves along
+it; a triangle that would fold over is left alone; a mesh modelled with both sides is worked on as one side and
+doubled again. Checked with harness screenshots of the scoop and the air cleaner before and after: a few hundred
+pixels differ. The converter prints every mesh it touched.
+
 ### Replacing a pack (`--replace`, `SlrrPackTwins`)
 
 A later release of a mod takes the place of the one it grew out of: `engines/Mopar` (MagnumForce, 2010) was replaced

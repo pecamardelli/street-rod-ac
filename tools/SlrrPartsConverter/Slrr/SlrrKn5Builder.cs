@@ -13,23 +13,40 @@ public static class SlrrKn5Builder
 {
     private const int MaxVerticesPerMesh = ushort.MaxValue;
 
+    // Parts are made by hand with a few thousand triangles, the most detailed ones with some ten thousand. A mesh far
+    // beyond that came out of a CAD program or a subdivision modifier and carries triangles its shape does not need.
+    // Those go, as long as no vertex ends up further than about a millimetre from the surfaces it stands in for.
+    private const int SimplifyAbove = 20000;
+    private const int SimplifyTo = 10000;
+    private const double SimplifyMaxError = 1e-6;
+
     /// <summary>A mesh of the part with the textures of its render and its offset inside the part</summary>
     public sealed record Piece(SlrrMesh Mesh, IReadOnlyList<string?> TextureFiles, Matrix4x4 Offset);
 
     /// <param name="texturePrefix">Makes texture names unique across packs, so part models can be merged later</param>
-    public static IKn5 Build(string name, IEnumerable<Piece> pieces, string texturePrefix)
+    /// <param name="report">Told about every mesh that had triangles taken out</param>
+    public static IKn5 Build(string name, IEnumerable<Piece> pieces, string texturePrefix, Action<string>? report = null)
     {
         var kn5 = Kn5.CreateEmpty();
         kn5.RootNode.Name = name;
 
         foreach (var piece in pieces)
         {
-            foreach (var sub in piece.Mesh.SubMeshes)
+            var subMeshes = piece.Mesh.SubMeshes.Where(s => s.Vertices.Length > 0 && s.Indices.Length >= 3).Select(Weld).ToList();
+
+            var triangles = subMeshes.Sum(s => s.Indices.Length / 3);
+            if (triangles > SimplifyAbove)
             {
-                if (sub.Vertices.Length == 0 || sub.Indices.Length < 3) continue;
+                subMeshes = SlrrMeshSimplifier.Simplify(subMeshes, SimplifyTo, SimplifyMaxError);
+                report?.Invoke($"{name}: {triangles} -> {subMeshes.Sum(s => s.Indices.Length / 3)} triangles");
+            }
+
+            foreach (var sub in subMeshes)
+            {
+                if (sub.Indices.Length < 3) continue;
 
                 var materialId = AddMaterial(kn5, $"{name}_{kn5.Materials.Count}", sub, piece.TextureFiles, texturePrefix);
-                foreach (var (vertices, indices) in Split(Weld(sub)))
+                foreach (var (vertices, indices) in Split(sub))
                 {
                     var nodeName = $"{name}_{kn5.RootNode.Children.Count}";
                     kn5.RootNode.Children.Add(CreateMeshNode(nodeName, vertices, indices, materialId, piece.Offset));

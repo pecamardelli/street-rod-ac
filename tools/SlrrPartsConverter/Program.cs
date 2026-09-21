@@ -300,7 +300,7 @@ public static class Program
         if (models.TryGetValue(key, out var existing)) return existing;
 
         var pieces = selected.Select(r => new SlrrKn5Builder.Piece(SlrrMesh.Load(r.MeshFile), r.TextureFiles, r.Render.Matrix));
-        var kn5 = SlrrKn5Builder.Build(source.Name, pieces, texturePrefix);
+        var kn5 = SlrrKn5Builder.Build(source.Name, pieces, texturePrefix, simplified => Console.WriteLine($"    {simplified}"));
         if (kn5.RootNode.Children.Count == 0) return models[key] = null;
 
         var model = source.Name + ".kn5";
