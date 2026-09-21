@@ -25,6 +25,7 @@ public static class Program
             Console.WriteLine("       EngineBench <parts folder> cars <AC cars folder>       factory engine suggested for every car");
             Console.WriteLine("       EngineBench <parts folder> tune <build id> [count]     engines a used car of that build may turn up with");
             Console.WriteLine("       EngineBench <parts folder> bench <build id>            take every part off and find where it goes back");
+            Console.WriteLine("       EngineBench <parts folder> renew <older parts folder>  engines saved with an older conversion, brought up to date");
             return 1;
         }
 
@@ -60,6 +61,9 @@ public static class Program
 
             case "bench" when args.Length > 2:
                 return Bench(catalog, args[2]);
+
+            case "renew" when args.Length > 2:
+                return Renew(catalog, args[2]);
 
             default:
                 Console.WriteLine("Unknown command");
@@ -285,6 +289,40 @@ public static class Program
 
         var after = EngineFactory.Evaluate(catalog, engine.Root);
         Console.WriteLine($"\n{failures} part(s) could not go back; engine makes {after?.Dyno?.MaxPowerHp:0} hp (was {engine.Report.Dyno?.MaxPowerHp:0})");
+        return failures == 0 ? 0 : 1;
+    }
+
+    /// <summary>
+    /// What a save made with an older conversion goes through: every engine of the old catalog that holds parts
+    /// the current one knows by another id is brought up to date and has to run again with all its parts on.
+    /// </summary>
+    private static int Renew(PartsCatalog catalog, string oldPartsFolder)
+    {
+        var old = PartsCatalog.Load(oldPartsFolder);
+        var failures = 0;
+        var renewed = 0;
+
+        foreach (var stock in EngineBuildIndex.Create(old).Runnable)
+        {
+            var engine = EngineFactory.CreateStock(old, stock, 1.0, new Random(1));
+            if (engine == null) continue;
+
+            var parts = engine.Root.SelfAndDescendants().Count();
+            var loose = new List<PartInstance>();
+            if (!SavedParts.BringUpToDate(catalog, engine.Root, loose)) continue;
+
+            renewed++;
+            var gone = engine.Root.SelfAndDescendants().Concat(loose.SelectMany(l => l.SelfAndDescendants())).Count(p => catalog.Get(p.DefinitionId) == null);
+            var after = EngineFactory.Evaluate(catalog, engine.Root);
+            var runs = after is { Runs: true };
+            if (!runs || gone > 0) failures++;
+
+            Console.WriteLine($"  {(runs && gone == 0 ? "ok  " : "FAIL")} {Short(stock.Build.Id),-48} {stock.PowerHp,4:0} hp -> " +
+                              $"{(runs ? $"{after!.Dyno!.MaxPowerHp,4:0} hp" : after?.Problem ?? "no engine")}  {parts} parts, {loose.Count} came off, {gone} unknown");
+            foreach (var part in loose) Console.WriteLine($"         off: {catalog.Get(part.DefinitionId)?.DisplayName ?? part.DefinitionId}");
+        }
+
+        Console.WriteLine($"\n{renewed} engine(s) brought up to date, {failures} with problems");
         return failures == 0 ? 0 : 1;
     }
 

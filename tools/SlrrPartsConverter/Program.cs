@@ -18,23 +18,37 @@ public static class Program
     private const string SlotRoleSuffix = "_slot_ID";
     private const string ConstantsFile = "script_constants.json";
     private const string NotesOption = "--notes";
+    private const string ReplaceOption = "--replace";
 
     private sealed record SourcePart(SlrrRpk Rpk, SlrrRpkEntry Entry, string ConfigFile, string? ScriptPath, string Id, string Name);
 
     public static int Main(string[] args)
     {
         // --notes <folder>: text files with engine builds written down as stock_parts_list_E lines
+        // --replace <old pack>=<new pack>: the old pack stays out, what names its parts gets their twins of the new one
         string? notes = null;
+        var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var positional = new List<string>();
         for (var i = 0; i < args.Length; i++)
         {
             if (args[i] == NotesOption && i + 1 < args.Length) notes = args[++i];
+            else if (args[i] == ReplaceOption && i + 1 < args.Length)
+            {
+                var pair = args[++i].Split('=');
+                if (pair.Length != 2)
+                {
+                    Console.WriteLine($"{ReplaceOption} takes <old pack>=<new pack>, e.g. engines/Mopar=engines/Chrysler_V8_pak");
+                    return 1;
+                }
+
+                replacements[pair[0].Trim()] = pair[1].Trim();
+            }
             else positional.Add(args[i]);
         }
 
         if (positional.Count < 2)
         {
-            Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>]");
+            Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""C:\Games\AC\content\parts"" engines/Mopar");
             return 1;
         }
@@ -79,6 +93,24 @@ public static class Program
         }
 
         Console.WriteLine($"Found {partIds.Count} parts in {packs.Count} packs");
+
+        var aliases = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (oldId, newId) in replacements)
+        {
+            var oldPack = packs.FirstOrDefault(p => p.Id.Equals(oldId, StringComparison.OrdinalIgnoreCase));
+            var newPack = packs.FirstOrDefault(p => p.Id.Equals(newId, StringComparison.OrdinalIgnoreCase));
+            if (oldPack.Parts == null || newPack.Parts == null)
+            {
+                Console.WriteLine($"Cannot replace {oldId} with {newId}: {(oldPack.Parts == null ? oldId : newId)} is not among the packs");
+                return 1;
+            }
+
+            Console.WriteLine($"Replacing {oldPack.Id} with {newPack.Id}");
+            foreach (var (from, to) in ReplacePack(game, oldPack.Parts, newPack.Parts, partIds)) aliases[from] = to;
+
+            packs.Remove(oldPack);
+            if (filter == null) RemovePack(Path.Combine(output, oldPack.Id.Replace('/', Path.DirectorySeparatorChar)));
+        }
 
         // Second pass: models and definitions
         var converted = 0;
@@ -130,6 +162,7 @@ public static class Program
         if (filter == null)
         {
             File.WriteAllText(Path.Combine(output, ConstantsFile), JsonConvert.SerializeObject(scripts.Constants, Formatting.Indented));
+            File.WriteAllText(Path.Combine(output, PartPack.AliasesFileName), JsonConvert.SerializeObject(aliases, Formatting.Indented));
 
             var engineBuilds = new SlrrEngineBuilds(game, partIds);
             // Cars get an evaluator of their own: their classes are of no use to the game
@@ -259,20 +292,7 @@ public static class Program
     private static string? ConvertModel(SlrrGame game, SourcePart source, SlrrPartConfig config, string packFolder,
         string texturePrefix, Dictionary<string, string?> models)
     {
-        var resolved = new List<(SlrrRender Render, string MeshFile, List<string?> TextureFiles)>();
-        foreach (var render in config.Renders)
-        {
-            var (renderRpk, entry) = game.Resolve(source.Rpk, render.Id);
-            if (renderRpk == null || entry == null) continue;
-
-            var meshFile = game.SourceFile(renderRpk, entry.Ids("mesh").FirstOrDefault(-1));
-            if (meshFile == null) continue;
-
-            resolved.Add((render, meshFile, entry.Ids("texture").Select(id => game.SourceFile(renderRpk, id)).ToList()));
-        }
-
-        var bestLod = resolved.Max(r => r.Render.Lod);
-        var selected = resolved.Where(r => r.Render.Lod == null || r.Render.Lod == bestLod).ToList();
+        var selected = SelectRenders(game, source, config);
         if (selected.Count == 0) return null;
 
         var key = string.Join('|', selected.Select(r =>
@@ -286,6 +306,87 @@ public static class Program
         var model = source.Name + ".kn5";
         kn5.Save(Path.Combine(packFolder, model));
         return models[key] = model;
+    }
+
+    /// <summary>What a part draws: the most detailed LOD that resolves to a mesh, plus every render outside the LOD set</summary>
+    private static List<(SlrrRender Render, string MeshFile, List<string?> TextureFiles)> SelectRenders(SlrrGame game, SourcePart source, SlrrPartConfig config)
+    {
+        var resolved = new List<(SlrrRender Render, string MeshFile, List<string?> TextureFiles)>();
+        foreach (var render in config.Renders)
+        {
+            var (renderRpk, entry) = game.Resolve(source.Rpk, render.Id);
+            if (renderRpk == null || entry == null) continue;
+
+            var meshFile = game.SourceFile(renderRpk, entry.Ids("mesh").FirstOrDefault(-1));
+            if (meshFile == null) continue;
+
+            resolved.Add((render, meshFile, entry.Ids("texture").Select(id => game.SourceFile(renderRpk, id)).ToList()));
+        }
+
+        var bestLod = resolved.Max(r => r.Render.Lod);
+        return resolved.Where(r => r.Render.Lod == null || r.Render.Lod == bestLod).ToList();
+    }
+
+    /// <summary>
+    /// Points every part of a replaced pack at the part that takes its place, so that whatever names the old
+    /// pack (car scripts, build notes, other packs) ends up with a part of the new one. Old parts without a
+    /// twin stay unresolved. Returns the pairs by part id, for the game to read saves made with the old pack.
+    /// </summary>
+    private static SortedDictionary<string, string> ReplacePack(SlrrGame game, List<SourcePart> oldParts, List<SourcePart> newParts,
+        Dictionary<(SlrrRpk, int), string> partIds)
+    {
+        // An evaluator of its own: the classes of a pack that is left out are of no use to the game
+        var scripts = new SlrrScriptEvaluator(game);
+        var geometry = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var twins = SlrrPackTwins.Match(oldParts.Select(Traits).ToList(), newParts.Select(Traits).ToList());
+
+        var aliases = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (source, twin) in oldParts.Zip(twins))
+        {
+            if (twin.New == null) partIds.Remove((source.Rpk, source.Entry.TypeId));
+            else partIds[(source.Rpk, source.Entry.TypeId)] = aliases[source.Id] = twin.New.Id;
+        }
+
+        Console.WriteLine($"  {twins.Count(t => t.New != null)} of {twins.Count} parts have a twin ({twins.Count(t => t.New != null && t.Doubt != null)} in doubt)");
+        foreach (var twin in twins.Where(t => t.New == null || t.Doubt != null))
+        {
+            Console.WriteLine(twin.New == null
+                ? $"    {twin.Old.Name,-40} no twin ({twin.Old.DisplayName})"
+                : $"    {twin.Old.Name,-40} -> {twin.New.Name,-44} {twin.Doubt}");
+        }
+
+        return aliases;
+
+        SlrrPartTraits Traits(SourcePart source)
+        {
+            var config = SlrrPartConfig.Load(source.ConfigFile);
+            var scriptFile = source.ScriptPath == null ? null : Path.Combine(game.Root, source.ScriptPath);
+            var script = scriptFile != null && File.Exists(scriptFile) ? scripts.Evaluate(scriptFile) : null;
+            var renders = SelectRenders(game, source, config);
+
+            var traits = new SlrrPartTraits
+            {
+                Id = source.Id,
+                Name = source.Name,
+                DisplayName = script?.DisplayName,
+                BaseClass = script?.BaseClass,
+                Slots = config.Slots.Select(s => s.Id).ToHashSet(),
+                Geometry = renders.Select(r => GeometryOf(r.MeshFile)).ToHashSet(),
+                Textures = renders.SelectMany(r => r.TextureFiles).Where(t => t != null)
+                    .Select(t => Path.GetFileNameWithoutExtension(t!).ToLowerInvariant()).ToHashSet()
+            };
+
+            foreach (var (partId, _) in config.Slots.SelectMany(s => s.AttachesTo))
+            {
+                var (targetRpk, target) = game.Resolve(source.Rpk, partId);
+                if (targetRpk != null && target != null && partIds.TryGetValue((targetRpk, target.TypeId), out var id)) traits.Neighbours.Add(id);
+            }
+
+            return traits;
+        }
+
+        string GeometryOf(string meshFile) =>
+            geometry.TryGetValue(meshFile, out var hash) ? hash : geometry[meshFile] = SlrrPackTwins.GeometryHash(SlrrMesh.Load(meshFile));
     }
 
     /// <summary>
@@ -313,6 +414,17 @@ public static class Program
         }
 
         return files.Count;
+    }
+
+    /// <summary>Takes a converted pack out of the output; a folder that is anything else is left alone</summary>
+    private static void RemovePack(string folder)
+    {
+        var packFile = Path.Combine(folder, PartPack.FileName);
+        if (!File.Exists(packFile)) return;
+
+        foreach (var file in Directory.EnumerateFiles(folder, "*.kn5")) File.Delete(file);
+        File.Delete(packFile);
+        if (!Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder);
     }
 
     /// <summary>Empties a previously converted pack folder; refuses to touch anything else</summary>

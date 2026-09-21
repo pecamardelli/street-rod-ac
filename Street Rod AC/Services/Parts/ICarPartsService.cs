@@ -40,6 +40,13 @@ namespace Street_Rod_AC.Services.Parts
         /// </summary>
         Task<bool> EnsurePartsAsync(Car car);
 
+        /// <summary>
+        /// Brings the parts of a loaded save in step with the catalog: a pack replaced by a later release gave its
+        /// parts new ids and moved some slots. Parts of the player that no longer fit where they were go on the
+        /// shelf. True when the save changed.
+        /// </summary>
+        bool BringUpToDate(GameState game);
+
         /// <summary>The engine of a car that has been around: the factory build, now and then worked on</summary>
         BuiltEngine? CreateUsedEngine(CarDefinition car, double condition);
 

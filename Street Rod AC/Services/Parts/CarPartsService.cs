@@ -85,6 +85,48 @@ namespace Street_Rod_AC.Services.Parts
             return Assign(car, engine);
         }
 
+        public bool BringUpToDate(GameState game)
+        {
+            if (!IsAvailable || !Catalog.HasAliases) return false;
+
+            var changed = 0;
+            var racers = new[] { game.Player }
+                .Concat(game.Racers.Inactive.Values).Concat(game.Racers.Retired.Values).Concat(game.Racers.ReadyToRace.Values);
+            foreach (var racer in racers)
+            {
+                // What comes off a car goes on its owner's shelf, once the shelf itself has been gone through
+                var shelf = new List<PartInstance>();
+                changed += Renew(racer.Cars.SelectMany(c => c.Parts).Concat(racer.Parts), shelf);
+                racer.Parts.AddRange(shelf);
+            }
+
+            // Cars and parts for sale: what no longer fits is not part of the offer
+            var forSale = game.UsedCars.SelectMany(c => c.Parts)
+                .Concat(game.UsedParts)
+                .Concat(game.UsedCarMarket.SelectMany(l => l.Parts))
+                .Concat(game.NewspaperAds.Cars.SelectMany(ad => ad.Car.Parts))
+                .Concat(game.NewspaperAds.Parts.Select(ad => ad.Part));
+            changed += Renew(forSale, new List<PartInstance>());
+
+            if (changed > 0) _logger.Information("{Count} part tree(s) of the save brought up to date with the parts catalog", changed);
+            return changed > 0;
+        }
+
+        private int Renew(IEnumerable<PartInstance> roots, List<PartInstance> loose)
+        {
+            var changed = 0;
+            foreach (var root in roots.ToList())
+            {
+                var before = loose.Count;
+                if (!SavedParts.BringUpToDate(Catalog, root, loose)) continue;
+
+                changed++;
+                foreach (var part in loose.Skip(before)) _logger.Information("{Part} no longer fits on {Root} and came off", part.DefinitionId, root.DefinitionId);
+            }
+
+            return changed;
+        }
+
         public BuiltEngine? CreateUsedEngine(CarDefinition car, double condition)
         {
             var build = GetStockBuild(car);

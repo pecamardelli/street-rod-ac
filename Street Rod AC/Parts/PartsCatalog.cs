@@ -14,6 +14,7 @@ public sealed class PartsCatalog
 
     private readonly string _root;
     private readonly Dictionary<string, PartDefinition> _parts = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> _aliases = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly Lazy<MatingIndex> _mating;
 
@@ -57,6 +58,15 @@ public sealed class PartsCatalog
             }
         }
 
+        var aliasesFile = Path.Combine(root, PartPack.AliasesFileName);
+        if (File.Exists(aliasesFile))
+        {
+            foreach (var (gone, current) in JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(aliasesFile)) ?? new())
+            {
+                catalog._aliases[gone] = current;
+            }
+        }
+
         var buildsFile = Path.Combine(root, EngineBuild.FileName);
         if (File.Exists(buildsFile))
             catalog.EngineBuilds = JsonConvert.DeserializeObject<List<EngineBuild>>(File.ReadAllText(buildsFile)) ?? new List<EngineBuild>();
@@ -64,7 +74,14 @@ public sealed class PartsCatalog
         return catalog;
     }
 
-    public PartDefinition? Get(string id) => _parts.GetValueOrDefault(id);
+    /// <summary>A part by its id, or by the id it had in a pack that has since been replaced</summary>
+    public PartDefinition? Get(string id) => _parts.GetValueOrDefault(id) ?? _parts.GetValueOrDefault(CurrentId(id));
+
+    /// <summary>True when parts have changed ids: saves made before may hold the old ones</summary>
+    public bool HasAliases => _aliases.Count > 0;
+
+    /// <summary>The id a part goes by now: its own, unless the pack it came from was replaced by a later release</summary>
+    public string CurrentId(string id) => !_parts.ContainsKey(id) && _aliases.TryGetValue(id, out var current) ? current : id;
 
     /// <summary>
     /// Whether two slots go together. A slot names the slots it attaches to, on either side of the joint (a header

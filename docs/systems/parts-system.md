@@ -31,7 +31,14 @@ Converted assets are from a commercial game and community mods: personal use onl
 
 ## Converter (`tools/SlrrPartsConverter`)
 
-`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>]`
+`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>]`
+
+The content in use is made with (both Chrysler packs are installed in the SLRR folder, see "Replacing a pack"):
+
+```
+SlrrPartsConverter "D:\JUEGOS\Street Legal Racing - Redline" "C:\GAMES\Street Rod AC\content\parts"
+    --notes "D:\JUEGOS\SLRR\SCRIPTS" --replace engines/Mopar=engines/Chrysler_V8_pak
+```
 
 Per part, from its compiled script (run with no game around, see `SlrrScriptEvaluator`):
 
@@ -50,7 +57,33 @@ engine model is checked against. A title names and rates only the first list und
 (`// heads`) is a comment: after a comment the numbering counts on, after a title it starts over.
 
 A run with a pack filter adds that pack's script classes to `_scripts`; only a full run replaces the folder and
-writes `engine_builds.json` and `script_constants.json`.
+writes `engine_builds.json`, `script_constants.json` and `part_aliases.json`.
+
+### Replacing a pack (`--replace`, `SlrrPackTwins`)
+
+A later release of a mod takes the place of the one it grew out of: `engines/Mopar` (MagnumForce, 2010) was replaced
+by `engines/Chrysler_V8_pak` (Chrysler V8 Pack 4.5 Reboot: the same meshes, 108 more parts, 4 more blocks). Car
+scripts and build notes keep naming the old rpk, so the old pack **stays installed in the SLRR folder**; it is read
+but not converted, and its output folder is removed.
+
+Nothing carries over by id or name: the new release renames the files, renumbers the rpk and some slots (oil pan
+9 → 10, carburettor 7 → 10), rebalances the scripts and says "small/big block" where the old one said "340/440".
+`SlrrPackTwins` pairs every old part with its twin by, in order of weight: **mating** (a twin bolts onto the twins of
+what the old part bolted onto; repeated until it settles, blocks and crankshafts anchor it because they carry their
+displacement in both packs), mesh geometry (hash of positions), words and numbers of the names, slot ids, textures,
+script class. The converter prints the pairs that are in doubt (another candidate as good, or a different mesh).
+
+Every reference to an old part (car builds, notes, stock parts, attach lines of other packs) then resolves to the
+twin, and `part_aliases.json` (old id → new id) is written for the game:
+
+- `PartsCatalog.Get` answers old ids through the aliases; `CurrentId` gives the id a part goes by now.
+- `SavedParts.BringUpToDate` (run over the whole save by `CarPartsService.BringUpToDate` when a game is loaded)
+  gives saved parts their current ids and makes every joint again that the catalog no longer agrees with, the way
+  the workbench would. A part that fits nowhere on its parent any more comes off: onto its owner's shelf, or out
+  of the offer for cars and parts that are for sale.
+
+Checked with `EngineBench <new parts> renew <old parts>`: all 37 engines of the old pack come up to date and run; the
+only part that comes off is the Hemi fan some 383 builds wore, which 4.5 no longer lets bolt to a 383 pump.
 
 ## Script VM (`Parts/Scripting`)
 
@@ -224,6 +257,7 @@ EngineBench <parts folder> export <build id> <car data folder> <output folder>
 EngineBench <parts folder> cars <AC cars folder>       factory engine suggested for every car, with the runners-up
 EngineBench <parts folder> tune <build id> [count]     engines a used car of that build may turn up with
 EngineBench <parts folder> bench <build id>            every part comes off and has to find its way back
+EngineBench <parts folder> renew <older parts folder>  engines as a save made with an older conversion holds them, brought up to date
 ```
 
 ## Not done yet

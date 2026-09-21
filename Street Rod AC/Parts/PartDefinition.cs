@@ -9,6 +9,12 @@ public class PartPack
 {
     public const string FileName = "pack.json";
 
+    /// <summary>
+    /// Next to the packs: ids of parts that are gone, with the part that took their place (a pack replaced by a
+    /// later release). Saves and profiles made before keep working through it.
+    /// </summary>
+    public const string AliasesFileName = "part_aliases.json";
+
     /// <summary>Pack id, also its folder under the parts root, e.g. "engines/Mopar"</summary>
     [JsonProperty("id")]
     public string Id { get; set; } = string.Empty;
