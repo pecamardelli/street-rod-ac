@@ -1,0 +1,88 @@
+{
+  "java.game.parts.Part": {
+    "COMMON": 0,
+    "PACKAGE": 1,
+    "PRESTIGE_DOWNGRADE_MUL": 1.08,
+    "PRESTIGE_VALUE_MUL": 0.012188,
+    "MF_STOCK": 0,
+    "MF_HOLLEY": "parts.rpk#0x0035",
+    "MF_HOLLEY2": "parts.rpk#0x0035",
+    "MF_AUTHORITY": "parts.rpk#0x0036",
+    "MF_NEUSPEED": 0,
+    "MF_BILLSTEIN": "parts.rpk#0x0033",
+    "MF_OZ": 0,
+    "MF_BAER": "parts.rpk#0x0037",
+    "MF_BFGOODRICH": 0,
+    "MF_BFGOODRICH2": 0,
+    "MF_BFGOODRICH3": 0,
+    "MF_BORLA": "parts.rpk#0x003A",
+    "MF_NOS": "parts.rpk#0x003B",
+    "MF_HR": "parts.rpk#0x003C",
+    "MF_JSP": "parts.rpk#0x003D",
+    "MF_JSP2": "parts.rpk#0x003D",
+    "MF_MICHELIN": 0,
+    "MF_MICHELIN2": 0,
+    "MF_PROCHARGER": "parts.rpk#0x0042",
+    "MF_PROCHARGER2": "parts.rpk#0x0042",
+    "MF_KN": "parts.rpk#0x0044",
+    "SAVEFILEVERSION_PART": 1,
+    "seed": 0.0
+  },
+  "java.game.parts.enginepart.AirFuelDeliverySystem": {
+    "FT_GAS_95": 0,
+    "FT_GAS_98": 1,
+    "FT_GAS_100": 2,
+    "FT_METHANOL": 3,
+    "FT_DIESEL": 4,
+    "FT_HYDROGEN": 5
+  },
+  "java.game.parts.enginepart.Block": {
+    "in_breather_magic": 0.9,
+    "ex_breather_magic": 0.9
+  },
+  "java.game.parts.enginepart.airfueldeliverysystem.charger.TurboCharger": {
+    "backup": 0.0
+  },
+  "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission": {
+    "DT_FWD": 1,
+    "DT_RWD": 2
+  },
+  "java.game.parts.rgearpart.ShockAbsorber": {
+    "WI_GAS": 0,
+    "WI_OIL": 1,
+    "WI_GAS_OIL": 2
+  },
+  "java.game.parts.rgearpart.Spring": {
+    "WHL_FRONT": 0,
+    "WHL_REAR": 1
+  },
+  "java.game.parts.rgearpart.Suspension": {
+    "DEG2RAD": 0.017453,
+    "SD_LEFT": 1.0,
+    "SD_RIGHT": -1.0
+  },
+  "java.game.parts.rgearpart.reciprocatingrgearpart.Tyre": {
+    "tcSTREET": 0,
+    "tcSPORT": 1,
+    "tcSUPERSPORT": 2,
+    "tcDRAGRADIAL": 3
+  },
+  "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel": {
+    "rtFACTORY": 0,
+    "rtALLOY": 1,
+    "rtRACE": 2
+  },
+  "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake": {
+    "BRAKE_FORCE_FINE_TUNE": 2.0,
+    "BP_RED_STUFF": 1.0,
+    "BP_GREEN_STUFF": 1.05,
+    "BP_BLACK_STUFF": 1.1,
+    "RT_STEEL": 1.0,
+    "RT_GROOVED": 1.025,
+    "RT_VENTEDGROOVED": 1.05,
+    "RT_CARBON": 1.15,
+    "CL_FORCE_1": 18639.0,
+    "CL_FORCE_BRUTAL": 21582.0,
+    "CL_RACEFORCE": 27468.0
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "id": "tyres/stock",
+  "source": "parts.rpk",
+  "parts": [
+    {
+      "id": "tyres/stock/Tyre",
+      "name": "Tyre",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "reciprocatingrgearpart",
+        "rgearpart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "the rim of the wheel",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 20,
+      "source_script": "java.game.parts.rgearpart.reciprocatingrgearpart.Tyre"
+    }
+  ]
+}

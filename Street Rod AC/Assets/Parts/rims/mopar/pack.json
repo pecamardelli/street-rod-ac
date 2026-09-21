@@ -1,0 +1,5254 @@
+{
+  "id": "rims/mopar",
+  "source": "parts\\mopar_wheels.rpk",
+  "parts": [
+    {
+      "id": "rims/mopar/rim_8_5",
+      "name": "rim_8_5",
+      "display_name": "ET 8x5 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "ET 8x5 rim",
+        "description": "Variable offset",
+        "value": 56.049822,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 16.483986,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 5.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 5.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "rim_8_5.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.04,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39321,
+      "source_script": "parts\\mopar_wheels\\scripts\\rim_8_5.class"
+    },
+    {
+      "id": "rims/mopar/rim_steel_back_13",
+      "name": "rim_steel_back_13",
+      "display_name": "Mopar steel factory Max wedge rim 15x13",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Mopar steel factory Max wedge rim 15x13",
+        "description": "Variable offset",
+        "value": 105.871886,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 20.469751,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 13.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 13.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "rim_steel_back_13.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 222,
+          "name": "cup",
+          "position": [
+            -0.08,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            3.142,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39320,
+      "source_script": "parts\\mopar_wheels\\scripts\\rim_steel_back_13.class"
+    },
+    {
+      "id": "rims/mopar/rim_steel_back",
+      "name": "rim_steel_back",
+      "display_name": "Mopar steel factory Max wedge rim 15x11",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Mopar steel factory Max wedge rim 15x11",
+        "description": "Variable offset",
+        "value": 93.41637,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 19.47331,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 11.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 11.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "rim_steel_back.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 222,
+          "name": "cup",
+          "position": [
+            -0.08,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            3.142,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39319,
+      "source_script": "parts\\mopar_wheels\\scripts\\rim_steel_back.class"
+    },
+    {
+      "id": "rims/mopar/rim_steel_front",
+      "name": "rim_steel_front",
+      "display_name": "Mopar steel factory Max wedge rim 15x8",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Mopar steel factory Max wedge rim 15x8",
+        "description": "Variable offset",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "rim_steel_front.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 222,
+          "name": "cup",
+          "position": [
+            -0.08,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            3.142,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39318,
+      "source_script": "parts\\mopar_wheels\\scripts\\rim_steel_front.class"
+    },
+    {
+      "id": "rims/mopar/cragar_13",
+      "name": "cragar_13",
+      "display_name": "Cragar Torq Thrust rim 15x13",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar Torq Thrust rim 15x13",
+        "description": "Variable offset",
+        "value": 105.871886,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 20.469751,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 13.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 13.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_13.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39317,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_13.class"
+    },
+    {
+      "id": "rims/mopar/cragar_11",
+      "name": "cragar_11",
+      "display_name": "Cragar Torq Thrust 15x11 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar Torq Thrust 15x11 rim",
+        "description": "Variable offset",
+        "value": 93.41637,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 19.47331,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 11.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 11.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_11.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39316,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_11.class"
+    },
+    {
+      "id": "rims/mopar/cragar_8",
+      "name": "cragar_8",
+      "display_name": "Cragar Torq Thrust 15x8 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar Torq Thrust 15x8 rim",
+        "description": "Variable offset",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_8.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.085,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39315,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_8.class"
+    },
+    {
+      "id": "rims/mopar/cragar_gt_13",
+      "name": "cragar_gt_13",
+      "display_name": "Cragar G/T rim 15x13 (black)",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar G/T rim 15x13 (black)",
+        "description": "Variable offset",
+        "value": 105.871886,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 20.469751,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 13.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 13.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_gt_13.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39314,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_gt_13.class"
+    },
+    {
+      "id": "rims/mopar/cragar_gt_11",
+      "name": "cragar_gt_11",
+      "display_name": "Cragar G/T 15x11 rim (black)",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar G/T 15x11 rim (black)",
+        "description": "Variable offset",
+        "value": 93.41637,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 19.47331,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 11.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 11.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_gt_11.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39313,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_gt_11.class"
+    },
+    {
+      "id": "rims/mopar/cragar_gt_8",
+      "name": "cragar_gt_8",
+      "display_name": "Cragar G/T 15x8 rim (black)",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar G/T 15x8 rim (black)",
+        "description": "Variable offset",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_gt_8.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.085,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39312,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_gt_8.class"
+    },
+    {
+      "id": "rims/mopar/cragar_gt_13_l",
+      "name": "cragar_gt_13_l",
+      "display_name": "Cragar G/T rim 15x13 (grey)",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar G/T rim 15x13 (grey)",
+        "description": "Variable offset",
+        "value": 105.871886,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 20.469751,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 13.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 13.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_gt_13_l.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39305,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_gt_13_l.class"
+    },
+    {
+      "id": "rims/mopar/cragar_gt_11_l",
+      "name": "cragar_gt_11_l",
+      "display_name": "Cragar G/T 15x11 rim (grey)",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar G/T 15x11 rim (grey)",
+        "description": "Variable offset",
+        "value": 93.41637,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 19.47331,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 11.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 11.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_gt_11_l.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39304,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_gt_11_l.class"
+    },
+    {
+      "id": "rims/mopar/cragar_gt_8_l",
+      "name": "cragar_gt_8_l",
+      "display_name": "Cragar G/T 15x8 rim (grey)",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar G/T 15x8 rim (grey)",
+        "description": "Variable offset",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_gt_8_l.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.085,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39303,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_gt_8_l.class"
+    },
+    {
+      "id": "rims/mopar/AMracing_13",
+      "name": "AMracing_13",
+      "display_name": "American Racing 5 spokes 15x13 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "American Racing 5 spokes 15x13 rim",
+        "description": "Variable offset",
+        "value": 105.871886,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 20.469751,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 13.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 13.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "AMracing_13.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39302,
+      "source_script": "parts\\mopar_wheels\\scripts\\AMracing_13.class"
+    },
+    {
+      "id": "rims/mopar/AMracing_11",
+      "name": "AMracing_11",
+      "display_name": "American Racing 5 spokes 15x11 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "American Racing 5 spokes 15x11 rim",
+        "description": "Variable offset",
+        "value": 93.41637,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 19.47331,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 11.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 11.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "AMracing_11.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39301,
+      "source_script": "parts\\mopar_wheels\\scripts\\AMracing_11.class"
+    },
+    {
+      "id": "rims/mopar/AMracing_8",
+      "name": "AMracing_8",
+      "display_name": "American Racing 5 spokes 15x8 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "American Racing 5 spokes 15x8 rim",
+        "description": "Variable offset",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "AMracing_8.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.085,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39300,
+      "source_script": "parts\\mopar_wheels\\scripts\\AMracing_8.class"
+    },
+    {
+      "id": "rims/mopar/ARslot_13",
+      "name": "ARslot_13",
+      "display_name": "American Racing Slot Mags 15x13 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "American Racing Slot Mags 15x13 rim",
+        "description": "Variable offset",
+        "value": 105.871886,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 20.469751,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 13.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 13.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "ARslot_13.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39299,
+      "source_script": "parts\\mopar_wheels\\scripts\\ARslot_13.class"
+    },
+    {
+      "id": "rims/mopar/ARslot_11",
+      "name": "ARslot_11",
+      "display_name": "American Racing Slot Mags 15x11 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "American Racing Slot Mags 15x11 rim",
+        "description": "Variable offset",
+        "value": 93.41637,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 19.47331,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 11.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 11.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "ARslot_11.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39298,
+      "source_script": "parts\\mopar_wheels\\scripts\\ARslot_11.class"
+    },
+    {
+      "id": "rims/mopar/ARslot_8",
+      "name": "ARslot_8",
+      "display_name": "American Racing Slot Mags 15x8 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "American Racing Slot Mags 15x8 rim",
+        "description": "Variable offset",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "ARslot_8.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.085,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39297,
+      "source_script": "parts\\mopar_wheels\\scripts\\ARslot_8.class"
+    },
+    {
+      "id": "rims/mopar/ARslot_5",
+      "name": "ARslot_5",
+      "display_name": "American Racing Slot Mags 15x5 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "American Racing Slot Mags 15x5 rim",
+        "description": "Variable offset",
+        "value": 56.049822,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 16.483986,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 5.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 5.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "ARslot_5.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.04,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39296,
+      "source_script": "parts\\mopar_wheels\\scripts\\ARslot_5.class"
+    },
+    {
+      "id": "rims/mopar/centerline_13",
+      "name": "centerline_13",
+      "display_name": "ACenterline alluminium 15x13 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "ACenterline alluminium 15x13 rim",
+        "description": "Variable offset",
+        "value": 105.871886,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 20.469751,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 13.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 13.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "centerline_13.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39289,
+      "source_script": "parts\\mopar_wheels\\scripts\\centerline_13.class"
+    },
+    {
+      "id": "rims/mopar/centerline_11",
+      "name": "centerline_11",
+      "display_name": "Centerline alluminium 15x11 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Centerline alluminium 15x11 rim",
+        "description": "Variable offset",
+        "value": 93.41637,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 19.47331,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 11.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 11.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "centerline_11.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39288,
+      "source_script": "parts\\mopar_wheels\\scripts\\centerline_11.class"
+    },
+    {
+      "id": "rims/mopar/centerline_8",
+      "name": "centerline_8",
+      "display_name": "Centerline alluminium 15x8 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Centerline alluminium 15x8 rim",
+        "description": "Variable offset",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "centerline_8.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.085,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39287,
+      "source_script": "parts\\mopar_wheels\\scripts\\centerline_8.class"
+    },
+    {
+      "id": "rims/mopar/centerline_5",
+      "name": "centerline_5",
+      "display_name": "Centerline alluminium 8x5 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Centerline alluminium 8x5 rim",
+        "description": "Variable offset",
+        "value": 56.049822,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 16.483986,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 5.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 5.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "centerline_5.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.04,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39286,
+      "source_script": "parts\\mopar_wheels\\scripts\\centerline_5.class"
+    },
+    {
+      "id": "rims/mopar/stock_8",
+      "name": "stock_8",
+      "display_name": "Chrysler steel 15x8 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Chrysler steel 15x8 rim",
+        "description": "Variable offset",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "stock_8.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.085,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 222,
+          "name": "cup",
+          "position": [
+            -0.076,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            3.142,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39285,
+      "source_script": "parts\\mopar_wheels\\scripts\\stock_8.class"
+    },
+    {
+      "id": "rims/mopar/cragar_black_13",
+      "name": "cragar_black_13",
+      "display_name": "Cragar Keystone Black rim 15x13",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar Keystone Black rim 15x13",
+        "description": "Variable offset",
+        "value": 105.871886,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 20.469751,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 13.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 13.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_black_13.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39284,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_black_13.class"
+    },
+    {
+      "id": "rims/mopar/cragar_black_11",
+      "name": "cragar_black_11",
+      "display_name": "Cragar Keystone Black 15x11 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar Keystone Black 15x11 rim",
+        "description": "Variable offset",
+        "value": 93.41637,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 19.47331,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 11.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 11.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_black_11.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39283,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_black_11.class"
+    },
+    {
+      "id": "rims/mopar/cragar_black_8",
+      "name": "cragar_black_8",
+      "display_name": "Cragar Keystone Black 15x8 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar Keystone Black 15x8 rim",
+        "description": "Variable offset",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_black_8.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.085,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39282,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_black_8.class"
+    },
+    {
+      "id": "rims/mopar/cragar_black_5",
+      "name": "cragar_black_5",
+      "display_name": "Cragar Keystone Black 15x5 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar Keystone Black 15x5 rim",
+        "description": "Variable offset",
+        "value": 56.049822,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 16.483986,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 5.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 5.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_black_5.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.04,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39281,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_black_5.class"
+    },
+    {
+      "id": "rims/mopar/cragar_grey_13",
+      "name": "cragar_grey_13",
+      "display_name": "Cragar Keystone Grey 15x13 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar Keystone Grey 15x13 rim",
+        "description": "Variable offset",
+        "value": 105.871886,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 20.469751,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 13.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 13.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_grey_13.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39280,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_grey_13.class"
+    },
+    {
+      "id": "rims/mopar/cragar_grey_11",
+      "name": "cragar_grey_11",
+      "display_name": "Cragar Keystone Grey 15x11 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar Keystone Grey 15x11 rim",
+        "description": "Variable offset",
+        "value": 93.41637,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 19.47331,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 11.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 11.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_grey_11.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39273,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_grey_11.class"
+    },
+    {
+      "id": "rims/mopar/cragar_grey_8",
+      "name": "cragar_grey_8",
+      "display_name": "Cragar Keystone Grey 15x8 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar Keystone Grey 15x8 rim",
+        "description": "Variable offset",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_grey_8.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.085,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39272,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_grey_8.class"
+    },
+    {
+      "id": "rims/mopar/cragar_grey_5",
+      "name": "cragar_grey_5",
+      "display_name": "Cragar Keystone Grey 15x5 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Cragar Keystone Grey 15x5 rim",
+        "description": "Variable offset",
+        "value": 56.049822,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 16.483986,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 5.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 5.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "cragar_grey_5.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.04,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39271,
+      "source_script": "parts\\mopar_wheels\\scripts\\cragar_grey_5.class"
+    },
+    {
+      "id": "rims/mopar/Fenton_mag_b_13",
+      "name": "Fenton_mag_b_13",
+      "display_name": "Fenton Mag rear 15x13 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Fenton Mag rear 15x13 rim",
+        "description": "Variable offset",
+        "value": 105.871886,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 20.469751,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 13.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 13.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "Fenton_mag_b_13.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39270,
+      "source_script": "parts\\mopar_wheels\\scripts\\Fenton_mag_b_13.class"
+    },
+    {
+      "id": "rims/mopar/Fenton_mag_b_11",
+      "name": "Fenton_mag_b_11",
+      "display_name": "Fenton Mag rear 15x11 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Fenton Mag rear 15x11 rim",
+        "description": "Variable offset",
+        "value": 93.41637,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 19.47331,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.04,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 11.0,
+        "rim_type": 0,
+        "f_offset": -40.0,
+        "default_offset": -40.0,
+        "diameter": 15.0,
+        "width": 11.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "Fenton_mag_b_11.kn5",
+      "mass": 10.176,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.005,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39269,
+      "source_script": "parts\\mopar_wheels\\scripts\\Fenton_mag_b_11.class"
+    },
+    {
+      "id": "rims/mopar/Fenton_mag_a_8",
+      "name": "Fenton_mag_a_8",
+      "display_name": "Fenton Mag front 15x8 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Fenton Mag front 15x8 rim",
+        "description": "Variable offset",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "Fenton_mag_a_8.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.085,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39268,
+      "source_script": "parts\\mopar_wheels\\scripts\\Fenton_mag_a_8.class"
+    },
+    {
+      "id": "rims/mopar/Fenton_mag_a_5",
+      "name": "Fenton_mag_a_5",
+      "display_name": "Fenton Mag front 15x5 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Fenton Mag front 15x5 rim",
+        "description": "Variable offset",
+        "value": 56.049822,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 16.483986,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.025,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 5.0,
+        "rim_type": 0,
+        "f_offset": -25.0,
+        "default_offset": -25.0,
+        "diameter": 15.0,
+        "width": 5.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "Fenton_mag_a_5.kn5",
+      "mass": 7.401,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.04,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 1,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.027,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            },
+            {
+              "part": null,
+              "slot": 2,
+              "source": "system.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 39267,
+      "source_script": "parts\\mopar_wheels\\scripts\\Fenton_mag_a_5.class"
+    }
+  ]
+}

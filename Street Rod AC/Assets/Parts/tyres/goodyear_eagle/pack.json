@@ -1,0 +1,314 @@
+{
+  "id": "tyres/goodyear_eagle",
+  "source": "parts\\Goodyear_Eagle.rpk",
+  "parts": [
+    {
+      "id": "tyres/goodyear_eagle/tyre_1",
+      "name": "tyre_1",
+      "display_name": "SL Tuners \n Goodyear Eagle Clean 255/50 R15 medium compound sport tyre",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Tyre",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Tyre",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners \n Goodyear Eagle Clean 255/50 R15 medium compound sport tyre",
+        "description": "This SL Tuners \n Goodyear Eagle Clean 255/50 R15 medium compound sport tyre is a 255 mm wide  tyre, that's diameter is 15 inch at the rims and the height of its sidewalls is 128 mm. It is compatible with all 15 inch rims that are between 9.0 and 11.0 inch in width.",
+        "value": 100.43495,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 33.277777,
+        "prestige_calc_weight": 15.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.0,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.558889,
+        "sliction": 0.814,
+        "frictn_x": 1.0,
+        "radius": 0.318,
+        "stiffness": 21.843137,
+        "rollres": 0.003625,
+        "loadcap": 9985.290492,
+        "loadsmooth": 0.3,
+        "CPatchMaximumAngle": 0.148159,
+        "insider_friction": 1.952863,
+        "wheel_radius": 190.5,
+        "profile_ratio": 0.5,
+        "tyre_width": 255.0,
+        "profile_height": 127.5,
+        "min_radius": 0.1905,
+        "max_radius": 0.318,
+        "slide_interval": 0.003922,
+        "min_rollres": 0.003625,
+        "optimal_inflation": 2.0,
+        "inflation": 2.0,
+        "par_8": 1.097879,
+        "maxRimWidth_i": 12,
+        "minRimWidth_i": 8,
+        "maxRimWidth": 11.0,
+        "minRimWidth": 9.0,
+        "default_fric": 1.0,
+        "fric_mul": 1.3,
+        "load_mul2": 10.5,
+        "CPatchMaxA": 16.0,
+        "CPatchMinA": 4.0,
+        "roll_res_mul": 0.725,
+        "slic_mul": 1.1,
+        "rubber_rigidity": 0.9,
+        "load_mul": 8.4,
+        "slide_cm": 0.1,
+        "render_types": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          "parts\\Goodyear_Eagle.rpk#0x0040",
+          "parts\\Goodyear_Eagle.rpk#0x0040",
+          "parts\\Goodyear_Eagle.rpk#0x0040",
+          "parts\\Goodyear_Eagle.rpk#0x0040",
+          "parts\\Goodyear_Eagle.rpk#0x0040",
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          "parts\\Goodyear_Eagle.rpk#0x0040"
+        ],
+        "tyre_size_label": "\n Goodyear Eagle Clean 255/50 R15",
+        "new_inflation": 0.0,
+        "max_wear": 1949927002.4719
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        ">Runing_Gear",
+        "Tyres",
+        "runinggear"
+      ],
+      "model": "tyre_1.kn5",
+      "mass": 0.127,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the tyre connects to the rim through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            3.142,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 80,
+      "source_script": "parts\\Goodyear_Eagle\\scripts\\tyre_1.class"
+    },
+    {
+      "id": "tyres/goodyear_eagle/tyre_2",
+      "name": "tyre_2",
+      "display_name": "SL Tuners \n Goodyear Eagle 255/50 R15 medium compound sport tyre",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Tyre",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Tyre",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners \n Goodyear Eagle 255/50 R15 medium compound sport tyre",
+        "description": "This SL Tuners \n Goodyear Eagle 255/50 R15 medium compound sport tyre is a 255 mm wide  tyre, that's diameter is 15 inch at the rims and the height of its sidewalls is 128 mm. It is compatible with all 15 inch rims that are between 9.0 and 11.0 inch in width.",
+        "value": 100.43495,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 33.277777,
+        "prestige_calc_weight": 15.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.0,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.558889,
+        "sliction": 0.814,
+        "frictn_x": 1.0,
+        "radius": 0.318,
+        "stiffness": 21.843137,
+        "rollres": 0.003625,
+        "loadcap": 9985.290492,
+        "loadsmooth": 0.3,
+        "CPatchMaximumAngle": 0.148159,
+        "insider_friction": 1.952863,
+        "wheel_radius": 190.5,
+        "profile_ratio": 0.5,
+        "tyre_width": 255.0,
+        "profile_height": 127.5,
+        "min_radius": 0.1905,
+        "max_radius": 0.318,
+        "slide_interval": 0.003922,
+        "min_rollres": 0.003625,
+        "optimal_inflation": 2.0,
+        "inflation": 2.0,
+        "par_8": 1.097879,
+        "maxRimWidth_i": 12,
+        "minRimWidth_i": 8,
+        "maxRimWidth": 11.0,
+        "minRimWidth": 9.0,
+        "default_fric": 1.0,
+        "fric_mul": 1.3,
+        "load_mul2": 10.5,
+        "CPatchMaxA": 16.0,
+        "CPatchMinA": 4.0,
+        "roll_res_mul": 0.725,
+        "slic_mul": 1.1,
+        "rubber_rigidity": 0.9,
+        "load_mul": 8.4,
+        "slide_cm": 0.1,
+        "render_types": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          "parts\\Goodyear_Eagle.rpk#0x0041",
+          "parts\\Goodyear_Eagle.rpk#0x0041",
+          "parts\\Goodyear_Eagle.rpk#0x0041",
+          "parts\\Goodyear_Eagle.rpk#0x0041",
+          "parts\\Goodyear_Eagle.rpk#0x0041",
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          "parts\\Goodyear_Eagle.rpk#0x0041"
+        ],
+        "tyre_size_label": "\n Goodyear Eagle 255/50 R15",
+        "new_inflation": 0.0,
+        "max_wear": 1949927002.4719
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        ">Runing_Gear",
+        "Tyres",
+        "runinggear"
+      ],
+      "model": "tyre_2.kn5",
+      "mass": 0.127,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the tyre connects to the rim through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            3.142,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 81,
+      "source_script": "parts\\Goodyear_Eagle\\scripts\\tyre_2.class"
+    }
+  ]
+}

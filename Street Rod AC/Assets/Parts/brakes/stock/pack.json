@@ -1,0 +1,5012 @@
+{
+  "id": "brakes/stock",
+  "source": "parts.rpk",
+  "parts": [
+    {
+      "id": "brakes/stock/disc_brake",
+      "name": "disc_brake",
+      "display_name": "Baiern CoupeSport 2.5 285mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern CoupeSport 2.5 285mm 4 piston disc brake",
+        "value": 257.254804,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 32.156851,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Baiern CoupeSport 2.5",
+        "brand_prestige_factor": 1.2,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.05,
+        "radius": 0.1425,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 285.0,
+        "friction_pad": 1.0,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Baiern",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 214,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Baiern_CS_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_00D7",
+      "name": "disc_brake_00D7",
+      "display_name": "Baiern CoupeSport 2.5 285mm 2 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern CoupeSport 2.5 285mm 2 piston disc brake",
+        "value": 161.429893,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 20.178737,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Baiern CoupeSport 2.5",
+        "brand_prestige_factor": 1.2,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1025,
+        "radius": 0.1425,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 1.0,
+        "diam_mm": 285.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Baiern",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 215,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Baiern_CS_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_00D8",
+      "name": "disc_brake_00D8",
+      "display_name": "Baiern DevilSport 305mm 6 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern DevilSport 305mm 6 piston disc brake",
+        "value": 661.796797,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 82.7246,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Baiern DevilSport",
+        "brand_prestige_factor": 2.2,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1025,
+        "radius": 0.1525,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 3.0,
+        "diam_mm": 305.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Baiern",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 216,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Baiern_DS_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_00D9",
+      "name": "disc_brake_00D9",
+      "display_name": "Baiern DevilSport 305mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern DevilSport 305mm 4 piston disc brake",
+        "value": 479.854448,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 59.981806,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Baiern DevilSport",
+        "brand_prestige_factor": 2.2,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.05,
+        "radius": 0.1525,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 305.0,
+        "friction_pad": 1.0,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Baiern",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 217,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Baiern_DS_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_00DA",
+      "name": "disc_brake_00DA",
+      "display_name": "Baiern CoupeSport GT III 265mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern CoupeSport GT III 265mm 4 piston disc brake",
+        "value": 956.604982,
+        "police_check_fine_value": 100.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 119.575623,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Baiern CoupeSport GT III",
+        "brand_prestige_factor": 4.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.265,
+        "radius": 0.1325,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 265.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.15
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Baiern",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 218,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Baiern_GT_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_00DB",
+      "name": "disc_brake_00DB",
+      "display_name": "Baiern CoupeSport GT III 235mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern CoupeSport GT III 235mm 4 piston disc brake",
+        "value": 932.049822,
+        "police_check_fine_value": 100.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 116.506228,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Baiern CoupeSport GT III",
+        "brand_prestige_factor": 4.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.265,
+        "radius": 0.1175,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 235.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.15
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Baiern",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 219,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Baiern_GT_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0167",
+      "name": "disc_brake_0167",
+      "display_name": "Duhen SunStrip 1.5 DVC 245mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Duhen SunStrip 1.5 DVC 245mm 4 piston disc brake",
+        "value": 208.329181,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 26.041148,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Duhen SunStrip 1.5 DVC",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1025,
+        "radius": 0.1225,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 245.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Duhen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 359,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_SunStrip_15_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0168",
+      "name": "disc_brake_0168",
+      "display_name": "Duhen SunStrip 1.5 DVC 215mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Duhen SunStrip 1.5 DVC 215mm 4 piston disc brake",
+        "value": 202.724199,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 25.340525,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Duhen SunStrip 1.5 DVC",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1025,
+        "radius": 0.1075,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 215.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Duhen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 360,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_SunStrip_15_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0169",
+      "name": "disc_brake_0169",
+      "display_name": "Duhen SunStrip 1.8 DVC 255mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Duhen SunStrip 1.8 DVC 255mm 4 piston disc brake",
+        "value": 231.21726,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 28.902157,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Duhen SunStrip 1.8 DVC",
+        "brand_prestige_factor": 1.1,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1025,
+        "radius": 0.1275,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 255.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Duhen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 361,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_SunStrip_18_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_016A",
+      "name": "disc_brake_016A",
+      "display_name": "Duhen SunStrip 1.8 DVC 235mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Duhen SunStrip 1.8 DVC 235mm 4 piston disc brake",
+        "value": 227.10694,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 28.388367,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Duhen SunStrip 1.8 DVC",
+        "brand_prestige_factor": 1.1,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1025,
+        "radius": 0.1175,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 235.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Duhen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 362,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_SunStrip_18_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_016D",
+      "name": "disc_brake_016D",
+      "display_name": "Duhen Racing SunStrip 2.0 CDVC 275mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Duhen Racing SunStrip 2.0 CDVC 275mm 4 piston disc brake",
+        "value": 492.361655,
+        "police_check_fine_value": 100.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 61.545207,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Duhen Racing SunStrip 2.0 CDVC",
+        "brand_prestige_factor": 2.25,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.2075,
+        "radius": 0.1375,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 275.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.15
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Duhen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 365,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_SunStrip_20_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_016E",
+      "name": "disc_brake_016E",
+      "display_name": "Duhen Racing SunStrip 2.0 CDVC 235mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Duhen Racing SunStrip 2.0 CDVC 235mm 4 piston disc brake",
+        "value": 473.945285,
+        "police_check_fine_value": 100.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 59.243161,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Duhen Racing SunStrip 2.0 CDVC",
+        "brand_prestige_factor": 2.25,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.2075,
+        "radius": 0.1175,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 235.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.15
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Duhen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 366,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_SunStrip_20_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_016B",
+      "name": "disc_brake_016B",
+      "display_name": "Duhen SunStrip 2.2 DVC 255mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Duhen SunStrip 2.2 DVC 255mm 4 piston disc brake",
+        "value": 243.364146,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 30.420518,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Duhen SunStrip 2.2 DVC",
+        "brand_prestige_factor": 1.15,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1275,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 255.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Duhen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 363,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_SunStrip_22_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_016C",
+      "name": "disc_brake_016C",
+      "display_name": "Duhen SunStrip 2.2 DVC 255mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Duhen SunStrip 2.2 DVC 255mm 4 piston disc brake",
+        "value": 241.727135,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 30.215892,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Duhen SunStrip 2.2 DVC",
+        "brand_prestige_factor": 1.15,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1025,
+        "radius": 0.1275,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 255.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Duhen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 364,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_SunStrip_22_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0151",
+      "name": "disc_brake_0151",
+      "display_name": "Einvagen 110 GT 255mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Einvagen 110 GT 255mm 4 piston disc brake",
+        "value": 206.505338,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 25.813167,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Einvagen 110 GT",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.0,
+        "radius": 0.1275,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 255.0,
+        "friction_pad": 1.0,
+        "friction_disc": 1.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Einvagen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 337,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Einvagen_GT_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0150",
+      "name": "disc_brake_0150",
+      "display_name": "Einvagen 110 GT 235mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Einvagen 110 GT 235mm 4 piston disc brake",
+        "value": 202.946619,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 25.368327,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Einvagen 110 GT",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.0,
+        "radius": 0.1175,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 235.0,
+        "friction_pad": 1.0,
+        "friction_disc": 1.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Einvagen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 336,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Einvagen_GT_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_014F",
+      "name": "disc_brake_014F",
+      "display_name": "Einvagen 110 GTK 255mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Einvagen 110 GTK 255mm 4 piston disc brake",
+        "value": 216.503434,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 27.062929,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Einvagen 110 GTK",
+        "brand_prestige_factor": 1.03,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1025,
+        "radius": 0.1275,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 255.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Einvagen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 335,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Einvagen_GTK_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0141",
+      "name": "disc_brake_0141",
+      "display_name": "Einvagen 110 GTK 235mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Einvagen 110 GTK 235mm 4 piston disc brake",
+        "value": 212.65468,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 26.581835,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Einvagen 110 GTK",
+        "brand_prestige_factor": 1.03,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1025,
+        "radius": 0.1175,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 235.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Einvagen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 321,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Einvagen_GTK_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0140",
+      "name": "disc_brake_0140",
+      "display_name": "Einvagen 140 GTA 265mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Einvagen 140 GTA 265mm 4 piston disc brake",
+        "value": 281.323132,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 35.165391,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Einvagen 140 GTA",
+        "brand_prestige_factor": 1.2,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1325,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 265.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Einvagen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 320,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Einvagen_GTA_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_013D",
+      "name": "disc_brake_013D",
+      "display_name": "Einvagen 140 GTA 255mm 2 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Einvagen 140 GTA 255mm 2 piston disc brake",
+        "value": 168.125979,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 21.015747,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Einvagen 140 GTA",
+        "brand_prestige_factor": 1.2,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1275,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 1.0,
+        "diam_mm": 255.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Einvagen",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 317,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Einvagen_GTA_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0152",
+      "name": "disc_brake_0152",
+      "display_name": "Emer Nonus StreetGT 275mm 6 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Emer Nonus StreetGT 275mm 6 piston disc brake",
+        "value": 512.883897,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 64.110487,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Emer Nonus StreetGT",
+        "brand_prestige_factor": 1.75,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.05,
+        "radius": 0.1375,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 3.0,
+        "diam_mm": 275.0,
+        "friction_pad": 1.0,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Emer",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 338,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Nonus_SGT_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0153",
+      "name": "disc_brake_0153",
+      "display_name": "Emer Nonus StreetGT 285mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Emer Nonus StreetGT 285mm 4 piston disc brake",
+        "value": 375.163256,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 46.895407,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Emer Nonus StreetGT",
+        "brand_prestige_factor": 1.75,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.05,
+        "radius": 0.1425,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 285.0,
+        "friction_pad": 1.0,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Emer",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 339,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Nonus_SGT_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0155",
+      "name": "disc_brake_0155",
+      "display_name": "Emer Motorsport Nonus GT2 315mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Emer Motorsport Nonus GT2 315mm 4 piston disc brake",
+        "value": 873.997954,
+        "police_check_fine_value": 100.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 109.249744,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Emer Motorsport Nonus GT2",
+        "brand_prestige_factor": 3.85,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.2075,
+        "radius": 0.1575,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 315.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.15
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Emer",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 341,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Nonus_GT2_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0156",
+      "name": "disc_brake_0156",
+      "display_name": "Emer Motorsport Nonus GT2 285mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Emer Motorsport Nonus GT2 285mm 4 piston disc brake",
+        "value": 850.363612,
+        "police_check_fine_value": 100.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 106.295452,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Emer Motorsport Nonus GT2",
+        "brand_prestige_factor": 3.85,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.2075,
+        "radius": 0.1425,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 285.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.15
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Emer",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 342,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Nonus_GT2_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0157",
+      "name": "disc_brake_0157",
+      "display_name": "Hauler's SuperDuty 500 335mm 6 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Hauler's SuperDuty 500 335mm 6 piston disc brake",
+        "value": 474.953648,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 59.369206,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Hauler's SuperDuty 500",
+        "brand_prestige_factor": 1.55,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1025,
+        "radius": 0.1675,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 3.0,
+        "diam_mm": 335.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Hauler's",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 343,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_SuperDuty_500_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0158",
+      "name": "disc_brake_0158",
+      "display_name": "Hauler's SuperDuty 500 325mm 6 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Hauler's SuperDuty 500 325mm 6 piston disc brake",
+        "value": 467.575979,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 58.446997,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Hauler's SuperDuty 500",
+        "brand_prestige_factor": 1.55,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.05,
+        "radius": 0.1625,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 3.0,
+        "diam_mm": 325.0,
+        "friction_pad": 1.05,
+        "friction_disc": 1.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Hauler's",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 344,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_SuperDuty_500_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0159",
+      "name": "disc_brake_0159",
+      "display_name": "Hauler's SuperDuty Extra 750 365mm 6 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Hauler's SuperDuty Extra 750 365mm 6 piston disc brake",
+        "value": 549.783363,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 68.72292,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Hauler's SuperDuty Extra 750",
+        "brand_prestige_factor": 1.75,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1825,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 3.0,
+        "diam_mm": 365.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Hauler's",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 345,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_SuperDuty_750_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_015D",
+      "name": "disc_brake_015D",
+      "display_name": "Hauler's SuperDuty Extra 750 345mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Hauler's SuperDuty Extra 750 345mm 4 piston disc brake",
+        "value": 394.391459,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 49.298932,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Hauler's SuperDuty Extra 750",
+        "brand_prestige_factor": 1.75,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1,
+        "radius": 0.1725,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 345.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Hauler's",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 349,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_SuperDuty_750_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0161",
+      "name": "disc_brake_0161",
+      "display_name": "Ishima Enula WR SuperTurizmo 265mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Ishima Enula WR SuperTurizmo 265mm 4 piston disc brake",
+        "value": 789.19911,
+        "police_check_fine_value": 100.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 98.649889,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Ishima Enula WR SuperTurizmo",
+        "brand_prestige_factor": 3.3,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.265,
+        "radius": 0.1325,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 265.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.15
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Ishima",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 353,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Ishima_WRS_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0162",
+      "name": "disc_brake_0162",
+      "display_name": "Ishima Enula WR SuperTurizmo 235mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Ishima Enula WR SuperTurizmo 235mm 4 piston disc brake",
+        "value": 768.941103,
+        "police_check_fine_value": 100.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 96.117638,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Ishima Enula WR SuperTurizmo",
+        "brand_prestige_factor": 3.3,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.265,
+        "radius": 0.1175,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 235.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.15
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Ishima",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 354,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Ishima_WRS_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0100",
+      "name": "disc_brake_0100",
+      "display_name": "Ishima Enula WRY 275mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Ishima Enula WRY 275mm 4 piston disc brake",
+        "value": 273.083274,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 34.135409,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Ishima Enula WRY",
+        "brand_prestige_factor": 1.3,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.0,
+        "radius": 0.1375,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 275.0,
+        "friction_pad": 1.0,
+        "friction_disc": 1.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Ishima",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 256,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Ishima_WRY_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0101",
+      "name": "disc_brake_0101",
+      "display_name": "Ishima Enula WRY 255mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Ishima Enula WRY 255mm 4 piston disc brake",
+        "value": 268.45694,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 33.557117,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Ishima Enula WRY",
+        "brand_prestige_factor": 1.3,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.0,
+        "radius": 0.1275,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 255.0,
+        "friction_pad": 1.0,
+        "friction_disc": 1.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Ishima",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 257,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Ishima_WRY_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_015F",
+      "name": "disc_brake_015F",
+      "display_name": "Ishima Enula WRZ 275mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Ishima Enula WRZ 275mm 4 piston disc brake",
+        "value": 323.036477,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.37956,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Ishima Enula WRZ",
+        "brand_prestige_factor": 1.5,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1375,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 275.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Ishima",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 351,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Ishima_WRZ_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0160",
+      "name": "disc_brake_0160",
+      "display_name": "Ishima Enula WRZ 255mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Ishima Enula WRZ 255mm 4 piston disc brake",
+        "value": 317.431495,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 39.678937,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Ishima Enula WRZ",
+        "brand_prestige_factor": 1.5,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1275,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 255.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Ishima",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 352,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Ishima_WRZ_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_015E",
+      "name": "disc_brake_015E",
+      "display_name": "MC GT 245mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "MC GT 245mm 4 piston disc brake",
+        "value": 461.398577,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 57.674822,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "MC GT",
+        "brand_prestige_factor": 2.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1225,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 245.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "MC",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 350,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_MC_GT_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_016F",
+      "name": "disc_brake_016F",
+      "display_name": "MC GT 315mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "MC GT 315mm 4 piston disc brake",
+        "value": 487.55516,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 60.944395,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "MC GT",
+        "brand_prestige_factor": 2.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1575,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 315.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "MC",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 367,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_MC_GT_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0170",
+      "name": "disc_brake_0170",
+      "display_name": "MC GT-B 255mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "MC GT-B 255mm 4 piston disc brake",
+        "value": 441.87847,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 55.234809,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "MC GT-B",
+        "brand_prestige_factor": 1.9,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1275,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 255.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "MC",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 368,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_MC_GTB_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0171",
+      "name": "disc_brake_0171",
+      "display_name": "MC GT-B 335mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "MC GT-B 335mm 4 piston disc brake",
+        "value": 470.277046,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 58.784631,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "MC GT-B",
+        "brand_prestige_factor": 1.9,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1675,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 335.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "MC",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 369,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_MC_GTB_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0172",
+      "name": "disc_brake_0172",
+      "display_name": "MC GTLE 275mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "MC GTLE 275mm 4 piston disc brake",
+        "value": 626.206317,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 78.27579,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "MC GTLE",
+        "brand_prestige_factor": 2.65,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1375,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 275.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "MC",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 370,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_MC_GTLE_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0173",
+      "name": "disc_brake_0173",
+      "display_name": "MC GTLE 315mm 6 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "MC GTLE 315mm 6 piston disc brake",
+        "value": 891.036566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 111.379571,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "MC GTLE",
+        "brand_prestige_factor": 2.65,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1575,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 3.0,
+        "diam_mm": 315.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "MC",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 371,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_MC_GTLE_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0174",
+      "name": "disc_brake_0174",
+      "display_name": "Prime DLH 500 315mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Prime DLH 500 315mm 4 piston disc brake",
+        "value": 792.277135,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 99.034642,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Prime DLH 500",
+        "brand_prestige_factor": 3.25,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1575,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 315.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Prime",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 372,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Prime_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0175",
+      "name": "disc_brake_0175",
+      "display_name": "Prime DLH 500 245mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Prime DLH 500 245mm 4 piston disc brake",
+        "value": 740.520018,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 92.565002,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Prime DLH 500",
+        "brand_prestige_factor": 3.25,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.05,
+        "radius": 0.1225,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 245.0,
+        "friction_pad": 1.0,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Prime",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 373,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Prime_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0176",
+      "name": "disc_brake_0176",
+      "display_name": "Shimutshibu Focer 200 285mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Shimutshibu Focer 200 285mm 4 piston disc brake",
+        "value": 274.803701,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 34.350463,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Shimutshibu Focer 200",
+        "brand_prestige_factor": 1.28,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1,
+        "radius": 0.1425,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 285.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Shimutshibu",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 374,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Focer_200_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0177",
+      "name": "disc_brake_0177",
+      "display_name": "Shimutshibu Focer 200 255mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Shimutshibu Focer 200 255mm 4 piston disc brake",
+        "value": 267.970961,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 33.49637,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Shimutshibu Focer 200",
+        "brand_prestige_factor": 1.28,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1,
+        "radius": 0.1275,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 255.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Shimutshibu",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 375,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Focer_200_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0178",
+      "name": "disc_brake_0178",
+      "display_name": "Shimutshibu Focer 300 285mm 6 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Shimutshibu Focer 300 285mm 6 piston disc brake",
+        "value": 415.90927,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 51.988659,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Shimutshibu Focer 300",
+        "brand_prestige_factor": 1.39,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1425,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 3.0,
+        "diam_mm": 285.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Shimutshibu",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 376,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Focer_300_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_0179",
+      "name": "disc_brake_0179",
+      "display_name": "Shimutshibu Focer 300 255mm 6 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Shimutshibu Focer 300 255mm 6 piston disc brake",
+        "value": 404.964875,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 50.620609,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Shimutshibu Focer 300",
+        "brand_prestige_factor": 1.39,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.1,
+        "radius": 0.1275,
+        "force": 18639.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 3.0,
+        "diam_mm": 255.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Shimutshibu",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 377,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Focer_300_rear.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_017A",
+      "name": "disc_brake_017A",
+      "display_name": "Shimutshibu Focer WRC 265mm 6 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Shimutshibu Focer WRC 265mm 6 piston disc brake",
+        "value": 1144.145018,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 143.018127,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Shimutshibu Focer WRC",
+        "brand_prestige_factor": 3.5,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1325,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 3.0,
+        "diam_mm": 265.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Shimutshibu",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 378,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Focer_WRC_front.class"
+    },
+    {
+      "id": "brakes/stock/disc_brake_017B",
+      "name": "disc_brake_017B",
+      "display_name": "Shimutshibu Focer WRC 285mm 4 piston disc brake",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake",
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Brake",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Shimutshibu Focer WRC 285mm 4 piston disc brake",
+        "value": 833.604093,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 104.200512,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "Shimutshibu Focer WRC",
+        "brand_prestige_factor": 3.5,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "friction": 1.155,
+        "radius": 0.1425,
+        "force": 21582.0,
+        "renderID_FL": "parts.rpk#0x00A1",
+        "renderID_FR": "parts.rpk#0x00C1",
+        "renderID_RL": "parts.rpk#0x00C3",
+        "renderID_RR": "parts.rpk#0x00C5",
+        "number_of_calipers": 2.0,
+        "diam_mm": 285.0,
+        "friction_pad": 1.1,
+        "friction_disc": 1.05
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "Shimutshibu",
+        "Brake",
+        "runinggear"
+      ],
+      "model": "disc_brake.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "brakes/stock/Brake",
+              "slot": 1,
+              "source": "parts.rpk#0x0024"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 379,
+      "source_script": "parts\\running_gear\\scripts\\brakes\\brake_Focer_WRC_rear.class"
+    },
+    {
+      "id": "brakes/stock/Brake",
+      "name": "Brake",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "brake",
+        "reciprocatingrgearpart",
+        "rgearpart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "towards suspension hub",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 2,
+          "name": "towards wheel hub",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 36,
+      "source_script": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DiscBrake"
+    },
+    {
+      "id": "brakes/stock/Brake_0023",
+      "name": "Brake_0023",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "brake",
+        "reciprocatingrgearpart",
+        "rgearpart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "towards suspension hub",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 2,
+          "name": "towards wheel hub",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 35,
+      "source_script": "java.game.parts.rgearpart.reciprocatingrgearpart.brake.DrumBrake"
+    },
+    {
+      "id": "brakes/stock/Brake_0245",
+      "name": "Brake_0245",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "reciprocatingrgearpart",
+        "rgearpart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "towards suspension hub",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 2,
+          "name": "towards wheel hub",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 581,
+      "source_script": "java.game.parts.rgearpart.reciprocatingrgearpart.Brake"
+    }
+  ]
+}

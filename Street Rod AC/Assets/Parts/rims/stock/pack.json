@@ -1,0 +1,80 @@
+{
+  "id": "rims/stock",
+  "source": "parts.rpk",
+  "parts": [
+    {
+      "id": "rims/stock/Wheel",
+      "name": "Wheel",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "reciprocatingrgearpart",
+        "rgearpart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "towards wheel hub",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": null,
+              "slot": 2,
+              "source": "parts.rpk#0x2000"
+            }
+          ],
+          "compatible_with": []
+        },
+        {
+          "id": 2,
+          "name": "the rim of the wheel (tyre contact)",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 512,
+      "source_script": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel"
+    }
+  ]
+}

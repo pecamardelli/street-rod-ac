@@ -1,0 +1,641 @@
+{
+  "id": "rims/goodyear_eagle",
+  "source": "parts\\Goodyear_Eagle.rpk",
+  "parts": [
+    {
+      "id": "rims/goodyear_eagle/rim_1",
+      "name": "rim_1",
+      "display_name": "GE PACK 10.0x15 ET-0 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "GE PACK 10.0x15 ET-0 rim",
+        "description": "<description not available yet>",
+        "value": 87.188612,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 18.975089,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": 0.0,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 10.0,
+        "rim_type": 0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        ">Rims",
+        "Factory",
+        "runinggear"
+      ],
+      "model": "rim_1.kn5",
+      "mass": 6.908,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.025,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 96,
+      "source_script": "parts\\Goodyear_Eagle\\scripts\\rim.class"
+    },
+    {
+      "id": "rims/goodyear_eagle/rim_2",
+      "name": "rim_2",
+      "display_name": "GE PACK 10.0x15 ET-0 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "GE PACK 10.0x15 ET-0 rim",
+        "description": "<description not available yet>",
+        "value": 87.188612,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 18.975089,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": 0.0,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 10.0,
+        "rim_type": 0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        ">Rims",
+        "Factory",
+        "runinggear"
+      ],
+      "model": "rim_2.kn5",
+      "mass": 6.908,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.025,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 97,
+      "source_script": "parts\\Goodyear_Eagle\\scripts\\rim.class"
+    },
+    {
+      "id": "rims/goodyear_eagle/rim_3",
+      "name": "rim_3",
+      "display_name": "GE PACK 10.0x15 ET-0 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "GE PACK 10.0x15 ET-0 rim",
+        "description": "<description not available yet>",
+        "value": 87.188612,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 18.975089,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": 0.0,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 10.0,
+        "rim_type": 0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        ">Rims",
+        "Factory",
+        "runinggear"
+      ],
+      "model": "rim_3.kn5",
+      "mass": 6.908,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.025,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 98,
+      "source_script": "parts\\Goodyear_Eagle\\scripts\\rim.class"
+    },
+    {
+      "id": "rims/goodyear_eagle/rim_4",
+      "name": "rim_4",
+      "display_name": "GE PACK 10.0x15 ET-0 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "GE PACK 10.0x15 ET-0 rim",
+        "description": "<description not available yet>",
+        "value": 87.188612,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 18.975089,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": 0.0,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 10.0,
+        "rim_type": 0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        ">Rims",
+        "Factory",
+        "runinggear"
+      ],
+      "model": "rim_4.kn5",
+      "mass": 6.908,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.025,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 99,
+      "source_script": "parts\\Goodyear_Eagle\\scripts\\rim.class"
+    },
+    {
+      "id": "rims/goodyear_eagle/rim_5",
+      "name": "rim_5",
+      "display_name": "GE PACK 10.0x15 ET-0 rim",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "GE PACK 10.0x15 ET-0 rim",
+        "description": "<description not available yet>",
+        "value": 87.188612,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 18.975089,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": 0.0,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 10.0,
+        "rim_type": 0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        ">Rims",
+        "Factory",
+        "runinggear"
+      ],
+      "model": "rim_5.kn5",
+      "mass": 6.908,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.025,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 100,
+      "source_script": "parts\\Goodyear_Eagle\\scripts\\rim.class"
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 # See docs/systems/parts-system.md for what each rule is there for.
 param(
     [string]$Slrr = "D:\JUEGOS\Street Legal Racing - Redline",
-    [string]$Output = "C:\GAMES\Street Rod AC\content\parts",
+    [string]$Output = (Join-Path $PSScriptRoot "..\Street Rod AC\Assets\Parts"),
     [string]$Notes = "D:\JUEGOS\SLRR\SCRIPTS",
     [string]$Converter = (Join-Path $PSScriptRoot "SlrrPartsConverter\bin\Release\net10.0\SlrrPartsConverter.exe")
 )

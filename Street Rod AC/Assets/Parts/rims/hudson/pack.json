@@ -1,0 +1,136 @@
+{
+  "id": "rims/hudson",
+  "source": "parts\\hudson_rim.rpk",
+  "parts": [
+    {
+      "id": "rims/hudson/rim_01",
+      "name": "rim_01",
+      "display_name": "hudson rim 15x8",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "hudson rim 15x8",
+        "description": "Variable offset",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.035,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -35.0,
+        "default_offset": -35.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "rim_01.kn5",
+      "mass": 12.89,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            -0.025,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            3.142,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            -0.025,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 225,
+      "source_script": "parts\\hudson_rim\\scripts\\rim_01.class"
+    }
+  ]
+}

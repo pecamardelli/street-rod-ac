@@ -8,17 +8,19 @@ simulation and, new here, the export to Assetto Corsa physics data.
 Scope: mechanical parts only (engine, transmission; running gear next). Car bodies stay Assetto Corsa's.
 
 ```
-SLRR install ──SlrrPartsConverter──▶ content\parts\                        (one-off, offline)
-                                       <pack>\pack.json + *.kn5             part definitions + models
+SLRR install ──SlrrPartsConverter──▶ Assets\Parts\                         (one-off, offline)
+                                       <kind>\<pack>\pack.json + *.kn5      part definitions + models
                                        engine_builds.json                   complete engines as part lists
                                        script_constants.json                statics of the shared script classes
                                        _scripts\...\*.class                 the compiled scripts the parts need
 
-content\parts ──PartsCatalog──▶ PartTreeBuilder ──▶ PartScriptRuntime ──▶ EngineDyno ──▶ EngineReport ──▶ AcEngineData
-                 definitions      build → tree        scripts run on it     torque curve    verdict+figures   AC data files
+Assets\Parts ──PartsCatalog──▶ PartTreeBuilder ──▶ PartScriptRuntime ──▶ EngineDyno ──▶ EngineReport ──▶ AcEngineData
+                definitions     build → tree        scripts run on it     torque curve    verdict+figures   AC data files
 ```
 
-Converted assets are from a commercial game and community mods: personal use only, never in the repo.
+The converted content lives in the repo, `Street Rod AC\Assets\Parts` (187 MB), and is copied next to the exe at build;
+`AppSettings.PartsPath` reads it from there. It is made from a commercial game and community mods: the repo stays
+private.
 
 ## Why a VM instead of a port
 
