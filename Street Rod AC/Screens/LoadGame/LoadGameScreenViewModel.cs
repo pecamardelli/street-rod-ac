@@ -133,7 +133,7 @@ namespace Street_Rod_AC.Screens.LoadGame
                 app.CurrentGameState = gameState;
 
                 // Navigate to game screen with loaded state
-                _navigationService.NavigateToGame(gameState);
+                _navigationService.NavigateToGarage(gameState);
             }
             catch (Exception ex)
             {

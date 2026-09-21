@@ -3,15 +3,59 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:controls="clr-namespace:Street_Rod_AC.Controls"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid x:Name="RootGrid"
-          Background="{StaticResource MainBackgroundBrush}"
-          Opacity="0">
+    <UserControl.Resources>
+        <Style x:Key="ViewportToggleStyle" TargetType="ToggleButton">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="6,0,0,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="border"
+                                Background="#AA1A1A1A"
+                                BorderBrush="#404040"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="12,5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#808080"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentPrimaryBrush}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource AccentPrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <Grid x:Name="RootGrid">
+        <!-- Everything lives in ContentLayer, which stays invisible until the 3D garage has rendered its
+             first frame; then the whole screen (garage, car, overlay) fades in at once -->
+        <Grid x:Name="ContentLayer"
+              Opacity="0"
+              IsHitTestVisible="False">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
+        <!-- 3D Garage (whole screen background; renders the empty garage when no car is selected) -->
+        <controls:CarViewport3D x:Name="Viewport3D"
+                                Grid.Row="0"
+                                CarDirectory="{Binding SelectedCar.CarDirectory}"
+                                SkinId="{Binding SelectedCar.SkinId}"
+                                ShowroomKn5="{Binding GarageShowroomKn5}"
+                                FadeInOnReady="False"/>
 
         <!-- Back Button -->
         <Button x:Name="BackButton"
@@ -21,8 +65,7 @@
                 Command="{Binding BackCommand}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Margin="20,20,0,0"
-                Opacity="0"/>
+                Margin="20,20,0,0"/>
 
         <!-- Exit Button -->
         <Button x:Name="ExitButton"
@@ -32,8 +75,7 @@
                 Command="{Binding ExitCommand}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Margin="20,94,0,0"
-                Opacity="0"/>
+                Margin="20,94,0,0"/>
 
         <!-- Main Content -->
         <Grid Grid.Row="0">
@@ -56,8 +98,7 @@
                     Command="{Binding SelectCarCommand}"
                     HorizontalAlignment="Center"
                     Margin="0,80,0,20"
-                    Cursor="Hand"
-                    Opacity="0">
+                    Cursor="Hand">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Setter Property="Template">
@@ -110,8 +151,21 @@
                     CornerRadius="5"
                     HorizontalAlignment="Center"
                     Width="800"
-                    Margin="0,0,0,40"
-                    Opacity="0">
+                    Margin="0,0,0,40">
+                <!-- Shown for the calendar, or as the 2D fallback when the 3D garage could not start -->
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActivePanel}" Value="Calendar">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding HasFailed, ElementName=Viewport3D}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
                 <Border.Effect>
                     <DropShadowEffect Color="Black"
                                     Direction="270"
@@ -146,58 +200,6 @@
                                       HorizontalAlignment="Center"/>
                         </StackPanel>
 
-                        <!-- Car Details Overlay -->
-                        <Border Background="#00000088"
-                               VerticalAlignment="Bottom"
-                               Padding="20,8"
-                               Visibility="{Binding HasCars, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Condition -->
-                                <TextBlock Grid.Column="0"
-                                          Text="Condition:"
-                                          FontSize="14"
-                                          Foreground="{StaticResource TextSecondaryBrush}"
-                                          Margin="0,0,10,0"
-                                          VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1"
-                                          Text="{Binding SelectedCar.ConditionDisplay}"
-                                          FontSize="14"
-                                          Foreground="{StaticResource TextPrimaryBrush}"
-                                          Margin="0,0,20,0"
-                                          VerticalAlignment="Center"/>
-
-                                <!-- Mileage -->
-                                <TextBlock Grid.Column="2"
-                                          Text="Mileage:"
-                                          FontSize="14"
-                                          Foreground="{StaticResource TextSecondaryBrush}"
-                                          Margin="0,0,10,0"
-                                          VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="3"
-                                          Text="{Binding SelectedCar.MileageDisplay}"
-                                          FontSize="14"
-                                          Foreground="{StaticResource TextPrimaryBrush}"
-                                          Margin="0,0,20,0"
-                                          VerticalAlignment="Center"/>
-
-                                <!-- Showroom Button -->
-                                <Button Grid.Column="4"
-                                        Content="Preview in Showroom"
-                                        Command="{Binding LaunchShowroomCommand}"
-                                        Style="{StaticResource DialogPrimaryButtonStyle}"
-                                        Padding="15,5"
-                                        FontSize="14"
-                                        VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
                     </Grid>
 
                     <!-- ==================== CALENDAR PANEL ==================== -->
@@ -343,71 +345,136 @@
                     </Grid>
                 </Grid>
             </Border>
-            </Grid>
 
-            <!-- Calendar Button -->
-            <Button x:Name="CalendarButton"
-                    Grid.Column="2"
-                    Command="{Binding ShowCalendarCommand}"
-                    Width="128"
-                    Height="128"
-                    HorizontalAlignment="Center"
+            <!-- Floating Car Bar (3D controls + car details) -->
+            <StackPanel x:Name="CarInfoBar"
+                        Grid.Row="1"
+                        Width="800"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,0,42"
+                        Visibility="{Binding ActivePanel, Converter={StaticResource GaragePanelToVisibilityConverter}, ConverterParameter=CarPreview}">
+                <!-- 3D Viewport Controls -->
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Margin="0,0,0,8"
+                            Visibility="{Binding HasCar, ElementName=Viewport3D, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ToggleButton Content="Lights"
+                                  Style="{StaticResource ViewportToggleStyle}"
+                                  IsChecked="{Binding HeadlightsOn, ElementName=Viewport3D, Mode=TwoWay}"/>
+                    <ToggleButton Content="Doors"
+                                  Style="{StaticResource ViewportToggleStyle}"
+                                  Visibility="{Binding HasDoors, ElementName=Viewport3D, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                  IsChecked="{Binding DoorsOpen, ElementName=Viewport3D, Mode=TwoWay}"/>
+                    <ToggleButton Content="Rotate"
+                                  Style="{StaticResource ViewportToggleStyle}"
+                                  IsChecked="{Binding AutoRotate, ElementName=Viewport3D, Mode=TwoWay}"/>
+                </StackPanel>
+
+                <!-- Car Details -->
+                <Border Background="#CC1A1A1A"
+                       BorderBrush="#404040"
+                       BorderThickness="1"
+                       CornerRadius="5"
+                       Padding="20,8"
+                       Visibility="{Binding HasCars, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Condition -->
+                        <TextBlock Grid.Column="0"
+                                  Text="Condition:"
+                                  FontSize="14"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  Margin="0,0,10,0"
+                                  VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding SelectedCar.ConditionDisplay}"
+                                  FontSize="14"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  Margin="0,0,20,0"
+                                  VerticalAlignment="Center"/>
+
+                        <!-- Mileage -->
+                        <TextBlock Grid.Column="2"
+                                  Text="Mileage:"
+                                  FontSize="14"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  Margin="0,0,10,0"
+                                  VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="3"
+                                  Text="{Binding SelectedCar.MileageDisplay}"
+                                  FontSize="14"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  Margin="0,0,20,0"
+                                  VerticalAlignment="Center"/>
+
+                        <!-- Showroom Button -->
+                        <Button Grid.Column="4"
+                                Content="Preview in Showroom"
+                                Command="{Binding LaunchShowroomCommand}"
+                                Style="{StaticResource DialogPrimaryButtonStyle}"
+                                Padding="15,5"
+                                FontSize="14"
+                                VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- ==================== OVERLAY NAVIGATION ==================== -->
+
+        <!-- Hit the Streets (mid left) -->
+        <Button x:Name="HitTheStreetsButton"
+                Grid.Row="0"
+                Style="{StaticResource OverlayTileButtonStyle}"
+                Background="{StaticResource HitTheStreetsButtonBrush}"
+                Command="{Binding HitTheStreetsCommand}"
+                Tag="Hit the streets"
+                Width="112"
+                Height="112"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Margin="30,0,0,0"/>
+
+        <!-- Newspaper (bottom left) -->
+        <Button x:Name="NewspaperButton"
+                Grid.Row="0"
+                Style="{StaticResource OverlayTileButtonStyle}"
+                Background="{StaticResource NewspaperButtonBrush}"
+                Command="{Binding NewspaperCommand}"
+                Tag="Newspaper"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Margin="30,0,0,30"/>
+
+        <!-- Career + Calendar (top right) -->
+        <StackPanel x:Name="RightButtons"
+                    Grid.Row="0"
+                    HorizontalAlignment="Right"
                     VerticalAlignment="Top"
-                    Margin="0,80,0,0"
-                    Cursor="Hand"
-                    Opacity="0">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Grid>
-                                        <Border x:Name="border"
-                                                Background="{TemplateBinding Background}"
-                                                BorderBrush="#404040"
-                                                BorderThickness="2"
-                                                CornerRadius="5">
-                                            <Border.Clip>
-                                                <RectangleGeometry RadiusX="5" RadiusY="5">
-                                                    <RectangleGeometry.Rect>
-                                                        <Rect Width="128" Height="128"/>
-                                                    </RectangleGeometry.Rect>
-                                                </RectangleGeometry>
-                                            </Border.Clip>
-                                        </Border>
-                                        <TextBlock x:Name="hoverLabel"
-                                                   Text="Calendar"
-                                                   FontFamily="Courier New"
-                                                   FontSize="14"
-                                                   FontWeight="Bold"
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Bottom"
-                                                   Margin="0,0,0,10"
-                                                   Opacity="0"/>
-                                    </Grid>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="border" Property="Opacity" Value="0.8"/>
-                                            <Setter TargetName="hoverLabel" Property="Opacity" Value="1"/>
-                                        </Trigger>
-                                        <Trigger Property="IsPressed" Value="True">
-                                            <Setter TargetName="border" Property="Opacity" Value="0.6"/>
-                                        </Trigger>
-                                        <Trigger Property="IsEnabled" Value="False">
-                                            <Setter TargetName="border" Property="Opacity" Value="0.3"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </Button.Style>
+                    Margin="0,30,30,0">
+            <Button Style="{StaticResource OverlayTileButtonStyle}"
+                    Background="{StaticResource CareerButtonBrush}"
+                    Command="{Binding CareerCommand}"
+                    Tag="Career stats"/>
+            <Button x:Name="CalendarButton"
+                    Style="{StaticResource OverlayTileButtonStyle}"
+                    Command="{Binding ShowCalendarCommand}"
+                    Tag="Calendar"
+                    Margin="0,16,0,0">
                 <Button.Background>
                     <ImageBrush ImageSource="/Assets/Images/Buttons/calendar.png" Stretch="Uniform"/>
                 </Button.Background>
             </Button>
-        </Grid>
+        </StackPanel>
 
         <!-- Bottom Nav Bar -->
         <Border Grid.Row="1"
@@ -437,5 +504,38 @@
                 </StackPanel>
             </Grid>
         </Border>
+        </Grid>
+
+        <!-- Loading Layer (shown until the 3D garage is ready) -->
+        <StackPanel x:Name="LoadingLayer"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    IsHitTestVisible="False">
+            <Border Width="60" Height="60" Margin="0,0,0,30">
+                <Border.RenderTransform>
+                    <RotateTransform x:Name="SpinnerRotation" CenterX="30" CenterY="30"/>
+                </Border.RenderTransform>
+                <Border.Triggers>
+                    <EventTrigger RoutedEvent="Loaded">
+                        <BeginStoryboard>
+                            <Storyboard RepeatBehavior="Forever">
+                                <DoubleAnimation Storyboard.TargetName="SpinnerRotation"
+                                                 Storyboard.TargetProperty="Angle"
+                                                 From="0" To="360"
+                                                 Duration="0:0:1"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Border.Triggers>
+                <Ellipse Stroke="#FF6B00" StrokeThickness="4"
+                         StrokeDashArray="3 2"
+                         Fill="Transparent"/>
+            </Border>
+            <TextBlock Text="Opening the garage..."
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       HorizontalAlignment="Center"/>
+        </StackPanel>
     </Grid>
 </UserControl>

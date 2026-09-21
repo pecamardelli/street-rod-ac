@@ -23,7 +23,8 @@ Dark, minimal, Assetto Corsa-like. Flat UI, no default Windows controls.
 - `ExitButtonStyle` - Back/exit buttons (64x64)
 - `DialogPrimaryButtonStyle` - Dialog confirm buttons
 - `DialogSecondaryButtonStyle` - Dialog cancel buttons
-- `GameButtonStyle` - Game screen buttons with hover labels
+- `GameButtonStyle` - Large image buttons with hover labels (Newspaper screen)
+- `OverlayTileButtonStyle` - Image tiles floating over the 3D garage, animated hover (scale, glow, slide-up label) via VisualStateManager
 
 ## Rules
 

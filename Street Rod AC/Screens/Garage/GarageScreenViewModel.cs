@@ -29,6 +29,17 @@ namespace Street_Rod_AC.Screens.Garage
         public AsyncRelayCommand LaunchShowroomCommand { get; }
         public RelayCommand SelectCarCommand { get; }
         public RelayCommand ShowCalendarCommand { get; }
+        public RelayCommand NewspaperCommand { get; }
+        public RelayCommand HitTheStreetsCommand { get; }
+        public RelayCommand CareerCommand { get; }
+
+        /// <summary>
+        /// Set by the view: plays the screen's fade-out and completes when it has finished.
+        /// Awaited before navigating away so the garage doesn't just pop off screen.
+        /// </summary>
+        public Func<Task>? ExitTransition { get; set; }
+
+        private bool _isLeaving;
 
         private ObservableCollection<CarDisplayViewModel> _cars;
         public ObservableCollection<CarDisplayViewModel> Cars
@@ -68,6 +79,9 @@ namespace Street_Rod_AC.Screens.Garage
         public bool HasCars => Cars.Count > 0;
 
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
+
+        /// <summary>Showroom model used as the environment of the 3D viewport</summary>
+        public string GarageShowroomKn5 => AppSettings.Instance.GarageShowroomKn5;
 
         public bool SkipEnterAnimation { get; }
 
@@ -155,6 +169,15 @@ namespace Street_Rod_AC.Screens.Garage
             LaunchShowroomCommand = new AsyncRelayCommand(OnLaunchShowroom, CanLaunchShowroom);
             SelectCarCommand = new RelayCommand(OnSelectCar);
             ShowCalendarCommand = new RelayCommand(OnShowCalendar);
+            NewspaperCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToNewspaper(_gameState)));
+            HitTheStreetsCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToDiner(_gameState)));
+            CareerCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToCareer(_gameState)));
+
+            // The garage is the game's home screen: make sure a car is selected if the player owns any
+            if (_gameState.Player.SelectedCarInstanceId == null && _gameState.Player.Cars?.Count > 0)
+            {
+                _gameState.Player.SelectedCarInstanceId = _gameState.Player.Cars[0].InstanceId;
+            }
 
             _cars = new ObservableCollection<CarDisplayViewModel>();
 
@@ -279,8 +302,32 @@ namespace Street_Rod_AC.Screens.Garage
 
         private void OnSelectCar()
         {
+            // No fade here: garage <-> car list is an instant swap in both directions
             _logger.Information("Navigating to car selection screen");
             _navigationService.NavigateToCarSelection(_gameState);
+        }
+
+        /// <summary>
+        /// Plays the exit transition (if the view provided one), then navigates
+        /// </summary>
+        private async void LeaveTo(Action navigate)
+        {
+            if (_isLeaving) return;
+            _isLeaving = true;
+
+            try
+            {
+                if (ExitTransition != null)
+                {
+                    await ExitTransition();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Exit transition failed, navigating anyway: {Error}", ex.Message);
+            }
+
+            navigate();
         }
 
         private void OnShowCalendar()
@@ -295,8 +342,21 @@ namespace Street_Rod_AC.Screens.Garage
 
         private void OnBack()
         {
-            _logger.Information("Navigating back to game screen");
-            _navigationService.NavigateToGame(_gameState);
+            // Show confirmation dialog
+            var confirmDialog = new Dialogs.Confirmation.ConfirmationDialogViewModel(
+                _dialogService,
+                "Are you sure you want to go back to the Main Menu? Your current game will remain saved.",
+                "Go Back?",
+                confirmed =>
+                {
+                    if (confirmed)
+                    {
+                        _logger.Information("Navigating back to main menu");
+                        LeaveTo(() => _navigationService.NavigateToMainMenu());
+                    }
+                });
+
+            _dialogService.ShowDialog(confirmDialog);
         }
 
         private void OnExit()
@@ -363,6 +423,10 @@ namespace Street_Rod_AC.Screens.Garage
         public Car CarInstance { get; set; } = new();
         public CarDefinition CarDefinition { get; set; } = new();
         public string PreviewImagePath { get; set; } = string.Empty;
+
+        /// <summary>AC car folder, used by the 3D viewport</summary>
+        public string CarDirectory => Path.Combine(AppSettings.Instance.CarsPath, CarDefinition.Id);
+        public string SkinId => !string.IsNullOrEmpty(CarInstance.SkinId) ? CarInstance.SkinId : "default";
 
         public string DisplayName => $"{CarDefinition.Brand} {CarDefinition.Name}";
         public string YearDisplay => CarDefinition.Year?.ToString() ?? "Unknown";

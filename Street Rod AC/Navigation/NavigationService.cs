@@ -123,17 +123,6 @@ namespace Street_Rod_AC.Navigation
             NavigateTo(screen);
         }
 
-        public void NavigateToGame(GameState gameState)
-        {
-            var screen = new Screens.Game.GameScreenViewModel(
-                this,
-                _dialogService,
-                gameState,
-                _catalogRepository,
-                _launcher);
-            NavigateTo(screen);
-        }
-
         public void NavigateToGarage(GameState gameState, bool skipAnimation = false)
         {
             var screen = new Screens.Garage.GarageScreenViewModel(

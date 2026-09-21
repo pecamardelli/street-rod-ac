@@ -10,8 +10,7 @@
 | LoadGame | `Screens/LoadGame/` | Load existing save |
 | Settings | `Screens/Settings/` | App settings |
 | CarCatalogEditor | `Screens/CarCatalogEditor/` | Edit car prices/precedence |
-| Game | `Screens/Game/` | In-game hub (calendar view) |
-| Garage | `Screens/Garage/` | Player's car collection |
+| Garage | `Screens/Garage/` | In-game hub: 3D garage with the selected car, overlay buttons to every other in-game screen |
 | CarSelection | `Screens/CarSelection/` | Select car for activity |
 | Diner | `Screens/Diner/` | Meet opponents, accept challenges |
 | Newspaper | `Screens/Newspaper/` | Used car ads, news |
@@ -22,16 +21,18 @@
 
 ```
 Init → MainMenu
-         ├── NewGame → Game
-         ├── LoadGame → Game
+         ├── NewGame → Garage
+         ├── LoadGame → Garage
          └── Settings → CarCatalogEditor
 
-Game ←→ Garage ←→ CarSelection
+Garage (hub) ←→ CarSelection
   │
-  ├──→ Diner (challenges)
-  │
+  ├──→ Diner (challenges)      [Hit the streets]
+  ├──→ Career                   [Career stats]
   └──→ Newspaper → UsedCarMarket
                  → UsedParts
+
+Garage Back button → MainMenu (with confirmation)
 ```
 
 ## Screen Structure
@@ -50,7 +51,6 @@ Each screen folder contains:
 | NavigateToLoadGame() | LoadGame |
 | NavigateToSettings() | Settings |
 | NavigateToCarCatalogEditor() | CarCatalogEditor |
-| NavigateToGame(gameState) | Game |
 | NavigateToGarage(gameState) | Garage |
 | NavigateToCarSelection(gameState) | CarSelection |
 | NavigateToDiner(gameState) | Diner |
