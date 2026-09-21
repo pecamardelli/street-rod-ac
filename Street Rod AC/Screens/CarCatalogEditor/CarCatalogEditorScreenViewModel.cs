@@ -74,6 +74,8 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
 
         public ObservableCollection<string> BrandOptions { get; set; }
 
+        private readonly Services.Parts.ICarPartsService? _partsService;
+
         public bool HasDirtyItems => _catalogItems?.Any(x => x.IsDirty) ?? false;
 
         public CarCatalogEditorScreenViewModel(
@@ -81,8 +83,10 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
             DialogService dialogService,
             IContentCatalogRepository catalogRepo,
             ICarProfileRepository profileRepo,
-            ICarProfileService profileService)
+            ICarProfileService profileService,
+            Services.Parts.ICarPartsService? partsService = null)
         {
+            _partsService = partsService;
             _navigationService = navigationService;
             _dialogService = dialogService;
             _catalogRepo = catalogRepo;
@@ -101,6 +105,17 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
             BrandOptions = new ObservableCollection<string> { "All Brands" };
 
             LoadCatalog();
+        }
+
+        /// <summary>Every engine build that runs, the likeliest for this car first</summary>
+        private IReadOnlyList<EngineOptionViewModel> EngineOptionsFor(CarDefinition car)
+        {
+            if (_partsService is not { IsAvailable: true }) return Array.Empty<EngineOptionViewModel>();
+
+            return Parts.Cars.StockEngineMatcher
+                .Rank(_partsService.Builds, car.Brand, car.Name, Parts.Cars.StockEngineMatcher.ParsePower(car.Specs?.Bhp))
+                .Select(m => new EngineOptionViewModel(m.Build.Build.Id, $"{m.Build.Build.Name}  \u00b7  {m.Build.PowerHp:0} hp, {m.Build.Litres:0.0} l"))
+                .ToList();
         }
 
         private void LoadCatalog()
@@ -134,7 +149,7 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
                     carDef.Id,
                     () => _profileService.GenerateDefaultProfile(carDef));
 
-                var itemVm = new CatalogItemViewModel(carDef, profile);
+                var itemVm = new CatalogItemViewModel(carDef, profile, EngineOptionsFor(carDef));
                 itemVm.PropertyChanged += OnItemPropertyChanged;
                 _catalogItems.Add(itemVm);
             }

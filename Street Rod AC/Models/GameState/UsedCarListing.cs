@@ -57,6 +57,18 @@ namespace Street_Rod_AC.Models.GameState
         /// When this listing was sold (if sold)
         /// </summary>
         public DateTime? SoldDate { get; set; }
+
+        /// <summary>
+        /// The parts this very car comes with, as on <see cref="Car.Parts"/>: what is for sale is what gets bought.
+        /// Empty on listings from before cars had parts; those get a factory engine when bought.
+        /// </summary>
+        public List<PartInstance> Parts { get; set; } = [];
+
+        /// <summary>What the seller says about the engine, e.g. "GM 327, 275 hp"; null when there is nothing to say</summary>
+        public string? EngineSummary { get; set; }
+
+        /// <summary>True when the engine is not as it left the factory</summary>
+        public bool IsModified { get; set; }
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 using System.Numerics;
+using Street_Rod_AC.Parts.Logic;
 
 namespace Street_Rod_AC.Parts;
 
@@ -43,12 +44,13 @@ public static class CarPartsLayout
     private const string Spring = "stock/spring";
     private const string ShockAbsorber = "stock/shock_absorber";
 
-    public static List<PlacedPart> Build(PartsCatalog catalog, CarAnchors anchors, string engineBlockId)
+    /// <param name="engine">The car's engine block with everything on it; null for an empty engine bay</param>
+    public static List<PlacedPart> Build(PartsCatalog catalog, CarAnchors anchors, InstalledPart? engine)
     {
         var result = new List<PlacedPart>();
         var forward = anchors.Forward;
 
-        AddEngine(catalog, anchors, engineBlockId, result);
+        if (engine != null) result.AddRange(PartAssembler.Assemble(engine, EnginePlacement(anchors, engine.Definition)));
 
         foreach (var (hub, axle) in new[]
                  {
@@ -74,24 +76,17 @@ public static class CarPartsLayout
         return result;
     }
 
-    private static void AddEngine(PartsCatalog catalog, CarAnchors anchors, string blockId, List<PlacedPart> result)
+    /// <summary>Where an engine block sits in the car: crankshaft at the hubs' height, block behind the front axle line</summary>
+    public static Matrix4x4 EnginePlacement(CarAnchors anchors, PartDefinition block)
     {
-        var block = catalog.Get(blockId);
-        if (block == null) return;
-
         var frame = CarFrame(anchors.Forward);
 
-        // Line the crankshaft up with the hubs' height and the block with the front axle
         var crank = block.Slots.FirstOrDefault(s => s.Name.Contains("crank", StringComparison.OrdinalIgnoreCase));
         var crankLocal = crank == null ? DefaultCrankPosition : new Vector3(crank.Position[0], crank.Position[1], 0f);
         var crankTarget = anchors.FrontAxle - anchors.Forward * EngineBehindFrontAxle + Vector3.UnitY * CrankAboveHubs;
         var origin = crankTarget - Vector3.TransformNormal(crankLocal, frame);
 
-        var placement = frame * Matrix4x4.CreateTranslation(origin);
-        foreach (var part in PartAssembler.AssembleDefault(catalog, blockId))
-        {
-            result.Add(part with { World = part.World * placement });
-        }
+        return frame * Matrix4x4.CreateTranslation(origin);
     }
 
     private static void Add(PartsCatalog catalog, string partId, Matrix4x4 world, List<PlacedPart> result)

@@ -13,6 +13,12 @@ public sealed class InstalledPart
 
     public PartDefinition Definition { get; }
 
+    /// <summary>
+    /// Which physical part this is, when it stands for one somebody owns. A tree is made anew after every
+    /// change; this is how the same part is known again in the next one.
+    /// </summary>
+    public Guid InstanceId { get; init; }
+
     /// <summary>1 = new, 0 = worn out (mileage)</summary>
     public double Wear { get; set; } = 1.0;
 

@@ -1,4 +1,4 @@
-﻿using System.Configuration;
+using System.Configuration;
 using System.Data;
 using System.Globalization;
 using System.Windows;
@@ -38,6 +38,8 @@ namespace Street_Rod_AC
         public ICarProfileRepository ProfileRepository { get; private set; }
         public ICarProfileService ProfileService { get; private set; }
         public IUsedCarMarketService MarketService { get; private set; }
+        public Services.Parts.ICarPartsService CarPartsService { get; private set; }
+        public Services.Parts.IPartsShopService PartsShopService { get; private set; }
         public IIniModificationService IniModificationService { get; private set; }
         public Services.Race.IRaceResultIngestionService RaceResultIngestionService { get; private set; }
         public IOpponentRepository OpponentRepository { get; private set; }
@@ -119,11 +121,14 @@ namespace Street_Rod_AC
             CarImportService = new CarImportService(CatalogRepository);
             ProfileRepository = new CarProfileRepository();
             ProfileService = new CarProfileService(CatalogRepository, ProfileRepository);
-            MarketService = new UsedCarMarketService(CatalogRepository, ProfileRepository);
+            CarPartsService = new Services.Parts.CarPartsService(CatalogRepository, ProfileRepository);
+            PartsShopService = new Services.Parts.PartsShopService(CarPartsService);
+            MarketService = new UsedCarMarketService(CatalogRepository, ProfileRepository, CarPartsService);
 
             // Scheduler and Time Service
             Scheduler = new GameTimeScheduler();
             Scheduler.RegisterTask(new MarketRefreshTask(MarketService));
+            Scheduler.RegisterTask(new PartsAdsRefreshTask(PartsShopService));
             Scheduler.RegisterTask(new Services.Scheduler.Tasks.RaceSimulatorTask(new Services.Simulation.RaceSimulatorService()));
             // Note: EventGenerationTask registered after RaceEventService is created
             GameTimeService = new GameTimeService(Scheduler);
@@ -235,6 +240,9 @@ namespace Street_Rod_AC
                 await ProfileService.EnsureProfilesExistAsync();
                 logger.Information("Car profiles ready. Total profiles: {ProfileCount}",
                     ProfileRepository.GetProfileCount());
+
+                // Parts catalog and factory engines load in the background; nothing needs them before the garage
+                _ = CarPartsService.WarmUpAsync();
 
                 // Load track content
                 logger.Information("Loading track content");

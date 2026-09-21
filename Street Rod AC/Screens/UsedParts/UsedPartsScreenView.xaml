@@ -6,6 +6,39 @@
              xmlns:bottomBar="clr-namespace:Street_Rod_AC.Components.BottomBar"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style x:Key="TabButtonStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border"
+                                Background="#CC1A1A1A"
+                                BorderBrush="#404040"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="18,8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#808080"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentPrimaryBrush}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource AccentPrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
     <Grid Background="{StaticResource NewspaperBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -22,23 +55,199 @@
                 VerticalAlignment="Top"
                 Margin="20,20,0,0"/>
 
-
         <!-- Content -->
-        <StackPanel Grid.Row="0"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Center">
-            <TextBlock Text="USED PARTS MARKET"
-                      FontSize="32"
-                      FontWeight="Bold"
-                      Foreground="{StaticResource TextPrimaryBrush}"
-                      HorizontalAlignment="Center"
-                      Margin="0,0,0,20"/>
+        <Grid Grid.Row="0"
+              MaxWidth="1100"
+              Margin="110,20,110,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-            <TextBlock Text="Coming Soon"
-                      FontSize="20"
-                      Foreground="{StaticResource TextSecondaryBrush}"
-                      HorizontalAlignment="Center"/>
-        </StackPanel>
+            <Border Grid.Row="0"
+                    Background="#CC1A1A1A"
+                    CornerRadius="5"
+                    Padding="28,4"
+                    HorizontalAlignment="Center"
+                    Margin="0,0,0,14">
+                <TextBlock Text="PARTS"
+                           FontSize="32"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource TextPrimaryBrush}"/>
+            </Border>
+
+            <!-- Pages -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
+                <RadioButton Content="Used parts ads"
+                             Style="{StaticResource TabButtonStyle}"
+                             IsChecked="{Binding IsUsedTab, Mode=OneWay}"
+                             Command="{Binding ShowTabCommand}"
+                             CommandParameter="Used"/>
+                <RadioButton Content="New by mail order"
+                             Style="{StaticResource TabButtonStyle}"
+                             IsChecked="{Binding IsNewTab, Mode=OneWay}"
+                             Command="{Binding ShowTabCommand}"
+                             CommandParameter="New"/>
+                <RadioButton Content="Sell from my shelf"
+                             Style="{StaticResource TabButtonStyle}"
+                             IsChecked="{Binding IsSellTab, Mode=OneWay}"
+                             Command="{Binding ShowTabCommand}"
+                             CommandParameter="Sell"/>
+            </StackPanel>
+
+            <!-- Filters -->
+            <Border Grid.Row="2"
+                    Background="#CC1A1A1A"
+                    BorderBrush="#404040"
+                    BorderThickness="1"
+                    CornerRadius="5"
+                    Padding="14,8"
+                    Margin="0,0,0,8">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Kind:"
+                               FontSize="14"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
+                    <ComboBox ItemsSource="{Binding Groups}"
+                              SelectedItem="{Binding SelectedGroup}"
+                              Width="220"
+                              Height="28"
+                              FontSize="13"
+                              VerticalContentAlignment="Center"/>
+
+                    <TextBlock Text="Name:"
+                               FontSize="14"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               VerticalAlignment="Center"
+                               Margin="20,0,8,0"/>
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=250}"
+                             Width="200"
+                             Height="28"
+                             FontSize="13"
+                             Padding="5,3"
+                             VerticalContentAlignment="Center"/>
+
+                    <CheckBox Content="{Binding FitFilterLabel}"
+                              IsChecked="{Binding OnlyFitting}"
+                              Visibility="{Binding CanFilterByFit, Converter={StaticResource BooleanToVisibilityConverter}}"
+                              Foreground="{StaticResource TextPrimaryBrush}"
+                              FontSize="14"
+                              VerticalAlignment="Center"
+                              VerticalContentAlignment="Center"
+                              Margin="20,0,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Offers -->
+            <Border Grid.Row="3"
+                    Background="#E0141414"
+                    BorderBrush="#404040"
+                    BorderThickness="1"
+                    CornerRadius="5">
+                <ListBox ItemsSource="{Binding Offers}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Focusable" Value="False"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="row"
+                                                Background="Transparent"
+                                                BorderBrush="#303030"
+                                                BorderThickness="0,0,0,1"
+                                                Padding="14,7">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="row" Property="Background" Value="#20FFFFFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="90"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="{Binding Name}"
+                                               FontSize="15"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock FontSize="12" Foreground="{StaticResource TextSecondaryBrush}">
+                                        <Run Text="{Binding Group, Mode=OneWay}"/>
+                                        <Run Text="  ·  "/>
+                                        <Run Text="{Binding Detail, Mode=OneWay}"/>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <Border Grid.Column="1"
+                                        Background="#3059FF73"
+                                        BorderBrush="#59FF73"
+                                        BorderThickness="1"
+                                        CornerRadius="3"
+                                        Padding="8,2"
+                                        VerticalAlignment="Center"
+                                        Margin="10,0"
+                                        Visibility="{Binding Fits, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock Text="fits your car" FontSize="11" Foreground="#59FF73"/>
+                                </Border>
+
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding PriceDisplay}"
+                                           FontSize="15"
+                                           FontWeight="Bold"
+                                           Foreground="#90EE90"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"/>
+
+                                <Button Grid.Column="3"
+                                        Content="{Binding ActionLabel}"
+                                        Command="{Binding DataContext.BuyCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                        CommandParameter="{Binding}"
+                                        IsEnabled="{Binding CanAfford}"
+                                        Style="{StaticResource DialogPrimaryButtonStyle}"
+                                        Padding="16,4"
+                                        FontSize="13"
+                                        MinWidth="70"
+                                        VerticalAlignment="Center"
+                                        Margin="14,0,0,0"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <TextBlock Grid.Row="4"
+                       Text="{Binding StatusText}"
+                       FontSize="13"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       HorizontalAlignment="Center"
+                       Margin="0,8,0,0">
+                <TextBlock.Effect>
+                    <DropShadowEffect Color="Black" ShadowDepth="1" BlurRadius="4"/>
+                </TextBlock.Effect>
+            </TextBlock>
+        </Grid>
 
         <!-- Bottom Nav Bar -->
         <bottomBar:BottomBarView Grid.Row="1"

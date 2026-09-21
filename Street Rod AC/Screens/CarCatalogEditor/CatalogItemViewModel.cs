@@ -17,15 +17,40 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
 
         private decimal _basePrice;
         private float _dealerPrecedence;
+        private EngineOptionViewModel? _stockEngine;
         private bool _isDirty;
 
-        public CatalogItemViewModel(CarDefinition definition, CarProfile profile)
+        /// <param name="engineOptions">Engine builds the car could leave the factory with, best match first; empty without a parts catalog</param>
+        public CatalogItemViewModel(CarDefinition definition, CarProfile profile, IReadOnlyList<EngineOptionViewModel>? engineOptions = null)
         {
             Definition = definition;
             Profile = profile;
             _basePrice = profile.BasePrice;
             _dealerPrecedence = profile.DealerPrecedence;
+            EngineOptions = engineOptions ?? Array.Empty<EngineOptionViewModel>();
+            _stockEngine = FindEngine(profile.StockEngineBuildId);
         }
+
+        public IReadOnlyList<EngineOptionViewModel> EngineOptions { get; }
+
+        public bool HasEngineOptions => EngineOptions.Count > 0;
+
+        /// <summary>The engine build the car leaves the factory with</summary>
+        public EngineOptionViewModel? StockEngine
+        {
+            get => _stockEngine;
+            set
+            {
+                if (ReferenceEquals(_stockEngine, value)) return;
+
+                _stockEngine = value;
+                IsDirty = true;
+                OnPropertyChanged();
+            }
+        }
+
+        private EngineOptionViewModel? FindEngine(string? buildId) =>
+            EngineOptions.FirstOrDefault(o => o.BuildId.Equals(buildId, StringComparison.OrdinalIgnoreCase));
 
         public string DisplayName => $"{Definition.Brand} {Definition.Name}";
         public string YearDisplay => Definition.Year?.ToString() ?? "Unknown";
@@ -93,6 +118,12 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
         {
             Profile.BasePrice = _basePrice;
             Profile.DealerPrecedence = _dealerPrecedence;
+            if (_stockEngine != null && !_stockEngine.BuildId.Equals(Profile.StockEngineBuildId, StringComparison.OrdinalIgnoreCase))
+            {
+                Profile.StockEngineBuildId = _stockEngine.BuildId;
+                Profile.StockEngineIsManual = true;
+            }
+
             Profile.LastUpdatedDate = DateTime.Now;
             Profile.Source = ProfileDataSource.Manual;
             IsDirty = false;
@@ -105,7 +136,9 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
         {
             _basePrice = Profile.BasePrice;
             _dealerPrecedence = Profile.DealerPrecedence;
+            _stockEngine = FindEngine(Profile.StockEngineBuildId);
             IsDirty = false;
+            OnPropertyChanged(nameof(StockEngine));
             OnPropertyChanged(nameof(BasePrice));
             OnPropertyChanged(nameof(BasePriceDisplay));
             OnPropertyChanged(nameof(DealerPrecedence));
@@ -119,6 +152,10 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
         {
             _basePrice = generatedProfile.BasePrice;
             _dealerPrecedence = generatedProfile.DealerPrecedence;
+
+            // The options come best match first: the first one is what a fresh profile would get
+            _stockEngine = EngineOptions.FirstOrDefault() ?? _stockEngine;
+            OnPropertyChanged(nameof(StockEngine));
             IsDirty = true;
             OnPropertyChanged(nameof(BasePrice));
             OnPropertyChanged(nameof(BasePriceDisplay));
@@ -130,5 +167,20 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+    }
+
+    /// <summary>An engine build on offer as a car's factory engine</summary>
+    public class EngineOptionViewModel
+    {
+        public EngineOptionViewModel(string buildId, string label)
+        {
+            BuildId = buildId;
+            Label = label;
+        }
+
+        public string BuildId { get; }
+
+        /// <summary>E.g. "Chevrolet Camaro COPO 427 '69  ·  659 hp, 7.0 l"</summary>
+        public string Label { get; }
     }
 }

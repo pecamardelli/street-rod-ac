@@ -42,7 +42,7 @@ namespace Street_Rod_AC.Models.GameState
     public class PartAd
     {
         public Guid AdId { get; set; }
-        public Part Part { get; set; }
+        public PartInstance Part { get; set; }
         public decimal AskingPrice { get; set; }
         public string SellerName { get; set; }
         public DateTime PostedDate { get; set; }
@@ -51,14 +51,14 @@ namespace Street_Rod_AC.Models.GameState
         public PartAd()
         {
             AdId = Guid.NewGuid();
-            Part = new Part();
+            Part = new PartInstance();
             AskingPrice = 0m;
             SellerName = "Unknown";
             PostedDate = DateTime.Now;
             DaysActive = 0;
         }
 
-        public PartAd(Part part, decimal askingPrice, string sellerName) : this()
+        public PartAd(PartInstance part, decimal askingPrice, string sellerName) : this()
         {
             Part = part;
             AskingPrice = askingPrice;

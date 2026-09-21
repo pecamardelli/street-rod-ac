@@ -28,7 +28,7 @@ namespace Street_Rod_AC.Services.Catalog
 
         public void UpsertCar(CarDefinition car)
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarDefinition>(CarsCollection);
 
             // Ensure indexes exist
@@ -42,7 +42,7 @@ namespace Street_Rod_AC.Services.Catalog
 
         public void UpsertCars(IEnumerable<CarDefinition> cars)
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarDefinition>(CarsCollection);
 
             // Ensure indexes exist
@@ -56,35 +56,35 @@ namespace Street_Rod_AC.Services.Catalog
 
         public CarDefinition? GetCar(string id)
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarDefinition>(CarsCollection);
             return collection.FindById(id);
         }
 
         public List<CarDefinition> GetAllCars()
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarDefinition>(CarsCollection);
             return collection.FindAll().ToList();
         }
 
         public List<CarDefinition> GetCarsByStatus(ContentStatus status)
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarDefinition>(CarsCollection);
             return collection.Find(x => x.Status == status).ToList();
         }
 
         public bool CarExists(string id)
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarDefinition>(CarsCollection);
             return collection.Exists(x => x.Id == id);
         }
 
         public void UpdateCarStatus(string id, ContentStatus status)
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarDefinition>(CarsCollection);
 
             var car = collection.FindById(id);
@@ -98,7 +98,7 @@ namespace Street_Rod_AC.Services.Catalog
 
         public void MarkAllCarsAsLegacy()
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarDefinition>(CarsCollection);
 
             var allCars = collection.FindAll().ToList();
@@ -115,14 +115,14 @@ namespace Street_Rod_AC.Services.Catalog
 
         public void DeleteBrokenCars()
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarDefinition>(CarsCollection);
             collection.DeleteMany(x => x.Status == ContentStatus.Broken);
         }
 
         public int GetCarCount()
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarDefinition>(CarsCollection);
             return collection.Count();
         }

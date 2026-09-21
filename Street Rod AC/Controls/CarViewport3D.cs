@@ -10,6 +10,7 @@ using AcTools.Render.Kn5SpecificForwardDark;
 using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Parts;
+using Street_Rod_AC.Parts.Logic;
 using D3D9 = Vortice.Direct3D9;
 using D3D11 = SlimDX.Direct3D11;
 
@@ -64,6 +65,22 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private bool _isDragging;
     private bool _isLoadingParts;
     private string? _partsCarDirectory;
+    private InstalledPart? _partsEngine;
+    private bool _isLoadingCandidates;
+
+    // What the part models on screen are made of: node index to part, and where every part sits
+    private IReadOnlyList<PlacedPart> _partNodes = Array.Empty<PlacedPart>();
+    private Dictionary<InstalledPart, System.Numerics.Matrix4x4> _partWorlds = new();
+    private IReadOnlyList<MountCandidate> _candidateNodes = Array.Empty<MountCandidate>();
+    private CarAnchors? _anchors;
+
+    // A press that does not turn into a drag is a click
+    private const double ClickSlack = 4.0;
+    private static readonly TimeSpan HoverInterval = TimeSpan.FromMilliseconds(30);
+    private System.Windows.Point _pressedAt;
+    private DateTime _lastHoverPick = DateTime.MinValue;
+    private readonly System.Windows.Controls.Border _partLabel;
+    private readonly System.Windows.Controls.TextBlock _partLabelText;
 
     public CarViewport3D()
     {
@@ -79,6 +96,28 @@ public class CarViewport3D : System.Windows.Controls.Grid
         };
         Children.Add(_image);
 
+        // Name of the part under the pointer, next to the pointer
+        _partLabelText = new System.Windows.Controls.TextBlock
+        {
+            Foreground = System.Windows.Media.Brushes.White,
+            FontSize = 13,
+            FontWeight = FontWeights.SemiBold
+        };
+        _partLabel = new System.Windows.Controls.Border
+        {
+            Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0xD0, 0x10, 0x10, 0x10)),
+            BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0x80, 0xFF, 0xE6, 0x8C)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(3),
+            Padding = new Thickness(8, 4, 8, 4),
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+            VerticalAlignment = System.Windows.VerticalAlignment.Top,
+            IsHitTestVisible = false,
+            Visibility = Visibility.Collapsed,
+            Child = _partLabelText
+        };
+        Children.Add(_partLabel);
+
         Loaded += (_, _) => RequestLoad();
         Unloaded += (_, _) => DisposeRenderer();
         IsVisibleChanged += (_, _) => RequestLoad();
@@ -91,6 +130,12 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     /// <summary>Raised if the renderer could not be started or crashed</summary>
     public event EventHandler? Failed;
+
+    /// <summary>A mounted part was clicked in the parts view; null for a click on nothing</summary>
+    public event Action<InstalledPart?>? PartClicked;
+
+    /// <summary>One of the places shown for a loose part was clicked</summary>
+    public event Action<MountCandidate>? CandidateClicked;
 
     /// <summary>
     /// Fade the viewport in by itself when the first frame is ready.
@@ -170,6 +215,53 @@ public class CarViewport3D : System.Windows.Controls.Grid
     {
         get => (bool)GetValue(PartsVisibleProperty);
         set => SetValue(PartsVisibleProperty, value);
+    }
+
+    public static readonly DependencyProperty PartsCatalogProperty = DependencyProperty.Register(
+        nameof(PartsCatalog), typeof(PartsCatalog), typeof(CarViewport3D),
+        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).ApplyParts()));
+
+    /// <summary>Where the part models come from; without it the parts view stays off</summary>
+    public PartsCatalog? PartsCatalog
+    {
+        get => (PartsCatalog?)GetValue(PartsCatalogProperty);
+        set => SetValue(PartsCatalogProperty, value);
+    }
+
+    public static readonly DependencyProperty EngineProperty = DependencyProperty.Register(
+        nameof(Engine), typeof(InstalledPart), typeof(CarViewport3D),
+        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).ApplyParts()));
+
+    /// <summary>
+    /// The car's engine block with everything that is on it; null for an empty engine bay.
+    /// The tree is drawn as it is when set: after a change, set a new tree.
+    /// </summary>
+    public InstalledPart? Engine
+    {
+        get => (InstalledPart?)GetValue(EngineProperty);
+        set => SetValue(EngineProperty, value);
+    }
+
+    public static readonly DependencyProperty CandidatesProperty = DependencyProperty.Register(
+        nameof(Candidates), typeof(IReadOnlyList<MountCandidate>), typeof(CarViewport3D),
+        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).ApplyCandidates()));
+
+    /// <summary>A loose part in every place it could go, shown glowing; a click on one raises <see cref="CandidateClicked"/></summary>
+    public IReadOnlyList<MountCandidate>? Candidates
+    {
+        get => (IReadOnlyList<MountCandidate>?)GetValue(CandidatesProperty);
+        set => SetValue(CandidatesProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectedPartProperty = DependencyProperty.Register(
+        nameof(SelectedPart), typeof(InstalledPart), typeof(CarViewport3D),
+        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).ApplySelection()));
+
+    /// <summary>The mounted part that is marked as selected</summary>
+    public InstalledPart? SelectedPart
+    {
+        get => (InstalledPart?)GetValue(SelectedPartProperty);
+        set => SetValue(SelectedPartProperty, value);
     }
 
     private static readonly DependencyPropertyKey IsReadyPropertyKey = DependencyProperty.RegisterReadOnly(
@@ -370,7 +462,8 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
         var carDirectory = _loadedCarDirectory;
         var carNode = renderer.CarNode;
-        if (!PartsVisible || carNode == null || string.IsNullOrEmpty(carDirectory))
+        var catalog = PartsCatalog;
+        if (!PartsVisible || carNode == null || catalog == null || string.IsNullOrEmpty(carDirectory))
         {
             // Without a car there is nothing to dissolve back into
             if (carNode == null)
@@ -383,13 +476,17 @@ public class CarViewport3D : System.Windows.Controls.Grid
                 renderer.HideParts();
             }
 
+            renderer.SetCandidates(null);
             _partsCarDirectory = null;
+            _partsEngine = null;
+            ShowPartLabel(null, default);
             _animateUntil = DateTime.Now + AnimationWindow;
             return;
         }
 
-        // The layout depends on the car, so a car swap rebuilds it
-        if (renderer.HasProp && _partsCarDirectory == carDirectory) return;
+        // The layout depends on the car and on what is in it, so either changing rebuilds it
+        var engine = Engine;
+        if (renderer.HasProp && _partsCarDirectory == carDirectory && ReferenceEquals(_partsEngine, engine)) return;
 
         var anchors = GetAnchors(carNode);
         if (anchors == null)
@@ -401,27 +498,48 @@ public class CarViewport3D : System.Windows.Controls.Grid
         _isLoadingParts = true;
         try
         {
-            var settings = AppSettings.Instance;
-            var engine = GuessEngine(Path.GetFileName(carDirectory)) ?? settings.GarageEnginePart;
             var started = DateTime.Now;
 
-            var model = await Task.Run(() =>
+            // Same car, other parts: what is no longer there lifts off while the new model is put together
+            var sameCar = renderer.HasProp && _partsCarDirectory == carDirectory;
+            var before = sameCar ? IdsOf(_partNodes) : null;
+            var after = engine?.SelfAndDescendants().Select(p => p.InstanceId).Where(id => id != Guid.Empty).ToHashSet() ?? new HashSet<Guid>();
+            var leaving = before == null ? new List<int>() : NodesWhere(_partNodes, id => !after.Contains(id));
+            if (leaving.Count > 0)
             {
-                var catalog = PartsCatalog.Load(settings.PartsPath);
+                renderer.MoveParts(leaving, arriving: false);
+                _animateUntil = DateTime.Now + AnimationWindow;
+            }
+
+            var (placed, model) = await Task.Run(() =>
+            {
                 var parts = CarPartsLayout.Build(catalog, anchors, engine);
-                return PartAssembler.BuildModel(catalog, "parts", parts);
+                return (parts, PartAssembler.BuildModel(catalog, "parts", parts));
             });
+
+            // The renderer only moves things while it draws: never wait on it for long
+            for (var waited = 0; waited < 1500 && renderer == _renderer && renderer.IsMovingParts; waited += 30) await Task.Delay(30);
 
             // The renderer or the car may have been replaced, or the toggle flipped back, while loading
             if (renderer == _renderer && PartsVisible && _loadedCarDirectory == carDirectory)
             {
                 renderer.SetProp(model.Kn5, SlimDX.Matrix.Identity);
+
+                // And what is new comes flying in
+                if (before != null) renderer.MoveParts(NodesWhere(model.Nodes, id => !before.Contains(id)), arriving: true);
                 renderer.GhostCar = true;
                 _partsCarDirectory = carDirectory;
+                _partsEngine = engine;
+                _anchors = anchors;
+                _partNodes = model.Nodes;
+                _partWorlds = placed.Where(p => p.Source != null).ToDictionary(p => p.Source!, p => p.World);
                 _animateUntil = DateTime.Now + AnimationWindow;
 
-                _logger.Information("Parts of {Car} laid out in {Ms} ms (engine {Engine})", Path.GetFileName(carDirectory),
-                    (int)(DateTime.Now - started).TotalMilliseconds, engine);
+                _logger.Information("Parts of {Car} laid out in {Ms} ms ({Count} parts, engine {Engine})", Path.GetFileName(carDirectory),
+                    (int)(DateTime.Now - started).TotalMilliseconds, placed.Count, engine?.Definition.Id ?? "none");
+
+                ApplySelection();
+                ApplyCandidates();
             }
         }
         catch (Exception ex)
@@ -435,7 +553,101 @@ public class CarViewport3D : System.Windows.Controls.Grid
         }
 
         // Catch up with whatever changed in the meantime
-        if (_renderer != null && (!PartsVisible || _loadedCarDirectory != carDirectory)) ApplyParts();
+        if (_renderer != null && (!PartsVisible || _loadedCarDirectory != carDirectory || !ReferenceEquals(Engine, engine))) ApplyParts();
+    }
+
+    private static HashSet<Guid> IdsOf(IReadOnlyList<PlacedPart> nodes) =>
+        nodes.Select(n => n.Source?.InstanceId ?? Guid.Empty).Where(id => id != Guid.Empty).ToHashSet();
+
+    /// <summary>Nodes of the parts somebody owns whose id passes the test; the fixed running gear has no id and never moves</summary>
+    private static List<int> NodesWhere(IReadOnlyList<PlacedPart> nodes, Func<Guid, bool> test) =>
+        Enumerable.Range(0, nodes.Count)
+            .Where(i => nodes[i].Source is { } source && source.InstanceId != Guid.Empty && test(source.InstanceId))
+            .ToList();
+
+    /// <summary>Shows the loose part of <see cref="Candidates"/> in the places it could go</summary>
+    private async void ApplyCandidates()
+    {
+        var renderer = _renderer;
+        if (renderer == null || _isLoadingCandidates) return;
+
+        var candidates = Candidates;
+        var catalog = PartsCatalog;
+        var anchors = _anchors;
+        if (candidates == null || candidates.Count == 0 || catalog == null || anchors == null || !renderer.HasProp)
+        {
+            renderer.SetCandidates(null);
+            _candidateNodes = Array.Empty<MountCandidate>();
+            return;
+        }
+
+        _isLoadingCandidates = true;
+        try
+        {
+            var worlds = _partWorlds;
+            var (model, owners) = await Task.Run(() =>
+            {
+                var placed = new List<PlacedPart>();
+                var ownerOf = new Dictionary<InstalledPart, MountCandidate>();
+                foreach (var candidate in candidates)
+                {
+                    var world = candidate.Parent == null
+                        ? CarPartsLayout.EnginePlacement(anchors, candidate.Part.Definition)
+                        : worlds.TryGetValue(candidate.Parent, out var parentWorld)
+                            ? PartAssembler.ChildWorld(candidate.Parent.Definition, candidate.ParentSlot, candidate.Part.Definition, candidate.OwnSlot, parentWorld)
+                            : null;
+                    if (world == null) continue;
+
+                    foreach (var part in PartAssembler.Assemble(candidate.Part, world.Value))
+                    {
+                        placed.Add(part);
+                        ownerOf[part.Source!] = candidate;
+                    }
+                }
+
+                if (placed.Count == 0) return (null, Array.Empty<MountCandidate>());
+
+                var built = PartAssembler.BuildModel(catalog, "candidates", placed);
+                return (built, built.Nodes.Select(n => ownerOf[n.Source!]).ToArray());
+            });
+
+            if (renderer == _renderer && ReferenceEquals(candidates, Candidates))
+            {
+                renderer.SetCandidates(model?.Kn5);
+                _candidateNodes = owners;
+                _animateUntil = DateTime.Now + AnimationWindow;
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // None of the parts has a model: nothing to show, nothing to click
+            renderer.SetCandidates(null);
+            _candidateNodes = Array.Empty<MountCandidate>();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Could not show where the part goes");
+        }
+        finally
+        {
+            _isLoadingCandidates = false;
+        }
+
+        if (_renderer != null && !ReferenceEquals(candidates, Candidates)) ApplyCandidates();
+    }
+
+    private void ApplySelection()
+    {
+        if (_renderer == null) return;
+
+        var selected = SelectedPart;
+        var node = -1;
+        for (var i = 0; selected != null && i < _partNodes.Count; i++)
+        {
+            if (ReferenceEquals(_partNodes[i].Source, selected)) node = i;
+        }
+
+        _renderer.SelectedPart = node < 0 ? null : node;
     }
 
     private static CarAnchors? GetAnchors(Kn5RenderableCar carNode)
@@ -447,21 +659,6 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
         var points = hubs.Select(h => new System.Numerics.Vector3(h!.Value.M41, h.Value.M42, h.Value.M43)).ToArray();
         return new CarAnchors(points[0], points[1], points[2], points[3]);
-    }
-
-    /// <summary>
-    /// Stand-in until cars carry their own parts: pick an engine of the right family from the car's name
-    /// </summary>
-    private static string? GuessEngine(string carId)
-    {
-        var id = carId.ToLowerInvariant();
-        if (new[] { "chevy", "chevrolet", "camaro", "vette", "corvette", "pontiac", "gto" }.Any(id.Contains))
-            return "engines/GM_V8_pak/GM_327_block";
-        if (new[] { "ford", "shelby", "mustang", "falcon", "cobra" }.Any(id.Contains))
-            return "engines/DEXTERV8s/Ford_302_block";
-        if (new[] { "chrysler", "dodge", "plymouth", "valiant", "mopar" }.Any(id.Contains))
-            return "engines/Mopar/block_340";
-        return null;
     }
 
     private void ApplySkin()
@@ -694,15 +891,19 @@ public class CarViewport3D : System.Windows.Controls.Grid
         if (_renderer == null) return;
 
         _isDragging = true;
-        _lastMouse = e.GetPosition(this);
+        _lastMouse = _pressedAt = e.GetPosition(this);
         CaptureMouse();
     }
 
     protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonUp(e);
+        var wasDragging = _isDragging;
         _isDragging = false;
         ReleaseMouseCapture();
+
+        var position = e.GetPosition(this);
+        if (wasDragging && (position - _pressedAt).Length <= ClickSlack) OnClick(position);
     }
 
     protected override void OnMouseMove(System.Windows.Input.MouseEventArgs e)
@@ -710,14 +911,82 @@ public class CarViewport3D : System.Windows.Controls.Grid
         base.OnMouseMove(e);
 
         var orbit = _renderer?.CameraOrbit;
-        if (!_isDragging || orbit == null) return;
+        if (orbit == null) return;
 
         var position = e.GetPosition(this);
+        if (!_isDragging)
+        {
+            UpdateHover(position);
+            return;
+        }
+
         orbit.Alpha += (float)(position.X - _lastMouse.X) * 0.01f;
         orbit.Beta = Math.Clamp(orbit.Beta + (float)(position.Y - _lastMouse.Y) * 0.01f, MinBeta, MaxBeta);
         _lastMouse = position;
 
+        if ((position - _pressedAt).Length > ClickSlack) ShowPartLabel(null, default);
         _renderer!.IsDirty = true;
+    }
+
+    protected override void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
+    {
+        base.OnMouseLeave(e);
+        if (_renderer != null) _renderer.HoveredPart = null;
+        ShowPartLabel(null, default);
+    }
+
+    private PartHit? PickAt(System.Windows.Point position) =>
+        _renderer == null || ActualWidth <= 0 || ActualHeight <= 0
+            ? null
+            : _renderer.Pick((float)(position.X / ActualWidth), (float)(position.Y / ActualHeight));
+
+    private void UpdateHover(System.Windows.Point position)
+    {
+        if (_renderer is not { HasProp: true } || !PartsVisible) return;
+
+        // Picking tests triangles on the CPU; the pointer moves more often than it needs to be asked
+        var now = DateTime.Now;
+        if (now - _lastHoverPick < HoverInterval) return;
+        _lastHoverPick = now;
+
+        var hit = PickAt(position);
+        _renderer.HoveredPart = hit;
+        ShowPartLabel(hit == null ? null : DefinitionOf(hit.Value), position);
+    }
+
+    private void OnClick(System.Windows.Point position)
+    {
+        if (_renderer is not { HasProp: true } || !PartsVisible) return;
+
+        var hit = PickAt(position);
+        if (hit is { Layer: PartLayer.Candidate } candidate && candidate.Node < _candidateNodes.Count)
+        {
+            CandidateClicked?.Invoke(_candidateNodes[candidate.Node]);
+            return;
+        }
+
+        var part = hit is { Layer: PartLayer.Mounted } mounted && mounted.Node < _partNodes.Count ? _partNodes[mounted.Node].Source : null;
+        PartClicked?.Invoke(part);
+    }
+
+    private PartDefinition? DefinitionOf(PartHit hit) => hit.Layer switch
+    {
+        PartLayer.Mounted when hit.Node < _partNodes.Count => _partNodes[hit.Node].Part,
+        PartLayer.Candidate when hit.Node < _candidateNodes.Count => _candidateNodes[hit.Node].Part.Definition,
+        _ => null
+    };
+
+    private void ShowPartLabel(PartDefinition? part, System.Windows.Point position)
+    {
+        if (part == null)
+        {
+            _partLabel.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        _partLabelText.Text = part.DisplayName ?? part.Name;
+        _partLabel.Margin = new Thickness(position.X + 18, position.Y + 14, 0, 0);
+        _partLabel.Visibility = Visibility.Visible;
     }
 
     protected override void OnMouseWheel(MouseWheelEventArgs e)

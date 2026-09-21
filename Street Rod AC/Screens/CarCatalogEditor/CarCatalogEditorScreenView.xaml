@@ -108,6 +108,30 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Factory engine: a build of the parts catalog, best matches first -->
+                                <StackPanel Grid.Row="1"
+                                            Grid.ColumnSpan="4"
+                                            Orientation="Horizontal"
+                                            Margin="0,10,0,0"
+                                            Visibility="{Binding HasEngineOptions, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock Text="Factory engine:"
+                                               FontSize="14"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,10,0"/>
+                                    <ComboBox ItemsSource="{Binding EngineOptions}"
+                                              SelectedItem="{Binding StockEngine}"
+                                              DisplayMemberPath="Label"
+                                              Width="460"
+                                              Height="28"
+                                              FontSize="13"
+                                              VerticalContentAlignment="Center"/>
+                                </StackPanel>
 
                                 <!-- Car Info -->
                                 <StackPanel Grid.Column="0"

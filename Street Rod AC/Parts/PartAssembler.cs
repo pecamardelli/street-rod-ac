@@ -2,14 +2,21 @@ using System.IO;
 using System.Numerics;
 using AcTools.Kn5File;
 using AcTools.Numerics;
+using Street_Rod_AC.Parts.Logic;
 
 namespace Street_Rod_AC.Parts;
 
-/// <summary>A part with its place in an assembly, relative to the assembly's root part</summary>
-public sealed record PlacedPart(PartDefinition Part, Matrix4x4 World);
+/// <summary>
+/// A part with its place in an assembly, relative to the assembly's root part.
+/// <see cref="Source"/> is the installed part it stands for, when it stands for one.
+/// </summary>
+public sealed record PlacedPart(PartDefinition Part, Matrix4x4 World, InstalledPart? Source = null);
 
-/// <summary>An assembly merged into one model, with its bounds in the model's own space</summary>
-public sealed record AssemblyModel(IKn5 Kn5, Vector3 Min, Vector3 Max);
+/// <summary>
+/// An assembly merged into one model, with its bounds in the model's own space.
+/// <see cref="Nodes"/> are the parts that made it into the model: the i-th is the node <see cref="PartAssembler.NodeName"/>(i).
+/// </summary>
+public sealed record AssemblyModel(IKn5 Kn5, Vector3 Min, Vector3 Max, IReadOnlyList<PlacedPart> Nodes);
 
 /// <summary>
 /// Puts parts together by their slots and merges their models into a single KN5 for the renderer
@@ -18,48 +25,38 @@ public static class PartAssembler
 {
     private const int MaxDepth = 8;
 
-    /// <summary>
-    /// Assembles a part with a stock-looking choice for every slot. Stands in for a real build
-    /// (the parts actually installed on a car) until the game tracks those.
-    /// </summary>
-    public static List<PlacedPart> AssembleDefault(PartsCatalog catalog, string rootId)
+    /// <summary>Places the parts of a real assembly: every part goes where the slot it is mounted on puts it</summary>
+    public static List<PlacedPart> Assemble(InstalledPart root, Matrix4x4 rootWorld)
     {
-        var root = catalog.Get(rootId) ?? throw new InvalidOperationException($"Part '{rootId}' is not in the catalog");
-
         var result = new List<PlacedPart>();
-        var placed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        Place(root, Matrix4x4.Identity, 0);
+        Place(root, rootWorld, 0);
         return result;
 
-        void Place(PartDefinition part, Matrix4x4 world, int depth)
+        void Place(InstalledPart part, Matrix4x4 world, int depth)
         {
-            if (!placed.Add(part.Id)) return;
-
-            result.Add(new PlacedPart(part, world));
+            result.Add(new PlacedPart(part.Definition, world, part));
             if (depth >= MaxDepth) return;
 
-            foreach (var slot in part.Slots)
+            foreach (var (slotId, child) in part.Children)
             {
-                var choice = catalog.GetMountable(part, slot)
-                    .Where(c => !placed.Contains(c.Part.Id) && !IsReceivingSlot(catalog, c.Part, c.Slot))
-                    // Prefer the variant made for this very part over generic or aftermarket ones
-                    .OrderByDescending(c => c.Part.Name.StartsWith(root.Name, StringComparison.OrdinalIgnoreCase))
-                    .FirstOrDefault();
-                if (choice.Part == null) continue;
-
-                // Bring the child's mounting slot onto the parent's slot
-                if (!Matrix4x4.Invert(SlotMatrix(choice.Slot), out var childSlotInverse)) continue;
-                Place(choice.Part, childSlotInverse * SlotMatrix(slot) * world, depth + 1);
+                if (ChildWorld(part.Definition, slotId, child.Definition, child.OwnSlot, world) is { } childWorld)
+                    Place(child, childWorld, depth + 1);
             }
         }
     }
 
-    /// <summary>
-    /// Some part configs copy the attach lines of their siblings onto slots that in fact receive parts
-    /// (one engine block "mounting" on another block's alternator slot). Those are not real mounts.
-    /// </summary>
-    private static bool IsReceivingSlot(PartsCatalog catalog, PartDefinition part, PartSlot slot) =>
-        catalog.GetMountable(part, slot).Count > 0;
+    /// <summary>Where a part ends up when one of its slots is brought onto a slot of a placed part; null when either slot is not there</summary>
+    public static Matrix4x4? ChildWorld(PartDefinition parent, int parentSlotId, PartDefinition child, int childSlotId, Matrix4x4 parentWorld)
+    {
+        var parentSlot = parent.Slots.FirstOrDefault(s => s.Id == parentSlotId);
+        var childSlot = child.Slots.FirstOrDefault(s => s.Id == childSlotId);
+        if (parentSlot == null || childSlot == null || !Matrix4x4.Invert(SlotMatrix(childSlot), out var childSlotInverse)) return null;
+
+        return childSlotInverse * SlotMatrix(parentSlot) * parentWorld;
+    }
+
+    /// <summary>Name of the node a part gets in a merged model</summary>
+    public static string NodeName(int index) => $"part{index}";
 
     public static Matrix4x4 SlotMatrix(PartSlot slot) =>
         Matrix4x4.CreateFromYawPitchRoll(slot.Rotation[0], slot.Rotation[1], slot.Rotation[2]) *
@@ -73,6 +70,7 @@ public static class PartAssembler
         var min = new Vector3(float.MaxValue);
         var max = new Vector3(float.MinValue);
         var models = new Dictionary<string, IKn5>(StringComparer.OrdinalIgnoreCase);
+        var nodes = new List<PlacedPart>();
         var index = 0;
 
         foreach (var placed in parts)
@@ -100,7 +98,7 @@ public static class PartAssembler
                 materialIds[sourceMaterialId++] = (uint)(kn5.Materials.Count - 1);
             }
 
-            var partNode = Kn5Node.CreateBaseNode(placed.Part.Id);
+            var partNode = Kn5Node.CreateBaseNode(NodeName(nodes.Count));
             partNode.Transform = ToMat4x4(placed.World);
 
             foreach (var mesh in model.RootNode.Children.Where(n => n.NodeClass == Kn5NodeClass.Mesh))
@@ -115,14 +113,19 @@ public static class PartAssembler
                 }
             }
 
-            if (partNode.Children.Count > 0) kn5.RootNode.Children.Add(partNode);
+            if (partNode.Children.Count > 0)
+            {
+                kn5.RootNode.Children.Add(partNode);
+                nodes.Add(placed);
+            }
+
             index++;
         }
 
         if (kn5.RootNode.Children.Count == 0)
             throw new InvalidOperationException($"No part of '{name}' has a model");
 
-        return new AssemblyModel(kn5, min, max);
+        return new AssemblyModel(kn5, min, max, nodes);
     }
 
     /// <summary>Geometry arrays are shared with the source, only the material binding differs</summary>

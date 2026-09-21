@@ -63,6 +63,12 @@ public static class EngineEvaluator
             : runtime.Call(tree.Root, "isDynoable").AsText;
         if (problem == null && dyno == null) problem = "the engine could not be evaluated.";
 
+        // The scripts hold the compression against what the fuel system allows. With no carburettor or injection
+        // that limit is 0, and what they say ("too high, not more than 0.0:1") points away from what is wrong.
+        var inputs = data == null ? null : DynoInputs.From(data);
+        if (problem != null && inputs is { MaxFuelFlow: <= 0, MaxAirFlow: <= 0 } && problem.Contains("compression", StringComparison.OrdinalIgnoreCase))
+            problem = "nothing feeds the engine: there is no carburettor or injection on the intake.";
+
         var gears = (int)(chassis?.Number("gears") ?? 0);
         var ratios = chassis?.Fields.GetValueOrDefault("ratio") as ScriptArray;
         double Ratio(int index) => ratios != null && ratios.Items.GetValueOrDefault(index) is ScriptNumber ratio ? ratio.Amount : 0;
@@ -71,7 +77,7 @@ public static class EngineEvaluator
         return new EngineReport
         {
             Problem = problem,
-            Inputs = data == null ? null : DynoInputs.From(data),
+            Inputs = inputs,
             Dyno = dyno,
             IdleRpm = block?.Number("rpm_idle") ?? 0,
             LimiterRpm = block?.Number("RPM_limit") ?? 0,

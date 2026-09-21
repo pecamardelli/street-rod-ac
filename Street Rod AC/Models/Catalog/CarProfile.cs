@@ -42,6 +42,16 @@ namespace Street_Rod_AC.Models.Catalog
         /// </summary>
         public DateTime LastUpdatedDate { get; set; }
 
+        /// <summary>
+        /// The engine the car leaves the factory with: id of an engine build of the parts catalog
+        /// (engine_builds.json). Suggested from the car's make, name and power; null until that has happened
+        /// or when no build comes close.
+        /// </summary>
+        public string? StockEngineBuildId { get; set; }
+
+        /// <summary>True when somebody picked the engine by hand; suggestions leave it alone then</summary>
+        public bool StockEngineIsManual { get; set; }
+
         // Future enrichment properties (optional, not used initially)
         public string? StreetRodEra { get; set; }
         public string? PerformanceTier { get; set; }

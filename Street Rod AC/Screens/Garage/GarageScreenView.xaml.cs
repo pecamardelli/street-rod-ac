@@ -31,6 +31,10 @@ namespace Street_Rod_AC.Screens.Garage
 
             Viewport3D.Ready += (_, _) => RevealAfter(SettleDelay);
             Viewport3D.Failed += (_, _) => RevealAfter(TimeSpan.Zero);
+
+            // Parts are picked in the 3D view; what a pick means is the workbench's business
+            Viewport3D.PartClicked += part => (DataContext as GarageScreenViewModel)?.Workbench.OnPartClicked(part);
+            Viewport3D.CandidateClicked += candidate => (DataContext as GarageScreenViewModel)?.Workbench.OnCandidateClicked(candidate);
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)

@@ -7,6 +7,8 @@ using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Configuration.Models;
+using Street_Rod_AC.Services.Parts;
+using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
 using System.Collections.ObjectModel;
@@ -33,6 +35,9 @@ namespace Street_Rod_AC.Screens.Garage
         public RelayCommand HitTheStreetsCommand { get; }
         public RelayCommand CareerCommand { get; }
 
+        /// <summary>The parts view of the selected car: its engine, the part clicked on, the shelf of loose parts</summary>
+        public PartsWorkbenchViewModel Workbench { get; }
+
         /// <summary>
         /// Set by the view: plays the screen's fade-out and completes when it has finished.
         /// Awaited before navigating away so the garage doesn't just pop off screen.
@@ -58,10 +63,12 @@ namespace Street_Rod_AC.Screens.Garage
             get => _selectedCar;
             set
             {
+                var carChanged = !ReferenceEquals(_selectedCar?.CarInstance, value?.CarInstance);
                 _selectedCar = value;
                 OnPropertyChanged(nameof(SelectedCar));
                 OnPropertyChanged(nameof(SelectedCarDisplay));
                 OnPropertyChanged(nameof(HasCars));
+                if (carChanged) Workbench.SetCar(value?.CarInstance);
             }
         }
 
@@ -84,6 +91,9 @@ namespace Street_Rod_AC.Screens.Garage
         public string GarageShowroomKn5 => AppSettings.Instance.GarageShowroomKn5;
 
         public bool SkipEnterAnimation { get; }
+
+        /// <summary>The tiles that lead out of the garage make room while the car is being worked on</summary>
+        public bool ShowNavigation => !Workbench.IsOpen;
 
         // Panel System
         private GaragePanel _activePanel = GaragePanel.CarPreview;
@@ -154,6 +164,8 @@ namespace Street_Rod_AC.Screens.Garage
             Models.GameState.GameState gameState,
             IContentCatalogRepository catalogRepo,
             IAssettoCorsaLauncher launcher,
+            ICarPartsService partsService,
+            IGameStateRepository gameStateRepo,
             bool skipAnimation = false)
         {
             _navigationService = navigationService;
@@ -180,6 +192,24 @@ namespace Street_Rod_AC.Screens.Garage
             }
 
             _cars = new ObservableCollection<CarDisplayViewModel>();
+
+            Workbench = new PartsWorkbenchViewModel(
+                partsService,
+                _gameState,
+                save: () =>
+                {
+                    if (!string.IsNullOrEmpty(_gameState.SaveName)) gameStateRepo.Save(_gameState, _gameState.SaveName);
+                },
+                spendMinutes: minutes => ((App)System.Windows.Application.Current).SpendTimeAsync(minutes));
+            Workbench.StateChanged += () =>
+            {
+                RefreshCalendarDisplay();
+                OnPropertyChanged(nameof(BankrollDisplay));
+            };
+            Workbench.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(PartsWorkbenchViewModel.IsOpen)) OnPropertyChanged(nameof(ShowNavigation));
+            };
 
             LoadPlayerCars();
         }

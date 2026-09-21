@@ -1,17 +1,20 @@
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Parts;
 
 namespace Street_Rod_AC.Services.Market
 {
     /// <summary>
     /// Implements used car market spawning and management
     /// </summary>
-    public class UsedCarMarketService(IContentCatalogRepository catalogRepo, ICarProfileRepository profileRepo) : IUsedCarMarketService
+    public class UsedCarMarketService(IContentCatalogRepository catalogRepo, ICarProfileRepository profileRepo, ICarPartsService? partsService = null) : IUsedCarMarketService
     {
         private readonly IContentCatalogRepository _catalogRepo = catalogRepo;
         private readonly ICarProfileRepository _profileRepo = profileRepo;
+        private readonly ICarPartsService? _partsService = partsService;
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("Market");
         private readonly Random _random = new();
 
@@ -23,6 +26,7 @@ namespace Street_Rod_AC.Services.Market
         private const int MinMileage = 5000;
         private const int MaxMileage = 60000;
         private const float PriceVariationPercent = 0.2f; // ±20%
+        private const double ModificationsPriceShare = 0.5; // money put into an engine never comes back in full
 
         public List<UsedCarListing> SpawnListings(List<DealerLocation> dealers, DateTime currentDate)
         {
@@ -170,7 +174,7 @@ namespace Street_Rod_AC.Services.Market
 
             var dealer = dealers[_random.Next(dealers.Count)];
 
-            return new UsedCarListing
+            var listing = new UsedCarListing
             {
                 Id = Guid.NewGuid().ToString(),
                 CarDefinitionId = carDef.Id,
@@ -182,6 +186,40 @@ namespace Street_Rod_AC.Services.Market
                 DealerLocation = dealer.Id,
                 IsSold = false
             };
+
+            AddEngine(listing, carDef);
+            return listing;
+        }
+
+        /// <summary>
+        /// The car is sold with the engine it has: mostly the factory one, now and then worked on.
+        /// What was put into it shows in the price, though never in full.
+        /// </summary>
+        private void AddEngine(UsedCarListing listing, CarDefinition carDef)
+        {
+            if (_partsService is not { IsAvailable: true }) return;
+
+            try
+            {
+                var engine = _partsService.CreateUsedEngine(carDef, listing.Condition);
+                if (engine == null) return;
+
+                listing.Parts.Add(engine.Root);
+                listing.EngineSummary = _partsService.Describe(engine.Root, engine.Report);
+                listing.IsModified = engine.IsModified;
+
+                if (engine.IsModified && _partsService.GetStockBuild(carDef) is { } stockBuild
+                    && EngineFactory.CreateStock(_partsService.Catalog, stockBuild, listing.Condition, _random) is { } stock)
+                {
+                    var extra = PartPricing.WorthOfAssembly(_partsService.Catalog, engine.Root) - PartPricing.WorthOfAssembly(_partsService.Catalog, stock.Root);
+                    if (extra > 0) listing.Price += Math.Round((decimal)(extra * ModificationsPriceShare) / 100) * 100;
+                }
+            }
+            catch (Exception ex)
+            {
+                // A listing without parts still sells; the buyer gets the factory engine then
+                _logger.Warning("Could not build the engine of a {CarId}: {Error}", carDef.Id, ex.Message);
+            }
         }
 
         private float GenerateCondition()

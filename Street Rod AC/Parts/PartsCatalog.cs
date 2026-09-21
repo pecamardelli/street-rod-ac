@@ -16,10 +16,13 @@ public sealed class PartsCatalog
     private readonly Dictionary<string, PartDefinition> _parts = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<(string PartId, int SlotId), List<(PartDefinition Part, PartSlot Slot)>> _mountable = new();
 
+    private readonly Lazy<MatingIndex> _mating;
+
     private PartsCatalog(string root)
     {
         _root = root;
         Scripts = new ScriptClassLoader(Path.Combine(root, PartScripts.Folder));
+        _mating = new Lazy<MatingIndex>(() => new MatingIndex(this));
     }
 
     public IReadOnlyDictionary<string, PartDefinition> Parts => _parts;
@@ -94,6 +97,81 @@ public sealed class PartsCatalog
         static bool Names(List<(PartDefinition Part, PartSlot Slot)> from, List<(PartDefinition Part, PartSlot Slot)> to) =>
             from.Any(f => f.Slot.AttachesTo.Any(a => a.Part != null && to.Any(t =>
                 t.Slot.Id == a.Slot && t.Part.Id.Equals(a.Part, StringComparison.OrdinalIgnoreCase))));
+    }
+
+    /// <summary>
+    /// Every part that goes on a slot, with the slot of its own it goes on by: the same answer as trying
+    /// <see cref="CanMate"/> against the whole catalog. Part configs copy attach lines between siblings, so a
+    /// part of the parent's own kind shows up now and then (a block "on" another block's alternator slot);
+    /// those are left out.
+    /// </summary>
+    public IReadOnlyList<(PartDefinition Part, PartSlot Slot)> FindMountable(PartDefinition parent, PartSlot slot)
+    {
+        var index = _mating.Value;
+        var parentGroup = PartKinds.GroupOf(parent);
+        var result = new List<(PartDefinition Part, PartSlot Slot)>();
+        var seen = new HashSet<PartSlot>();
+
+        foreach (var equivalent in Equivalents(parent, slot))
+        {
+            Add(index.NamedBy.GetValueOrDefault(Key(equivalent.Part.Id, equivalent.Slot.Id)));
+            foreach (var target in equivalent.Slot.AttachesTo)
+            {
+                if (target.Part != null) Add(index.StandIns.GetValueOrDefault(Key(target.Part, target.Slot)));
+            }
+        }
+
+        return result;
+
+        void Add(List<(PartDefinition Part, PartSlot Slot)>? candidates)
+        {
+            if (candidates == null) return;
+
+            foreach (var candidate in candidates)
+            {
+                if (ReferenceEquals(candidate.Part, parent) || !seen.Add(candidate.Slot)) continue;
+                if (PartKinds.IsBlock(candidate.Part)) continue;
+                if (PartKinds.NeverStacks(parentGroup) && PartKinds.GroupOf(candidate.Part) == parentGroup) continue;
+
+                result.Add(candidate);
+            }
+        }
+    }
+
+    private static (string PartId, int SlotId) Key(string partId, int slotId) => (partId.ToLowerInvariant(), slotId);
+
+    /// <summary><see cref="CanMate"/> turned around: from a slot to the slots that mate with it</summary>
+    private sealed class MatingIndex
+    {
+        /// <summary>Slots that name a slot in their attach lines, themselves or through a slot they stand in for</summary>
+        public Dictionary<(string PartId, int SlotId), List<(PartDefinition Part, PartSlot Slot)>> NamedBy { get; } = new();
+
+        /// <summary>Slots that stand in for a slot, the slot itself included</summary>
+        public Dictionary<(string PartId, int SlotId), List<(PartDefinition Part, PartSlot Slot)>> StandIns { get; } = new();
+
+        public MatingIndex(PartsCatalog catalog)
+        {
+            foreach (var part in catalog._parts.Values)
+            {
+                foreach (var slot in part.Slots)
+                {
+                    foreach (var equivalent in catalog.Equivalents(part, slot))
+                    {
+                        Add(StandIns, Key(equivalent.Part.Id, equivalent.Slot.Id), (part, slot));
+                        foreach (var target in equivalent.Slot.AttachesTo)
+                        {
+                            if (target.Part != null) Add(NamedBy, Key(target.Part, target.Slot), (part, slot));
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void Add(Dictionary<(string, int), List<(PartDefinition, PartSlot)>> map, (string, int) key, (PartDefinition, PartSlot) value)
+        {
+            if (!map.TryGetValue(key, out var list)) map[key] = list = new();
+            list.Add(value);
+        }
     }
 
     /// <summary>The slot itself and every slot it stands in for, directly or through another stand-in</summary>
