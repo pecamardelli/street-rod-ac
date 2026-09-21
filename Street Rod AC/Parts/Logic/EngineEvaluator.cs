@@ -56,8 +56,11 @@ public static class EngineEvaluator
         var data = block?.Fields.GetValueOrDefault("dynodata")?.AsObject;
         var dyno = data == null ? null : runtime.DynoResultOf(data);
 
-        // The scripts' own verdict, asked after the dyno so the compression check has its figure
-        var problem = runtime.Call(tree.Root, "isDynoable").AsText;
+        // The scripts' own verdict, asked after the dyno so the compression check has its figure. A part whose
+        // script is not there looks like a missing part to the others; what they say about it would mislead.
+        var problem = runtime.MissingScripts.Count > 0
+            ? $"the script of {runtime.MissingScripts[0].Definition.Id} is missing ({runtime.MissingScripts.Count} in all): the parts need converting again."
+            : runtime.Call(tree.Root, "isDynoable").AsText;
         if (problem == null && dyno == null) problem = "the engine could not be evaluated.";
 
         var gears = (int)(chassis?.Number("gears") ?? 0);
@@ -79,7 +82,7 @@ public static class EngineEvaluator
             DriveType = gears > 0 ? (int)(chassis?.Number("drive_type") ?? 0) : 0,
             DiffLock = chassis?.Number("diff_lock") ?? 0,
             Mass = parts.Sum(p => (double)p.Definition.Mass),
-            Value = parts.Sum(p => p.Definition.Properties.GetValueOrDefault("value") is double value ? value : 0),
+            Value = parts.Sum(p => p.Definition.Number("value")),
             Unplaced = tree.Unplaced
         };
     }

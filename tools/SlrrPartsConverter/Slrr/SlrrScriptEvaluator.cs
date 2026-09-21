@@ -66,10 +66,10 @@ public sealed class SlrrScriptEvaluator
 
         var chain = _loader.Chain(script);
         var host = new ExtractionHost();
-        var vm = new ScriptVm(_loader, host);
+        var vm = new ScriptVm(_loader, host) { FirstAlternativeWins = true };
 
         var part = vm.Instantiate(chain, ScriptValue.Unknown);
-        var constructed = new Dictionary<string, ScriptValue>(part.Fields);
+        var constructed = new State(part);
 
         // Constants and the backups tuning menus keep say nothing about the part
         var hidden = chain.SelectMany(c => c.Fields)
@@ -89,13 +89,13 @@ public sealed class SlrrScriptEvaluator
 
         vm.Call(part, "addStockParts", ScriptValue.Unknown);
         var stockState = Changes(properties, Snapshot(part, hidden));
-        Restore(part, constructed);
+        constructed.Restore();
 
         // Checks are run for the "missing part" answers they give, not for what they do
         var stockPartCount = host.StockParts.Count;
         vm.Call(part, "isDynoable");
         vm.Call(part, "isDriveable");
-        Restore(part, constructed);
+        constructed.Restore();
         host.StockParts.RemoveRange(stockPartCount, host.StockParts.Count - stockPartCount);
 
         // Branches for different cars often mount the same part
@@ -122,10 +122,51 @@ public sealed class SlrrScriptEvaluator
         };
     }
 
-    private static void Restore(ScriptObject part, Dictionary<string, ScriptValue> state)
+    /// <summary>
+    /// A part as it is at one moment, to come back to: its fields and, through them, the elements of its arrays and
+    /// the fields of the objects it holds. Those are shared by reference; putting back the part's fields alone
+    /// would leave what a method did inside them.
+    /// </summary>
+    private sealed class State
     {
-        part.Fields.Clear();
-        foreach (var (name, value) in state) part.Fields[name] = value;
+        private readonly Dictionary<ScriptObject, Dictionary<string, ScriptValue>> _objects = new(ReferenceEqualityComparer.Instance);
+        private readonly Dictionary<ScriptArray, Dictionary<int, ScriptValue>> _arrays = new(ReferenceEqualityComparer.Instance);
+
+        public State(ScriptObject part)
+        {
+            Capture(new ScriptReference(part));
+        }
+
+        public void Restore()
+        {
+            foreach (var (instance, fields) in _objects)
+            {
+                instance.Fields.Clear();
+                foreach (var (name, value) in fields) instance.Fields[name] = value;
+            }
+
+            foreach (var (array, items) in _arrays)
+            {
+                array.Items.Clear();
+                foreach (var (index, value) in items) array.Items[index] = value;
+            }
+        }
+
+        private void Capture(ScriptValue value)
+        {
+            switch (value)
+            {
+                case ScriptReference { Target: var instance } when !_objects.ContainsKey(instance):
+                    _objects[instance] = new Dictionary<string, ScriptValue>(instance.Fields);
+                    foreach (var field in instance.Fields.Values.ToList()) Capture(field);
+                    break;
+
+                case ScriptArray array when !_arrays.ContainsKey(array):
+                    _arrays[array] = new Dictionary<int, ScriptValue>(array.Items);
+                    foreach (var item in array.Items.Values.ToList()) Capture(item);
+                    break;
+            }
+        }
     }
 
     private static Dictionary<string, object> Snapshot(ScriptObject part, HashSet<string> hidden)

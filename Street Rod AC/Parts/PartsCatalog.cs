@@ -1,5 +1,6 @@
 using System.IO;
 using Newtonsoft.Json;
+using Street_Rod_AC.Parts.Scripting;
 
 namespace Street_Rod_AC.Parts;
 
@@ -18,12 +19,19 @@ public sealed class PartsCatalog
     private PartsCatalog(string root)
     {
         _root = root;
+        Scripts = new ScriptClassLoader(Path.Combine(root, PartScripts.Folder));
     }
 
     public IReadOnlyDictionary<string, PartDefinition> Parts => _parts;
 
     /// <summary>Folder the catalog was loaded from</summary>
     public string Root => _root;
+
+    /// <summary>
+    /// The compiled scripts of the parts. One loader for the catalog: a class is read and parsed once,
+    /// however many times an assembly of parts is brought to life.
+    /// </summary>
+    public ScriptClassLoader Scripts { get; }
 
     /// <summary>Complete engines as part lists: factory builds of the source game's cars and written-down builds</summary>
     public IReadOnlyList<EngineBuild> EngineBuilds { get; private set; } = Array.Empty<EngineBuild>();

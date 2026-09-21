@@ -25,7 +25,8 @@ public sealed class SlrrEngineBuilds
         RegexOptions.Compiled);
 
     private static readonly Regex NoteListStart = new(@"parts_list_E\s*=\s*new\s+int", RegexOptions.Compiled);
-    private static readonly Regex Power = new(@"(?<hp>\d+(?:[.,]\d+)?)\s*hp\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex Power = new(@"(?<hp>\d+(?:[.,]\d+)*)\s*hp\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex Thousands = new(@"^\d{1,3}(,\d{3})+$", RegexOptions.Compiled);
     private static readonly Regex NotSlug = new("[^a-z0-9]+", RegexOptions.Compiled);
     private static readonly Regex CodeLine = new(@"^(else|if|for|while|do|return|int|float)\b", RegexOptions.Compiled);
 
@@ -95,7 +96,9 @@ public sealed class SlrrEngineBuilds
 
     /// <summary>
     /// Build notes are loose text: a title line (often with the power, "MOPAR 340 Six Pack 290 hp ====")
-    /// followed by the stock_parts_list_E lines of a car script.
+    /// followed by the stock_parts_list_E lines of a car script. A line of prose in the middle of a list
+    /// ("// heads") is a comment, not a title: the list counts on from where it was, while after a title it starts over.
+    /// A title names, and rates, only the first list under it; a stage kit that follows is not the 290 hp engine.
     /// </summary>
     public List<EngineBuild> FromNotes(string folder)
     {
@@ -104,22 +107,38 @@ public sealed class SlrrEngineBuilds
         {
             var fileId = Slug(Path.GetFileNameWithoutExtension(file));
             string? title = null;
+            var titleUsed = false;
+            string? prose = null;
             EngineBuild? current = null;
             var indices = new HashSet<int>();
+            var lastIndex = -1;
 
             foreach (var line in File.ReadLines(file, Encoding.Latin1))
             {
                 var entry = NoteEntry.Match(line);
                 if (entry.Success)
                 {
+                    var index = int.Parse(entry.Groups["index"].Value);
+
+                    // Prose before this entry was a title if a list starts here: there is none yet, or the numbering goes back
+                    if (prose != null && (current == null || index <= lastIndex))
+                    {
+                        (title, titleUsed) = (prose, false);
+                        current = null;
+                    }
+
+                    prose = null;
+                    lastIndex = index;
+
                     if (current == null)
                     {
-                        builds.Add(current = NewBuild(title ?? fileId));
+                        builds.Add(current = NewBuild(title ?? fileId, !titleUsed));
+                        titleUsed = true;
                         indices.Clear();
                     }
 
                     // Notes copied from car scripts pick between engines at random: the first alternative wins
-                    if (!indices.Add(int.Parse(entry.Groups["index"].Value))) continue;
+                    if (!indices.Add(index)) continue;
 
                     var rpkPath = entry.Groups["rpk"].Value.Replace('.', '\\') + ".rpk";
                     var reference = Reference(rpkPath, System.Convert.ToInt32(entry.Groups["id"].Value, 16));
@@ -130,34 +149,30 @@ public sealed class SlrrEngineBuilds
 
                 if (NoteListStart.IsMatch(line))
                 {
-                    if (current is { Parts.Count: >= MinBuildParts }) current = null;
+                    // Prose right before a new list is its title, whatever the numbers say
+                    if (current is { Parts.Count: >= MinBuildParts } || prose != null) current = null;
                     continue;
                 }
 
-                // A line of prose is the title of whatever list comes next
+                // A line of prose: the title of the list that comes next, or a comment inside the one that is open
                 var text = line.Trim().Trim('=', '#', '/', '*', '-').Trim();
                 if (text.Length > 2 && char.IsLetter(text[0]) && !CodeLine.IsMatch(text) && !text.Contains(';') && !text.Contains('(') && !text.Contains('{') && !text.Contains('='))
-                {
-                    title = text;
-                    current = null;
-                }
+                    prose = text;
             }
 
-            EngineBuild NewBuild(string name)
+            EngineBuild NewBuild(string name, bool rated)
             {
                 var id = $"notes/{fileId}/{Slug(name)}";
                 for (var n = 2; builds.Any(b => b.Id == id); n++) id = $"notes/{fileId}/{Slug(name)}-{n}";
 
-                var power = Power.Match(name);
+                var power = rated ? Power.Match(name) : Match.Empty;
                 return new EngineBuild
                 {
                     Id = id,
                     Name = name,
                     Origin = EngineBuild.OriginNotes,
                     Source = Path.GetFileName(file),
-                    RatedPower = power.Success
-                        ? double.Parse(power.Groups["hp"].Value.Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture)
-                        : null
+                    RatedPower = power.Success ? Horsepower(power.Groups["hp"].Value) : null
                 };
             }
         }
@@ -168,6 +183,13 @@ public sealed class SlrrEngineBuilds
             .GroupBy(b => b.Name + "|" + string.Join(",", b.Parts.Select(p => p.Source.ToLowerInvariant())))
             .Select(g => g.First())
             .ToList();
+    }
+
+    /// <summary>"1,050" is a thousand and fifty, "10,5" and "10.5" are ten and a half</summary>
+    private static double? Horsepower(string text)
+    {
+        text = Thousands.IsMatch(text) ? text.Replace(",", string.Empty) : text.Replace(',', '.');
+        return double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var hp) ? hp : null;
     }
 
     /// <summary>"rpk path#0xID" as the script evaluator exports resources</summary>

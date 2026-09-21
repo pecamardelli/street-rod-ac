@@ -46,7 +46,11 @@ Per part, from its compiled script (run with no game around, see `SlrrScriptEval
 
 `engine_builds.json`: every car chassis script's `stock_parts_list_E` (+ stage 1/2 kits), plus the lists found in the
 text files given with `--notes`. A note title like `MOPAR 340 Six Pack 290 hp` also gives `rated_power`, which the
-engine model is checked against.
+engine model is checked against. A title names and rates only the first list under it. Prose inside a list
+(`// heads`) is a comment: after a comment the numbering counts on, after a title it starts over.
+
+A run with a pack filter adds that pack's script classes to `_scripts`; only a full run replaces the folder and
+writes `engine_builds.json` and `script_constants.json`.
 
 ## Script VM (`Parts/Scripting`)
 
@@ -58,7 +62,17 @@ engine model is checked against.
   Natives go to an `IScriptHost`. What the host does not provide is **unknown**; code behind unknown conditions is
   walked without taking effect. `partOnSlot(n)` with no game around returns an unknown tagged with slot `n`, which is
   how `if (!p) return "msg"` turns into a `required_slots` rule.
+  - The uncertain region runs from the undecidable `if` to the end of its branches. A loop around it returns to
+    certain code and decides the `if` anew on every round.
+  - `FirstAlternativeWins` (converter only): part lists filled inside undecidable branches are kept, first one wins.
+    The game leaves it off; there, uncertain code changes nothing.
+- Declared types count (`ScriptTypes`): `int n = maxRPM / 250` drops the fraction, a `float` field, parameter, array
+  element or return value set from an int literal divides as a float from there on, `(int)`/`(float)` casts convert.
+  Unset elements of `new float[n]` read as 0 (null for objects), outside the array as unknown.
+- Statics belong to the class: initializers run once per VM, instances see the values. The holder exists before its
+  initializers run, so `static Foo instance = new Foo()` ends; construction depth carries through initializers.
 - Method parameters are numbered backwards (last parameter = local 1, local 0 = this).
+- One `ScriptClassLoader` per catalog (`PartsCatalog.Scripts`, thread-safe): classes are read and parsed once.
 
 ## Runtime (`Parts/Logic`)
 
@@ -76,7 +90,9 @@ engine model is checked against.
   by their fuel system land within 5% of their rated power that way). Breathing is first-order filling/emptying through
   the valves, fitted to the rated builds. Boost is baked into the curve.
 - `EngineEvaluator` → `EngineReport`: runs or not and why (the scripts' words), curve, idle, limiter, inertia, gears,
-  final, drive type, diff lock, mass, value.
+  final, drive type, diff lock, mass, value. A part whose class file is not in `_scripts` is reported as that, since
+  to the other scripts it would just look like a missing part.
+- Numbers in `properties`/`derived` come back from JSON as `long` or `double`; read them with `PartDefinition.Number`.
 
 Model check: `EngineBench <parts> rated`. Currently mean error +4%, mean absolute 15% over 15 builds
 (Mopar 340 Six Pack: 310 hp @ 5750, 446 Nm @ 2750; factory 290 hp, 468 Nm).
@@ -90,9 +106,12 @@ files with minimal edits (`IniText` keeps comments and order):
 |---|---|
 | `power.lut` | Flywheel torque × drivetrain efficiency (0.87 default; AC has no drivetrain loss of its own) |
 | `engine.ini` | `INERTIA`, `LIMITER`, `MINIMUM`, `COAST_REF`, `DAMAGE/RPM_THRESHOLD` = what the weakest rotating part survives; `TURBO_n` removed (boost is in the curve) |
-| `drivetrain.ini` | `GEARS` count/ratios/reverse/final, `DIFFERENTIAL` lock, clutch torque raised if needed. `TRACTION` is left alone: the body decides |
-| `ai.ini` | Shift points |
+| `drivetrain.ini` | `GEARS` count/ratios/reverse/final, `DIFFERENTIAL` lock, clutch torque raised if needed, `AUTO_SHIFTER` `UP`/`DOWN` when the car has them. `TRACTION` is left alone: the body decides |
+| `ai.ini` | Shift points: `UP` near peak power below the limiter; `DOWN` at most 90% of where the widest gear step lands after an upshift, so wide-ratio boxes do not hunt |
 | `setup.ini` | Gear ratio selectors removed; they would override the transmission |
+
+A car without `engine.ini` or `drivetrain.ini` throws (`FileNotFoundException`) instead of producing skeleton files; a
+build without a limiter (`RPM_limit` 0) is limited at the end of its curve.
 
 `AcCarDataReader.ForCar(dir)` reads a car's data whether folder or `data.acd`. **Nothing writes into the AC install
 yet**: applying the files for a race and restoring them afterwards (the rule for every AC change) is the next step.

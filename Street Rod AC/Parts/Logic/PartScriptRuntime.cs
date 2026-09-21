@@ -23,15 +23,21 @@ public sealed class PartScriptRuntime
     {
         Root = root;
 
-        var loader = new ScriptClassLoader(Path.Combine(catalog.Root, PartScripts.Folder));
+        var loader = catalog.Scripts;
         _vm = new ScriptVm(loader, new Host(this));
 
         Chassis = loader.Chain(ChassisClass) is { } chassisChain ? _vm.Instantiate(chassisChain, ScriptValue.Of(0)) : null;
 
         foreach (var part in root.SelfAndDescendants())
         {
-            var script = part.Definition.SourceScript == null ? null : loader.Load(Path.Combine(loader.Root, part.Definition.SourceScript));
-            if (script == null) continue;
+            if (part.Definition.SourceScript == null) continue;
+
+            var script = loader.Load(Path.Combine(loader.Root, part.Definition.SourceScript));
+            if (script == null)
+            {
+                MissingScripts.Add(part);
+                continue;
+            }
 
             var instance = _vm.Instantiate(loader.Chain(script), ScriptValue.Of(0));
             instance.Tag = part;
@@ -45,6 +51,9 @@ public sealed class PartScriptRuntime
 
     /// <summary>Stand-in for the car; the scripts leave their results for the drivetrain on it</summary>
     public ScriptObject? Chassis { get; }
+
+    /// <summary>Parts that have a script which is not among the converted classes; to the other parts they are not there</summary>
+    public List<InstalledPart> MissingScripts { get; } = new();
 
     public ScriptObject? ObjectOf(InstalledPart part) => _objects.GetValueOrDefault(part);
 

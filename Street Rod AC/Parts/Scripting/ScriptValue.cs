@@ -46,9 +46,39 @@ public sealed record ScriptReference(ScriptObject Target) : ScriptValue;
 /// <summary>A class used as a value: the left side of a static call or field</summary>
 public sealed record ScriptClassReference(string ClassName) : ScriptValue;
 
-public sealed record ScriptArray(int Length) : ScriptValue
+/// <summary>An array of the element type's signature ("F", "I", "Ljava.lang.String;"); only what was set is stored</summary>
+public sealed record ScriptArray(int Length, string? ElementType = null) : ScriptValue
 {
     public SortedDictionary<int, ScriptValue> Items { get; } = new();
+
+    /// <summary>The element as a script reads it: what nobody set is zero or null, what lies outside is not knowable</summary>
+    public ScriptValue Get(int index) =>
+        Items.TryGetValue(index, out var item) ? item
+        : index >= 0 && index < Length ? ScriptTypes.Default(ElementType)
+        : Unknown;
+}
+
+/// <summary>What the declared type of a field, local, parameter or array element does to a value</summary>
+public static class ScriptTypes
+{
+    public static bool IsWhole(string? signature) => signature is "I" or "Z" or "B" or "S" or "C" or "J";
+
+    public static bool IsFraction(string? signature) => signature is "F" or "D";
+
+    /// <summary>What a variable of the type holds before anything is assigned to it</summary>
+    public static ScriptValue Default(string? signature) =>
+        IsFraction(signature) ? new ScriptNumber(0, false)
+        : IsWhole(signature) ? new ScriptNumber(0, true)
+        : ScriptValue.Null;
+
+    /// <summary>A number stored as the type: whole types drop the fraction, float types stop dividing as integers</summary>
+    public static ScriptValue Convert(ScriptValue value, string? signature)
+    {
+        if (value is not ScriptNumber number) return value;
+
+        if (IsWhole(signature)) return number.IsInteger ? number : new ScriptNumber(Math.Truncate(number.Amount), true);
+        return IsFraction(signature) && number.IsInteger ? number with { IsInteger = false } : number;
+    }
 }
 
 /// <summary>An instance of a script class: its class chain (own class first) and its fields, statics included</summary>
@@ -69,6 +99,17 @@ public sealed class ScriptObject
 
     /// <summary>instanceof, by full class name</summary>
     public bool Is(string className) => Chain.Any(c => c.ClassName == className);
+
+    /// <summary>Declared type of a field, from the nearest class that has it</summary>
+    public string? FieldSignature(string field)
+    {
+        foreach (var type in Chain)
+        {
+            if (type.FieldSignature(field) is { } signature) return signature;
+        }
+
+        return null;
+    }
 
     public double Number(string field, double fallback = 0) =>
         Fields.TryGetValue(field, out var value) && value is ScriptNumber number ? number.Amount : fallback;

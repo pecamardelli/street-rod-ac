@@ -75,6 +75,15 @@ public class PartDefinition
     [JsonProperty("required_slots")]
     public List<PartSlotRule> RequiredSlots { get; set; } = new();
 
+    /// <summary>
+    /// A number among <see cref="Properties"/>. They come back from JSON as long or double, whichever the
+    /// script's number happened to look like, so they are never to be read by type.
+    /// </summary>
+    public double Number(string property, double fallback = 0) =>
+        Properties.GetValueOrDefault(property) is { } value and (long or int or double or float or decimal)
+            ? System.Convert.ToDouble(value, System.Globalization.CultureInfo.InvariantCulture)
+            : fallback;
+
     /// <summary>Catalog categories from the most specific up, e.g. ["blocks", "Main", "engine", "parts"]</summary>
     [JsonProperty("categories")]
     public List<string> Categories { get; set; } = new();

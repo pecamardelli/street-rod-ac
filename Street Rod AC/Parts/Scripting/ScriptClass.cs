@@ -32,21 +32,27 @@ public sealed record ScriptMethod(int Flags, string Name, string Signature, int 
     public bool IsNative => (Flags & 0x40) != 0;
 
     /// <summary>Number of parameters in a signature like "(ILjava.lang.String;[F)V"</summary>
-    public int ParameterCount
-    {
-        get
-        {
-            var count = 0;
-            for (var i = Signature.IndexOf('(') + 1; i > 0 && i < Signature.Length && Signature[i] != ')'; i++)
-            {
-                while (i < Signature.Length && Signature[i] == '[') i++;
-                if (i < Signature.Length && Signature[i] == 'L') i = Signature.IndexOf(';', i);
-                if (i < 0) break;
-                count++;
-            }
+    public int ParameterCount => ParameterTypes.Count;
 
-            return count;
+    /// <summary>Signature of every parameter, first one first: "I", "Ljava.lang.String;", "[F"</summary>
+    public IReadOnlyList<string> ParameterTypes { get; } = ParseParameters(Signature);
+
+    /// <summary>What follows the parameters: "V", "F", "Ljava.lang.String;"</summary>
+    public string ReturnType => Signature[(Signature.LastIndexOf(')') + 1)..];
+
+    private static List<string> ParseParameters(string signature)
+    {
+        var types = new List<string>();
+        for (var i = signature.IndexOf('(') + 1; i > 0 && i < signature.Length && signature[i] != ')'; i++)
+        {
+            var start = i;
+            while (i < signature.Length && signature[i] == '[') i++;
+            if (i < signature.Length && signature[i] == 'L') i = signature.IndexOf(';', i);
+            if (i < 0) break;
+            types.Add(signature[start..Math.Min(i + 1, signature.Length)]);
         }
+
+        return types;
     }
 }
 
@@ -84,6 +90,21 @@ public sealed class ScriptClass
     public string? BaseClass => Pool.Count > 3 && Pool[3].Kind == ScriptConstantKind.Class ? Text(Pool[3].A) : Text(2);
 
     public string? Text(int index) => index >= 0 && index < Pool.Count ? Pool[index].Text : null;
+
+    private Dictionary<string, string>? _fieldSignatures;
+
+    /// <summary>Declared type of a field of this class; null when the class has no such field</summary>
+    public string? FieldSignature(string name)
+    {
+        if (_fieldSignatures == null)
+        {
+            var signatures = new Dictionary<string, string>();
+            foreach (var field in Fields) signatures.TryAdd(field.Name, field.Signature);
+            _fieldSignatures = signatures;
+        }
+
+        return _fieldSignatures.GetValueOrDefault(name);
+    }
 
     /// <summary>Class name behind a type operand, which is a signature string: "Ljava.game.parts.Part;"</summary>
     public string? TypeName(int index)

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO;
 using System.Text;
 using Street_Rod_AC.Parts.Logic;
 
@@ -36,8 +37,12 @@ public static class AcEngineData
     private const int MaxTurbos = 8;
     private const int MaxGears = 10;
 
+    // A downshift point this far below where the widest upshift lands keeps the gearbox from hunting
+    private const double DownshiftMargin = 0.9;
+
     /// <param name="readFile">Text of a file of the car's data (folder or data.acd), null when it has no such file</param>
     /// <returns>File name to new content, for the files that change</returns>
+    /// <exception cref="FileNotFoundException">The car has no engine.ini or drivetrain.ini: not a car's data</exception>
     public static Dictionary<string, string> Generate(EngineReport report, Func<string, string?> readFile, AcEngineDataOptions? options = null)
     {
         if (report.Dyno is not { Curve.Count: > 0 } dyno)
@@ -46,14 +51,23 @@ public static class AcEngineData
         options ??= new AcEngineDataOptions();
         var files = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        var engine = new IniText(readFile(EngineFile));
+        // Without the car's own files there is nothing to change, and a file of our few keys alone is not a car
+        var engine = new IniText(readFile(EngineFile) ?? throw new FileNotFoundException("The car's data has no " + EngineFile, EngineFile));
+        var drivetrain = new IniText(readFile(DrivetrainFile) ?? throw new FileNotFoundException("The car's data has no " + DrivetrainFile, DrivetrainFile));
+
+        // A build without a limiter revs as far as its curve goes
+        var limiter = report.LimiterRpm > 0 ? report.LimiterRpm : dyno.Curve[^1].Rpm;
         var curveFile = engine.Get("HEADER", "POWER_CURVE") is { Length: > 0 } existing ? existing : DefaultPowerCurve;
 
         files[curveFile] = PowerCurve(dyno, options.DrivetrainEfficiency);
-        files[EngineFile] = Engine(engine, report, dyno, curveFile, options);
-        files[DrivetrainFile] = Drivetrain(new IniText(readFile(DrivetrainFile)), report, dyno, options);
+        files[EngineFile] = Engine(engine, report, dyno, limiter, curveFile, options);
 
-        if (readFile(AiFile) is { } ai) files[AiFile] = Ai(new IniText(ai), report, dyno);
+        GearsAndClutch(drivetrain, report, dyno, options);
+        var (up, down) = ShiftPoints(drivetrain, report, dyno, limiter);
+        AutoShifter(drivetrain, up, down);
+        files[DrivetrainFile] = drivetrain.ToString();
+
+        if (readFile(AiFile) is { } ai) files[AiFile] = Ai(new IniText(ai), up, down);
         if (options.ReplaceGearbox && report.GearRatios.Count > 0 && readFile(SetupFile) is { } setup) files[SetupFile] = Setup(new IniText(setup));
 
         return files;
@@ -73,19 +87,19 @@ public static class AcEngineData
         return text.ToString();
     }
 
-    private static string Engine(IniText ini, EngineReport report, DynoResult dyno, string curveFile, AcEngineDataOptions options)
+    private static string Engine(IniText ini, EngineReport report, DynoResult dyno, double limiter, string curveFile, AcEngineDataOptions options)
     {
         ini.Set("HEADER", "POWER_CURVE", curveFile);
         if (ini.Get("HEADER", "COAST_CURVE") == null) ini.Set("HEADER", "COAST_CURVE", "FROM_COAST_REF");
 
         ini.Set("ENGINE_DATA", "INERTIA", Number(Math.Clamp(report.Inertia * options.InertiaScale, 0.05, 0.6), "0.000"));
-        ini.Set("ENGINE_DATA", "LIMITER", Number(report.LimiterRpm, "0"));
+        ini.Set("ENGINE_DATA", "LIMITER", Number(limiter, "0"));
         ini.Set("ENGINE_DATA", "MINIMUM", Number(report.IdleRpm, "0"));
         if (ini.Get("ENGINE_DATA", "LIMITER_HZ") == null) ini.Set("ENGINE_DATA", "LIMITER_HZ", "30");
         if (ini.Get("ENGINE_DATA", "ALTITUDE_SENSITIVITY") == null) ini.Set("ENGINE_DATA", "ALTITUDE_SENSITIVITY", "0.1");
 
         // Engine braking grows with size: about 12 Nm per litre at the limiter
-        ini.Set("COAST_REF", "RPM", Number(report.LimiterRpm, "0"));
+        ini.Set("COAST_REF", "RPM", Number(limiter, "0"));
         ini.Set("COAST_REF", "TORQUE", Number(dyno.Displacement * 1000 * 12, "0"));
         if (ini.Get("COAST_REF", "NON_LINEARITY") == null) ini.Set("COAST_REF", "NON_LINEARITY", "0");
 
@@ -100,7 +114,7 @@ public static class AcEngineData
         return ini.ToString();
     }
 
-    private static string Drivetrain(IniText ini, EngineReport report, DynoResult dyno, AcEngineDataOptions options)
+    private static void GearsAndClutch(IniText ini, EngineReport report, DynoResult dyno, AcEngineDataOptions options)
     {
         if (options.ReplaceGearbox && report.GearRatios.Count > 0)
         {
@@ -122,16 +136,42 @@ public static class AcEngineData
         var needed = dyno.MaxTorque * 1.3;
         var current = double.TryParse(ini.Get("CLUTCH", "MAX_TORQUE"), NumberStyles.Float, CultureInfo.InvariantCulture, out var torque) ? torque : 0;
         if (current < needed) ini.Set("CLUTCH", "MAX_TORQUE", Number(needed, "0"));
-
-        return ini.ToString();
     }
 
-    /// <summary>Opponents and the automatic gearbox shift by these</summary>
-    private static string Ai(IniText ini, EngineReport report, DynoResult dyno)
+    /// <summary>
+    /// Where to shift, by the gears the car ends up with. An upshift drops the revs by the step between the two
+    /// gears; a downshift point above where the widest step lands would shift straight back down, and up again.
+    /// </summary>
+    private static (double Up, double Down) ShiftPoints(IniText drivetrain, EngineReport report, DynoResult dyno, double limiter)
     {
-        var up = Math.Min(report.LimiterRpm * 0.97, dyno.MaxPowerRpm + 400);
+        var up = Math.Min(limiter * 0.97, dyno.MaxPowerRpm + 400);
+        var down = Math.Max(report.IdleRpm + 800, up * 0.6);
+
+        var ratios = Enumerable.Range(1, MaxGears)
+            .Select(i => double.TryParse(drivetrain.Get("GEARS", $"GEAR_{i}"), NumberStyles.Float, CultureInfo.InvariantCulture, out var ratio) ? ratio : 0)
+            .TakeWhile(r => r > 0)
+            .ToList();
+        if (ratios.Count > 1)
+        {
+            var widestStep = ratios.Zip(ratios.Skip(1), (lower, higher) => higher / lower).Min();
+            down = Math.Min(down, up * widestStep * DownshiftMargin);
+        }
+
+        return (up, down);
+    }
+
+    /// <summary>The car's own automatic gearbox has shift points too; left at the old engine's they may lie beyond the limiter</summary>
+    private static void AutoShifter(IniText ini, double up, double down)
+    {
+        if (ini.Get("AUTO_SHIFTER", "UP") != null) ini.Set("AUTO_SHIFTER", "UP", Number(up, "0"));
+        if (ini.Get("AUTO_SHIFTER", "DOWN") != null) ini.Set("AUTO_SHIFTER", "DOWN", Number(down, "0"));
+    }
+
+    /// <summary>Opponents shift by these</summary>
+    private static string Ai(IniText ini, double up, double down)
+    {
         ini.Set("GEARS", "UP", Number(up, "0"));
-        ini.Set("GEARS", "DOWN", Number(Math.Max(report.IdleRpm + 800, up * 0.6), "0"));
+        ini.Set("GEARS", "DOWN", Number(down, "0"));
         return ini.ToString();
     }
 

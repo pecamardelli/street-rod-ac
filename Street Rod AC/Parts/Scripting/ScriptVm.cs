@@ -20,7 +20,7 @@ public sealed class ScriptVm
     private const string PartConstructorSignature = "(I)";
 
     private readonly IScriptHost _host;
-    private readonly Dictionary<string, ScriptObject?> _statics = new();
+    private readonly Dictionary<ScriptClass, ScriptObject> _statics = new();
     private int _steps;
 
     public ScriptVm(ScriptClassLoader loader, IScriptHost host)
@@ -32,6 +32,14 @@ public sealed class ScriptVm
     public ScriptClassLoader Loader { get; }
 
     public List<ScriptSlotRule> Rules { get; } = new();
+
+    /// <summary>
+    /// For reading parts out of scripts with no game around: lists of parts are often filled inside branches nobody
+    /// can decide here (one engine or another, at random). With this on, such a list and the resources put into it
+    /// are kept although the branch is uncertain, and the first alternative wins. A game that runs the scripts for
+    /// real leaves it off: there, uncertain code changes nothing.
+    /// </summary>
+    public bool FirstAlternativeWins { get; init; }
 
     /// <summary>Creates an object: field initializers and constructor of every class of the chain, base classes first</summary>
     public ScriptObject Instantiate(IReadOnlyList<ScriptClass> chain, params ScriptValue[] arguments)
@@ -52,9 +60,16 @@ public sealed class ScriptVm
     private ScriptObject Construct(IReadOnlyList<ScriptClass> chain, ScriptValue[] arguments, int depth)
     {
         var instance = new ScriptObject(chain);
+        var statics = Statics(chain, depth);
         for (var i = chain.Count - 1; i >= 0; i--)
         {
-            InitializeFields(instance, i, false);
+            // Statics belong to the class: an instance sees them, it does not run their initializers again
+            foreach (var field in chain[i].Fields)
+            {
+                if (field.IsStatic && statics.Fields.TryGetValue(field.Name, out var shared)) instance.Fields[field.Name] = shared;
+            }
+
+            InitializeFields(instance, i, false, depth);
 
             var constructors = chain[i].Methods.Where(m => m.Name == Constructor).ToList();
             var constructor = i == 0 ? constructors.FirstOrDefault(m => m.ParameterCount == arguments.Length) : null;
@@ -72,43 +87,42 @@ public sealed class ScriptVm
         return instance;
     }
 
-    private void InitializeFields(ScriptObject instance, int classIndex, bool staticsOnly)
+    /// <summary>Runs the initializers of a class: those of its static fields or those of its instance fields</summary>
+    private void InitializeFields(ScriptObject instance, int classIndex, bool statics, int depth)
     {
         var type = instance.Chain[classIndex];
         foreach (var field in type.Fields)
         {
-            if (staticsOnly && !field.IsStatic) continue;
+            if (field.IsStatic != statics) continue;
 
             if (field.Tree < 0 || field.Tree >= type.Trees.Count)
             {
-                instance.Fields[field.Name] = field.Signature switch
-                {
-                    "F" or "D" => new ScriptNumber(0, false),
-                    "I" or "Z" or "B" or "S" or "C" or "J" => new ScriptNumber(0, true),
-                    _ => ScriptValue.Null
-                };
+                instance.Fields[field.Name] = ScriptTypes.Default(field.Signature);
                 continue;
             }
 
-            var value = Run(instance, classIndex, type.Trees[field.Tree], Array.Empty<ScriptValue>(), false, false, 0);
-            if (value != null) instance.Fields[field.Name] = value;
+            // An initializer may construct objects, whose initializers construct objects: the depth carries on
+            var value = Run(instance, classIndex, type.Trees[field.Tree], Array.Empty<ScriptValue>(), false, false, depth);
+            if (value != null) instance.Fields[field.Name] = ScriptTypes.Convert(value, field.Signature);
         }
     }
 
-    /// <summary>Stand-in object for the static side of a class; null when the class is not a script class</summary>
-    private ScriptObject? Statics(string className, string? nearFolder)
+    /// <summary>
+    /// Stand-in object for the static side of a class. It is known before its initializers run, so a class
+    /// that constructs itself in one of them (static Foo instance = new Foo()) finds it instead of starting over.
+    /// </summary>
+    private ScriptObject Statics(IReadOnlyList<ScriptClass> chain, int depth)
     {
-        if (_statics.TryGetValue(className, out var cached)) return cached;
+        if (_statics.TryGetValue(chain[0], out var holder)) return holder;
 
-        ScriptObject? holder = null;
-        if (Loader.Chain(className, nearFolder) is { } chain)
-        {
-            _statics[className] = holder = new ScriptObject(chain);
-            for (var i = chain.Count - 1; i >= 0; i--) InitializeFields(holder, i, true);
-        }
-
-        return _statics[className] = holder;
+        _statics[chain[0]] = holder = new ScriptObject(chain);
+        for (var i = chain.Count - 1; i >= 0; i--) InitializeFields(holder, i, true, depth);
+        return holder;
     }
+
+    /// <summary>Null when the class is not a script class</summary>
+    private ScriptObject? Statics(string className, string? nearFolder, int depth) =>
+        Loader.Chain(className, nearFolder) is { } chain ? Statics(chain, depth) : null;
 
     private ScriptValue InvokeVirtual(ScriptObject target, int fromClass, string name, ScriptValue[] arguments, bool uncertain, int depth)
     {
@@ -132,7 +146,12 @@ public sealed class ScriptVm
         var type = target.Chain[classIndex];
         if (depth > MaxDepth || method.Tree < 0 || method.Tree >= type.Trees.Count) return ScriptValue.Unknown;
 
-        return Run(target, classIndex, type.Trees[method.Tree], arguments, !method.IsStatic, uncertain, depth + 1) ?? ScriptValue.Unknown;
+        // A float parameter handed an int is a float from there on, as is what a float method returns
+        var types = method.ParameterTypes;
+        var passed = arguments.Select((a, i) => i < types.Count ? ScriptTypes.Convert(a, types[i]) : a).ToArray();
+
+        var result = Run(target, classIndex, type.Trees[method.Tree], passed, !method.IsStatic, uncertain, depth + 1) ?? ScriptValue.Unknown;
+        return ScriptTypes.Convert(result, method.ReturnType);
     }
 
     private ScriptValue CallOn(ScriptValue? target, ScriptObject self, ScriptClass type, string name, ScriptValue[] arguments, bool uncertain, int depth)
@@ -143,7 +162,7 @@ public sealed class ScriptVm
                 return InvokeVirtual(reference.Target, 0, name, arguments, uncertain, depth);
 
             case ScriptClassReference classReference:
-                return Statics(classReference.ClassName, type.Folder) is { } statics
+                return Statics(classReference.ClassName, type.Folder, depth) is { } statics
                     ? InvokeVirtual(statics, 0, name, arguments, uncertain, depth)
                     : _host.CallStatic(this, classReference.ClassName, name, arguments) ?? ScriptValue.Unknown;
 
@@ -167,6 +186,12 @@ public sealed class ScriptVm
     private sealed record ArgumentCount(int Count) : ScriptValue;
     private sealed record NewObject(string? ClassName) : ScriptValue;
 
+    /// <summary>Local variables of one call, with the types they were declared with</summary>
+    private sealed class Locals : Dictionary<int, ScriptValue>
+    {
+        public Dictionary<int, string> Types { get; } = new();
+    }
+
     #endregion
 
     /// <summary>
@@ -177,13 +202,16 @@ public sealed class ScriptVm
     {
         var type = self.Chain[classIndex];
         var stack = new List<ScriptValue>();
-        var locals = new Dictionary<int, ScriptValue>();
+        var locals = new Locals();
 
         // Parameters are numbered from the last one back; local 0 is "this" when there is one
         for (var i = 0; i < arguments.Length; i++) locals[arguments.Length - 1 - i + (hasThis ? 1 : 0)] = arguments[i];
         if (hasThis) locals[0] = new ScriptReference(self);
 
+        // Code between an undecidable if and the end of its branches is walked without effect. The region has a
+        // start too: a loop around it comes back to certain code, and decides the if anew on every round.
         var declaredLocal = -1;
+        var uncertainFrom = uncertain ? 0 : -1;
         var uncertainUntil = uncertain ? int.MaxValue : -1;
         var keptJumps = new HashSet<int>();
         int? regionSlot = null;
@@ -195,13 +223,18 @@ public sealed class ScriptVm
             if (++_steps > MaxSteps) return null;
 
             var instruction = tree[index];
-            var unsure = index < uncertainUntil;
+            var unsure = index >= uncertainFrom && index < uncertainUntil;
             if (index >= regionSlotUntil) regionSlot = null;
 
             switch (instruction.Op)
             {
                 case 0x01: stack.Add(new LocalRef(instruction.Operand)); break;
-                case 0x02: declaredLocal = instruction.Operand; break;
+                case 0x02:
+                    // Followed by the type the local is declared with
+                    declaredLocal = instruction.Operand;
+                    if (index + 1 < tree.Length && tree[index + 1].Op == 0x06 && type.Text(tree[index + 1].Operand) is { } declaredType)
+                        locals.Types[declaredLocal] = declaredType;
+                    break;
                 case 0x09: stack.Add(new ScriptText(type.Text(instruction.Operand) ?? string.Empty)); break;
                 case 0x0A: stack.Add(new ScriptNumber(ToDouble(instruction.FloatOperand), false)); break;
                 case 0x0B: stack.Add(new ScriptNumber(instruction.Operand, true)); break;
@@ -228,8 +261,8 @@ public sealed class ScriptVm
 
                 case 0x07:
                 {
-                    // instanceof, cast and new are followed by their type, which is not an instruction of its own
-                    var typeName = instruction.Operand is 30 or 32 or 33 ? NextType(type, tree, index) : null;
+                    // instanceof, cast, new and new array are followed by their type, which is not an instruction of its own
+                    var typeName = instruction.Operand is 30 or 31 or 32 or 33 ? NextType(type, tree, index) : null;
                     Operator(instruction.Operand, typeName, stack, locals, unsure);
                     if (typeName != null) index++;
                     break;
@@ -264,7 +297,7 @@ public sealed class ScriptVm
                 case 0x1A:
                 {
                     var name = instruction.Op == 0x12 ? type.Text(instruction.Operand) : type.MemberName(instruction.Operand);
-                    var hasPath = TakePath(self, stack, locals, out var target);
+                    var hasPath = TakePath(self, stack, locals, depth, out var target);
                     var callArguments = TakeArguments(stack, locals);
 
                     // No path: our own method, or a static one of a class we do not descend from
@@ -320,12 +353,12 @@ public sealed class ScriptVm
                     {
                         stack.Add(new PathField(name));
                     }
-                    else if (TakePath(self, stack, locals, out var target))
+                    else if (TakePath(self, stack, locals, depth, out var target))
                     {
                         stack.Add(target switch
                         {
                             ScriptReference reference => new FieldRef(reference.Target, name),
-                            ScriptClassReference classReference => StaticField(classReference.ClassName, name, type.Folder),
+                            ScriptClassReference classReference => StaticField(classReference.ClassName, name, type.Folder, depth),
                             ScriptUnknown => target,
                             _ => ScriptValue.Unknown
                         });
@@ -333,7 +366,7 @@ public sealed class ScriptVm
                     else
                     {
                         var owner = type.MemberClass(instruction.Operand);
-                        stack.Add(owner == null || self.Is(owner) ? new FieldRef(self, name) : StaticField(owner, name, type.Folder));
+                        stack.Add(owner == null || self.Is(owner) ? new FieldRef(self, name) : StaticField(owner, name, type.Folder, depth));
                     }
                     break;
                 }
@@ -362,7 +395,16 @@ public sealed class ScriptVm
                     {
                         // Both branches get walked, neither takes effect
                         var target = index + instruction.Operand;
-                        uncertainUntil = Math.Max(uncertainUntil, target);
+                        if (unsure)
+                        {
+                            uncertainUntil = Math.Max(uncertainUntil, target);
+                        }
+                        else
+                        {
+                            (uncertainFrom, uncertainUntil) = (index, target);
+                            keptJumps.Clear();
+                        }
+
                         regionSlot = (tested as ScriptUnknown)?.Slot;
                         regionSlotUntil = target;
 
@@ -381,13 +423,20 @@ public sealed class ScriptVm
                     // Backwards = loop; a loop whose condition is unknown gets walked once
                     if (keptJumps.Contains(index) || instruction.Operand <= 0 && unsure) break;
 
+                    // Back to before an uncertain region: the next round meets its if afresh
+                    if (index + instruction.Operand < uncertainFrom && uncertainUntil != int.MaxValue)
+                    {
+                        (uncertainFrom, uncertainUntil) = (-1, -1);
+                        keptJumps.Clear();
+                    }
+
                     index += instruction.Operand - 1;
                     break;
 
                 case 0x16:
                 case 0x17:
                     stack.Clear();
-                    uncertainUntil = int.MaxValue;
+                    (uncertainFrom, uncertainUntil) = (0, int.MaxValue);
                     break;
 
                 case 0x28:
@@ -398,7 +447,7 @@ public sealed class ScriptVm
                     if (!unsure) return result;
 
                     // May or may not have returned here: nothing after this point is certain
-                    uncertainUntil = int.MaxValue;
+                    (uncertainFrom, uncertainUntil) = (0, int.MaxValue);
                     if (possibleReturn is not ScriptUnknown { Slot: not null })
                         possibleReturn = result is ScriptUnknown ? result : possibleReturn ?? ScriptValue.Unknown;
                     if (result is ScriptText message && regionSlot != null)
@@ -411,7 +460,7 @@ public sealed class ScriptVm
 
                 case 0x29:
                     if (!unsure) return ScriptValue.Unknown;
-                    uncertainUntil = int.MaxValue;
+                    (uncertainFrom, uncertainUntil) = (0, int.MaxValue);
                     break;
 
                 case 0x2A:
@@ -464,7 +513,7 @@ public sealed class ScriptVm
     /// Takes a complete object path off the stack and follows it. False when the member that comes next
     /// is one of our own (no path, or the "this" path of marker 1).
     /// </summary>
-    private bool TakePath(ScriptObject self, List<ScriptValue> stack, Dictionary<int, ScriptValue> locals, out ScriptValue? target)
+    private bool TakePath(ScriptObject self, List<ScriptValue> stack, Locals locals, int depth, out ScriptValue? target)
     {
         target = null;
 
@@ -485,7 +534,7 @@ public sealed class ScriptVm
             current = (current, element) switch
             {
                 (ScriptReference reference, PathField field) => Resolve(new FieldRef(reference.Target, field.Name), locals),
-                (ScriptClassReference classReference, PathField field) => StaticField(classReference.ClassName, field.Name, self.Chain[0].Folder),
+                (ScriptClassReference classReference, PathField field) => StaticField(classReference.ClassName, field.Name, self.Chain[0].Folder, depth),
                 (ScriptUnknown, _) => current,
                 _ => ScriptValue.Unknown
             };
@@ -495,10 +544,10 @@ public sealed class ScriptVm
         return true;
     }
 
-    private ScriptValue StaticField(string className, string field, string? nearFolder) =>
-        Statics(className, nearFolder) is { } statics && statics.Fields.TryGetValue(field, out var value) ? value : ScriptValue.Unknown;
+    private ScriptValue StaticField(string className, string field, string? nearFolder, int depth) =>
+        Statics(className, nearFolder, depth) is { } statics && statics.Fields.TryGetValue(field, out var value) ? value : ScriptValue.Unknown;
 
-    private ScriptValue[] TakeArguments(List<ScriptValue> stack, Dictionary<int, ScriptValue> locals)
+    private ScriptValue[] TakeArguments(List<ScriptValue> stack, Locals locals)
     {
         if (stack.Count == 0 || stack[^1] is not ArgumentCount count) return Array.Empty<ScriptValue>();
 
@@ -509,7 +558,7 @@ public sealed class ScriptVm
         return arguments;
     }
 
-    private static ScriptValue Resolve(ScriptValue value, Dictionary<int, ScriptValue> locals)
+    private static ScriptValue Resolve(ScriptValue value, Locals locals)
     {
         switch (value)
         {
@@ -518,10 +567,8 @@ public sealed class ScriptVm
             case LocalRef local:
                 return locals.TryGetValue(local.Index, out var localValue) ? localValue : ScriptValue.Unknown;
             case ElementRef element:
-                return Resolve(element.Array, locals) is ScriptArray array
-                       && Resolve(element.Index, locals) is ScriptNumber { IsInteger: true } position
-                       && array.Items.TryGetValue((int)position.Amount, out var item)
-                    ? item
+                return Resolve(element.Array, locals) is ScriptArray array && Resolve(element.Index, locals) is ScriptNumber { IsInteger: true } position
+                    ? array.Get((int)position.Amount)
                     : ScriptValue.Unknown;
             case Marker or ArgumentCount or NewObject or PathField:
                 return ScriptValue.Unknown;
@@ -530,7 +577,7 @@ public sealed class ScriptVm
         }
     }
 
-    private static void Assign(ScriptValue target, ScriptValue value, Dictionary<int, ScriptValue> locals, bool unsure)
+    private void Assign(ScriptValue target, ScriptValue value, Locals locals, bool unsure)
     {
         // What an unknown value was read from stays known, so later checks on it can still be attributed
         var original = value;
@@ -539,22 +586,22 @@ public sealed class ScriptVm
         switch (target)
         {
             case LocalRef local:
-                locals[local.Index] = value;
+                locals[local.Index] = ScriptTypes.Convert(value, locals.Types.GetValueOrDefault(local.Index));
                 break;
 
             case FieldRef field when !unsure:
-                field.Owner.Fields[field.Name] = value;
+                field.Owner.Fields[field.Name] = ScriptTypes.Convert(value, field.Owner.FieldSignature(field.Name));
                 break;
 
             // Lists of parts filled inside random branches (one engine or another): the first alternative wins
-            case FieldRef field when original is ScriptArray && (!field.Owner.Fields.TryGetValue(field.Name, out var existing) || existing is ScriptNull):
+            case FieldRef field when FirstAlternativeWins && original is ScriptArray && (!field.Owner.Fields.TryGetValue(field.Name, out var existing) || existing is ScriptNull):
                 field.Owner.Fields[field.Name] = original;
                 break;
 
-            case ElementRef element when !unsure || original is ScriptResource:
+            case ElementRef element when !unsure || FirstAlternativeWins && original is ScriptResource:
                 if (Resolve(element.Array, locals) is ScriptArray array && Resolve(element.Index, locals) is ScriptNumber { IsInteger: true } position
                     && (!unsure || !array.Items.ContainsKey((int)position.Amount)))
-                    array.Items[(int)position.Amount] = original;
+                    array.Items[(int)position.Amount] = ScriptTypes.Convert(original, array.ElementType);
                 break;
         }
     }
@@ -575,7 +622,7 @@ public sealed class ScriptVm
 
     #region Operators
 
-    private static void Statement(int kind, List<ScriptValue> stack, Dictionary<int, ScriptValue> locals, bool unsure)
+    private void Statement(int kind, List<ScriptValue> stack, Locals locals, bool unsure)
     {
         if (kind is 23 or 24 && stack.Count > 0)
         {
@@ -597,7 +644,7 @@ public sealed class ScriptVm
         Assign(target, value, locals, unsure);
     }
 
-    private static void Operator(int kind, string? typeName, List<ScriptValue> stack, Dictionary<int, ScriptValue> locals, bool unsure)
+    private void Operator(int kind, string? typeName, List<ScriptValue> stack, Locals locals, bool unsure)
     {
         switch (kind)
         {
@@ -610,7 +657,9 @@ public sealed class ScriptVm
 
             case 31:
                 var size = Resolve(Pop(stack), locals);
-                stack.Add(size is ScriptNumber { IsInteger: true } length ? new ScriptArray((int)length.Amount) : ScriptValue.Unknown);
+                stack.Add(size is ScriptNumber { IsInteger: true } length
+                    ? new ScriptArray((int)length.Amount, typeName is { Length: > 1 } && typeName[0] == '[' ? typeName[1..] : null)
+                    : ScriptValue.Unknown);
                 break;
 
             case 35: // assignment used as a value
@@ -646,7 +695,7 @@ public sealed class ScriptVm
                         ScriptNull => ScriptValue.Of(false),
                         _ => ScriptValue.Unknown
                     },
-                    33 => operand,
+                    33 => ScriptTypes.Convert(operand, typeName),
                     _ => ScriptValue.Unknown
                 }, operand));
                 break;

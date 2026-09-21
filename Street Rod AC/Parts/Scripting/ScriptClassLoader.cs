@@ -8,6 +8,7 @@ namespace Street_Rod_AC.Parts.Scripting;
 /// java.game.parts.enginepart.block live in parts\scripts\enginepart\block: the scripts folder may sit at any
 /// level of the package path. Cars share the package java.game.cars while each keeps its classes in its own
 /// folder, so the folder of the referring class is tried first.
+/// A loaded class never changes, so one loader serves any number of VMs, on any thread.
 /// </summary>
 public sealed class ScriptClassLoader
 {
@@ -16,6 +17,7 @@ public sealed class ScriptClassLoader
     private const int MaxChain = 32;
 
     private readonly Dictionary<string, ScriptClass?> _classes = new(StringComparer.OrdinalIgnoreCase);
+    private readonly object _lock = new();
 
     public ScriptClassLoader(string root)
     {
@@ -25,20 +27,31 @@ public sealed class ScriptClassLoader
     public string Root { get; }
 
     /// <summary>Every class file read so far</summary>
-    public IEnumerable<string> LoadedFiles => _files;
+    public IEnumerable<string> LoadedFiles
+    {
+        get { lock (_lock) return _files.ToList(); }
+    }
 
     private readonly HashSet<string> _files = new(StringComparer.OrdinalIgnoreCase);
 
     public ScriptClass? Load(string file)
     {
-        if (_classes.TryGetValue(file, out var cached)) return cached;
+        lock (_lock)
+        {
+            if (_classes.TryGetValue(file, out var cached)) return cached;
 
-        var loaded = File.Exists(file) ? ScriptClass.Load(file) : null;
-        if (loaded != null) _files.Add(Path.GetFullPath(file));
-        return _classes[file] = loaded;
+            var loaded = File.Exists(file) ? ScriptClass.Load(file) : null;
+            if (loaded != null) _files.Add(Path.GetFullPath(file));
+            return _classes[file] = loaded;
+        }
     }
 
     public ScriptClass? Find(string className, string? nearFolder = null)
+    {
+        lock (_lock) return FindLocked(className, nearFolder);
+    }
+
+    private ScriptClass? FindLocked(string className, string? nearFolder)
     {
         if (nearFolder != null)
         {

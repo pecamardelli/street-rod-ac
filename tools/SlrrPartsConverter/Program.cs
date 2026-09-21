@@ -120,6 +120,11 @@ public static class Program
             Console.WriteLine($"  {packId,-45} {pack.Parts.Count,4} parts, {models.Values.Count(m => m != null),4} models");
         }
 
+        // The game runs the part scripts itself. A filtered run adds the classes of its packs to what is there;
+        // parts without their classes would be parts nobody finds on their slot.
+        var copied = CopyScripts(game, scripts, Path.Combine(output, PartScripts.Folder), filter == null);
+        Console.WriteLine($"  {copied} script classes");
+
         // Constants of the shared script classes (fuel types, price factors...), for the game's part logic.
         // A filtered run has not seen them all.
         if (filter == null)
@@ -133,8 +138,6 @@ public static class Program
 
             File.WriteAllText(Path.Combine(output, EngineBuild.FileName), JsonConvert.SerializeObject(builds, Formatting.Indented));
 
-            var copied = CopyScripts(game, scripts, Path.Combine(output, PartScripts.Folder));
-            Console.WriteLine($"  {copied} script classes");
             Console.WriteLine($"  {builds.Count} engine builds ({builds.Count(b => b.RatedPower != null)} with a rated power, " +
                               $"{builds.Count(b => b.Parts.All(p => p.Part != null))} fully resolved)");
         }
@@ -289,13 +292,14 @@ public static class Program
     /// The game runs the part scripts itself, so it gets the classes: everything the evaluation touched plus the
     /// shared part classes, in the folder layout class lookup depends on.
     /// </summary>
-    private static int CopyScripts(SlrrGame game, SlrrScriptEvaluator scripts, string target)
+    /// <param name="replace">Whether the classes are all there are: what was in the folder before goes</param>
+    private static int CopyScripts(SlrrGame game, SlrrScriptEvaluator scripts, string target, bool replace)
     {
         var files = new HashSet<string>(scripts.UsedClassFiles, StringComparer.OrdinalIgnoreCase);
         var shared = Path.Combine(game.Root, PartsFolder, "scripts");
         if (Directory.Exists(shared)) files.UnionWith(Directory.EnumerateFiles(shared, "*.class", SearchOption.AllDirectories));
 
-        if (Directory.Exists(target)) Directory.Delete(target, true);
+        if (replace && Directory.Exists(target)) Directory.Delete(target, true);
 
         var root = Path.GetFullPath(game.Root);
         foreach (var file in files)

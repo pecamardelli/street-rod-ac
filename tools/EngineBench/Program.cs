@@ -165,7 +165,17 @@ public static class Program
             return 1;
         }
 
-        var files = AcEngineData.Generate(report, name => File.Exists(Path.Combine(carData, name)) ? File.ReadAllText(Path.Combine(carData, name)) : null);
+        Dictionary<string, string> files;
+        try
+        {
+            files = AcEngineData.Generate(report, name => File.Exists(Path.Combine(carData, name)) ? File.ReadAllText(Path.Combine(carData, name)) : null);
+        }
+        catch (FileNotFoundException ex)
+        {
+            Console.WriteLine($"{ex.Message}: {carData} is not the data folder of a car");
+            return 1;
+        }
+
         Directory.CreateDirectory(output);
         foreach (var (name, content) in files) File.WriteAllText(Path.Combine(output, name), content);
 
