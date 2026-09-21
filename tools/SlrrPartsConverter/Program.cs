@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Newtonsoft.Json;
 using Street_Rod_AC.Parts;
+using Street_Rod_AC.Parts.Scripting;
 using Street_Rod_AC.Slrr;
 
 namespace Street_Rod_AC;
@@ -14,21 +15,34 @@ public static class Program
     private const string PartsFolder = "parts";
     private const string BaseRpk = "parts.rpk";
     private const string BasePackId = "stock";
+    private const string SlotRoleSuffix = "_slot_ID";
+    private const string ConstantsFile = "script_constants.json";
+    private const string NotesOption = "--notes";
 
     private sealed record SourcePart(SlrrRpk Rpk, SlrrRpkEntry Entry, string ConfigFile, string? ScriptPath, string Id, string Name);
 
     public static int Main(string[] args)
     {
-        if (args.Length < 2)
+        // --notes <folder>: text files with engine builds written down as stock_parts_list_E lines
+        string? notes = null;
+        var positional = new List<string>();
+        for (var i = 0; i < args.Length; i++)
         {
-            Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter]");
+            if (args[i] == NotesOption && i + 1 < args.Length) notes = args[++i];
+            else positional.Add(args[i]);
+        }
+
+        if (positional.Count < 2)
+        {
+            Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""C:\Games\AC\content\parts"" engines/Mopar");
             return 1;
         }
 
-        var game = new SlrrGame(args[0]);
-        var output = args[1];
-        var filter = args.Length > 2 ? args[2] : null;
+        var game = new SlrrGame(positional[0]);
+        var scripts = new SlrrScriptEvaluator(game);
+        var output = positional[1];
+        var filter = positional.Count > 2 ? positional[2] : null;
 
         var partsRoot = Path.Combine(game.Root, PartsFolder);
         if (!Directory.Exists(partsRoot))
@@ -90,7 +104,7 @@ public static class Program
             {
                 try
                 {
-                    var definition = Convert(game, source, partIds, packFolder, texturePrefix, models);
+                    var definition = Convert(game, scripts, source, partIds, packFolder, texturePrefix, models);
                     pack.Parts.Add(definition);
 
                     converted++;
@@ -104,6 +118,28 @@ public static class Program
 
             File.WriteAllText(Path.Combine(packFolder, PartPack.FileName), JsonConvert.SerializeObject(pack, Formatting.Indented));
             Console.WriteLine($"  {packId,-45} {pack.Parts.Count,4} parts, {models.Values.Count(m => m != null),4} models");
+        }
+
+        // The game runs the part scripts itself. A filtered run adds the classes of its packs to what is there;
+        // parts without their classes would be parts nobody finds on their slot.
+        var copied = CopyScripts(game, scripts, Path.Combine(output, PartScripts.Folder), filter == null);
+        Console.WriteLine($"  {copied} script classes");
+
+        // Constants of the shared script classes (fuel types, price factors...), for the game's part logic.
+        // A filtered run has not seen them all.
+        if (filter == null)
+        {
+            File.WriteAllText(Path.Combine(output, ConstantsFile), JsonConvert.SerializeObject(scripts.Constants, Formatting.Indented));
+
+            var engineBuilds = new SlrrEngineBuilds(game, partIds);
+            // Cars get an evaluator of their own: their classes are of no use to the game
+            var builds = engineBuilds.FromCars(new SlrrScriptEvaluator(game));
+            if (notes != null && Directory.Exists(notes)) builds.AddRange(engineBuilds.FromNotes(notes));
+
+            File.WriteAllText(Path.Combine(output, EngineBuild.FileName), JsonConvert.SerializeObject(builds, Formatting.Indented));
+
+            Console.WriteLine($"  {builds.Count} engine builds ({builds.Count(b => b.RatedPower != null)} with a rated power, " +
+                              $"{builds.Count(b => b.Parts.All(p => p.Part != null))} fully resolved)");
         }
 
         Console.WriteLine();
@@ -144,13 +180,20 @@ public static class Program
         return parts;
     }
 
-    private static PartDefinition Convert(SlrrGame game, SourcePart source, Dictionary<(SlrrRpk, int), string> partIds,
-        string packFolder, string texturePrefix, Dictionary<string, string?> models)
+    private static PartDefinition Convert(SlrrGame game, SlrrScriptEvaluator scripts, SourcePart source,
+        Dictionary<(SlrrRpk, int), string> partIds, string packFolder, string texturePrefix, Dictionary<string, string?> models)
     {
         var config = SlrrPartConfig.Load(source.ConfigFile);
 
         var scriptFile = source.ScriptPath == null ? null : Path.Combine(game.Root, source.ScriptPath);
-        var script = scriptFile != null && File.Exists(scriptFile) ? SlrrScript.Load(scriptFile) : null;
+        var script = scriptFile != null && File.Exists(scriptFile) ? scripts.Evaluate(scriptFile) : null;
+
+        // Fields like crankshaft_slot_ID name the slot a kind of part goes on; 0 = the part has no such slot
+        var properties = script?.Properties ?? new Dictionary<string, object>();
+        var slotRoles = properties
+            .Where(p => p.Key.EndsWith(SlotRoleSuffix, StringComparison.Ordinal) && p.Value is long)
+            .ToDictionary(p => p.Key[..^SlotRoleSuffix.Length], p => (int)(long)p.Value);
+        foreach (var role in slotRoles.Keys) properties.Remove(role + SlotRoleSuffix);
 
         return new PartDefinition
         {
@@ -158,6 +201,13 @@ public static class Program
             Name = source.Name,
             DisplayName = script?.DisplayName,
             BaseClass = script?.BaseClass,
+            ClassChain = script?.ClassChain ?? new List<string>(),
+            Properties = properties,
+            Derived = script?.Derived ?? new Dictionary<string, object>(),
+            SlotRoles = slotRoles.Where(r => r.Value > 0).ToDictionary(r => r.Key, r => r.Value),
+            StockParts = (script?.StockParts ?? new List<SlrrStockPart>()).Select(StockReference).ToList(),
+            RequiredSlots = (script?.RequiredSlots ?? new List<ScriptSlotRule>())
+                .Select(r => new PartSlotRule { Slot = r.Slot, Message = r.Message }).ToList(),
             Categories = game.Categories(source.Rpk, source.Entry),
             Model = ConvertModel(game, source, config, packFolder, texturePrefix, models),
             Mass = config.Mass,
@@ -175,6 +225,19 @@ public static class Program
                 CompatibleWith = slot.CompatibleWith.Select(r => Reference(r.PartId, r.SlotId)).ToList()
             }).ToList()
         };
+
+        // Scripts name the rpk outright, so their ids need no external table
+        PartStockReference StockReference(SlrrStockPart stock)
+        {
+            var rpk = game.GetRpk(stock.Rpk);
+            return new PartStockReference
+            {
+                Part = rpk != null && partIds.TryGetValue((rpk, stock.TypeId), out var id) ? id : null,
+                Name = stock.Name,
+                Conditional = stock.Conditional,
+                Source = $"{stock.Rpk}#0x{stock.TypeId:X4}"
+            };
+        }
 
         PartSlotReference Reference(int partId, int slotId)
         {
@@ -223,6 +286,33 @@ public static class Program
         var model = source.Name + ".kn5";
         kn5.Save(Path.Combine(packFolder, model));
         return models[key] = model;
+    }
+
+    /// <summary>
+    /// The game runs the part scripts itself, so it gets the classes: everything the evaluation touched plus the
+    /// shared part classes, in the folder layout class lookup depends on.
+    /// </summary>
+    /// <param name="replace">Whether the classes are all there are: what was in the folder before goes</param>
+    private static int CopyScripts(SlrrGame game, SlrrScriptEvaluator scripts, string target, bool replace)
+    {
+        var files = new HashSet<string>(scripts.UsedClassFiles, StringComparer.OrdinalIgnoreCase);
+        var shared = Path.Combine(game.Root, PartsFolder, "scripts");
+        if (Directory.Exists(shared)) files.UnionWith(Directory.EnumerateFiles(shared, "*.class", SearchOption.AllDirectories));
+
+        if (replace && Directory.Exists(target)) Directory.Delete(target, true);
+
+        var root = Path.GetFullPath(game.Root);
+        foreach (var file in files)
+        {
+            var relative = Path.GetRelativePath(root, Path.GetFullPath(file));
+            if (relative.StartsWith("..", StringComparison.Ordinal)) continue;
+
+            var destination = Path.Combine(target, relative);
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            File.Copy(file, destination, true);
+        }
+
+        return files.Count;
     }
 
     /// <summary>Empties a previously converted pack folder; refuses to touch anything else</summary>

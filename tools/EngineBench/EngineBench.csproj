@@ -6,25 +6,21 @@
     <RootNamespace>Street_Rod_AC</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="AcTools">
-      <HintPath>..\..\..\actools\Output\x64\Debug\AcTools.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
-  <!-- The converted part format is owned by the game; the converter only writes it -->
+  <!-- The part logic is the game's; the bench only drives it from the command line -->
   <ItemGroup>
     <Compile Include="..\..\Street Rod AC\Parts\PartDefinition.cs" Link="Parts\PartDefinition.cs" />
     <Compile Include="..\..\Street Rod AC\Parts\EngineBuild.cs" Link="Parts\EngineBuild.cs" />
+    <Compile Include="..\..\Street Rod AC\Parts\PartsCatalog.cs" Link="Parts\PartsCatalog.cs" />
     <Compile Include="..\..\Street Rod AC\Parts\Scripting\*.cs" Link="Parts\Scripting\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Street Rod AC\Parts\Logic\*.cs" Link="Parts\Logic\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Street Rod AC\Parts\Export\AcEngineData.cs" Link="Parts\Export\AcEngineData.cs" />
+    <Compile Include="..\..\Street Rod AC\Parts\Export\IniText.cs" Link="Parts\Export\IniText.cs" />
   </ItemGroup>
 
 </Project>
