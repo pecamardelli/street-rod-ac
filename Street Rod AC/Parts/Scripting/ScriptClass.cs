@@ -1,9 +1,9 @@
 using System.IO;
 using System.Text;
 
-namespace Street_Rod_AC.Slrr;
+namespace Street_Rod_AC.Parts.Scripting;
 
-public enum SlrrConstantKind
+public enum ScriptConstantKind
 {
     String = 0,
     Resource = 3,
@@ -13,27 +13,49 @@ public enum SlrrConstantKind
 }
 
 /// <summary>Constant pool entry: a string, or up to two indices/values depending on the kind</summary>
-public readonly record struct SlrrConstant(SlrrConstantKind Kind, string? Text, int A, int B);
+public readonly record struct ScriptConstant(ScriptConstantKind Kind, string? Text, int A, int B);
 
 /// <summary>One node of a compiled method: opcode, source line and the operand some opcodes carry</summary>
-public readonly record struct SlrrInstruction(byte Op, int Line, int Operand)
+public readonly record struct ScriptInstruction(byte Op, int Line, int Operand)
 {
     public float FloatOperand => BitConverter.Int32BitsToSingle(Operand);
 }
 
-public sealed record SlrrField(int Flags, string Name, string Signature, int Tree)
+public sealed record ScriptField(int Flags, string Name, string Signature, int Tree)
 {
     public bool IsStatic => (Flags & 8) != 0;
 }
 
-public sealed record SlrrMethod(int Flags, string Name, string Signature, int Tree);
+public sealed record ScriptMethod(int Flags, string Name, string Signature, int Tree)
+{
+    public bool IsStatic => (Flags & 8) != 0;
+    public bool IsNative => (Flags & 0x40) != 0;
+
+    /// <summary>Number of parameters in a signature like "(ILjava.lang.String;[F)V"</summary>
+    public int ParameterCount
+    {
+        get
+        {
+            var count = 0;
+            for (var i = Signature.IndexOf('(') + 1; i > 0 && i < Signature.Length && Signature[i] != ')'; i++)
+            {
+                while (i < Signature.Length && Signature[i] == '[') i++;
+                if (i < Signature.Length && Signature[i] == 'L') i = Signature.IndexOf(';', i);
+                if (i < 0) break;
+                count++;
+            }
+
+            return count;
+        }
+    }
+}
 
 /// <summary>
 /// A compiled SLRR script ("TUFA" class file): sections CONS (constant pool), FILD (fields with the
 /// index of their initializer), MTHD (methods with the index of their body) and TREE (the bodies,
 /// postfix expression trees where every node carries its source line).
 /// </summary>
-public sealed class SlrrClassFile
+public sealed class ScriptClass
 {
     private const int HeaderSize = 12;
 
@@ -50,20 +72,34 @@ public sealed class SlrrClassFile
         0x04, 0x05, 0x0C, 0x10, 0x18, 0x20, 0x21, 0x22, 0x23, 0x24, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D
     };
 
-    public List<SlrrConstant> Pool { get; } = new();
-    public List<SlrrField> Fields { get; } = new();
-    public List<SlrrMethod> Methods { get; } = new();
-    public List<SlrrInstruction[]> Trees { get; } = new();
+    public List<ScriptConstant> Pool { get; } = new();
+    public List<ScriptField> Fields { get; } = new();
+    public List<ScriptMethod> Methods { get; } = new();
+    public List<ScriptInstruction[]> Trees { get; } = new();
+
+    /// <summary>Folder the class was loaded from; classes of one car or pack refer to each other from there</summary>
+    public string Folder { get; private set; } = string.Empty;
 
     public string? ClassName => Text(0);
-    public string? BaseClass => Pool.Count > 3 && Pool[3].Kind == SlrrConstantKind.Class ? Text(Pool[3].A) : Text(2);
+    public string? BaseClass => Pool.Count > 3 && Pool[3].Kind == ScriptConstantKind.Class ? Text(Pool[3].A) : Text(2);
 
     public string? Text(int index) => index >= 0 && index < Pool.Count ? Pool[index].Text : null;
+
+    /// <summary>Class name behind a type operand, which is a signature string: "Ljava.game.parts.Part;"</summary>
+    public string? TypeName(int index)
+    {
+        var text = Text(index);
+        return text is { Length: > 2 } && text[0] == 'L' && text[^1] == ';' ? text[1..^1] : text;
+    }
+
+    /// <summary>Class name behind a class constant</summary>
+    public string? ClassAt(int index) =>
+        index >= 0 && index < Pool.Count && Pool[index].Kind == ScriptConstantKind.Class ? Text(Pool[index].A) : null;
 
     /// <summary>Name of the field or method behind a member constant</summary>
     public string? MemberName(int index)
     {
-        if (index < 0 || index >= Pool.Count || Pool[index].Kind != SlrrConstantKind.Member) return null;
+        if (index < 0 || index >= Pool.Count || Pool[index].Kind != ScriptConstantKind.Member) return null;
 
         var nameAndType = Pool[index].B;
         return nameAndType >= 0 && nameAndType < Pool.Count ? Text(Pool[nameAndType].A) : null;
@@ -72,18 +108,18 @@ public sealed class SlrrClassFile
     /// <summary>Class a member constant belongs to</summary>
     public string? MemberClass(int index)
     {
-        if (index < 0 || index >= Pool.Count || Pool[index].Kind != SlrrConstantKind.Member) return null;
+        if (index < 0 || index >= Pool.Count || Pool[index].Kind != ScriptConstantKind.Member) return null;
 
         var owner = Pool[index].A;
         return owner >= 0 && owner < Pool.Count ? Text(Pool[owner].A) : null;
     }
 
-    public static SlrrClassFile? Load(string filename)
+    public static ScriptClass? Load(string filename)
     {
         var data = File.ReadAllBytes(filename);
         if (data.Length < HeaderSize + 8 || Encoding.ASCII.GetString(data, 0, 4) != "TUFA") return null;
 
-        var result = new SlrrClassFile();
+        var result = new ScriptClass { Folder = Path.GetDirectoryName(filename) ?? string.Empty };
         try
         {
             var position = HeaderSize;
@@ -120,24 +156,24 @@ public sealed class SlrrClassFile
 
         for (var i = 0; i < count; i++)
         {
-            var kind = (SlrrConstantKind)BitConverter.ToInt32(data, position);
+            var kind = (ScriptConstantKind)BitConverter.ToInt32(data, position);
             position += 4;
 
             switch (kind)
             {
-                case SlrrConstantKind.String:
+                case ScriptConstantKind.String:
                     var length = BitConverter.ToInt32(data, position);
-                    Pool.Add(new SlrrConstant(kind, Encoding.Latin1.GetString(data, position + 4, length), 0, 0));
+                    Pool.Add(new ScriptConstant(kind, Encoding.Latin1.GetString(data, position + 4, length), 0, 0));
                     position += 4 + length + 1;
                     break;
-                case SlrrConstantKind.Class:
-                    Pool.Add(new SlrrConstant(kind, null, BitConverter.ToInt32(data, position), 0));
+                case ScriptConstantKind.Class:
+                    Pool.Add(new ScriptConstant(kind, null, BitConverter.ToInt32(data, position), 0));
                     position += 4;
                     break;
-                case SlrrConstantKind.Resource:
-                case SlrrConstantKind.Member:
-                case SlrrConstantKind.NameAndType:
-                    Pool.Add(new SlrrConstant(kind, null, BitConverter.ToInt32(data, position), BitConverter.ToInt32(data, position + 4)));
+                case ScriptConstantKind.Resource:
+                case ScriptConstantKind.Member:
+                case ScriptConstantKind.NameAndType:
+                    Pool.Add(new ScriptConstant(kind, null, BitConverter.ToInt32(data, position), BitConverter.ToInt32(data, position + 4)));
                     position += 8;
                     break;
                 default:
@@ -156,7 +192,7 @@ public sealed class SlrrClassFile
 
             for (var i = 0; i < count; i++, position += 16)
             {
-                Fields.Add(new SlrrField(
+                Fields.Add(new ScriptField(
                     BitConverter.ToInt32(data, position),
                     Text(BitConverter.ToInt32(data, position + 4)) ?? string.Empty,
                     Text(BitConverter.ToInt32(data, position + 8)) ?? string.Empty,
@@ -175,7 +211,7 @@ public sealed class SlrrClassFile
 
             for (var i = 0; i < count; i++, position += 20)
             {
-                Methods.Add(new SlrrMethod(
+                Methods.Add(new ScriptMethod(
                     BitConverter.ToInt32(data, position),
                     Text(BitConverter.ToInt32(data, position + 4)) ?? string.Empty,
                     Text(BitConverter.ToInt32(data, position + 8)) ?? string.Empty,
@@ -195,7 +231,7 @@ public sealed class SlrrClassFile
             position += 4;
             if (length < 0 || length > end - position) throw new InvalidDataException("Bad tree length");
 
-            var tree = new SlrrInstruction[length];
+            var tree = new ScriptInstruction[length];
             for (var j = 0; j < length; j++)
             {
                 var op = data[position];
@@ -213,7 +249,7 @@ public sealed class SlrrClassFile
                     throw new InvalidDataException($"Unknown opcode 0x{op:X2}");
                 }
 
-                tree[j] = new SlrrInstruction(op, line, operand);
+                tree[j] = new ScriptInstruction(op, line, operand);
             }
 
             Trees.Add(tree);

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Newtonsoft.Json;
 using Street_Rod_AC.Parts;
+using Street_Rod_AC.Parts.Scripting;
 using Street_Rod_AC.Slrr;
 
 namespace Street_Rod_AC;
@@ -126,10 +127,14 @@ public static class Program
             File.WriteAllText(Path.Combine(output, ConstantsFile), JsonConvert.SerializeObject(scripts.Constants, Formatting.Indented));
 
             var engineBuilds = new SlrrEngineBuilds(game, partIds);
-            var builds = engineBuilds.FromCars(scripts);
+            // Cars get an evaluator of their own: their classes are of no use to the game
+            var builds = engineBuilds.FromCars(new SlrrScriptEvaluator(game));
             if (notes != null && Directory.Exists(notes)) builds.AddRange(engineBuilds.FromNotes(notes));
 
             File.WriteAllText(Path.Combine(output, EngineBuild.FileName), JsonConvert.SerializeObject(builds, Formatting.Indented));
+
+            var copied = CopyScripts(game, scripts, Path.Combine(output, PartScripts.Folder));
+            Console.WriteLine($"  {copied} script classes");
             Console.WriteLine($"  {builds.Count} engine builds ({builds.Count(b => b.RatedPower != null)} with a rated power, " +
                               $"{builds.Count(b => b.Parts.All(p => p.Part != null))} fully resolved)");
         }
@@ -198,7 +203,7 @@ public static class Program
             Derived = script?.Derived ?? new Dictionary<string, object>(),
             SlotRoles = slotRoles.Where(r => r.Value > 0).ToDictionary(r => r.Key, r => r.Value),
             StockParts = (script?.StockParts ?? new List<SlrrStockPart>()).Select(StockReference).ToList(),
-            RequiredSlots = (script?.RequiredSlots ?? new List<SlrrSlotRule>())
+            RequiredSlots = (script?.RequiredSlots ?? new List<ScriptSlotRule>())
                 .Select(r => new PartSlotRule { Slot = r.Slot, Message = r.Message }).ToList(),
             Categories = game.Categories(source.Rpk, source.Entry),
             Model = ConvertModel(game, source, config, packFolder, texturePrefix, models),
@@ -278,6 +283,32 @@ public static class Program
         var model = source.Name + ".kn5";
         kn5.Save(Path.Combine(packFolder, model));
         return models[key] = model;
+    }
+
+    /// <summary>
+    /// The game runs the part scripts itself, so it gets the classes: everything the evaluation touched plus the
+    /// shared part classes, in the folder layout class lookup depends on.
+    /// </summary>
+    private static int CopyScripts(SlrrGame game, SlrrScriptEvaluator scripts, string target)
+    {
+        var files = new HashSet<string>(scripts.UsedClassFiles, StringComparer.OrdinalIgnoreCase);
+        var shared = Path.Combine(game.Root, PartsFolder, "scripts");
+        if (Directory.Exists(shared)) files.UnionWith(Directory.EnumerateFiles(shared, "*.class", SearchOption.AllDirectories));
+
+        if (Directory.Exists(target)) Directory.Delete(target, true);
+
+        var root = Path.GetFullPath(game.Root);
+        foreach (var file in files)
+        {
+            var relative = Path.GetRelativePath(root, Path.GetFullPath(file));
+            if (relative.StartsWith("..", StringComparison.Ordinal)) continue;
+
+            var destination = Path.Combine(target, relative);
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            File.Copy(file, destination, true);
+        }
+
+        return files.Count;
     }
 
     /// <summary>Empties a previously converted pack folder; refuses to touch anything else</summary>

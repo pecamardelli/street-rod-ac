@@ -9,6 +9,8 @@ namespace Street_Rod_AC.Parts;
 /// </summary>
 public sealed class PartsCatalog
 {
+    private const int MaxEquivalents = 16;
+
     private readonly string _root;
     private readonly Dictionary<string, PartDefinition> _parts = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<(string PartId, int SlotId), List<(PartDefinition Part, PartSlot Slot)>> _mountable = new();
@@ -19,6 +21,12 @@ public sealed class PartsCatalog
     }
 
     public IReadOnlyDictionary<string, PartDefinition> Parts => _parts;
+
+    /// <summary>Folder the catalog was loaded from</summary>
+    public string Root => _root;
+
+    /// <summary>Complete engines as part lists: factory builds of the source game's cars and written-down builds</summary>
+    public IReadOnlyList<EngineBuild> EngineBuilds { get; private set; } = Array.Empty<EngineBuild>();
 
     public static PartsCatalog Load(string root)
     {
@@ -35,6 +43,10 @@ public sealed class PartsCatalog
                 catalog._parts[part.Id] = part;
             }
         }
+
+        var buildsFile = Path.Combine(root, EngineBuild.FileName);
+        if (File.Exists(buildsFile))
+            catalog.EngineBuilds = JsonConvert.DeserializeObject<List<EngineBuild>>(File.ReadAllText(buildsFile)) ?? new List<EngineBuild>();
 
         foreach (var part in catalog._parts.Values)
         {
@@ -59,6 +71,40 @@ public sealed class PartsCatalog
     /// <summary>Parts that can be mounted on a slot, each with the slot of its own it mounts by</summary>
     public IReadOnlyList<(PartDefinition Part, PartSlot Slot)> GetMountable(PartDefinition parent, PartSlot slot) =>
         _mountable.TryGetValue((parent.Id.ToLowerInvariant(), slot.Id), out var list) ? list : Array.Empty<(PartDefinition, PartSlot)>();
+
+    /// <summary>
+    /// Whether two slots go together. A slot names the slots it attaches to, on either side of the joint (a header
+    /// names the head it bolts to, a block names the radiator it takes), and a slot may stand in for the slot of
+    /// another part: whatever fits there fits here.
+    /// </summary>
+    public bool CanMate(PartDefinition part, PartSlot slot, PartDefinition other, PartSlot otherSlot)
+    {
+        var mine = Equivalents(part, slot);
+        var theirs = Equivalents(other, otherSlot);
+        return Names(mine, theirs) || Names(theirs, mine);
+
+        static bool Names(List<(PartDefinition Part, PartSlot Slot)> from, List<(PartDefinition Part, PartSlot Slot)> to) =>
+            from.Any(f => f.Slot.AttachesTo.Any(a => a.Part != null && to.Any(t =>
+                t.Slot.Id == a.Slot && t.Part.Id.Equals(a.Part, StringComparison.OrdinalIgnoreCase))));
+    }
+
+    /// <summary>The slot itself and every slot it stands in for, directly or through another stand-in</summary>
+    private List<(PartDefinition Part, PartSlot Slot)> Equivalents(PartDefinition part, PartSlot slot)
+    {
+        var result = new List<(PartDefinition Part, PartSlot Slot)> { (part, slot) };
+        for (var i = 0; i < result.Count && result.Count < MaxEquivalents; i++)
+        {
+            foreach (var compatible in result[i].Slot.CompatibleWith)
+            {
+                if (compatible.Part == null || Get(compatible.Part) is not { } target) continue;
+
+                var targetSlot = target.Slots.FirstOrDefault(s => s.Id == compatible.Slot);
+                if (targetSlot != null && !result.Any(r => ReferenceEquals(r.Slot, targetSlot))) result.Add((target, targetSlot));
+            }
+        }
+
+        return result;
+    }
 
     /// <summary>Full path of the part's model, null if it has none</summary>
     public string? GetModelPath(PartDefinition part)
