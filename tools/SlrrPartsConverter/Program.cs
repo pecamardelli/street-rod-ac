@@ -21,6 +21,7 @@ public static class Program
     private const string NotesOption = "--notes";
     private const string ReplaceOption = "--replace";
     private const string DropOption = "--drop";
+    private const string RenameOption = "--rename";
 
     private sealed record SourcePart(SlrrRpk Rpk, SlrrRpkEntry Entry, string ConfigFile, string? ScriptPath, string Id, string Name);
 
@@ -29,8 +30,10 @@ public static class Program
         // --notes <folder>: text files with engine builds written down as stock_parts_list_E lines
         // --replace <old pack>=<new pack>: the old pack stays out, what names its parts gets their twins of the new one
         // --drop <part id pattern>: parts left out altogether (a pack's take on engines another pack does better)
+        // --rename <rpk pack>=<pack id>: the pack goes by a name of our own (the mod's file name says nothing to a player)
         string? notes = null;
         var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var renames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var drops = new List<Regex>();
         var positional = new List<string>();
         for (var i = 0; i < args.Length; i++)
@@ -41,26 +44,35 @@ public static class Program
                 drops.AddRange(args[++i].Split(',').Select(p =>
                     new Regex("^" + Regex.Escape(p.Trim()).Replace(@"\*", ".*") + "$", RegexOptions.IgnoreCase | RegexOptions.Compiled)));
             }
-            else if (args[i] == ReplaceOption && i + 1 < args.Length)
+            else if ((args[i] == ReplaceOption || args[i] == RenameOption) && i + 1 < args.Length)
             {
-                var pair = args[++i].Split('=');
-                if (pair.Length != 2)
+                var option = args[i];
+                foreach (var pair in args[++i].Split(',').Select(p => p.Split('=')))
                 {
-                    Console.WriteLine($"{ReplaceOption} takes <old pack>=<new pack>, e.g. engines/Mopar=engines/Chrysler_V8_pak");
-                    return 1;
-                }
+                    if (pair.Length != 2)
+                    {
+                        Console.WriteLine(option == ReplaceOption
+                            ? $"{ReplaceOption} takes <old pack>=<new pack>, e.g. engines/Mopar=engines/Chrysler_V8_pak"
+                            : $"{RenameOption} takes <rpk pack>=<pack id>, e.g. engines/Chrysler_V8_pak=engines/chrysler");
+                        return 1;
+                    }
 
-                replacements[pair[0].Trim()] = pair[1].Trim();
+                    (option == ReplaceOption ? replacements : renames)[pair[0].Trim()] = pair[1].Trim();
+                }
             }
             else positional.Add(args[i]);
         }
 
         if (positional.Count < 2)
         {
-            Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...]");
+            Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] " +
+                              "[--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>=<pack id>,...]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""C:\Games\AC\content\parts"" engines/Mopar");
             return 1;
         }
+
+        // Packs are named after the rpk they come from unless renamed; every option names them by what they are called here
+        foreach (var (old, replacement) in replacements.ToList()) replacements[old] = renames.GetValueOrDefault(replacement, replacement);
 
         var game = new SlrrGame(positional[0]);
         var scripts = new SlrrScriptEvaluator(game);
@@ -80,6 +92,8 @@ public static class Program
         var packs = new List<(string Id, SlrrRpk Rpk, List<SourcePart> Parts)>();
         var partIds = new Dictionary<(SlrrRpk, int), string>();
         var dropped = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // Ids parts went by before, for saves made then: a pack renamed since, or replaced by a later release
+        var aliases = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         // The base game keeps its stock parts (running gear, accessories, neons) in an rpk next to the parts folder
         var baseRpk = Path.Combine(game.Root, BaseRpk);
@@ -92,9 +106,10 @@ public static class Program
             var rpk = game.GetRpk(relativePath);
             if (rpk == null) continue;
 
-            var packId = file == baseRpk
+            var rpkId = file == baseRpk
                 ? BasePackId
                 : Path.ChangeExtension(Path.GetRelativePath(partsRoot, file), null).Replace('\\', '/');
+            var packId = renames.GetValueOrDefault(rpkId, rpkId);
             var parts = CollectParts(game, rpk, packId);
             foreach (var part in parts.Where(part => drops.Any(d => d.IsMatch(part.Id))).ToList())
             {
@@ -104,12 +119,15 @@ public static class Program
             if (parts.Count == 0) continue;
 
             packs.Add((packId, rpk, parts));
-            foreach (var part in parts) partIds[(part.Rpk, part.Entry.TypeId)] = part.Id;
+            foreach (var part in parts)
+            {
+                partIds[(part.Rpk, part.Entry.TypeId)] = part.Id;
+                if (packId != rpkId) aliases[$"{rpkId}/{part.Name}"] = part.Id;
+            }
         }
 
         Console.WriteLine($"Found {partIds.Count} parts in {packs.Count} packs" + (dropped.Count > 0 ? $", {dropped.Count} dropped" : ""));
 
-        var aliases = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var (oldId, newId) in replacements)
         {
             var oldPack = packs.FirstOrDefault(p => p.Id.Equals(oldId, StringComparison.OrdinalIgnoreCase));
@@ -124,7 +142,6 @@ public static class Program
             foreach (var (from, to) in ReplacePack(game, oldPack.Parts, newPack.Parts, partIds)) aliases[from] = to;
 
             packs.Remove(oldPack);
-            if (filter == null) RemovePack(Path.Combine(output, oldPack.Id.Replace('/', Path.DirectorySeparatorChar)));
         }
 
         // Second pass: models and definitions
@@ -176,6 +193,17 @@ public static class Program
         // A filtered run has not seen them all.
         if (filter == null)
         {
+            // Packs converted before under a name no longer produced (renamed, replaced, dropped whole) would be
+            // loaded next to the current ones
+            var current = packs.Select(p => Path.GetFullPath(Path.Combine(output, p.Id.Replace('/', Path.DirectorySeparatorChar))))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var stale in Directory.EnumerateFiles(output, PartPack.FileName, SearchOption.AllDirectories)
+                         .Select(f => Path.GetFullPath(Path.GetDirectoryName(f)!)).Where(f => !current.Contains(f)).ToList())
+            {
+                RemovePack(stale);
+                Console.WriteLine($"  removed {Path.GetRelativePath(output, stale)}: no longer converted");
+            }
+
             File.WriteAllText(Path.Combine(output, ConstantsFile), JsonConvert.SerializeObject(scripts.Constants, Formatting.Indented));
             File.WriteAllText(Path.Combine(output, PartPack.AliasesFileName), JsonConvert.SerializeObject(aliases, Formatting.Indented));
 
