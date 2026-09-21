@@ -111,7 +111,7 @@ namespace Street_Rod_AC.Screens.CarSelection
             _logger.Information("Loaded {Count} cars for selection", Cars.Count);
         }
 
-        private void OnSelectCar(CarSelectionItemViewModel? selectedCar)
+        private async void OnSelectCar(CarSelectionItemViewModel? selectedCar)
         {
             if (selectedCar == null)
                 return;
@@ -125,10 +125,18 @@ namespace Street_Rod_AC.Screens.CarSelection
             // Update game state
             _gameState.Player.SelectedCarInstanceId = selectedCar.CarInstance.InstanceId;
 
-            // Spend time for switching cars (15 min)
+            // Spend time for switching cars (15 min). Waited for before saving: late in the day that is the
+            // next morning, and what the new day brings belongs in the save.
             if (isActuallySwitching)
             {
-                _ = ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.SwitchCar);
+                try
+                {
+                    await ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.SwitchCar);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Could not spend the time for switching cars");
+                }
             }
 
             // Save game state to persist the selection

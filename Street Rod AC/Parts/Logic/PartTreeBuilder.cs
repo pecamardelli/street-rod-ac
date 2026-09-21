@@ -26,7 +26,7 @@ public static class PartTreeBuilder
             else missing.Add(id);
         }
 
-        var rootDefinition = pending.FirstOrDefault(p => p.ClassChain.Any(c => c.EndsWith("." + rootClass, StringComparison.Ordinal)));
+        var rootDefinition = pending.FirstOrDefault(p => PartKinds.Is(p, rootClass));
         if (rootDefinition == null) return null;
 
         pending.Remove(rootDefinition);

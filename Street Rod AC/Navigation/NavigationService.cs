@@ -131,6 +131,8 @@ namespace Street_Rod_AC.Navigation
                 gameState,
                 _catalogRepository,
                 _launcher,
+                ((App)System.Windows.Application.Current).CarPartsService,
+                _gameStateRepository,
                 skipAnimation);
             NavigateTo(screen);
         }
@@ -190,10 +192,14 @@ namespace Street_Rod_AC.Navigation
 
         public void NavigateToUsedParts(GameState gameState)
         {
+            var app = (App)System.Windows.Application.Current;
             var screen = new Screens.UsedParts.UsedPartsScreenViewModel(
                 this,
                 _dialogService,
-                gameState);
+                gameState,
+                app.CarPartsService,
+                app.PartsShopService,
+                _gameStateRepository);
             NavigateTo(screen);
         }
 
@@ -204,7 +210,8 @@ namespace Street_Rod_AC.Navigation
                 _dialogService,
                 _catalogRepository,
                 _profileRepository,
-                _profileService);
+                _profileService,
+                ((App)System.Windows.Application.Current).CarPartsService);
             NavigateTo(screen);
         }
 

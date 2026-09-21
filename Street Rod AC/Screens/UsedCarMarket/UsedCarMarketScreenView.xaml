@@ -52,6 +52,15 @@
             </StackPanel>
         </StackPanel>
 
+        <!-- The first market of a game takes a few seconds to put together -->
+        <TextBlock Grid.Row="1"
+                   Text="The dealers are putting their cars out..."
+                   FontSize="18"
+                   Foreground="{StaticResource TextSecondaryBrush}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
         <!-- Car Listings -->
         <ScrollViewer Grid.Row="1"
                      VerticalScrollBarVisibility="Auto"
@@ -73,7 +82,7 @@
                                CornerRadius="5"
                                Margin="10"
                                Width="350"
-                               Height="220">
+                               Height="250">
                             <Border.Effect>
                                 <DropShadowEffect Color="Black"
                                                 Direction="270"
@@ -149,6 +158,21 @@
                                         <TextBlock Text="{Binding MileageDisplay}"
                                                   FontSize="14"
                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+
+                                    <!-- Engine -->
+                                    <StackPanel Orientation="Horizontal"
+                                                Margin="0,5,0,0"
+                                                Visibility="{Binding EngineDisplay, Converter={StaticResource StringToVisibilityConverter}}">
+                                        <TextBlock Text="Engine:"
+                                                  FontSize="14"
+                                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                                  Width="80"/>
+                                        <TextBlock Text="{Binding EngineDisplay}"
+                                                  FontSize="14"
+                                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                                  TextWrapping="Wrap"
+                                                  MaxWidth="220"/>
                                     </StackPanel>
                                 </StackPanel>
 

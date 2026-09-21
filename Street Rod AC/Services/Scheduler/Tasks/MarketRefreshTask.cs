@@ -21,14 +21,14 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
             _logger = AppLoggerFactory.CreateLogger("MarketRefreshTask");
         }
 
-        public Task ExecuteAsync(GameState gameState, DateTime currentDate)
+        public async Task ExecuteAsync(GameState gameState, DateTime currentDate)
         {
             _logger.Information("Running daily market refresh for date {Date}", currentDate);
 
             var previousCount = gameState.UsedCarMarket.Count;
             var previousAvailable = gameState.UsedCarMarket.Count(l => !l.IsSold);
 
-            gameState.UsedCarMarket = _marketService.RefreshMarket(
+            gameState.UsedCarMarket = await _marketService.RefreshMarketAsync(
                 gameState.UsedCarMarket,
                 gameState.DealerLocations,
                 currentDate);
@@ -39,8 +39,6 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
             _logger.Information(
                 "Market refresh complete. Listings: {Previous} -> {New}, Available: {PrevAvail} -> {NewAvail}",
                 previousCount, newCount, previousAvailable, newAvailable);
-
-            return Task.CompletedTask;
         }
     }
 }

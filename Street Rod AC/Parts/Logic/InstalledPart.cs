@@ -13,6 +13,12 @@ public sealed class InstalledPart
 
     public PartDefinition Definition { get; }
 
+    /// <summary>
+    /// Which physical part this is, when it stands for one somebody owns. A tree is made anew after every
+    /// change; this is how the same part is known again in the next one.
+    /// </summary>
+    public Guid InstanceId { get; init; }
+
     /// <summary>1 = new, 0 = worn out (mileage)</summary>
     public double Wear { get; set; } = 1.0;
 
@@ -54,8 +60,7 @@ public sealed class InstalledPart
     }
 
     /// <summary>True when the part's script descends from the class, given by simple name: "Block", "Transmission"</summary>
-    public bool Is(string className) =>
-        Definition.ClassChain.Any(c => c.EndsWith("." + className, StringComparison.Ordinal));
+    public bool Is(string className) => PartKinds.Is(Definition, className);
 
     public override string ToString() => Definition.DisplayName ?? Definition.Id;
 }

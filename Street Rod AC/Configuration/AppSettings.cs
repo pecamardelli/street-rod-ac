@@ -70,9 +70,10 @@ public class AppSettings
     public string PartsPath => Path.Combine(AssettoCorsaPath, "content", "parts");
 
     /// <summary>
-    /// Engine shown in the garage until cars carry their own: id of the engine block part
+    /// What a part costs against the value its script gives it. The scripts think in the dollars of the early
+    /// 2000s, the game's cars are priced in those of 1970: about a fifth.
     /// </summary>
-    public string GarageEnginePart { get; set; } = "engines/Mopar/block_340";
+    public double PartsPriceScale { get; set; } = 0.2;
 
     /// <summary>
     /// Validates that the AC installation path exists and is valid

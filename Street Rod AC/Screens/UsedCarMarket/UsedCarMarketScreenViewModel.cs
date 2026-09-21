@@ -99,7 +99,20 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             InitializeMarket();
         }
 
-        private void InitializeMarket()
+        private bool _isLoading;
+
+        /// <summary>The first market of a game is being put together: every car gets its engine, which takes a few seconds</summary>
+        public bool IsLoading
+        {
+            get => _isLoading;
+            private set
+            {
+                _isLoading = value;
+                OnPropertyChanged(nameof(IsLoading));
+            }
+        }
+
+        private async void InitializeMarket()
         {
             _logger.Information("Initializing used car market screen");
 
@@ -116,9 +129,21 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
                 }
 
                 // Spawn initial market
-                var listings = _marketService.SpawnListings(_gameState.DealerLocations, _gameState.Date);
-                _gameState.UsedCarMarket = listings;
-                _logger.Information("Spawned {ListingCount} initial listings", listings.Count);
+                IsLoading = true;
+                try
+                {
+                    var listings = await _marketService.SpawnListingsAsync(_gameState.DealerLocations, _gameState.Date);
+                    _gameState.UsedCarMarket = listings;
+                    _logger.Information("Spawned {ListingCount} initial listings", listings.Count);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Could not spawn the initial market");
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
             }
 
             // Load dealer options
@@ -240,7 +265,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             _dialogService.ShowDialog(confirmDialog);
         }
 
-        private void CompletePurchase(UsedCarListing listing, CarDefinition carDef, string dealerName)
+        private async void CompletePurchase(UsedCarListing listing, CarDefinition carDef, string dealerName)
         {
             // Validate funds
             if (_gameState.Player.Money < listing.Price)
@@ -282,8 +307,11 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
                 TransmissionHealth = listing.Condition,
                 BodyCondition = listing.Condition,
                 TireCondition = listing.Condition,
-                InstalledParts = new List<Part>()
+                // What was for sale is what gets bought; older listings carry no parts and get the factory engine
+                Parts = listing.Parts,
+                HasPartsAssigned = listing.Parts.Count > 0
             };
+            ((App)System.Windows.Application.Current).CarPartsService.EnsureParts(carInstance);
 
             // Add to player's garage
             if (_gameState.Player.Cars == null)
@@ -299,11 +327,22 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             currentListing.IsSold = true;
             currentListing.SoldDate = _gameState.Date;
 
+            // The parts went with the car; the sold listing stays around for a week and need not keep a copy
+            currentListing.Parts = [];
+
             _logger.Information("Purchase completed: {CarName} for ${Price}, new bankroll: ${Bankroll}",
                 carDef.Name, listing.Price, _gameState.Player.Money);
 
-            // Spend time for buying a car (2 hours)
-            _ = ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.BuyCar);
+            // Spend time for buying a car (2 hours). Waited for before saving: late in the day that is the
+            // next morning, with the market and the ads turned over, and all of it belongs in the save.
+            try
+            {
+                await ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.BuyCar);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not spend the time for buying the car");
+            }
 
             // Save game state
             try
@@ -333,7 +372,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             _dialogService.ShowDialog(successDialog);
         }
 
-        private void OnRefreshMarket()
+        private async void OnRefreshMarket()
         {
             _logger.Information("Manual market refresh requested");
 
@@ -342,15 +381,20 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
                 _gameState.DealerLocations = _marketService.GetDefaultDealers();
             }
 
-            var refreshedListings = _marketService.RefreshMarket(
-                _gameState.UsedCarMarket,
-                _gameState.DealerLocations,
-                _gameState.Date);
+            try
+            {
+                _gameState.UsedCarMarket = await _marketService.RefreshMarketAsync(
+                    _gameState.UsedCarMarket,
+                    _gameState.DealerLocations,
+                    _gameState.Date);
+                LoadListings();
 
-            _gameState.UsedCarMarket = refreshedListings;
-            LoadListings();
-
-            _logger.Information("Market refresh completed");
+                _logger.Information("Market refresh completed");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Market refresh failed");
+            }
         }
 
         private void OnBack()
@@ -397,5 +441,10 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
         public string PriceDisplay => $"${Listing.Price:N0}";
         public string ConditionDisplay => $"{(int)(Listing.Condition * 100)}%";
         public string MileageDisplay => $"{Listing.Mileage:N0} km";
+
+        /// <summary>What is under the hood, with a word on it when somebody has been at it</summary>
+        public string EngineDisplay => Listing.EngineSummary == null
+            ? string.Empty
+            : Listing.IsModified ? Listing.EngineSummary + " (modified)" : Listing.EngineSummary;
     }
 }

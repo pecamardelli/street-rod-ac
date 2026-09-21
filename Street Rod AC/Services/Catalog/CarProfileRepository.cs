@@ -27,7 +27,7 @@ namespace Street_Rod_AC.Services.Catalog
 
         public CarProfile? GetProfile(string carDefinitionId)
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarProfile>(ProfilesCollection);
             return collection.FindById(carDefinitionId);
         }
@@ -45,7 +45,7 @@ namespace Street_Rod_AC.Services.Catalog
 
         public void UpsertProfile(CarProfile profile)
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarProfile>(ProfilesCollection);
 
             // Ensure indexes
@@ -55,23 +55,32 @@ namespace Street_Rod_AC.Services.Catalog
             collection.Upsert(profile);
         }
 
+        public bool UpdateProfile(string carDefinitionId, Func<CarProfile, CarProfile?> change)
+        {
+            using var db = CatalogDatabase.Open(_databasePath);
+            var collection = db.GetCollection<CarProfile>(ProfilesCollection);
+
+            var stored = collection.FindById(carDefinitionId);
+            return stored != null && change(stored) is { } changed && collection.Update(changed);
+        }
+
         public List<CarProfile> GetAllProfiles()
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarProfile>(ProfilesCollection);
             return [.. collection.FindAll()];
         }
 
         public bool ProfileExists(string carDefinitionId)
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarProfile>(ProfilesCollection);
             return collection.Exists(x => x.CarDefinitionId == carDefinitionId);
         }
 
         public int GetProfileCount()
         {
-            using var db = new LiteDatabase(_databasePath);
+            using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarProfile>(ProfilesCollection);
             return collection.Count();
         }

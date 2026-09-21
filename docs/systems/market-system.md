@@ -59,8 +59,9 @@ Five default dealers with regions:
 
 ## Key Service
 `UsedCarMarketService` (`IUsedCarMarketService`):
-- `SpawnListings(dealers, date)` - Initial spawn
-- `RefreshMarket(listings, dealers, date)` - Daily refresh
+- `SpawnListingsAsync(dealers, date)` - Initial spawn
+- `RefreshMarketAsync(listings, dealers, date)` - Daily refresh. Engines are put together only for the listings that
+  make it into the market, on a worker thread; the listings are looked at and handed back on the calling thread
 - `GetAvailableListings(listings)` - Filter unsold
 
 ## Files

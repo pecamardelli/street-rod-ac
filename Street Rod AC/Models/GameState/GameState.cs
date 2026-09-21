@@ -34,7 +34,7 @@ namespace Street_Rod_AC.Models.GameState
 
         // Markets
         public List<Car> UsedCars { get; set; }
-        public List<Part> UsedParts { get; set; }
+        public List<PartInstance> UsedParts { get; set; }
         public NewspaperAds NewspaperAds { get; set; }
 
         // Used Car Market System

@@ -1,5 +1,7 @@
 using System.Globalization;
+using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts;
+using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Parts.Export;
 using Street_Rod_AC.Parts.Logic;
 
@@ -20,6 +22,9 @@ public static class Program
         {
             Console.WriteLine("Usage: EngineBench <parts folder> list | rated | all | inputs | show <build id>");
             Console.WriteLine("       EngineBench <parts folder> export <build id> <car data folder> <output folder>");
+            Console.WriteLine("       EngineBench <parts folder> cars <AC cars folder>       factory engine suggested for every car");
+            Console.WriteLine("       EngineBench <parts folder> tune <build id> [count]     engines a used car of that build may turn up with");
+            Console.WriteLine("       EngineBench <parts folder> bench <build id>            take every part off and find where it goes back");
             return 1;
         }
 
@@ -46,6 +51,15 @@ public static class Program
 
             case "export" when args.Length > 4:
                 return Export(catalog, args[2], args[3], args[4]);
+
+            case "cars" when args.Length > 2:
+                return Cars(catalog, args[2]);
+
+            case "tune" when args.Length > 2:
+                return Tune(catalog, args[2], args.Length > 3 ? int.Parse(args[3]) : 10);
+
+            case "bench" when args.Length > 2:
+                return Bench(catalog, args[2]);
 
             default:
                 Console.WriteLine("Unknown command");
@@ -181,6 +195,97 @@ public static class Program
 
         Console.WriteLine($"{build.Name}: {report.Dyno!.MaxPowerHp:0} hp, {report.GearRatios.Count} gears -> {string.Join(", ", files.Keys)} in {output}");
         return 0;
+    }
+
+    /// <summary>The engine each Assetto Corsa car would get, with the runners-up</summary>
+    private static int Cars(PartsCatalog catalog, string carsFolder)
+    {
+        var index = EngineBuildIndex.Create(catalog);
+        Console.WriteLine($"{index.Runnable.Count} builds run\n");
+
+        foreach (var folder in Directory.GetDirectories(carsFolder))
+        {
+            var uiFile = Path.Combine(folder, "ui", "ui_car.json");
+            if (!File.Exists(uiFile)) continue;
+
+            var ui = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(uiFile));
+            var brand = (string?)ui["brand"] ?? "";
+            var name = (string?)ui["name"] ?? "";
+            var bhp = StockEngineMatcher.ParsePower((string?)ui["specs"]?["bhp"]);
+
+            Console.WriteLine($"{Path.GetFileName(folder)}: {brand} | {name} | {bhp:0} bhp  (family '{MakeFamilies.FamilyOf(brand + " " + name)}')");
+            foreach (var match in StockEngineMatcher.Rank(index, brand, name, bhp).Take(4))
+                Console.WriteLine($"    {match.Score,6:0.00}  {match.Build.PowerHp,4:0} hp {match.Build.Litres,5:0.00} l  [{match.Build.Family,-6}] {match.Build.Build.Name}  ({match.Build.Build.Id})");
+        }
+
+        return 0;
+    }
+
+    private static int Tune(PartsCatalog catalog, string id, int count)
+    {
+        var index = EngineBuildIndex.Create(catalog);
+        var stock = index.Runnable.FirstOrDefault(b => b.Build.Id.Contains(id, StringComparison.OrdinalIgnoreCase));
+        if (stock == null)
+        {
+            Console.WriteLine($"No build '{id}' that runs");
+            return 1;
+        }
+
+        Console.WriteLine($"{stock.Build.Name}: {stock.PowerHp:0} hp, family '{stock.Family}'\n");
+        var random = new Random(1);
+        var started = DateTime.Now;
+        for (var i = 0; i < count; i++)
+        {
+            var level = random.NextDouble();
+            var engine = EngineFactory.CreateTuned(catalog, index, stock, 0.8, level, random);
+            if (engine == null) continue;
+
+            Console.WriteLine($"  level {level:0.00}: {engine.Report.Dyno?.MaxPowerHp,4:0} hp  ${PartPricing.WorthOfAssembly(catalog, engine.Root),6:0}  " +
+                              $"{(engine.IsModified ? string.Join(", ", engine.Changes) : "stock")}{(engine.Report.Runs ? "" : "  DOES NOT RUN: " + engine.Report.Problem)}");
+        }
+
+        Console.WriteLine($"\n{(DateTime.Now - started).TotalMilliseconds / count:0} ms per engine");
+        return 0;
+    }
+
+    /// <summary>Every part of a build comes off and has to find its way back to where it was</summary>
+    private static int Bench(PartsCatalog catalog, string id)
+    {
+        var index = EngineBuildIndex.Create(catalog);
+        var stock = index.Runnable.FirstOrDefault(b => b.Build.Id.Contains(id, StringComparison.OrdinalIgnoreCase));
+        var engine = stock == null ? null : EngineFactory.CreateStock(catalog, stock, 1.0, new Random(1));
+        if (engine == null)
+        {
+            Console.WriteLine($"No build '{id}' that runs");
+            return 1;
+        }
+
+        var car = new List<PartInstance> { engine.Root };
+        var failures = 0;
+        foreach (var part in engine.Root.SelfAndDescendants().Skip(1).ToList())
+        {
+            var parent = PartTrees.FindParent(engine.Root, part)!;
+            var (slot, own) = (part.ParentSlot, part.OwnSlot);
+
+            Workbench.Remove(car, part);
+            var without = EngineFactory.Evaluate(catalog, engine.Root);
+            var places = Workbench.FindPlaces(catalog, car, part);
+            var back = places.FirstOrDefault(p => ReferenceEquals(p.Parent, parent) && p.ParentSlot == slot);
+            var definition = catalog.Get(part.DefinitionId)!;
+            var parentDefinition = catalog.Get(parent.DefinitionId)!;
+            var alternatives = catalog.FindMountable(parentDefinition, parentDefinition.Slots.First(s => s.Id == slot));
+
+            Console.WriteLine($"  {(back == null ? "LOST" : "ok  ")} {definition.DisplayName ?? definition.Id,-46} {places.Count} place(s), " +
+                              $"{alternatives.Count} part(s) fit its slot{(alternatives.Any(a => a.Part == definition) ? "" : "  (not itself!)")}");
+            Console.WriteLine($"         without it: {(without is { Runs: true } ? $"{without.Dyno!.MaxPowerHp:0} hp" : without?.Problem)}  (CR {without?.Dyno?.Compression:0.0})");
+            if (back == null) failures++;
+
+            Workbench.Mount(car, back ?? new MountPlace(parent, slot, own), part);
+        }
+
+        var after = EngineFactory.Evaluate(catalog, engine.Root);
+        Console.WriteLine($"\n{failures} part(s) could not go back; engine makes {after?.Dyno?.MaxPowerHp:0} hp (was {engine.Report.Dyno?.MaxPowerHp:0})");
+        return failures == 0 ? 0 : 1;
     }
 
     private static void Print(InstalledPart part, int depth)

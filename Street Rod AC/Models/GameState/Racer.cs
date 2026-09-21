@@ -6,7 +6,8 @@ namespace Street_Rod_AC.Models.GameState
         public string Name { get; set; } = name;
         public RacerStats Stats { get; set; } = new RacerStats();
         public List<Car> Cars { get; set; } = [];
-        public List<Part> Parts { get; set; } = [];
+        /// <summary>Loose parts on the shelf; a part keeps whatever was mounted on it when it came off</summary>
+        public List<PartInstance> Parts { get; set; } = [];
         public decimal Money { get; set; } = 0m;
         public RacerStatus Status { get; set; } = RacerStatus.ReadyToRace;
 

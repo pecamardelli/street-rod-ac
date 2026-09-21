@@ -13,8 +13,20 @@ namespace Street_Rod_AC.Models.GameState
         public double BodyCondition { get; set; } // 0.0 to 1.0
         public double TireCondition { get; set; } // 0.0 to 1.0
 
-        // Installed Parts
-        public List<Part> InstalledParts { get; set; }
+        /// <summary>
+        /// Parts mounted on the car itself, each with everything that is mounted on it in turn.
+        /// <see cref="PartInstance.ParentSlot"/> says where on the car: the engine goes on <see cref="PartInstance.CarEngineSlot"/>.
+        /// </summary>
+        public List<PartInstance> Parts { get; set; }
+
+        /// <summary>
+        /// False until the car has been given the parts it left the factory with. Tells a car that never had
+        /// any (an older save) from one whose engine has been pulled.
+        /// </summary>
+        public bool HasPartsAssigned { get; set; }
+
+        [LiteDB.BsonIgnore]
+        public PartInstance? Engine => Parts.FirstOrDefault(p => p.ParentSlot == PartInstance.CarEngineSlot);
 
         // Purchase/Sale Info
         public decimal PurchasePrice { get; set; }
@@ -34,7 +46,7 @@ namespace Street_Rod_AC.Models.GameState
             TransmissionHealth = 1.0;
             BodyCondition = 1.0;
             TireCondition = 1.0;
-            InstalledParts = [];
+            Parts = [];
             PurchasePrice = 0m;
             PurchaseDate = DateTime.Now;
         }

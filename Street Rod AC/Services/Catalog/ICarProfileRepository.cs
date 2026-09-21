@@ -23,6 +23,14 @@ namespace Street_Rod_AC.Services.Catalog
         void UpsertProfile(CarProfile profile);
 
         /// <summary>
+        /// Reads the stored profile, asks the caller what to store instead and stores that, all in one visit
+        /// to the database, so that nothing saved from another thread in between gets lost. The caller returns
+        /// the stored profile with its changes, or one of its own with whatever it wants to keep of the stored
+        /// one, or null to leave things as they are. False when there is no such profile or it was left alone.
+        /// </summary>
+        bool UpdateProfile(string carDefinitionId, Func<CarProfile, CarProfile?> change);
+
+        /// <summary>
         /// Gets all profiles
         /// </summary>
         List<CarProfile> GetAllProfiles();

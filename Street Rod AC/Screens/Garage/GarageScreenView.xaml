@@ -4,6 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:controls="clr-namespace:Street_Rod_AC.Controls"
+             xmlns:local="clr-namespace:Street_Rod_AC.Screens.Garage"
+             xmlns:helpers="clr-namespace:Street_Rod_AC.Helpers"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -55,6 +57,11 @@
                                 CarDirectory="{Binding SelectedCar.CarDirectory}"
                                 SkinId="{Binding SelectedCar.SkinId}"
                                 ShowroomKn5="{Binding GarageShowroomKn5}"
+                                PartsCatalog="{Binding Workbench.Catalog}"
+                                PartsVisible="{Binding Workbench.IsOpen}"
+                                Engine="{Binding Workbench.Engine}"
+                                Candidates="{Binding Workbench.Candidates}"
+                                SelectedPart="{Binding Workbench.SelectedPart}"
                                 FadeInOnReady="False"/>
 
         <!-- Back Button -->
@@ -368,7 +375,8 @@
                                   IsChecked="{Binding DoorsOpen, ElementName=Viewport3D, Mode=TwoWay}"/>
                     <ToggleButton Content="Parts"
                                   Style="{StaticResource ViewportToggleStyle}"
-                                  IsChecked="{Binding PartsVisible, ElementName=Viewport3D, Mode=TwoWay}"/>
+                                  Visibility="{Binding Workbench.IsAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                  IsChecked="{Binding Workbench.IsOpen, Mode=TwoWay}"/>
                     <ToggleButton Content="Rotate"
                                   Style="{StaticResource ViewportToggleStyle}"
                                   IsChecked="{Binding AutoRotate, ElementName=Viewport3D, Mode=TwoWay}"/>
@@ -432,6 +440,11 @@
             </Grid>
         </Grid>
 
+        <!-- Parts workbench (engine sheet, picked part, shelf) around the 3D view while the parts are on show;
+             its cards come and go by themselves -->
+        <local:PartsWorkbenchView Grid.Row="0"
+                                  DataContext="{Binding Workbench}"/>
+
         <!-- ==================== OVERLAY NAVIGATION ==================== -->
 
         <!-- Hit the Streets (mid left) -->
@@ -441,6 +454,8 @@
                 Background="{StaticResource HitTheStreetsButtonBrush}"
                 Command="{Binding HitTheStreetsCommand}"
                 Tag="Hit the streets"
+                helpers:Reveal.IsShown="{Binding ShowNavigation}"
+                helpers:Reveal.OffsetX="-60"
                 Width="112"
                 Height="112"
                 HorizontalAlignment="Left"
@@ -454,6 +469,8 @@
                 Background="{StaticResource NewspaperButtonBrush}"
                 Command="{Binding NewspaperCommand}"
                 Tag="Newspaper"
+                helpers:Reveal.IsShown="{Binding ShowNavigation}"
+                helpers:Reveal.OffsetX="-60"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Bottom"
                 Margin="30,0,0,30"/>
@@ -461,6 +478,8 @@
         <!-- Career + Calendar (top right) -->
         <StackPanel x:Name="RightButtons"
                     Grid.Row="0"
+                    helpers:Reveal.IsShown="{Binding ShowNavigation}"
+                    helpers:Reveal.OffsetX="60"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Margin="0,30,30,0">
