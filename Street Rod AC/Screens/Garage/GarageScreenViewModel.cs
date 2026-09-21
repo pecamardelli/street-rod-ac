@@ -69,6 +69,9 @@ namespace Street_Rod_AC.Screens.Garage
 
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
 
+        /// <summary>Showroom model used as the environment of the 3D viewport</summary>
+        public string GarageShowroomKn5 => AppSettings.Instance.GarageShowroomKn5;
+
         public bool SkipEnterAnimation { get; }
 
         // Panel System
@@ -363,6 +366,10 @@ namespace Street_Rod_AC.Screens.Garage
         public Car CarInstance { get; set; } = new();
         public CarDefinition CarDefinition { get; set; } = new();
         public string PreviewImagePath { get; set; } = string.Empty;
+
+        /// <summary>AC car folder, used by the 3D viewport</summary>
+        public string CarDirectory => Path.Combine(AppSettings.Instance.CarsPath, CarDefinition.Id);
+        public string SkinId => !string.IsNullOrEmpty(CarInstance.SkinId) ? CarInstance.SkinId : "default";
 
         public string DisplayName => $"{CarDefinition.Brand} {CarDefinition.Name}";
         public string YearDisplay => CarDefinition.Year?.ToString() ?? "Unknown";

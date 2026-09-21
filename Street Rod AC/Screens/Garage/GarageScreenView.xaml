@@ -3,8 +3,41 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:controls="clr-namespace:Street_Rod_AC.Controls"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style x:Key="ViewportToggleStyle" TargetType="ToggleButton">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="6,0,0,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="border"
+                                Background="#AA1A1A1A"
+                                BorderBrush="#404040"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="12,5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#808080"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource AccentPrimaryBrush}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource AccentPrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <Grid x:Name="RootGrid"
           Background="{StaticResource MainBackgroundBrush}"
           Opacity="0">
@@ -144,6 +177,30 @@
                                       FontSize="16"
                                       Foreground="#606060"
                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- 3D Viewport (transparent until the first frame is ready, so the photo shows while loading) -->
+                        <controls:CarViewport3D x:Name="Viewport3D"
+                                                CarDirectory="{Binding SelectedCar.CarDirectory}"
+                                                SkinId="{Binding SelectedCar.SkinId}"
+                                                ShowroomKn5="{Binding GarageShowroomKn5}"/>
+
+                        <!-- 3D Viewport Controls -->
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Margin="0,10,10,0"
+                                    Visibility="{Binding IsReady, ElementName=Viewport3D, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <ToggleButton Content="Lights"
+                                          Style="{StaticResource ViewportToggleStyle}"
+                                          IsChecked="{Binding HeadlightsOn, ElementName=Viewport3D, Mode=TwoWay}"/>
+                            <ToggleButton Content="Doors"
+                                          Style="{StaticResource ViewportToggleStyle}"
+                                          Visibility="{Binding HasDoors, ElementName=Viewport3D, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                          IsChecked="{Binding DoorsOpen, ElementName=Viewport3D, Mode=TwoWay}"/>
+                            <ToggleButton Content="Rotate"
+                                          Style="{StaticResource ViewportToggleStyle}"
+                                          IsChecked="{Binding AutoRotate, ElementName=Viewport3D, Mode=TwoWay}"/>
                         </StackPanel>
 
                         <!-- Car Details Overlay -->

@@ -50,6 +50,21 @@ public class AppSettings
     public string TracksPath => Path.Combine(AssettoCorsaPath, "content", "tracks");
 
     /// <summary>
+    /// Path to the showrooms content folder
+    /// </summary>
+    public string ShowroomsPath => Path.Combine(AssettoCorsaPath, "content", "showroom");
+
+    /// <summary>
+    /// Showroom used as the 3D garage environment
+    /// </summary>
+    public string GarageShowroomId { get; set; } = "Hangar";
+
+    /// <summary>
+    /// Full path to the garage showroom model
+    /// </summary>
+    public string GarageShowroomKn5 => Path.Combine(ShowroomsPath, GarageShowroomId, GarageShowroomId + ".kn5");
+
+    /// <summary>
     /// Validates that the AC installation path exists and is valid
     /// </summary>
     public bool IsValidInstallation()
