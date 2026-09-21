@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="Street Rod AC/Street Rod AC.csproj" />
+  <Folder Name="/tools/">
+    <Project Path="tools/SlrrPartsConverter/SlrrPartsConverter.csproj" />
+  </Folder>
 </Solution>

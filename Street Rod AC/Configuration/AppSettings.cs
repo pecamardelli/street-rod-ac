@@ -65,6 +65,16 @@ public class AppSettings
     public string GarageShowroomKn5 => Path.Combine(ShowroomsPath, GarageShowroomId, GarageShowroomId + ".kn5");
 
     /// <summary>
+    /// Path to the converted part packs (see tools/SlrrPartsConverter)
+    /// </summary>
+    public string PartsPath => Path.Combine(AssettoCorsaPath, "content", "parts");
+
+    /// <summary>
+    /// Engine shown in the garage until cars carry their own: id of the engine block part
+    /// </summary>
+    public string GarageEnginePart { get; set; } = "engines/Mopar/block_340";
+
+    /// <summary>
     /// Validates that the AC installation path exists and is valid
     /// </summary>
     public bool IsValidInstallation()
