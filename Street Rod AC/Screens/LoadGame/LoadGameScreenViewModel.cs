@@ -129,6 +129,9 @@ namespace Street_Rod_AC.Screens.LoadGame
                     return;
                 }
 
+                // Parts saved under ids of a pack that has been replaced since
+                if (app.CarPartsService.BringUpToDate(gameState)) repository.Save(gameState, saveInfo.SaveName);
+
                 // Store current game state in App for saving on exit
                 app.CurrentGameState = gameState;
 

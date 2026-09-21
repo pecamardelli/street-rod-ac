@@ -122,7 +122,7 @@ public static class EngineFactory
 
         var group = PartKinds.GroupOf(oldDefinition);
         var alternatives = catalog.FindMountable(parentDefinition, parentSlot)
-            .Where(c => !c.Part.Id.Equals(old.DefinitionId, StringComparison.OrdinalIgnoreCase) && PartKinds.GroupOf(c.Part) == group)
+            .Where(c => !ReferenceEquals(c.Part, oldDefinition) && PartKinds.GroupOf(c.Part) == group)
             .ToList();
         if (alternatives.Count == 0) return null;
 
