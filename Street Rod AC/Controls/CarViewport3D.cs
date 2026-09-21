@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using AcTools.Render.Kn5Specific.Objects;
 using AcTools.Render.Kn5SpecificForwardDark;
 using Street_Rod_AC.Logging;
@@ -27,9 +28,11 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private const float DefaultRadius = 6.5f;
     private const float DefaultAlpha = 0.8f;
     private const float DefaultBeta = 0.15f;
+    private const float EmptyGarageEyeHeight = 1.5f;
 
     // Keep drawing for a while after a toggle so door/light animations play out
     private static readonly TimeSpan AnimationWindow = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan FadeInDuration = TimeSpan.FromMilliseconds(600);
 
     // D3DImage can drop the first frame after a back buffer swap, and the shared surface is read without
     // GPU sync, so a lone frame may never show up. Keep drawing briefly after every change instead.
@@ -151,6 +154,30 @@ public class CarViewport3D : System.Windows.Controls.Grid
         private set => SetValue(IsReadyPropertyKey, value);
     }
 
+    private static readonly DependencyPropertyKey HasFailedPropertyKey = DependencyProperty.RegisterReadOnly(
+        nameof(HasFailed), typeof(bool), typeof(CarViewport3D), new PropertyMetadata(false));
+
+    public static readonly DependencyProperty HasFailedProperty = HasFailedPropertyKey.DependencyProperty;
+
+    /// <summary>True if the 3D renderer could not be started; hosts should show a 2D fallback</summary>
+    public bool HasFailed
+    {
+        get => (bool)GetValue(HasFailedProperty);
+        private set => SetValue(HasFailedPropertyKey, value);
+    }
+
+    private static readonly DependencyPropertyKey HasCarPropertyKey = DependencyProperty.RegisterReadOnly(
+        nameof(HasCar), typeof(bool), typeof(CarViewport3D), new PropertyMetadata(false));
+
+    public static readonly DependencyProperty HasCarProperty = HasCarPropertyKey.DependencyProperty;
+
+    /// <summary>True if a car model is loaded (false when only the empty showroom is shown)</summary>
+    public bool HasCar
+    {
+        get => (bool)GetValue(HasCarProperty);
+        private set => SetValue(HasCarPropertyKey, value);
+    }
+
     private static readonly DependencyPropertyKey HasDoorsPropertyKey = DependencyProperty.RegisterReadOnly(
         nameof(HasDoors), typeof(bool), typeof(CarViewport3D), new PropertyMetadata(false));
 
@@ -171,8 +198,9 @@ public class CarViewport3D : System.Windows.Controls.Grid
     {
         if (!IsLoaded || !IsVisible || _failed) return;
 
-        var carDirectory = CarDirectory;
-        if (string.IsNullOrEmpty(carDirectory) || carDirectory == _loadedCarDirectory) return;
+        // An empty directory means "no car": only the showroom is rendered
+        var carDirectory = CarDirectory ?? string.Empty;
+        if (_renderer != null && carDirectory == _loadedCarDirectory) return;
 
         if (_isLoading)
         {
@@ -187,10 +215,9 @@ public class CarViewport3D : System.Windows.Controls.Grid
         }
         catch (Exception ex)
         {
-            // Leave the viewport transparent so whatever is behind it (the preview photo) stays visible
-            _failed = true;
+            // Leave the viewport transparent so whatever is behind it stays visible
             _logger.Error(ex, "3D viewport failed for {CarDirectory}", carDirectory);
-            DisposeRenderer();
+            Fail();
         }
         finally
         {
@@ -206,11 +233,12 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     private async Task LoadCarAsync(string carDirectory)
     {
-        if (!Directory.Exists(carDirectory))
+        var hasCar = carDirectory.Length > 0;
+        if (hasCar && !Directory.Exists(carDirectory))
             throw new DirectoryNotFoundException($"Car folder not found: {carDirectory}");
 
         var started = DateTime.Now;
-        var car = CarDescription.FromDirectory(carDirectory);
+        var car = hasCar ? CarDescription.FromDirectory(carDirectory) : null;
         var skinId = SkinId;
 
         if (_renderer == null)
@@ -221,6 +249,9 @@ public class CarViewport3D : System.Windows.Controls.Grid
                 _logger.Warning("Showroom not found, rendering without it: {Showroom}", showroom);
                 showroom = null;
             }
+
+            if (car == null && showroom == null)
+                throw new InvalidOperationException("Nothing to render: no car and no showroom");
 
             var (width, height) = GetPixelSize();
             var renderer = new DarkKn5ObjectRenderer(car, showroom)
@@ -263,19 +294,18 @@ public class CarViewport3D : System.Windows.Controls.Grid
         }
         else
         {
-            IsReady = false;
-            _image.Opacity = 0;
             await _renderer.MainSlot.SetCarAsync(car, skinId ?? Kn5RenderableCar.DefaultSkin);
             ResetCamera();
         }
 
         _loadedCarDirectory = carDirectory;
+        HasCar = _renderer.CarNode != null;
         HasDoors = _renderer.CarNode?.HasLeftDoorAnimation == true || _renderer.CarNode?.HasRightDoorAnimation == true;
         ApplySkin();
         ApplyCarState();
         _renderer.IsDirty = true;
 
-        _logger.Information("Loaded {Car} in {Ms} ms", Path.GetFileName(carDirectory),
+        _logger.Information("Loaded {Car} in {Ms} ms", hasCar ? Path.GetFileName(carDirectory) : "(empty garage)",
             (int)(DateTime.Now - started).TotalMilliseconds);
     }
 
@@ -287,11 +317,24 @@ public class CarViewport3D : System.Windows.Controls.Grid
         orbit.Radius = DefaultRadius;
         orbit.Alpha = DefaultAlpha;
         orbit.Beta = DefaultBeta;
+
+        if (_renderer!.CarNode == null)
+        {
+            // Empty garage: nothing to frame, so look across the room at eye level instead of at the floor
+            _renderer.AutoAdjustTarget = false;
+            orbit.Target = new SlimDX.Vector3(0f, EmptyGarageEyeHeight, 0f);
+            orbit.Radius = MaxRadius;
+            orbit.Beta = MinBeta;
+        }
+        else
+        {
+            _renderer.AutoAdjustTarget = true;
+        }
     }
 
     private void ApplySkin()
     {
-        if (_renderer == null || _loadedCarDirectory == null) return;
+        if (_renderer == null || string.IsNullOrEmpty(_loadedCarDirectory)) return;
 
         var skinId = SkinId;
         if (string.IsNullOrEmpty(skinId)) return;
@@ -363,14 +406,13 @@ public class CarViewport3D : System.Windows.Controls.Grid
             if (!IsReady)
             {
                 IsReady = true;
-                _image.Opacity = 1;
+                _image.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, FadeInDuration));
             }
         }
         catch (Exception ex)
         {
-            _failed = true;
             _logger.Error(ex, "3D viewport render loop failed");
-            DisposeRenderer();
+            Fail();
         }
     }
 
@@ -485,7 +527,17 @@ public class CarViewport3D : System.Windows.Controls.Grid
         _d3d9 = null;
 
         IsReady = false;
+        HasCar = false;
+        HasDoors = false;
+        _image.BeginAnimation(OpacityProperty, null);
         _image.Opacity = 0;
+    }
+
+    private void Fail()
+    {
+        _failed = true;
+        DisposeRenderer();
+        HasFailed = true;
     }
 
     [DllImport("user32.dll")]

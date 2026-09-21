@@ -46,6 +46,13 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- 3D Garage (whole screen background; renders the empty garage when no car is selected) -->
+        <controls:CarViewport3D x:Name="Viewport3D"
+                                Grid.Row="0"
+                                CarDirectory="{Binding SelectedCar.CarDirectory}"
+                                SkinId="{Binding SelectedCar.SkinId}"
+                                ShowroomKn5="{Binding GarageShowroomKn5}"/>
+
         <!-- Back Button -->
         <Button x:Name="BackButton"
                 Grid.Row="0"
@@ -145,6 +152,20 @@
                     Width="800"
                     Margin="0,0,0,40"
                     Opacity="0">
+                <!-- Shown for the calendar, or as the 2D fallback when the 3D garage could not start -->
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActivePanel}" Value="Calendar">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding HasFailed, ElementName=Viewport3D}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
                 <Border.Effect>
                     <DropShadowEffect Color="Black"
                                     Direction="270"
@@ -179,82 +200,6 @@
                                       HorizontalAlignment="Center"/>
                         </StackPanel>
 
-                        <!-- 3D Viewport (transparent until the first frame is ready, so the photo shows while loading) -->
-                        <controls:CarViewport3D x:Name="Viewport3D"
-                                                CarDirectory="{Binding SelectedCar.CarDirectory}"
-                                                SkinId="{Binding SelectedCar.SkinId}"
-                                                ShowroomKn5="{Binding GarageShowroomKn5}"/>
-
-                        <!-- 3D Viewport Controls -->
-                        <StackPanel Orientation="Horizontal"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Top"
-                                    Margin="0,10,10,0"
-                                    Visibility="{Binding IsReady, ElementName=Viewport3D, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <ToggleButton Content="Lights"
-                                          Style="{StaticResource ViewportToggleStyle}"
-                                          IsChecked="{Binding HeadlightsOn, ElementName=Viewport3D, Mode=TwoWay}"/>
-                            <ToggleButton Content="Doors"
-                                          Style="{StaticResource ViewportToggleStyle}"
-                                          Visibility="{Binding HasDoors, ElementName=Viewport3D, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                          IsChecked="{Binding DoorsOpen, ElementName=Viewport3D, Mode=TwoWay}"/>
-                            <ToggleButton Content="Rotate"
-                                          Style="{StaticResource ViewportToggleStyle}"
-                                          IsChecked="{Binding AutoRotate, ElementName=Viewport3D, Mode=TwoWay}"/>
-                        </StackPanel>
-
-                        <!-- Car Details Overlay -->
-                        <Border Background="#00000088"
-                               VerticalAlignment="Bottom"
-                               Padding="20,8"
-                               Visibility="{Binding HasCars, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Condition -->
-                                <TextBlock Grid.Column="0"
-                                          Text="Condition:"
-                                          FontSize="14"
-                                          Foreground="{StaticResource TextSecondaryBrush}"
-                                          Margin="0,0,10,0"
-                                          VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1"
-                                          Text="{Binding SelectedCar.ConditionDisplay}"
-                                          FontSize="14"
-                                          Foreground="{StaticResource TextPrimaryBrush}"
-                                          Margin="0,0,20,0"
-                                          VerticalAlignment="Center"/>
-
-                                <!-- Mileage -->
-                                <TextBlock Grid.Column="2"
-                                          Text="Mileage:"
-                                          FontSize="14"
-                                          Foreground="{StaticResource TextSecondaryBrush}"
-                                          Margin="0,0,10,0"
-                                          VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="3"
-                                          Text="{Binding SelectedCar.MileageDisplay}"
-                                          FontSize="14"
-                                          Foreground="{StaticResource TextPrimaryBrush}"
-                                          Margin="0,0,20,0"
-                                          VerticalAlignment="Center"/>
-
-                                <!-- Showroom Button -->
-                                <Button Grid.Column="4"
-                                        Content="Preview in Showroom"
-                                        Command="{Binding LaunchShowroomCommand}"
-                                        Style="{StaticResource DialogPrimaryButtonStyle}"
-                                        Padding="15,5"
-                                        FontSize="14"
-                                        VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
                     </Grid>
 
                     <!-- ==================== CALENDAR PANEL ==================== -->
@@ -400,6 +345,88 @@
                     </Grid>
                 </Grid>
             </Border>
+
+            <!-- Floating Car Bar (3D controls + car details) -->
+            <StackPanel x:Name="CarInfoBar"
+                        Grid.Row="1"
+                        Width="800"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,0,42"
+                        Visibility="{Binding ActivePanel, Converter={StaticResource GaragePanelToVisibilityConverter}, ConverterParameter=CarPreview}"
+                        Opacity="0">
+                <!-- 3D Viewport Controls -->
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Margin="0,0,0,8"
+                            Visibility="{Binding HasCar, ElementName=Viewport3D, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ToggleButton Content="Lights"
+                                  Style="{StaticResource ViewportToggleStyle}"
+                                  IsChecked="{Binding HeadlightsOn, ElementName=Viewport3D, Mode=TwoWay}"/>
+                    <ToggleButton Content="Doors"
+                                  Style="{StaticResource ViewportToggleStyle}"
+                                  Visibility="{Binding HasDoors, ElementName=Viewport3D, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                  IsChecked="{Binding DoorsOpen, ElementName=Viewport3D, Mode=TwoWay}"/>
+                    <ToggleButton Content="Rotate"
+                                  Style="{StaticResource ViewportToggleStyle}"
+                                  IsChecked="{Binding AutoRotate, ElementName=Viewport3D, Mode=TwoWay}"/>
+                </StackPanel>
+
+                <!-- Car Details -->
+                <Border Background="#CC1A1A1A"
+                       BorderBrush="#404040"
+                       BorderThickness="1"
+                       CornerRadius="5"
+                       Padding="20,8"
+                       Visibility="{Binding HasCars, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Condition -->
+                        <TextBlock Grid.Column="0"
+                                  Text="Condition:"
+                                  FontSize="14"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  Margin="0,0,10,0"
+                                  VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding SelectedCar.ConditionDisplay}"
+                                  FontSize="14"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  Margin="0,0,20,0"
+                                  VerticalAlignment="Center"/>
+
+                        <!-- Mileage -->
+                        <TextBlock Grid.Column="2"
+                                  Text="Mileage:"
+                                  FontSize="14"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  Margin="0,0,10,0"
+                                  VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="3"
+                                  Text="{Binding SelectedCar.MileageDisplay}"
+                                  FontSize="14"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  Margin="0,0,20,0"
+                                  VerticalAlignment="Center"/>
+
+                        <!-- Showroom Button -->
+                        <Button Grid.Column="4"
+                                Content="Preview in Showroom"
+                                Command="{Binding LaunchShowroomCommand}"
+                                Style="{StaticResource DialogPrimaryButtonStyle}"
+                                Padding="15,5"
+                                FontSize="14"
+                                VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
             </Grid>
 
             <!-- Calendar Button -->

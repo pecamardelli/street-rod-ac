@@ -27,6 +27,7 @@ namespace Street_Rod_AC.Screens.Garage
                     ExitButton.Opacity = 1;
                     CarDisplayButton.Opacity = 1;
                     PreviewContainer.Opacity = 1;
+                    CarInfoBar.Opacity = 1;
                     CalendarButton.Opacity = 1;
                 }
                 else
@@ -60,6 +61,7 @@ namespace Street_Rod_AC.Screens.Garage
                         BeginTime = TimeSpan.FromSeconds(0.4)
                     };
                     PreviewContainer.BeginAnimation(OpacityProperty, contentFade);
+                    CarInfoBar.BeginAnimation(OpacityProperty, contentFade);
                 }
             }
         }
