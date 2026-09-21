@@ -141,7 +141,7 @@ Located in the extension folder but NOT Street Rod specific:
 The `sr_race` mode handles auto-start and auto-quit internally using CSP APIs. The C# launcher:
 1. Launches AC with sr_race mode enabled
 2. Waits for AC process to exit
-3. Reads race results from Python app JSON output
+3. Reads race results from the SR Race Manager Lua app (`apps/lua/sr_race_manager`), written to `Documents/Assetto Corsa/out/sr_race_manager/*.json`
 
 ### Communication Methods
 

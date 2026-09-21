@@ -8,7 +8,7 @@ External WPF application that manages game logic, economy, and progression. Asse
 ## Tech Stack
 - .NET 10 / WPF / MVVM
 - LiteDB for persistence
-- Python app for in-race telemetry
+- CSP Lua app (`apps/lua/sr_race_manager`) for in-race telemetry and results
 
 ## Documentation
 See [docs/CLAUDE.md](docs/CLAUDE.md) for AI context and architecture overview.

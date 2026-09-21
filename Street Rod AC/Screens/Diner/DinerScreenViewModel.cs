@@ -1,6 +1,5 @@
 using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Dialogs;
-using Street_Rod_AC.Dialogs.ChallengeSetup; // For ChallengeSetup model
 using Street_Rod_AC.Dialogs.Information;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.AC;

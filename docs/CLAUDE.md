@@ -79,11 +79,12 @@ NavigationService.NavigateTo[ScreenName](dependencies)
 | SR Race Mode | `C:\GAMES\Street Rod AC\extension\lua\new-modes\sr_race\` | Auto-start + auto-quit via CSP |
 | Crash Penalty Mode | `C:\GAMES\Street Rod AC\extension\lua\new-modes\crash-penalty-tournament\` | Penalty tracking (unused) |
 | FFB Limiter | `C:\GAMES\Street Rod AC\extension\lua\ffb-postprocess\upper-limit\` | Direct drive protection |
-| Python Race App | `apps\python\StreetRodRaceApp\` | Crash detection, race results JSON |
+| SR Race Manager (Lua app) | `apps\lua\sr_race_manager\` | Auto-start, crash detection, race results JSON, auto-quit |
+| Python Race App (legacy) | `apps\python\StreetRodRaceApp\` | Superseded by SR Race Manager, kept for reference |
 
 **Key Integration Points**:
-- SR Race Mode uses `ac.endSession()` for clean quit after finish
-- Python App writes results to `Documents/Assetto Corsa/out/StreetRodRaceApp/*.json`
+- Races launch with the `sr_race` CSP new-mode (set by `IniModificationService`)
+- SR Race Manager writes results to `Documents/Assetto Corsa/out/sr_race_manager/*.json` and quits via `ac.shutdownAssettoCorsa()`
 - Launcher reads JSON results after AC process exits
 
 ## Quick Reference - Adding Features
@@ -113,5 +114,5 @@ NavigationService.NavigateTo[ScreenName](dependencies)
 - [Opponent System](systems/opponent-system.md)
 - [AC Launcher](ac-integration/launcher.md)
 - [CSP Lua Scripts](ac-integration/csp-lua-scripts.md)
-- [Python Race App](ac-integration/python-app.md)
+- [Python Race App (legacy)](ac-integration/python-app.md)
 - [Screens Index](screens/index.md)

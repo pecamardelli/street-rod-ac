@@ -1,5 +1,7 @@
 # AC Python Race App
 
+> **Legacy**: This app was migrated to the CSP Lua app in `apps/lua/sr_race_manager`. The launcher now ingests results from `Documents/Assetto Corsa/out/sr_race_manager/`. This document is kept for reference.
+
 ## Purpose
 Lightweight telemetry observer inside AC. Enforces Street Rod crash consequences. Outputs session results.
 

@@ -20,7 +20,6 @@
              xmlns:career="clr-namespace:Street_Rod_AC.Screens.Career"
              xmlns:confirmation="clr-namespace:Street_Rod_AC.Dialogs.Confirmation"
              xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
-             xmlns:challengeSetup="clr-namespace:Street_Rod_AC.Dialogs.ChallengeSetup"
              xmlns:eventEntry="clr-namespace:Street_Rod_AC.Dialogs.EventEntry"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
@@ -115,10 +114,6 @@
 
             <DataTemplate DataType="{x:Type information:InformationDialogViewModel}">
                 <information:InformationDialogView/>
-            </DataTemplate>
-
-            <DataTemplate DataType="{x:Type challengeSetup:ChallengeSetupDialogViewModel}">
-                <challengeSetup:ChallengeSetupDialogView/>
             </DataTemplate>
 
             <DataTemplate DataType="{x:Type eventEntry:EventEntryDialogViewModel}">
