@@ -320,8 +320,7 @@
                                            CornerRadius="8"
                                            Padding="12,10"
                                            Margin="10,0,0,0"
-                                           MaxWidth="200"
-                                           MinWidth="120">
+                                           Width="300">
                                         <TextBlock Text="{Binding OpponentMessage}"
                                                   FontSize="13"
                                                   FontStyle="Italic"
