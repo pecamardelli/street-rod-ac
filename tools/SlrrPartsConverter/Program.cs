@@ -14,6 +14,8 @@ public static class Program
     private const string PartsFolder = "parts";
     private const string BaseRpk = "parts.rpk";
     private const string BasePackId = "stock";
+    private const string SlotRoleSuffix = "_slot_ID";
+    private const string ConstantsFile = "script_constants.json";
 
     private sealed record SourcePart(SlrrRpk Rpk, SlrrRpkEntry Entry, string ConfigFile, string? ScriptPath, string Id, string Name);
 
@@ -27,6 +29,7 @@ public static class Program
         }
 
         var game = new SlrrGame(args[0]);
+        var scripts = new SlrrScriptEvaluator(game);
         var output = args[1];
         var filter = args.Length > 2 ? args[2] : null;
 
@@ -90,7 +93,7 @@ public static class Program
             {
                 try
                 {
-                    var definition = Convert(game, source, partIds, packFolder, texturePrefix, models);
+                    var definition = Convert(game, scripts, source, partIds, packFolder, texturePrefix, models);
                     pack.Parts.Add(definition);
 
                     converted++;
@@ -105,6 +108,11 @@ public static class Program
             File.WriteAllText(Path.Combine(packFolder, PartPack.FileName), JsonConvert.SerializeObject(pack, Formatting.Indented));
             Console.WriteLine($"  {packId,-45} {pack.Parts.Count,4} parts, {models.Values.Count(m => m != null),4} models");
         }
+
+        // Constants of the shared script classes (fuel types, price factors...), for the game's part logic.
+        // A filtered run has not seen them all.
+        if (filter == null)
+            File.WriteAllText(Path.Combine(output, ConstantsFile), JsonConvert.SerializeObject(scripts.Constants, Formatting.Indented));
 
         Console.WriteLine();
         Console.WriteLine($"Converted {converted} parts ({withoutModel} without a model) in {stopwatch.Elapsed.TotalSeconds:0.0} s");
@@ -144,13 +152,20 @@ public static class Program
         return parts;
     }
 
-    private static PartDefinition Convert(SlrrGame game, SourcePart source, Dictionary<(SlrrRpk, int), string> partIds,
-        string packFolder, string texturePrefix, Dictionary<string, string?> models)
+    private static PartDefinition Convert(SlrrGame game, SlrrScriptEvaluator scripts, SourcePart source,
+        Dictionary<(SlrrRpk, int), string> partIds, string packFolder, string texturePrefix, Dictionary<string, string?> models)
     {
         var config = SlrrPartConfig.Load(source.ConfigFile);
 
         var scriptFile = source.ScriptPath == null ? null : Path.Combine(game.Root, source.ScriptPath);
-        var script = scriptFile != null && File.Exists(scriptFile) ? SlrrScript.Load(scriptFile) : null;
+        var script = scriptFile != null && File.Exists(scriptFile) ? scripts.Evaluate(scriptFile) : null;
+
+        // Fields like crankshaft_slot_ID name the slot a kind of part goes on; 0 = the part has no such slot
+        var properties = script?.Properties ?? new Dictionary<string, object>();
+        var slotRoles = properties
+            .Where(p => p.Key.EndsWith(SlotRoleSuffix, StringComparison.Ordinal) && p.Value is long)
+            .ToDictionary(p => p.Key[..^SlotRoleSuffix.Length], p => (int)(long)p.Value);
+        foreach (var role in slotRoles.Keys) properties.Remove(role + SlotRoleSuffix);
 
         return new PartDefinition
         {
@@ -158,6 +173,13 @@ public static class Program
             Name = source.Name,
             DisplayName = script?.DisplayName,
             BaseClass = script?.BaseClass,
+            ClassChain = script?.ClassChain ?? new List<string>(),
+            Properties = properties,
+            Derived = script?.Derived ?? new Dictionary<string, object>(),
+            SlotRoles = slotRoles.Where(r => r.Value > 0).ToDictionary(r => r.Key, r => r.Value),
+            StockParts = (script?.StockParts ?? new List<SlrrStockPart>()).Select(StockReference).ToList(),
+            RequiredSlots = (script?.RequiredSlots ?? new List<SlrrSlotRule>())
+                .Select(r => new PartSlotRule { Slot = r.Slot, Message = r.Message }).ToList(),
             Categories = game.Categories(source.Rpk, source.Entry),
             Model = ConvertModel(game, source, config, packFolder, texturePrefix, models),
             Mass = config.Mass,
@@ -175,6 +197,19 @@ public static class Program
                 CompatibleWith = slot.CompatibleWith.Select(r => Reference(r.PartId, r.SlotId)).ToList()
             }).ToList()
         };
+
+        // Scripts name the rpk outright, so their ids need no external table
+        PartStockReference StockReference(SlrrStockPart stock)
+        {
+            var rpk = game.GetRpk(stock.Rpk);
+            return new PartStockReference
+            {
+                Part = rpk != null && partIds.TryGetValue((rpk, stock.TypeId), out var id) ? id : null,
+                Name = stock.Name,
+                Conditional = stock.Conditional,
+                Source = $"{stock.Rpk}#0x{stock.TypeId:X4}"
+            };
+        }
 
         PartSlotReference Reference(int partId, int slotId)
         {

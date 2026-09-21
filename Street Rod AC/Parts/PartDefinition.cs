@@ -45,6 +45,36 @@ public class PartDefinition
     [JsonProperty("base_class")]
     public string? BaseClass { get; set; }
 
+    /// <summary>Every script class above the part, nearest first, ending at "java.game.parts.Part"</summary>
+    [JsonProperty("class_chain")]
+    public List<string> ClassChain { get; set; } = new();
+
+    /// <summary>
+    /// The part's script fields once constructed (bore, stroke, ratio, value, max_wear...), in the script's
+    /// own names and units. Values are numbers, strings, "rpk path#0xID" resources or lists of those.
+    /// </summary>
+    [JsonProperty("properties")]
+    public Dictionary<string, object> Properties { get; set; } = new();
+
+    /// <summary>
+    /// Fields the script recomputes in updatevariables(), as they come out for a brand new part on its own.
+    /// Reference values to check the game's own part logic against.
+    /// </summary>
+    [JsonProperty("derived")]
+    public Dictionary<string, object> Derived { get; set; } = new();
+
+    /// <summary>What the script expects on which of the part's slots, e.g. "crankshaft" -> 8</summary>
+    [JsonProperty("slot_roles")]
+    public Dictionary<string, int> SlotRoles { get; set; } = new();
+
+    /// <summary>Parts the script mounts on a factory build of this part</summary>
+    [JsonProperty("stock_parts")]
+    public List<PartStockReference> StockParts { get; set; } = new();
+
+    /// <summary>Slots that must be filled for the part to work, with the script's explanation</summary>
+    [JsonProperty("required_slots")]
+    public List<PartSlotRule> RequiredSlots { get; set; } = new();
+
     /// <summary>Catalog categories from the most specific up, e.g. ["blocks", "Main", "engine", "parts"]</summary>
     [JsonProperty("categories")]
     public List<string> Categories { get; set; } = new();
@@ -100,6 +130,35 @@ public class PartSlot
     /// </summary>
     [JsonProperty("compatible_with")]
     public List<PartSlotReference> CompatibleWith { get; set; } = new();
+}
+
+public class PartStockReference
+{
+    /// <summary>Id of the mounted part; null when it is outside the converted parts</summary>
+    [JsonProperty("part")]
+    public string? Part { get; set; }
+
+    /// <summary>The script's label for it, e.g. "103er crankshaft"</summary>
+    [JsonProperty("name")]
+    public string? Name { get; set; }
+
+    /// <summary>True when the script only mounts it on some cars or at random</summary>
+    [JsonProperty("conditional")]
+    public bool Conditional { get; set; }
+
+    /// <summary>Original reference, "rpk path#0xTYPEID", always set</summary>
+    [JsonProperty("source")]
+    public string Source { get; set; } = string.Empty;
+}
+
+public class PartSlotRule
+{
+    [JsonProperty("slot")]
+    public int Slot { get; set; }
+
+    /// <summary>The script's words when the slot is empty, e.g. "the engine is missing the alternator."</summary>
+    [JsonProperty("message")]
+    public string Message { get; set; } = string.Empty;
 }
 
 public class PartSlotReference
