@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Scripting;
@@ -19,6 +20,7 @@ public static class Program
     private const string ConstantsFile = "script_constants.json";
     private const string NotesOption = "--notes";
     private const string ReplaceOption = "--replace";
+    private const string DropOption = "--drop";
 
     private sealed record SourcePart(SlrrRpk Rpk, SlrrRpkEntry Entry, string ConfigFile, string? ScriptPath, string Id, string Name);
 
@@ -26,12 +28,19 @@ public static class Program
     {
         // --notes <folder>: text files with engine builds written down as stock_parts_list_E lines
         // --replace <old pack>=<new pack>: the old pack stays out, what names its parts gets their twins of the new one
+        // --drop <part id pattern>: parts left out altogether (a pack's take on engines another pack does better)
         string? notes = null;
         var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var drops = new List<Regex>();
         var positional = new List<string>();
         for (var i = 0; i < args.Length; i++)
         {
             if (args[i] == NotesOption && i + 1 < args.Length) notes = args[++i];
+            else if (args[i] == DropOption && i + 1 < args.Length)
+            {
+                drops.AddRange(args[++i].Split(',').Select(p =>
+                    new Regex("^" + Regex.Escape(p.Trim()).Replace(@"\*", ".*") + "$", RegexOptions.IgnoreCase | RegexOptions.Compiled)));
+            }
             else if (args[i] == ReplaceOption && i + 1 < args.Length)
             {
                 var pair = args[++i].Split('=');
@@ -48,7 +57,7 @@ public static class Program
 
         if (positional.Count < 2)
         {
-            Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>]");
+            Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""C:\Games\AC\content\parts"" engines/Mopar");
             return 1;
         }
@@ -70,6 +79,7 @@ public static class Program
         // First pass: give every part an id, so slots can refer to parts of any pack
         var packs = new List<(string Id, SlrrRpk Rpk, List<SourcePart> Parts)>();
         var partIds = new Dictionary<(SlrrRpk, int), string>();
+        var dropped = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // The base game keeps its stock parts (running gear, accessories, neons) in an rpk next to the parts folder
         var baseRpk = Path.Combine(game.Root, BaseRpk);
@@ -86,13 +96,18 @@ public static class Program
                 ? BasePackId
                 : Path.ChangeExtension(Path.GetRelativePath(partsRoot, file), null).Replace('\\', '/');
             var parts = CollectParts(game, rpk, packId);
+            foreach (var part in parts.Where(part => drops.Any(d => d.IsMatch(part.Id))).ToList())
+            {
+                parts.Remove(part);
+                dropped.Add(SlrrGame.Describe(rpk, part.Entry.TypeId));
+            }
             if (parts.Count == 0) continue;
 
             packs.Add((packId, rpk, parts));
             foreach (var part in parts) partIds[(part.Rpk, part.Entry.TypeId)] = part.Id;
         }
 
-        Console.WriteLine($"Found {partIds.Count} parts in {packs.Count} packs");
+        Console.WriteLine($"Found {partIds.Count} parts in {packs.Count} packs" + (dropped.Count > 0 ? $", {dropped.Count} dropped" : ""));
 
         var aliases = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var (oldId, newId) in replacements)
@@ -168,6 +183,10 @@ public static class Program
             // Cars get an evaluator of their own: their classes are of no use to the game
             var builds = engineBuilds.FromCars(new SlrrScriptEvaluator(game));
             if (notes != null && Directory.Exists(notes)) builds.AddRange(engineBuilds.FromNotes(notes));
+
+            // An engine around a part that was dropped on purpose is no engine the game should offer
+            var left = builds.RemoveAll(b => b.Parts.Any(p => p.Part == null && dropped.Contains(p.Source)));
+            if (left > 0) Console.WriteLine($"  {left} engine builds left out, they use dropped parts");
 
             File.WriteAllText(Path.Combine(output, EngineBuild.FileName), JsonConvert.SerializeObject(builds, Formatting.Indented));
 

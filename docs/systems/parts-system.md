@@ -31,14 +31,19 @@ Converted assets are from a commercial game and community mods: personal use onl
 
 ## Converter (`tools/SlrrPartsConverter`)
 
-`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>]`
+`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...]`
 
 The content in use is made with (both Chrysler packs are installed in the SLRR folder, see "Replacing a pack"):
 
 ```
 SlrrPartsConverter "D:\JUEGOS\Street Legal Racing - Redline" "C:\GAMES\Street Rod AC\content\parts"
     --notes "D:\JUEGOS\SLRR\SCRIPTS" --replace engines/Mopar=engines/Chrysler_V8_pak
+    --drop "engines/DEXTERV8s/Dodge_*,engines/DEXTERV8s/*_Mopar_head_cover"
 ```
+
+`--drop` leaves parts out altogether (`*` matches anything in the id): Dexter's Dodge engines are one generic block
+mesh with Dodge numbers, and the Chrysler pack does all of them properly. Engine builds around a dropped part are
+left out as well. A save that holds such a part: see `BringUpToDate` under "Replacing a pack".
 
 Per part, from its compiled script (run with no game around, see `SlrrScriptEvaluator`):
 
@@ -92,7 +97,9 @@ twin, and `part_aliases.json` (old id → new id) is written for the game:
 - `SavedParts.BringUpToDate` (run over the whole save by `CarPartsService.BringUpToDate` when a game is loaded)
   gives saved parts their current ids and makes every joint again that the catalog no longer agrees with, the way
   the workbench would. A part that fits nowhere on its parent any more comes off: onto its owner's shelf, or out
-  of the offer for cars and parts that are for sale.
+  of the offer for cars and parts that are for sale. A car whose engine block the catalog no longer has at all
+  (dropped parts) loses the engine and gets its factory engine again the next time it is looked at, worn like the
+  car; loose parts, listings and ads made of such parts leave the save.
 
 Checked with `EngineBench <new parts> renew <old parts>`: all 37 engines of the old pack come up to date and run; the
 only part that comes off is the Hemi fan some 383 builds wore, which 4.5 no longer lets bolt to a 383 pump.

@@ -87,20 +87,40 @@ namespace Street_Rod_AC.Services.Parts
 
         public bool BringUpToDate(GameState game)
         {
-            if (!IsAvailable || !Catalog.HasAliases) return false;
+            if (!IsAvailable) return false;
 
             var changed = 0;
             var racers = new[] { game.Player }
                 .Concat(game.Racers.Inactive.Values).Concat(game.Racers.Retired.Values).Concat(game.Racers.ReadyToRace.Values);
             foreach (var racer in racers)
             {
+                // An engine the catalog no longer knows (its parts were left out of the content) is gone from the
+                // car, which gets its factory engine the next time it is looked at, worn like the car
+                foreach (var car in racer.Cars)
+                {
+                    if (car.Engine is not { } engine || Catalog.Get(engine.DefinitionId) != null) continue;
+
+                    _logger.Information("{Car} had a {Block} the catalog no longer has: gets its factory engine again", car.DefinitionId, engine.DefinitionId);
+                    car.Parts.Remove(engine);
+                    car.HasPartsAssigned = false;
+                    changed++;
+                }
+
                 // What comes off a car goes on its owner's shelf, once the shelf itself has been gone through
                 var shelf = new List<PartInstance>();
+                changed += racer.Parts.RemoveAll(part => Catalog.Get(part.DefinitionId) == null);
                 changed += Renew(racer.Cars.SelectMany(c => c.Parts).Concat(racer.Parts), shelf);
                 racer.Parts.AddRange(shelf);
             }
 
-            // Cars and parts for sale: what no longer fits is not part of the offer
+            // Cars and parts for sale: what no longer fits is not part of the offer, an engine that is gone takes
+            // the offer with it
+            changed += game.UsedCars.RemoveAll(c => c.Engine is { } e && Catalog.Get(e.DefinitionId) == null);
+            changed += game.UsedParts.RemoveAll(p => Catalog.Get(p.DefinitionId) == null);
+            changed += game.UsedCarMarket.RemoveAll(l => l.Parts.Any(p => Catalog.Get(p.DefinitionId) == null));
+            changed += game.NewspaperAds.Cars.RemoveAll(ad => ad.Car.Engine is { } e && Catalog.Get(e.DefinitionId) == null);
+            changed += game.NewspaperAds.Parts.RemoveAll(ad => Catalog.Get(ad.Part.DefinitionId) == null);
+
             var forSale = game.UsedCars.SelectMany(c => c.Parts)
                 .Concat(game.UsedParts)
                 .Concat(game.UsedCarMarket.SelectMany(l => l.Parts))
@@ -108,7 +128,7 @@ namespace Street_Rod_AC.Services.Parts
                 .Concat(game.NewspaperAds.Parts.Select(ad => ad.Part));
             changed += Renew(forSale, new List<PartInstance>());
 
-            if (changed > 0) _logger.Information("{Count} part tree(s) of the save brought up to date with the parts catalog", changed);
+            if (changed > 0) _logger.Information("{Count} change(s) to the save's parts to keep up with the parts catalog", changed);
             return changed > 0;
         }
 
