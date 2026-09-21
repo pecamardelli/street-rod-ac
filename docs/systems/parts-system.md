@@ -31,30 +31,48 @@ Converted assets are from a commercial game and community mods: personal use onl
 
 ## Converter (`tools/SlrrPartsConverter`)
 
-`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>=<pack id>,...]`
+`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...]`
 
-The content in use is made with (both Chrysler packs are installed in the SLRR folder, see "Replacing a pack"):
+The content in use is made with `tools/convert-parts.ps1` (both Chrysler packs are installed in the SLRR folder, see
+"Replacing a pack"). It comes out as:
 
 ```
-SlrrPartsConverter "D:\JUEGOS\Street Legal Racing - Redline" "C:\GAMES\Street Rod AC\content\parts"
-    --notes "D:\JUEGOS\SLRR\SCRIPTS" --replace engines/Mopar=engines/chrysler
-    --rename "engines/Chrysler_V8_pak=engines/chrysler,engines/GM_V8_pak=engines/gm,engines/DEXTERV8s=engines/ford,engines/fordi6_data=engines/ford_six"
-    --drop "engines/Baiern_Emer/*,engines/Einvagen_Duhen_Ishima_Focer/*,engines/GMC_Nissan_Honda_Hyundai_Opel/*,engines/Buick_LC2/*,engines/MC_Prime/*,engines/MC_Prime_SuperDuty/*,engines/ford/Dodge_*,engines/ford/*_Mopar_head_cover,engines/ford/*Chevrolet_*,engines/ford/Drag_*,engines/chrysler/_Engine_block_360BP,engines/gm/GMP_427_block"
+engines/chrysler, gm, ford, ford_six   the engine packs (GM has Pontiac and Cadillac too; ford_six is the Falcon's engine)
+engines/stock                          the base game's engine bits: batteries, N2O, and the engine-part roots
+rims/mopar, falcon, hudson, opala, goodyear_eagle, stock
+tyres/mopar, camaro69, goodyear_eagle, stock
+exhaust/mufflers, stock
+suspension/stock                       suspensions, springs, shocks, sway bars (named after SLRR's own cars: the only running gear there is)
+brakes/stock
 ```
 
 `--rename` names a pack after what it holds instead of the mod's file name: the pack id is the folder and the first
-part of every part id, so `engines/chrysler/_Engine_block_340` where the rpk is `Chrysler_V8_pak`. Every other option
-names packs by their new names. The old ids go into `part_aliases.json` like those of a replaced pack, so saves made
-before keep working (see "Replacing a pack"). A full run removes converted packs it no longer produces (renamed,
-replaced or dropped whole); the catalog would otherwise load both.
+part of every part id, so `engines/chrysler/_Engine_block_340` where the rpk is `Chrysler_V8_pak`. With a selector
+(`wheels:Tyre=tyres/sl_tuners`, `stock:bodypart=body/stock`, `stock:BodyPart*=body/stock`) only the parts it picks
+out go there: those descending from a script class of that name, filed under a category of that name, or named so
+themselves (`*` for anything). Selector rules apply in the order given, first match wins, the rest of the rpk goes
+where its plain rename says. One rpk may so become several packs (rims and tyres out of `wheels.rpk`, six packs out of
+the base game's `parts.rpk`); a replaced or replacing pack takes the whole rpk with it. Every other option names packs
+by their new names. The old ids go into `part_aliases.json` like those of a replaced pack, so saves made before keep
+working (see "Replacing a pack"). A full run removes converted packs it no longer produces (renamed, replaced or
+dropped whole); the catalog would otherwise load both.
+
+`stock` (the base game's `parts.rpk`) holds 96 scriptless entries without a model: the roots that every mod declares
+its fit against (`stock/Wheel` is what every rim and tyre mounts by, `stock/ExhaustTip` every muffler, `stock/Brake`,
+`stock/Spring_0051`... the suspensions). They are routed next to what needs them (`rims/stock`, `tyres/stock`,
+`exhaust/stock`, `brakes/stock`, `suspension/stock`, `engines/stock`) and never go on sale: the shop only lists
+scripted parts, plus what the engine builds use (batteries).
 
 `--drop` leaves parts out altogether (`*` matches anything in the id). Engine builds around a dropped part are left out
 as well. A save that holds such a part: see `BringUpToDate` under "Replacing a pack". What is dropped, for a game set
-in 1960s America: the fictional and modern packs whole (Baiern/Emer OHC sixes, Einvagen/Duhen/Ishima fours, the OHC
-V6 pack, the Buick LC2 turbo V6, SLRR's own MC/Prime/SuperDuty OHC V8s), Dexter's Dodge and Chevrolet engines (one
-generic block mesh with numbers on it; the Chrysler and GM packs do them properly) and its fictional drag block, and
-two 2000s crate blocks (BluePrint 360, GM Performance Parts 427). The Ford six (`ford_six`, the Falcon's engine) is a
-reskin of the Baiern OHC six but stands on its own: its parts attach to each other, not to Baiern parts.
+in 1960s America and mechanical parts only: the fictional and modern engine packs whole (Baiern/Emer OHC sixes,
+Einvagen/Duhen/Ishima fours, the OHC V6 pack, the Buick LC2 turbo V6, SLRR's own MC/Prime/SuperDuty OHC V8s), Dexter's
+Dodge and Chevrolet engines (one generic block mesh with numbers on it; the Chrysler and GM packs do them properly) and
+its fictional drag block, two 2000s crate blocks (BluePrint 360, GM Performance Parts 427), SL Tuners' `wheels.rpk`
+(142 of its 151 rims are 17"-21"), and everything that is body or interior: `interior` (seats, steering wheels),
+`wings`, and the base game's neons, plates, woofers and body-part roots (routed to `body/stock`, then dropped). The
+Ford six (`ford_six`) is a reskin of the Baiern OHC six but stands on its own: its parts attach to each other, not to
+Baiern parts.
 
 Per part, from its compiled script (run with no game around, see `SlrrScriptEvaluator`):
 
