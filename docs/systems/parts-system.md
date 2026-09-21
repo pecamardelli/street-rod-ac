@@ -91,11 +91,91 @@ writes `engine_builds.json` and `script_constants.json`.
   the valves, fitted to the rated builds. Boost is baked into the curve.
 - `EngineEvaluator` → `EngineReport`: runs or not and why (the scripts' words), curve, idle, limiter, inertia, gears,
   final, drive type, diff lock, mass, value. A part whose class file is not in `_scripts` is reported as that, since
-  to the other scripts it would just look like a missing part.
+  to the other scripts it would just look like a missing part. One verdict of the scripts is put right: with no
+  carburettor or injection the compression limit they derive from the fuel is 0 and they complain about compression
+  ("not more than 0.0:1"); the report says that nothing feeds the engine instead.
 - Numbers in `properties`/`derived` come back from JSON as `long` or `double`; read them with `PartDefinition.Number`.
 
 Model check: `EngineBench <parts> rated`. Currently mean error +4%, mean absolute 15% over 15 builds
 (Mopar 340 Six Pack: 310 hp @ 5750, 446 Nm @ 2750; factory 290 hp, 468 Nm).
+
+## Cars and their parts (`Parts/Cars`, `Services/Parts`)
+
+Every car in the game owns a tree of parts; what is on the tree is what the garage draws, what the dyno measures and
+(next) what Assetto Corsa gets to drive.
+
+**Save model.** `PartInstance` (in `Models/GameState`) is a part as a save file holds it: catalog id, wear, tear, tuning,
+the slot it is mounted on, the slot it is mounted by, and its children. `Car.Parts` are the parts that sit on the car
+itself, by car slot (`PartInstance.CarEngineSlot` = 1, the scripts' own number; running gear will use 101+). A loose part
+keeps whatever was on it, so the player's shelf (`Player.Parts`) and the ads hold sub-assemblies as readily as single
+parts, a complete engine included. `PartTrees` goes between `PartInstance` and the runtime's `InstalledPart`
+(`LiveTree` keeps the way back). `Car.HasPartsAssigned` tells a car that never had parts (an older save) from one whose
+engine was pulled; `ICarPartsService.EnsureParts` gives the former its factory engine, worn like the car, the first time
+the car is looked at.
+
+**Factory engine.** `CarProfile.StockEngineBuildId` names an engine build of `engine_builds.json`. It is suggested by
+`StockEngineMatcher` and can be overruled per car in the Car Catalog Editor (options come best match first;
+`StockEngineIsManual` keeps suggestions away afterwards). The matcher scores the builds that run
+(`EngineBuildIndex`: every build on the dyno once, about a second, kept for the session): same corporate family
+(`MakeFamilies`: GM, Ford, Mopar... from the words of the name; a block belongs to the make whose cars it came in),
+words the names share (a 427 is a 427), and how close the power comes to the car's own `bhp`. With the parts there are,
+some cars get the nearest relative rather than their engine (no slant six: the Valiant gets a 318).
+Check: `EngineBench <parts> cars <AC cars folder>`.
+
+**Cars that have been around** (`EngineFactory.CreateTuned`). Used car listings carry their actual engine
+(`UsedCarListing.Parts`, moved onto the car when it is bought) and about a third of them have been worked on, only the
+way somebody plausibly would have: an engine of the same family with 5-50% more power, and bolt-on parts (air filter,
+carburettor, manifold, headers, camshaft, flywheel, clutch) picked from what really goes on that very slot
+(`PartsCatalog.FindMountable`), whose own children find their place on the new part. Every change has to leave an engine
+that runs, makes no less power, stays under 1.6x the factory power, and is worth doing (more power or a dearer part).
+A Hemi never ends up in a Chevrolet. Half of what the changes are worth shows in the asking price.
+Check: `EngineBench <parts> tune <build id> [count]`.
+
+**Workbench** (`Workbench`). A part comes off with everything that is mounted on it and goes back on the same way.
+`FindPlaces` lists the free slots a loose part mates with (`CanMate`), blocks only ever go in the empty engine bay, and
+kinds that never stack (head on head, block on block: copy-paste in the mods' configs) are refused. The list
+(`PartKinds.NeverStacks`) was checked against every engine build: intake manifolds are *not* on it, 23 builds mount
+theirs on a converter plate that is a manifold itself.
+Check: `EngineBench <parts> bench <build id>` takes every part of a build off and has it find its way back.
+
+**What fits a slot.** `PartsCatalog.FindMountable(parent, slot)` answers `CanMate` for the whole catalog from an index
+built on first use: slots by the slots they name, and slots by the slots they stand in for.
+
+**Garage.** The Parts toggle opens the workbench (`PartsWorkbenchViewModel` + `PartsWorkbenchView` around the 3D view):
+- the engine sheet: block, power, torque, displacement and compression, gearbox, weight, and when it does not run the
+  part scripts' own words for why;
+- parts are picked **in the 3D view**: the part under the pointer glows and is named, a click selects it (orange glow,
+  card with condition and worth, "Take it off"). Hidden parts are reached the way they are in a workshop: take off what
+  is in the way;
+- the shelf: picking a loose part shows it, glowing green, in every place it fits; a click on one mounts it.
+  "Take apart" splits what is mounted on a shelf part off it (a manifold from its carburettor), piece by piece.
+Every change is saved and costs game time (5 minutes a part, 30 at most).
+
+Nothing pops. The cards and the navigation tiles they replace slide and fade through `Helpers/Reveal`
+(`Reveal.IsShown` in place of a Visibility binding, `OffsetX/Y` for where an element comes from). Parts move too: a tree
+is made anew after every change, so `InstalledPart.InstanceId` (the saved part's id) is how the viewport tells what left
+and what arrived. What left lifts off the old model while the new one is put together (`GarageRenderer.MoveParts`: the
+part nodes' `LocalMatrix` travels 0.45 m away from the middle of what stays, shrinking, 0.55 s), then the models are
+swapped and what arrived flies in the same way backwards. A car change swaps without any of it.
+
+`CarViewport3D` draws what it is given: `PartsCatalog`, `Engine` (an `InstalledPart` tree, a new one after every
+change), `Candidates` (`MountCandidate`: a loose tree, the part and slot it would go on) and `SelectedPart`; it raises
+`PartClicked` and `CandidateClicked`. `PartAssembler.Assemble` places a tree by its slots, `BuildModel` merges it into
+one KN5 with a node per part (`NodeName(i)`, `AssemblyModel.Nodes[i]`), which is how a pick finds its part.
+`GarageRenderer` holds two part models (mounted, candidates), picks by ray (`Pick`: bounding box first, then triangles,
+about 0.2 ms) and draws the glows: depth of the thing alone, `EffectPpOutline`, then scaled to a tint with a
+blend-factor pass, one buffer per glow (car, candidates, selected, hovered).
+
+**Shop** (`PartsShopService`, the Used Parts screen of the newspaper). Three pages: used parts from the ads
+(`NewspaperAds.Parts`, 25-40 ads turned over daily by `PartsAdsRefreshTask`, now and then a complete engine), new parts
+by mail order (the engine packs plus whatever else the builds use), and selling from the shelf. Filters: kind
+(`PartKinds.GroupOf`, from the script classes), name, and "only what fits my car" (`FindFittingParts`: everything that
+goes on any slot of the selected car's tree, taken slots included). New price is the script's `value`; a used part is
+worth `value x tear x (0.3 + 0.7 x wear)` as in SLRR, ads ask around 60% of that, a trade-in pays 40%.
+`AppSettings.PartsPriceScale` (0.2) brings the scripts' early-2000s dollars to the game's 1970 ones.
+
+`catalog.db` is opened per call and exclusively; with parts work running in the background the two catalog repositories
+now take turns through `CatalogDatabase.Open`.
 
 ## Assetto Corsa export (`Parts/Export`)
 
@@ -121,12 +201,19 @@ yet**: applying the files for a race and restoring them afterwards (the rule for
 ```
 EngineBench <parts folder> list | rated | all | inputs | show <build id>
 EngineBench <parts folder> export <build id> <car data folder> <output folder>
+EngineBench <parts folder> cars <AC cars folder>       factory engine suggested for every car, with the runners-up
+EngineBench <parts folder> tune <build id> [count]     engines a used car of that build may turn up with
+EngineBench <parts folder> bench <build id>            every part comes off and has to find its way back
 ```
 
 ## Not done yet
 
-- Hooking a player car to a part tree (save model, garage UI for mounting parts, shop).
-- Applying exported data for a race, with restore.
+- Applying exported data for a race, with restore. Open question for that step: a factory build does not make
+  exactly the power of the AC car it stands for (the matcher picks the nearest engine, the dyno is within ~15%), so
+  either the parts' curve replaces the car's, or the car's own curve is scaled by tuned/factory from the dyno.
+- Opponents' cars get their parts lazily (`EnsureParts`) but nothing uses them yet.
+- Working on an engine outside a car (an engine stand): on the shelf an assembly can be taken apart, but parts only
+  go together on a car.
 - Running gear (tyres, brakes, suspension): same VM, different natives (`WheelRef`).
 - Wear from mileage; tuning UI (the scripts' `buildTuningMenu` is not used, fields are set directly).
 - Turbo lag (boost is static in the curve) and car mass change from the engine's mass.
