@@ -366,6 +366,9 @@
                                   Style="{StaticResource ViewportToggleStyle}"
                                   Visibility="{Binding HasDoors, ElementName=Viewport3D, Converter={StaticResource BooleanToVisibilityConverter}}"
                                   IsChecked="{Binding DoorsOpen, ElementName=Viewport3D, Mode=TwoWay}"/>
+                    <ToggleButton Content="Parts"
+                                  Style="{StaticResource ViewportToggleStyle}"
+                                  IsChecked="{Binding PartsVisible, ElementName=Viewport3D, Mode=TwoWay}"/>
                     <ToggleButton Content="Rotate"
                                   Style="{StaticResource ViewportToggleStyle}"
                                   IsChecked="{Binding AutoRotate, ElementName=Viewport3D, Mode=TwoWay}"/>

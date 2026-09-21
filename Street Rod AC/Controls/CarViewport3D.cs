@@ -7,7 +7,9 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using AcTools.Render.Kn5Specific.Objects;
 using AcTools.Render.Kn5SpecificForwardDark;
+using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Logging;
+using Street_Rod_AC.Parts;
 using D3D9 = Vortice.Direct3D9;
 using D3D11 = SlimDX.Direct3D11;
 
@@ -30,6 +32,9 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private const float DefaultBeta = 0.15f;
     private const float EmptyGarageEyeHeight = 1.5f;
 
+    // With the parts on show there is something worth a closer look
+    private const float PartsMinRadius = 1.6f;
+
     // Keep drawing for a while after a toggle so door/light animations play out
     private static readonly TimeSpan AnimationWindow = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan FadeInDuration = TimeSpan.FromMilliseconds(600);
@@ -42,7 +47,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private readonly System.Windows.Controls.Image _image;
     private readonly D3DImage _d3dImage = new();
 
-    private DarkKn5ObjectRenderer? _renderer;
+    private GarageRenderer? _renderer;
     private D3D9.IDirect3D9Ex? _d3d9;
     private D3D9.IDirect3DDevice9Ex? _d3d9Device;
     private D3D9.IDirect3DTexture9? _sharedTexture;
@@ -57,6 +62,8 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private DateTime _animateUntil = DateTime.MinValue;
     private System.Windows.Point _lastMouse;
     private bool _isDragging;
+    private bool _isLoadingParts;
+    private string? _partsCarDirectory;
 
     public CarViewport3D()
     {
@@ -152,6 +159,17 @@ public class CarViewport3D : System.Windows.Controls.Grid
     {
         get => (bool)GetValue(AutoRotateProperty);
         set => SetValue(AutoRotateProperty, value);
+    }
+
+    public static readonly DependencyProperty PartsVisibleProperty = DependencyProperty.Register(
+        nameof(PartsVisible), typeof(bool), typeof(CarViewport3D),
+        new PropertyMetadata(false, (d, _) => ((CarViewport3D)d).ApplyParts()));
+
+    /// <summary>X-ray view: the car fades to a shell and its parts show in their places</summary>
+    public bool PartsVisible
+    {
+        get => (bool)GetValue(PartsVisibleProperty);
+        set => SetValue(PartsVisibleProperty, value);
     }
 
     private static readonly DependencyPropertyKey IsReadyPropertyKey = DependencyProperty.RegisterReadOnly(
@@ -266,7 +284,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
                 throw new InvalidOperationException("Nothing to render: no car and no showroom");
 
             var (width, height) = GetPixelSize();
-            var renderer = new DarkKn5ObjectRenderer(car, showroom)
+            var renderer = new GarageRenderer(car, showroom)
             {
                 WpfMode = true,
                 UseMsaa = false, // shared surfaces can't be multisampled
@@ -315,6 +333,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
         HasDoors = _renderer.CarNode?.HasLeftDoorAnimation == true || _renderer.CarNode?.HasRightDoorAnimation == true;
         ApplySkin();
         ApplyCarState();
+        ApplyParts();
         _renderer.IsDirty = true;
 
         _logger.Information("Loaded {Car} in {Ms} ms", hasCar ? Path.GetFileName(carDirectory) : "(empty garage)",
@@ -342,6 +361,107 @@ public class CarViewport3D : System.Windows.Controls.Grid
         {
             _renderer.AutoAdjustTarget = true;
         }
+    }
+
+    private async void ApplyParts()
+    {
+        var renderer = _renderer;
+        if (renderer == null || _isLoadingParts) return;
+
+        var carDirectory = _loadedCarDirectory;
+        var carNode = renderer.CarNode;
+        if (!PartsVisible || carNode == null || string.IsNullOrEmpty(carDirectory))
+        {
+            // Without a car there is nothing to dissolve back into
+            if (carNode == null)
+            {
+                renderer.GhostCar = false;
+                renderer.SetProp(null, SlimDX.Matrix.Identity);
+            }
+            else
+            {
+                renderer.HideParts();
+            }
+
+            _partsCarDirectory = null;
+            _animateUntil = DateTime.Now + AnimationWindow;
+            return;
+        }
+
+        // The layout depends on the car, so a car swap rebuilds it
+        if (renderer.HasProp && _partsCarDirectory == carDirectory) return;
+
+        var anchors = GetAnchors(carNode);
+        if (anchors == null)
+        {
+            _logger.Warning("Car has no wheel nodes to place the parts by: {Car}", carDirectory);
+            return;
+        }
+
+        _isLoadingParts = true;
+        try
+        {
+            var settings = AppSettings.Instance;
+            var engine = GuessEngine(Path.GetFileName(carDirectory)) ?? settings.GarageEnginePart;
+            var started = DateTime.Now;
+
+            var model = await Task.Run(() =>
+            {
+                var catalog = PartsCatalog.Load(settings.PartsPath);
+                var parts = CarPartsLayout.Build(catalog, anchors, engine);
+                return PartAssembler.BuildModel(catalog, "parts", parts);
+            });
+
+            // The renderer or the car may have been replaced, or the toggle flipped back, while loading
+            if (renderer == _renderer && PartsVisible && _loadedCarDirectory == carDirectory)
+            {
+                renderer.SetProp(model.Kn5, SlimDX.Matrix.Identity);
+                renderer.GhostCar = true;
+                _partsCarDirectory = carDirectory;
+                _animateUntil = DateTime.Now + AnimationWindow;
+
+                _logger.Information("Parts of {Car} laid out in {Ms} ms (engine {Engine})", Path.GetFileName(carDirectory),
+                    (int)(DateTime.Now - started).TotalMilliseconds, engine);
+            }
+        }
+        catch (Exception ex)
+        {
+            // The garage works fine without the parts view, so just leave it off
+            _logger.Error(ex, "Could not lay out the parts");
+        }
+        finally
+        {
+            _isLoadingParts = false;
+        }
+
+        // Catch up with whatever changed in the meantime
+        if (_renderer != null && (!PartsVisible || _loadedCarDirectory != carDirectory)) ApplyParts();
+    }
+
+    private static CarAnchors? GetAnchors(Kn5RenderableCar carNode)
+    {
+        var hubs = new[] { "WHEEL_LF", "WHEEL_RF", "WHEEL_LR", "WHEEL_RR" }
+            .Select(name => carNode.RootObject.GetDummyByName(name)?.Matrix)
+            .ToArray();
+        if (hubs.Any(h => h == null)) return null;
+
+        var points = hubs.Select(h => new System.Numerics.Vector3(h!.Value.M41, h.Value.M42, h.Value.M43)).ToArray();
+        return new CarAnchors(points[0], points[1], points[2], points[3]);
+    }
+
+    /// <summary>
+    /// Stand-in until cars carry their own parts: pick an engine of the right family from the car's name
+    /// </summary>
+    private static string? GuessEngine(string carId)
+    {
+        var id = carId.ToLowerInvariant();
+        if (new[] { "chevy", "chevrolet", "camaro", "vette", "corvette", "pontiac", "gto" }.Any(id.Contains))
+            return "engines/GM_V8_pak/GM_327_block";
+        if (new[] { "ford", "shelby", "mustang", "falcon", "cobra" }.Any(id.Contains))
+            return "engines/DEXTERV8s/Ford_302_block";
+        if (new[] { "chrysler", "dodge", "plymouth", "valiant", "mopar" }.Any(id.Contains))
+            return "engines/Mopar/block_340";
+        return null;
     }
 
     private void ApplySkin()
@@ -607,7 +727,8 @@ public class CarViewport3D : System.Windows.Controls.Grid
         var orbit = _renderer?.CameraOrbit;
         if (orbit == null) return;
 
-        orbit.Radius = Math.Clamp(orbit.Radius - e.Delta * 0.002f, MinRadius, MaxRadius);
+        var minRadius = _renderer!.HasProp ? PartsMinRadius : MinRadius;
+        orbit.Radius = Math.Clamp(orbit.Radius - e.Delta * 0.002f, minRadius, MaxRadius);
         _renderer!.IsDirty = true;
         e.Handled = true;
     }
