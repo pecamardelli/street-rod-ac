@@ -79,6 +79,18 @@ public class CarViewport3D : System.Windows.Controls.Grid
         _d3dImage.IsFrontBufferAvailableChanged += OnFrontBufferAvailableChanged;
     }
 
+    /// <summary>Raised once when the first 3D frame is on screen</summary>
+    public event EventHandler? Ready;
+
+    /// <summary>Raised if the renderer could not be started or crashed</summary>
+    public event EventHandler? Failed;
+
+    /// <summary>
+    /// Fade the viewport in by itself when the first frame is ready.
+    /// Turn off when the host reveals the whole screen at once.
+    /// </summary>
+    public bool FadeInOnReady { get; set; } = true;
+
     #region Dependency properties
 
     public static readonly DependencyProperty CarDirectoryProperty = DependencyProperty.Register(
@@ -406,7 +418,15 @@ public class CarViewport3D : System.Windows.Controls.Grid
             if (!IsReady)
             {
                 IsReady = true;
-                _image.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, FadeInDuration));
+                if (FadeInOnReady)
+                {
+                    _image.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, FadeInDuration));
+                }
+                else
+                {
+                    _image.Opacity = 1;
+                }
+                Ready?.Invoke(this, EventArgs.Empty);
             }
         }
         catch (Exception ex)
@@ -538,6 +558,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
         _failed = true;
         DisposeRenderer();
         HasFailed = true;
+        Failed?.Invoke(this, EventArgs.Empty);
     }
 
     [DllImport("user32.dll")]

@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace Street_Rod_AC.Screens.Garage
 {
@@ -9,53 +10,90 @@ namespace Street_Rod_AC.Screens.Garage
     /// </summary>
     public partial class GarageScreenView : System.Windows.Controls.UserControl
     {
-        private static readonly TimeSpan FadeInDuration = TimeSpan.FromSeconds(0.5);
+        private static readonly TimeSpan FadeInDuration = TimeSpan.FromSeconds(0.6);
+        private static readonly TimeSpan QuickFadeInDuration = TimeSpan.FromSeconds(0.25);
         private static readonly TimeSpan FadeOutDuration = TimeSpan.FromSeconds(0.35);
+
+        // Let the renderer draw a few frames (reflections, shadows) before showing it
+        private static readonly TimeSpan SettleDelay = TimeSpan.FromMilliseconds(200);
+
+        // Never leave the player stuck on the loading layer if the renderer reports nothing
+        private static readonly TimeSpan RevealTimeout = TimeSpan.FromSeconds(15);
+
+        private DispatcherTimer? _revealTimer;
+        private bool _revealed;
 
         public GarageScreenView()
         {
             InitializeComponent();
             Loaded += OnLoaded;
-        }
+            Unloaded += (_, _) => _revealTimer?.Stop();
 
-        /// <summary>Overlay elements that fade in after the background, in order of appearance</summary>
-        private FrameworkElement[] OverlayElements => new FrameworkElement[]
-        {
-            BackButton, ExitButton, CarDisplayButton, RightButtons,
-            HitTheStreetsButton, NewspaperButton, PreviewContainer, CarInfoBar
-        };
+            Viewport3D.Ready += (_, _) => RevealAfter(SettleDelay);
+            Viewport3D.Failed += (_, _) => RevealAfter(TimeSpan.Zero);
+        }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (DataContext is not GarageScreenViewModel viewModel)
-                return;
-
-            viewModel.ExitTransition = FadeOutAsync;
-
-            if (viewModel.SkipEnterAnimation)
+            if (DataContext is GarageScreenViewModel viewModel)
             {
-                // Skip animation - set everything to full opacity immediately
-                RootGrid.Opacity = 1;
-                foreach (var element in OverlayElements)
-                {
-                    element.Opacity = 1;
-                }
+                viewModel.ExitTransition = FadeOutAsync;
+            }
+
+            // Re-loaded with the garage already rendered (or failed): nothing to wait for
+            if (Viewport3D.IsReady || Viewport3D.HasFailed)
+            {
+                RevealAfter(TimeSpan.Zero);
+            }
+            else
+            {
+                RevealAfter(RevealTimeout);
+            }
+        }
+
+        /// <summary>
+        /// Schedules the reveal; a shorter delay replaces a pending longer one (timeout -> ready)
+        /// </summary>
+        private void RevealAfter(TimeSpan delay)
+        {
+            if (_revealed) return;
+
+            _revealTimer?.Stop();
+
+            if (delay <= TimeSpan.Zero)
+            {
+                Reveal();
                 return;
             }
 
-            // Background (and the 3D garage) first, then the overlay staggered on top of it
-            RootGrid.BeginAnimation(OpacityProperty, new DoubleAnimation(0.0, 1.0, FadeInDuration));
+            _revealTimer = new DispatcherTimer { Interval = delay };
+            _revealTimer.Tick += (_, _) => Reveal();
+            _revealTimer.Start();
+        }
 
-            var delay = TimeSpan.FromSeconds(0.3);
-            foreach (var element in OverlayElements)
+        /// <summary>
+        /// Swaps the loading layer for the finished screen: garage, car and overlay fade in together
+        /// </summary>
+        private void Reveal()
+        {
+            _revealTimer?.Stop();
+            if (_revealed) return;
+            _revealed = true;
+
+            var skipAnimation = (DataContext as GarageScreenViewModel)?.SkipEnterAnimation == true;
+            var duration = skipAnimation ? QuickFadeInDuration : FadeInDuration;
+
+            // Invisible buttons must not be clickable while loading
+            ContentLayer.IsHitTestVisible = true;
+
+            ContentLayer.BeginAnimation(OpacityProperty, new DoubleAnimation(0.0, 1.0, duration)
             {
-                element.BeginAnimation(OpacityProperty, new DoubleAnimation(0.0, 1.0, FadeInDuration)
-                {
-                    BeginTime = delay,
-                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                });
-                delay += TimeSpan.FromSeconds(0.04);
-            }
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            });
+
+            var hideLoading = new DoubleAnimation(LoadingLayer.Opacity, 0.0, QuickFadeInDuration);
+            hideLoading.Completed += (_, _) => LoadingLayer.Visibility = Visibility.Collapsed;
+            LoadingLayer.BeginAnimation(OpacityProperty, hideLoading);
         }
 
         /// <summary>

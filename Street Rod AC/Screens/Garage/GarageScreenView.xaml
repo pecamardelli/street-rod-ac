@@ -38,9 +38,12 @@
             </Setter>
         </Style>
     </UserControl.Resources>
-    <Grid x:Name="RootGrid"
-          Background="{StaticResource MainBackgroundBrush}"
-          Opacity="0">
+    <Grid x:Name="RootGrid">
+        <!-- Everything lives in ContentLayer, which stays invisible until the 3D garage has rendered its
+             first frame; then the whole screen (garage, car, overlay) fades in at once -->
+        <Grid x:Name="ContentLayer"
+              Opacity="0"
+              IsHitTestVisible="False">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -51,7 +54,8 @@
                                 Grid.Row="0"
                                 CarDirectory="{Binding SelectedCar.CarDirectory}"
                                 SkinId="{Binding SelectedCar.SkinId}"
-                                ShowroomKn5="{Binding GarageShowroomKn5}"/>
+                                ShowroomKn5="{Binding GarageShowroomKn5}"
+                                FadeInOnReady="False"/>
 
         <!-- Back Button -->
         <Button x:Name="BackButton"
@@ -61,8 +65,7 @@
                 Command="{Binding BackCommand}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Margin="20,20,0,0"
-                Opacity="0"/>
+                Margin="20,20,0,0"/>
 
         <!-- Exit Button -->
         <Button x:Name="ExitButton"
@@ -72,8 +75,7 @@
                 Command="{Binding ExitCommand}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Margin="20,94,0,0"
-                Opacity="0"/>
+                Margin="20,94,0,0"/>
 
         <!-- Main Content -->
         <Grid Grid.Row="0">
@@ -96,8 +98,7 @@
                     Command="{Binding SelectCarCommand}"
                     HorizontalAlignment="Center"
                     Margin="0,80,0,20"
-                    Cursor="Hand"
-                    Opacity="0">
+                    Cursor="Hand">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Setter Property="Template">
@@ -150,8 +151,7 @@
                     CornerRadius="5"
                     HorizontalAlignment="Center"
                     Width="800"
-                    Margin="0,0,0,40"
-                    Opacity="0">
+                    Margin="0,0,0,40">
                 <!-- Shown for the calendar, or as the 2D fallback when the 3D garage could not start -->
                 <Border.Style>
                     <Style TargetType="Border">
@@ -353,8 +353,7 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Bottom"
                         Margin="0,0,0,42"
-                        Visibility="{Binding ActivePanel, Converter={StaticResource GaragePanelToVisibilityConverter}, ConverterParameter=CarPreview}"
-                        Opacity="0">
+                        Visibility="{Binding ActivePanel, Converter={StaticResource GaragePanelToVisibilityConverter}, ConverterParameter=CarPreview}">
                 <!-- 3D Viewport Controls -->
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Right"
@@ -439,12 +438,11 @@
                 Background="{StaticResource HitTheStreetsButtonBrush}"
                 Command="{Binding HitTheStreetsCommand}"
                 Tag="Hit the streets"
-                Width="168"
-                Height="168"
+                Width="112"
+                Height="112"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Margin="30,0,0,0"
-                Opacity="0"/>
+                Margin="30,0,0,0"/>
 
         <!-- Newspaper (bottom left) -->
         <Button x:Name="NewspaperButton"
@@ -455,16 +453,14 @@
                 Tag="Newspaper"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Bottom"
-                Margin="30,0,0,30"
-                Opacity="0"/>
+                Margin="30,0,0,30"/>
 
         <!-- Career + Calendar (top right) -->
         <StackPanel x:Name="RightButtons"
                     Grid.Row="0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
-                    Margin="0,30,30,0"
-                    Opacity="0">
+                    Margin="0,30,30,0">
             <Button Style="{StaticResource OverlayTileButtonStyle}"
                     Background="{StaticResource CareerButtonBrush}"
                     Command="{Binding CareerCommand}"
@@ -473,7 +469,7 @@
                     Style="{StaticResource OverlayTileButtonStyle}"
                     Command="{Binding ShowCalendarCommand}"
                     Tag="Calendar"
-                    Margin="0,24,0,0">
+                    Margin="0,16,0,0">
                 <Button.Background>
                     <ImageBrush ImageSource="/Assets/Images/Buttons/calendar.png" Stretch="Uniform"/>
                 </Button.Background>
@@ -508,5 +504,38 @@
                 </StackPanel>
             </Grid>
         </Border>
+        </Grid>
+
+        <!-- Loading Layer (shown until the 3D garage is ready) -->
+        <StackPanel x:Name="LoadingLayer"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    IsHitTestVisible="False">
+            <Border Width="60" Height="60" Margin="0,0,0,30">
+                <Border.RenderTransform>
+                    <RotateTransform x:Name="SpinnerRotation" CenterX="30" CenterY="30"/>
+                </Border.RenderTransform>
+                <Border.Triggers>
+                    <EventTrigger RoutedEvent="Loaded">
+                        <BeginStoryboard>
+                            <Storyboard RepeatBehavior="Forever">
+                                <DoubleAnimation Storyboard.TargetName="SpinnerRotation"
+                                                 Storyboard.TargetProperty="Angle"
+                                                 From="0" To="360"
+                                                 Duration="0:0:1"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Border.Triggers>
+                <Ellipse Stroke="#FF6B00" StrokeThickness="4"
+                         StrokeDashArray="3 2"
+                         Fill="Transparent"/>
+            </Border>
+            <TextBlock Text="Opening the garage..."
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       HorizontalAlignment="Center"/>
+        </StackPanel>
     </Grid>
 </UserControl>

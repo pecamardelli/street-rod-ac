@@ -199,8 +199,8 @@
 
     <!-- Overlay Tile Button Style (image tiles floating over the 3D garage, animated hover) -->
     <Style x:Key="OverlayTileButtonStyle" TargetType="Button">
-        <Setter Property="Width" Value="128"/>
-        <Setter Property="Height" Value="128"/>
+        <Setter Property="Width" Value="88"/>
+        <Setter Property="Height" Value="88"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
@@ -213,12 +213,12 @@
                         </Grid.RenderTransform>
 
                         <!-- Glow (separate element so the blur is not applied to the image) -->
-                        <Border CornerRadius="10" Background="#01000000">
+                        <Border CornerRadius="8" Background="#01000000">
                             <Border.Effect>
                                 <DropShadowEffect x:Name="glow"
                                                   Color="#FFC107"
                                                   ShadowDepth="0"
-                                                  BlurRadius="28"
+                                                  BlurRadius="22"
                                                   Opacity="0"/>
                             </Border.Effect>
                         </Border>
@@ -227,7 +227,7 @@
                         <Border x:Name="tile"
                                 Background="{TemplateBinding Background}"
                                 BorderThickness="2"
-                                CornerRadius="10"
+                                CornerRadius="8"
                                 Opacity="0.85">
                             <Border.BorderBrush>
                                 <SolidColorBrush x:Name="tileBorder" Color="#404040"/>
@@ -237,9 +237,9 @@
                         <!-- Label strip, slides up on hover -->
                         <Border x:Name="labelStrip"
                                 VerticalAlignment="Bottom"
-                                CornerRadius="0,0,8,8"
+                                CornerRadius="0,0,6,6"
                                 Margin="2"
-                                Padding="4,14,4,8"
+                                Padding="2,10,2,5"
                                 Opacity="0"
                                 IsHitTestVisible="False">
                             <Border.Background>
@@ -253,7 +253,7 @@
                             </Border.RenderTransform>
                             <TextBlock Text="{TemplateBinding Tag}"
                                        FontFamily="Courier New"
-                                       FontSize="14"
+                                       FontSize="11"
                                        FontWeight="Bold"
                                        Foreground="White"
                                        TextAlignment="Center"
