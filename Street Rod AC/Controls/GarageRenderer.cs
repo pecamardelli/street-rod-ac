@@ -309,7 +309,9 @@ public class GarageRenderer : DarkKn5ObjectRenderer
     }
 
     /// <summary>
-    /// The part under a point of the picture, the nearest one across both part models.
+    /// The part under a point of the picture: the nearest place shown for a loose part, else the nearest
+    /// mounted part. The places glow through whatever is in front of them, and some sit inside another part
+    /// (a fuel rail in its manifold), so they are reached through the mounted parts.
     /// The car itself is never hit: in the parts view it is a ghost one reaches through.
     /// </summary>
     /// <param name="x">0 at the left edge, 1 at the right</param>
@@ -319,11 +321,12 @@ public class GarageRenderer : DarkKn5ObjectRenderer
         if (!IsGhosting || Camera == null) return null;
 
         var ray = Camera.GetPickingRay(new Vector2(x * ActualWidth, y * ActualHeight), new Vector2(ActualWidth, ActualHeight));
-        PartHit? nearest = null;
-        var distance = float.MaxValue;
+        return Nearest(PartLayer.Candidate, _candidateNodes) ?? Nearest(PartLayer.Mounted, _propNodes);
 
-        foreach (var (layer, nodes) in new[] { (PartLayer.Mounted, _propNodes), (PartLayer.Candidate, _candidateNodes) })
+        PartHit? Nearest(PartLayer layer, List<PartNode> nodes)
         {
+            PartHit? nearest = null;
+            var distance = float.MaxValue;
             for (var i = 0; i < nodes.Count; i++)
             {
                 if (nodes[i].Intersect(ray) is { } hit && hit < distance)
@@ -332,9 +335,9 @@ public class GarageRenderer : DarkKn5ObjectRenderer
                     nearest = new PartHit(layer, i);
                 }
             }
-        }
 
-        return nearest;
+            return nearest;
+        }
     }
 
     /// <summary>The meshes of one part in a part model</summary>

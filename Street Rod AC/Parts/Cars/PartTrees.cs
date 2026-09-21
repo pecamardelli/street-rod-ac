@@ -3,22 +3,21 @@ using Street_Rod_AC.Parts.Logic;
 
 namespace Street_Rod_AC.Parts.Cars;
 
-/// <summary>A saved part tree brought together with the catalog, and the way back from each part to its saved self</summary>
+/// <summary>
+/// A saved part tree brought together with the catalog, and the way back from each part to its saved self.
+/// Saved parts the catalog no longer has (a pack was removed) are left out, with what is on them.
+/// </summary>
 public sealed class LiveTree
 {
-    public LiveTree(InstalledPart root, Dictionary<InstalledPart, PartInstance> saved, List<PartInstance> unknown)
+    public LiveTree(InstalledPart root, Dictionary<InstalledPart, PartInstance> saved)
     {
         Root = root;
         Saved = saved;
-        Unknown = unknown;
     }
 
     public InstalledPart Root { get; }
 
     public IReadOnlyDictionary<InstalledPart, PartInstance> Saved { get; }
-
-    /// <summary>Saved parts the catalog no longer has (a pack was removed); they and what is on them are left out</summary>
-    public IReadOnlyList<PartInstance> Unknown { get; }
 
     public PartTree AsPartTree() => new(Root, Array.Empty<PartDefinition>(), Array.Empty<string>());
 }
@@ -34,10 +33,9 @@ public static class PartTrees
         if (catalog.Get(root.DefinitionId) is not { } rootDefinition) return null;
 
         var saved = new Dictionary<InstalledPart, PartInstance>();
-        var unknown = new List<PartInstance>();
         var installedRoot = Create(rootDefinition, root);
         AddChildren(installedRoot, root);
-        return new LiveTree(installedRoot, saved, unknown);
+        return new LiveTree(installedRoot, saved);
 
         InstalledPart Create(PartDefinition definition, PartInstance instance)
         {
@@ -51,11 +49,7 @@ public static class PartTrees
         {
             foreach (var child in instance.Children)
             {
-                if (catalog.Get(child.DefinitionId) is not { } definition)
-                {
-                    unknown.Add(child);
-                    continue;
-                }
+                if (catalog.Get(child.DefinitionId) is not { } definition) continue;
 
                 var installed = Create(definition, child);
                 parent.Mount(child.ParentSlot, installed, child.OwnSlot);
@@ -103,21 +97,14 @@ public static class PartTrees
         return copy;
     }
 
+    /// <summary>A part somebody owns in a few words: its condition and what comes with it, "85%, with 3 more parts"</summary>
+    public static string Describe(PartInstance part)
+    {
+        var attached = part.SelfAndDescendants().Count() - 1;
+        return $"{part.Wear * 100:0}%" + (attached > 0 ? $", with {attached} more part{(attached == 1 ? "" : "s")}" : "");
+    }
+
     /// <summary>The part another part is mounted on; null for a root or a part that is not in the tree</summary>
     public static PartInstance? FindParent(PartInstance root, PartInstance part) =>
         root.SelfAndDescendants().FirstOrDefault(p => p.Children.Contains(part));
-
-    /// <summary>Same parts in the same places, whatever their condition</summary>
-    public static bool SameBuild(PartInstance a, PartInstance b)
-    {
-        if (!a.DefinitionId.Equals(b.DefinitionId, StringComparison.OrdinalIgnoreCase) || a.Children.Count != b.Children.Count) return false;
-
-        foreach (var child in a.Children)
-        {
-            var other = b.Children.FirstOrDefault(c => c.ParentSlot == child.ParentSlot);
-            if (other == null || !SameBuild(child, other)) return false;
-        }
-
-        return true;
-    }
 }

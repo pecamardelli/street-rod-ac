@@ -72,6 +72,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private IReadOnlyList<PlacedPart> _partNodes = Array.Empty<PlacedPart>();
     private Dictionary<InstalledPart, System.Numerics.Matrix4x4> _partWorlds = new();
     private IReadOnlyList<MountCandidate> _candidateNodes = Array.Empty<MountCandidate>();
+    private IReadOnlyList<MountCandidate>? _shownCandidates;
     private CarAnchors? _anchors;
 
     // A press that does not turn into a drag is a click
@@ -569,15 +570,19 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private async void ApplyCandidates()
     {
         var renderer = _renderer;
-        if (renderer == null || _isLoadingCandidates) return;
+        if (renderer == null) return;
 
+        // The places of the part picked before are no places for this one: they go at once, not when the
+        // new ones are built, or a click in between would mount this part where the other one fits
         var candidates = Candidates;
+        if (!ReferenceEquals(candidates, _shownCandidates)) ClearCandidates(renderer);
+        if (_isLoadingCandidates) return;
+
         var catalog = PartsCatalog;
         var anchors = _anchors;
         if (candidates == null || candidates.Count == 0 || catalog == null || anchors == null || !renderer.HasProp)
         {
-            renderer.SetCandidates(null);
-            _candidateNodes = Array.Empty<MountCandidate>();
+            ClearCandidates(renderer);
             return;
         }
 
@@ -615,14 +620,14 @@ public class CarViewport3D : System.Windows.Controls.Grid
             {
                 renderer.SetCandidates(model?.Kn5);
                 _candidateNodes = owners;
+                _shownCandidates = candidates;
                 _animateUntil = DateTime.Now + AnimationWindow;
             }
         }
         catch (InvalidOperationException)
         {
-            // None of the parts has a model: nothing to show, nothing to click
-            renderer.SetCandidates(null);
-            _candidateNodes = Array.Empty<MountCandidate>();
+            // Nothing made it into the model: nothing to show, nothing to click
+            ClearCandidates(renderer);
         }
         catch (Exception ex)
         {
@@ -636,15 +641,25 @@ public class CarViewport3D : System.Windows.Controls.Grid
         if (_renderer != null && !ReferenceEquals(candidates, Candidates)) ApplyCandidates();
     }
 
+    private void ClearCandidates(GarageRenderer renderer)
+    {
+        renderer.SetCandidates(null);
+        _candidateNodes = Array.Empty<MountCandidate>();
+        _shownCandidates = null;
+        renderer.IsDirty = true;
+    }
+
     private void ApplySelection()
     {
         if (_renderer == null) return;
 
+        // The model on screen may still be the one of the tree before: the same part is known by its id there
         var selected = SelectedPart;
         var node = -1;
         for (var i = 0; selected != null && i < _partNodes.Count; i++)
         {
-            if (ReferenceEquals(_partNodes[i].Source, selected)) node = i;
+            var source = _partNodes[i].Source;
+            if (ReferenceEquals(source, selected) || (source != null && selected.InstanceId != Guid.Empty && source.InstanceId == selected.InstanceId)) node = i;
         }
 
         _renderer.SelectedPart = node < 0 ? null : node;
@@ -961,7 +976,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
         var hit = PickAt(position);
         if (hit is { Layer: PartLayer.Candidate } candidate && candidate.Node < _candidateNodes.Count)
         {
-            CandidateClicked?.Invoke(_candidateNodes[candidate.Node]);
+            if (ReferenceEquals(_shownCandidates, Candidates)) CandidateClicked?.Invoke(_candidateNodes[candidate.Node]);
             return;
         }
 

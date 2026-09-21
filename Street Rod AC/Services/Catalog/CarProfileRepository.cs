@@ -55,6 +55,15 @@ namespace Street_Rod_AC.Services.Catalog
             collection.Upsert(profile);
         }
 
+        public bool UpdateProfile(string carDefinitionId, Func<CarProfile, CarProfile?> change)
+        {
+            using var db = CatalogDatabase.Open(_databasePath);
+            var collection = db.GetCollection<CarProfile>(ProfilesCollection);
+
+            var stored = collection.FindById(carDefinitionId);
+            return stored != null && change(stored) is { } changed && collection.Update(changed);
+        }
+
         public List<CarProfile> GetAllProfiles()
         {
             using var db = CatalogDatabase.Open(_databasePath);

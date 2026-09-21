@@ -111,11 +111,15 @@ keeps whatever was on it, so the player's shelf (`Player.Parts`) and the ads hol
 parts, a complete engine included. `PartTrees` goes between `PartInstance` and the runtime's `InstalledPart`
 (`LiveTree` keeps the way back). `Car.HasPartsAssigned` tells a car that never had parts (an older save) from one whose
 engine was pulled; `ICarPartsService.EnsureParts` gives the former its factory engine, worn like the car, the first time
-the car is looked at.
+the car is looked at (`EnsurePartsAsync` from a screen: the engine is built on a worker thread, the car changed on the
+caller's).
 
 **Factory engine.** `CarProfile.StockEngineBuildId` names an engine build of `engine_builds.json`. It is suggested by
 `StockEngineMatcher` and can be overruled per car in the Car Catalog Editor (options come best match first;
-`StockEngineIsManual` keeps suggestions away afterwards). The matcher scores the builds that run
+`StockEngineIsManual` keeps suggestions away afterwards, also when the picked build leaves the catalog: the car then
+runs on the best match until somebody picks again). Suggestions are written with `ICarProfileRepository.UpdateProfile`,
+a read-change-write in one visit to the database, and the editor saves the same way, so neither overwrites what the
+other stored in the meantime. The matcher scores the builds that run
 (`EngineBuildIndex`: every build on the dyno once, about a second, kept for the session): same corporate family
 (`MakeFamilies`: GM, Ford, Mopar... from the words of the name; a block belongs to the make whose cars it came in),
 words the names share (a 427 is a 427), and how close the power comes to the car's own `bhp`. With the parts there are,
@@ -162,8 +166,15 @@ swapped and what arrived flies in the same way backwards. A car change swaps wit
 change), `Candidates` (`MountCandidate`: a loose tree, the part and slot it would go on) and `SelectedPart`; it raises
 `PartClicked` and `CandidateClicked`. `PartAssembler.Assemble` places a tree by its slots, `BuildModel` merges it into
 one KN5 with a node per part (`NodeName(i)`, `AssemblyModel.Nodes[i]`), which is how a pick finds its part.
+A part without a model (a handful of fuel rails and injectors) goes into the model as a small grey box
+(`PlaceholderMesh`): parts are mounted and taken off by clicking them, so every part needs something to click.
+The model on screen lags behind the tree while parts fly off and the next model is built, so whatever comes out of a
+click is checked against what counts now: the workbench finds a clicked part again by its `InstanceId` in the current
+tree, and a clicked place only counts if it belongs to the `Candidates` of the shelf part that is picked (the viewport
+drops the places of the part picked before at once).
 `GarageRenderer` holds two part models (mounted, candidates), picks by ray (`Pick`: bounding box first, then triangles,
-about 0.2 ms) and draws the glows: depth of the thing alone, `EffectPpOutline`, then scaled to a tint with a
+about 0.2 ms; a place for a loose part wins over a mounted part in front of it, the places glow through everything
+and some sit inside another part) and draws the glows: depth of the thing alone, `EffectPpOutline`, then scaled to a tint with a
 blend-factor pass, one buffer per glow (car, candidates, selected, hovered).
 
 **Shop** (`PartsShopService`, the Used Parts screen of the newspaper). Three pages: used parts from the ads
@@ -175,7 +186,16 @@ worth `value x tear x (0.3 + 0.7 x wear)` as in SLRR, ads ask around 60% of that
 `AppSettings.PartsPriceScale` (0.2) brings the scripts' early-2000s dollars to the game's 1970 ones.
 
 `catalog.db` is opened per call and exclusively; with parts work running in the background the two catalog repositories
-now take turns through `CatalogDatabase.Open`.
+now take turns through `CatalogDatabase.Open` (a semaphore, given back when the connection is disposed, whatever
+happens while closing; a call must not open the database again while it has it open).
+
+**Threads.** The game state and the save file belong to the UI thread. Whatever takes long (loading the catalog,
+putting engines together for ads, market listings and cars without parts) runs on a worker thread on objects nobody
+else has yet, and the result goes into the game state back on the calling thread (`RefreshAdsAsync`,
+`EnsurePartsAsync`, `UsedCarMarketService.RefreshMarketAsync`). Two scheduled tasks therefore hand the day back before
+they are done (`MarketRefreshTask`, `PartsAdsRefreshTask`); they are registered last, so the race simulation and the
+event generation are finished first, and whoever saves after spending time awaits `SpendTimeAsync` before saving.
+`ICarPartsService.IsAvailable` never throws: parts that cannot be read count as no parts, for the session.
 
 ## Assetto Corsa export (`Parts/Export`)
 

@@ -18,10 +18,6 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
             _shopService = shopService;
         }
 
-        public Task ExecuteAsync(GameState gameState, DateTime currentDate)
-        {
-            // Building whole engines for the ads takes a moment: not on the UI thread
-            return Task.Run(() => _shopService.RefreshAds(gameState, currentDate));
-        }
+        public Task ExecuteAsync(GameState gameState, DateTime currentDate) => _shopService.RefreshAdsAsync(gameState, currentDate);
     }
 }

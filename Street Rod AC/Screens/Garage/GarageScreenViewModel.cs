@@ -206,6 +206,10 @@ namespace Street_Rod_AC.Screens.Garage
                 RefreshCalendarDisplay();
                 OnPropertyChanged(nameof(BankrollDisplay));
             };
+            Workbench.SaveFailed += _ => _dialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(
+                _dialogService,
+                "The work on the car is done, but the game could not be saved. It is saved again the next time something changes.",
+                "Save Warning"));
             Workbench.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(PartsWorkbenchViewModel.IsOpen)) OnPropertyChanged(nameof(ShowNavigation));

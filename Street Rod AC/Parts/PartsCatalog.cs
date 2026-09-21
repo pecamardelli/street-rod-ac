@@ -14,7 +14,6 @@ public sealed class PartsCatalog
 
     private readonly string _root;
     private readonly Dictionary<string, PartDefinition> _parts = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<(string PartId, int SlotId), List<(PartDefinition Part, PartSlot Slot)>> _mountable = new();
 
     private readonly Lazy<MatingIndex> _mating;
 
@@ -39,6 +38,9 @@ public sealed class PartsCatalog
     /// <summary>Complete engines as part lists: factory builds of the source game's cars and written-down builds</summary>
     public IReadOnlyList<EngineBuild> EngineBuilds { get; private set; } = Array.Empty<EngineBuild>();
 
+    /// <summary>A catalog without parts, for when the parts under the folder cannot be read</summary>
+    public static PartsCatalog Empty(string root) => new(root);
+
     public static PartsCatalog Load(string root)
     {
         var catalog = new PartsCatalog(root);
@@ -59,29 +61,10 @@ public sealed class PartsCatalog
         if (File.Exists(buildsFile))
             catalog.EngineBuilds = JsonConvert.DeserializeObject<List<EngineBuild>>(File.ReadAllText(buildsFile)) ?? new List<EngineBuild>();
 
-        foreach (var part in catalog._parts.Values)
-        {
-            foreach (var slot in part.Slots)
-            {
-                foreach (var target in slot.AttachesTo)
-                {
-                    if (target.Part == null) continue;
-
-                    var key = (target.Part.ToLowerInvariant(), target.Slot);
-                    if (!catalog._mountable.TryGetValue(key, out var list)) catalog._mountable[key] = list = new();
-                    list.Add((part, slot));
-                }
-            }
-        }
-
         return catalog;
     }
 
     public PartDefinition? Get(string id) => _parts.GetValueOrDefault(id);
-
-    /// <summary>Parts that can be mounted on a slot, each with the slot of its own it mounts by</summary>
-    public IReadOnlyList<(PartDefinition Part, PartSlot Slot)> GetMountable(PartDefinition parent, PartSlot slot) =>
-        _mountable.TryGetValue((parent.Id.ToLowerInvariant(), slot.Id), out var list) ? list : Array.Empty<(PartDefinition, PartSlot)>();
 
     /// <summary>
     /// Whether two slots go together. A slot names the slots it attaches to, on either side of the joint (a header

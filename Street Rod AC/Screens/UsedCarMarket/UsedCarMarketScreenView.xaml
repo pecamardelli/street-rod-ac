@@ -52,6 +52,15 @@
             </StackPanel>
         </StackPanel>
 
+        <!-- The first market of a game takes a few seconds to put together -->
+        <TextBlock Grid.Row="1"
+                   Text="The dealers are putting their cars out..."
+                   FontSize="18"
+                   Foreground="{StaticResource TextSecondaryBrush}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
         <!-- Car Listings -->
         <ScrollViewer Grid.Row="1"
                      VerticalScrollBarVisibility="Auto"

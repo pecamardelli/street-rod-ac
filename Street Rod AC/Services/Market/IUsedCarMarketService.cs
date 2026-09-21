@@ -8,14 +8,16 @@ namespace Street_Rod_AC.Services.Market
     public interface IUsedCarMarketService
     {
         /// <summary>
-        /// Spawns new used car listings based on precedence and dealer locations
+        /// Spawns new used car listings based on precedence and dealer locations.
+        /// The engines of the cars are put together on a worker thread: that takes a moment.
         /// </summary>
-        List<UsedCarListing> SpawnListings(List<DealerLocation> dealers, DateTime currentDate);
+        Task<List<UsedCarListing>> SpawnListingsAsync(List<DealerLocation> dealers, DateTime currentDate);
 
         /// <summary>
-        /// Refreshes the market: removes old listings, spawns new ones
+        /// Refreshes the market: removes old listings, spawns new ones. The listings that are there are only
+        /// looked at on the calling thread; the engines of the new ones are put together on a worker thread.
         /// </summary>
-        List<UsedCarListing> RefreshMarket(List<UsedCarListing> currentListings, List<DealerLocation> dealers, DateTime currentDate);
+        Task<List<UsedCarListing>> RefreshMarketAsync(List<UsedCarListing> currentListings, List<DealerLocation> dealers, DateTime currentDate);
 
         /// <summary>
         /// Gets available (not sold) listings

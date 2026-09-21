@@ -15,6 +15,7 @@ public sealed record PlacedPart(PartDefinition Part, Matrix4x4 World, InstalledP
 /// <summary>
 /// An assembly merged into one model, with its bounds in the model's own space.
 /// <see cref="Nodes"/> are the parts that made it into the model: the i-th is the node <see cref="PartAssembler.NodeName"/>(i).
+/// A part without a model of its own that stands for an installed part is in it as a small box, so it can be clicked.
 /// </summary>
 public sealed record AssemblyModel(IKn5 Kn5, Vector3 Min, Vector3 Max, IReadOnlyList<PlacedPart> Nodes);
 
@@ -76,7 +77,11 @@ public static class PartAssembler
         foreach (var placed in parts)
         {
             var modelPath = catalog.GetModelPath(placed.Part);
-            if (modelPath == null || !File.Exists(modelPath)) continue;
+            if (modelPath == null || !File.Exists(modelPath))
+            {
+                if (placed.Source != null) AddPlaceholder(placed);
+                continue;
+            }
 
             if (!models.TryGetValue(modelPath, out var model)) models[modelPath] = model = Kn5.FromFile(modelPath);
 
@@ -126,6 +131,19 @@ public static class PartAssembler
             throw new InvalidOperationException($"No part of '{name}' has a model");
 
         return new AssemblyModel(kn5, min, max, nodes);
+
+        void AddPlaceholder(PlacedPart placed)
+        {
+            var partNode = Kn5Node.CreateBaseNode(NodeName(nodes.Count));
+            partNode.Transform = ToMat4x4(placed.World);
+            partNode.Children.Add(PlaceholderMesh.Create(kn5, $"{partNode.Name}_box"));
+            kn5.RootNode.Children.Add(partNode);
+            nodes.Add(placed);
+
+            var centre = placed.World.Translation;
+            min = Vector3.Min(min, centre - new Vector3(PlaceholderMesh.HalfSize));
+            max = Vector3.Max(max, centre + new Vector3(PlaceholderMesh.HalfSize));
+        }
     }
 
     /// <summary>Geometry arrays are shared with the source, only the material binding differs</summary>

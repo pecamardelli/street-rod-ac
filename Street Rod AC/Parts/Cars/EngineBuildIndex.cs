@@ -19,6 +19,9 @@ public sealed class EngineBuildIndex
 
     private EngineBuildIndex() { }
 
+    /// <summary>No builds at all: what there is when the catalog has none, or they could not be rated</summary>
+    public static EngineBuildIndex Empty { get; } = new();
+
     /// <summary>Builds that run, in the order of the catalog</summary>
     public IReadOnlyList<RatedBuild> Runnable { get; private set; } = Array.Empty<RatedBuild>();
 

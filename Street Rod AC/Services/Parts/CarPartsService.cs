@@ -24,6 +24,7 @@ namespace Street_Rod_AC.Services.Parts
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger(LogCategory.Parts);
         private readonly Lazy<PartsCatalog> _catalog;
         private readonly Lazy<EngineBuildIndex> _builds;
+        private readonly object _assignLock = new();
 
         public CarPartsService(IContentCatalogRepository catalogRepo, ICarProfileRepository profileRepo)
         {
@@ -70,20 +71,18 @@ namespace Street_Rod_AC.Services.Parts
         {
             if (car.HasPartsAssigned || !IsAvailable) return false;
 
-            var definition = _catalogRepo.GetCar(car.DefinitionId);
-            var build = definition == null ? null : GetStockBuild(definition);
-            var engine = build == null ? null : EngineFactory.CreateStock(Catalog, build, car.EngineHealth, Random.Shared);
-            if (engine == null)
-            {
-                _logger.Warning("No factory engine for {Car}", car.DefinitionId);
-                return false;
-            }
+            return Assign(car, CreateFactoryEngine(car.DefinitionId, car.EngineHealth));
+        }
 
-            car.Parts.Add(engine.Root);
-            car.HasPartsAssigned = true;
-            _logger.Information("{Car} given its factory engine: {Build}, {Power:0} hp", car.DefinitionId, build!.Build.Name,
-                engine.Report.Dyno?.MaxPowerHp ?? 0);
-            return true;
+        public async Task<bool> EnsurePartsAsync(Car car)
+        {
+            if (car.HasPartsAssigned) return false;
+
+            // The engine is put together away from the caller's thread; the car is only touched back on it
+            var definitionId = car.DefinitionId;
+            var condition = car.EngineHealth;
+            var engine = await Task.Run(() => IsAvailable ? CreateFactoryEngine(definitionId, condition) : null);
+            return Assign(car, engine);
         }
 
         public BuiltEngine? CreateUsedEngine(CarDefinition car, double condition)
@@ -97,57 +96,130 @@ namespace Street_Rod_AC.Services.Parts
                 : EngineFactory.CreateStock(Catalog, build, condition, Random.Shared);
         }
 
-        public EngineReport? Evaluate(Car car) =>
-            IsAvailable && car.Engine is { } engine ? EngineFactory.Evaluate(Catalog, engine) : null;
-
         public string? Describe(PartInstance engine, EngineReport? report)
         {
             var block = Catalog.Get(engine.DefinitionId);
             if (block == null) return null;
 
-            var name = (block.DisplayName ?? block.Name).Replace(" engine Block", "", StringComparison.OrdinalIgnoreCase)
-                .Replace(" block", "", StringComparison.OrdinalIgnoreCase);
+            var name = ShortBlockName(block.DisplayName ?? block.Name);
             return report is { Runs: true } ? $"{name}, {report.Dyno!.MaxPowerHp:0} hp" : $"{name}, not running";
         }
 
+        /// <summary>
+        /// "Chrysler LA 340 engine Block" is a "Chrysler LA 340": the part's kind at the end of the name goes.
+        /// A "GM 327-396 small block" keeps it, that is what the engine is called.
+        /// </summary>
+        private static string ShortBlockName(string name)
+        {
+            foreach (var kind in new[] { " engine block", " block" })
+            {
+                if (!name.EndsWith(kind, StringComparison.OrdinalIgnoreCase)) continue;
+
+                var shorter = name[..^kind.Length].TrimEnd();
+                var lastWord = shorter[(shorter.LastIndexOf(' ') + 1)..];
+                var belongsToName = lastWord.ToLowerInvariant() is "small" or "big" or "bare" or "short";
+                return belongsToName || !shorter.Contains(' ') ? name : shorter;
+            }
+
+            return name;
+        }
+
+        private BuiltEngine? CreateFactoryEngine(string carDefinitionId, double condition)
+        {
+            var definition = _catalogRepo.GetCar(carDefinitionId);
+            var build = definition == null ? null : GetStockBuild(definition);
+            var engine = build == null ? null : EngineFactory.CreateStock(Catalog, build, condition, Random.Shared);
+            if (engine == null) _logger.Warning("No factory engine for {Car}", carDefinitionId);
+            return engine;
+        }
+
+        /// <summary>Two screens may ask for the same car at the same moment: only the first engine goes in</summary>
+        private bool Assign(Car car, BuiltEngine? engine)
+        {
+            if (engine == null) return false;
+
+            lock (_assignLock)
+            {
+                if (car.HasPartsAssigned) return false;
+
+                car.Parts.Add(engine.Root);
+                car.HasPartsAssigned = true;
+            }
+
+            _logger.Information("{Car} given its factory engine: {Block}, {Power:0} hp", car.DefinitionId, engine.Root.DefinitionId,
+                engine.Report.Dyno?.MaxPowerHp ?? 0);
+            return true;
+        }
+
+        // A Lazy keeps the exception of a load that failed and throws it at everybody who asks afterwards.
+        // Parts that cannot be read are parts that are not there: the game goes on without them.
         private PartsCatalog LoadCatalog()
         {
-            var started = DateTime.Now;
-            var catalog = PartsCatalog.Load(AppSettings.Instance.PartsPath);
-            _logger.Information("Parts catalog: {Parts} parts, {Builds} engine builds in {Ms} ms", catalog.Parts.Count,
-                catalog.EngineBuilds.Count, (int)(DateTime.Now - started).TotalMilliseconds);
-            return catalog;
+            try
+            {
+                var started = DateTime.Now;
+                var catalog = PartsCatalog.Load(AppSettings.Instance.PartsPath);
+                _logger.Information("Parts catalog: {Parts} parts, {Builds} engine builds in {Ms} ms", catalog.Parts.Count,
+                    catalog.EngineBuilds.Count, (int)(DateTime.Now - started).TotalMilliseconds);
+                return catalog;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not read the parts under {Path}: going without them", AppSettings.Instance.PartsPath);
+                return PartsCatalog.Empty(AppSettings.Instance.PartsPath);
+            }
         }
 
         private EngineBuildIndex CreateIndex()
         {
-            var started = DateTime.Now;
-            var index = EngineBuildIndex.Create(Catalog);
-            _logger.Information("{Count} engine builds run, put on the dyno in {Ms} ms", index.Runnable.Count,
-                (int)(DateTime.Now - started).TotalMilliseconds);
-            return index;
+            try
+            {
+                var started = DateTime.Now;
+                var index = EngineBuildIndex.Create(Catalog);
+                _logger.Information("{Count} engine builds run, put on the dyno in {Ms} ms", index.Runnable.Count,
+                    (int)(DateTime.Now - started).TotalMilliseconds);
+                return index;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not put the engine builds on the dyno: going without them");
+                return EngineBuildIndex.Empty;
+            }
         }
 
         private RatedBuild? Suggest(CarDefinition car) =>
             StockEngineMatcher.Best(Builds, car.Brand, car.Name, StockEngineMatcher.ParsePower(car.Specs?.Bhp));
 
-        /// <summary>Fills in the factory engine of every profile that has none, or whose build has left the catalog</summary>
+        /// <summary>
+        /// Fills in the factory engine of every profile that has none, or whose build has left the catalog.
+        /// An engine picked by hand is left alone even then: the car runs on the best match until somebody picks again.
+        /// </summary>
         private void SuggestStockEngines()
         {
             foreach (var profile in _profileRepo.GetAllProfiles())
             {
-                if (Builds.Get(profile.StockEngineBuildId) != null) continue;
+                if (NeedsNoSuggestion(profile)) continue;
 
                 var car = _catalogRepo.GetCar(profile.CarDefinitionId);
                 var build = car == null ? null : Suggest(car);
                 if (build == null) continue;
 
-                profile.StockEngineBuildId = build.Build.Id;
-                profile.StockEngineIsManual = false;
-                profile.LastUpdatedDate = DateTime.Now;
-                _profileRepo.UpsertProfile(profile);
-                _logger.Information("Factory engine of {Car}: {Build} ({Power:0} hp)", profile.CarDefinitionId, build.Build.Name, build.PowerHp);
+                // Onto the profile as it is in the database now, not as it was when the loop started: the
+                // catalog editor may have saved it in the meantime
+                var suggested = _profileRepo.UpdateProfile(profile.CarDefinitionId, stored =>
+                {
+                    if (NeedsNoSuggestion(stored)) return null;
+
+                    stored.StockEngineBuildId = build.Build.Id;
+                    stored.LastUpdatedDate = DateTime.Now;
+                    return stored;
+                });
+
+                if (suggested) _logger.Information("Factory engine of {Car}: {Build} ({Power:0} hp)", profile.CarDefinitionId, build.Build.Name, build.PowerHp);
             }
         }
+
+        private bool NeedsNoSuggestion(CarProfile profile) =>
+            profile.StockEngineIsManual || Builds.Get(profile.StockEngineBuildId) != null;
     }
 }

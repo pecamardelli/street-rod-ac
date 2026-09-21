@@ -59,7 +59,7 @@ public static class Workbench
     {
         var siblings = carParts.Contains(part)
             ? carParts
-            : carParts.SelectMany(p => p.SelfAndDescendants()).FirstOrDefault(p => p.Children.Contains(part))?.Children;
+            : carParts.Select(root => PartTrees.FindParent(root, part)).FirstOrDefault(parent => parent != null)?.Children;
         if (siblings == null) return false;
 
         siblings.Remove(part);

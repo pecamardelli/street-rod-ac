@@ -47,26 +47,33 @@ namespace Street_Rod_AC.Services.Parts
         public decimal TradeInPrice(PartInstance part) =>
             PartPricing.Round(PartPricing.WorthOfAssembly(_parts.Catalog, part) * PartPricing.TradeInFactor);
 
-        public void RefreshAds(Models.GameState.GameState gameState, DateTime currentDate)
+        public async Task RefreshAdsAsync(Models.GameState.GameState gameState, DateTime currentDate)
         {
-            if (!IsAvailable) return;
-
             var ads = gameState.NewspaperAds.Parts;
-            var expired = ads.RemoveAll(ad => (currentDate - ad.PostedDate).TotalDays > AdLifetimeDays
-                                              || _parts.Catalog.Get(ad.Part.DefinitionId) == null);
+            var target = Random.Shared.Next(MinAds, MaxAds + 1);
+            var wanted = target - ads.Count(ad => !IsExpired(ad, currentDate));
+
+            // Loose from the game state: the list of ads belongs to the caller's thread, which may be saving it right now
+            var fresh = await Task.Run(() => IsAvailable ? CreateAds(wanted, currentDate) : null);
+            if (fresh == null) return;
+
+            var expired = ads.RemoveAll(ad => IsExpired(ad, currentDate) || _parts.Catalog.Get(ad.Part.DefinitionId) == null);
             foreach (var ad in ads) ad.DaysActive = Math.Max(0, (int)(currentDate - ad.PostedDate).TotalDays);
 
-            var target = Random.Shared.Next(MinAds, MaxAds + 1);
-            var added = 0;
-            while (ads.Count < target)
-            {
-                if (CreateAd(currentDate) is not { } ad) break;
+            // No more than asked for, whatever else filled the paper while the ads were made
+            var added = fresh.Take(Math.Max(0, target - ads.Count)).ToList();
+            ads.AddRange(added);
 
-                ads.Add(ad);
-                added++;
-            }
+            _logger.Information("Used parts ads: {Expired} gone, {Added} new, {Total} in the paper", expired, added.Count, ads.Count);
+        }
 
-            _logger.Information("Used parts ads: {Expired} gone, {Added} new, {Total} in the paper", expired, added, ads.Count);
+        private static bool IsExpired(PartAd ad, DateTime currentDate) => (currentDate - ad.PostedDate).TotalDays > AdLifetimeDays;
+
+        private List<PartAd> CreateAds(int count, DateTime currentDate)
+        {
+            var ads = new List<PartAd>();
+            while (ads.Count < count && CreateAd(currentDate) is { } ad) ads.Add(ad);
+            return ads;
         }
 
         public HashSet<string> FindFittingParts(Car? car)

@@ -47,6 +47,9 @@ namespace Street_Rod_AC.Screens.Garage
         /// <summary>Raised when money or time moved, for the screen around the workbench</summary>
         public event Action? StateChanged;
 
+        /// <summary>The work is done but the game could not be saved; the screen around the workbench says so</summary>
+        public event Action<Exception>? SaveFailed;
+
         public RelayCommand RemoveSelectedCommand { get; }
         public RelayCommand CancelMountCommand { get; }
         public RelayCommand TakeApartCommand { get; }
@@ -129,7 +132,6 @@ namespace Street_Rod_AC.Screens.Garage
         private EngineReport? _report;
 
         public bool HasEngine => _engine != null;
-        public bool EngineRuns => _report is { Runs: true };
 
         public string EngineName =>
             _engine == null ? "No engine" : (_engine.Definition.DisplayName ?? _engine.Definition.Name);
@@ -229,13 +231,10 @@ namespace Street_Rod_AC.Screens.Garage
 
             try
             {
-                // The first call loads the catalog: keep that off the UI thread
-                var available = await Task.Run(() =>
-                {
-                    if (!_parts.IsAvailable) return false;
-                    if (car != null && _parts.EnsureParts(car)) _save();
-                    return true;
-                });
+                // The first call loads the catalog: keep that off the UI thread. The car and the save file
+                // belong to the UI thread, so a car without parts gets them, and is saved, back on it.
+                var available = await Task.Run(() => _parts.IsAvailable);
+                if (available && car != null && await _parts.EnsurePartsAsync(car)) Save();
 
                 if (!ReferenceEquals(_car, car)) return;
 
@@ -255,12 +254,30 @@ namespace Street_Rod_AC.Screens.Garage
             if (SelectedShelfItem != null && part == null) return;
 
             SelectedShelfItem = null;
-            SelectedPart = part;
+            SelectedPart = InCurrentTree(part);
+        }
+
+        /// <summary>
+        /// The tree is made anew after every change, and the 3D view goes on showing the one before until the
+        /// new model is built: a click in between brings a part of the old tree. The same part of the tree
+        /// that counts now is known by its id; a part that has come off in the meantime is nothing to select.
+        /// </summary>
+        private InstalledPart? InCurrentTree(InstalledPart? part)
+        {
+            if (part == null || _live == null || _live.Saved.ContainsKey(part)) return part;
+
+            return part.InstanceId == Guid.Empty
+                ? part
+                : _live.Root.SelfAndDescendants().FirstOrDefault(p => p.InstanceId == part.InstanceId);
         }
 
         public void OnCandidateClicked(MountCandidate candidate)
         {
             if (_car == null || candidate.Tag is not MountPlace place || SelectedShelfItem is not { } item) return;
+
+            // The 3D view shows the places of the part picked before until those of this one are built:
+            // a place is only good for the part it was found for
+            if (_candidates?.Any(c => ReferenceEquals(c, candidate)) != true) return;
 
             Workbench.Mount(_car.Parts, place, item.Part);
             _gameState.Player.Parts.Remove(item.Part);
@@ -304,14 +321,14 @@ namespace Street_Rod_AC.Screens.Garage
             Finish(pieces.Count);
         }
 
-        /// <summary>After the car changed: show it, save it, and let the clock run for the work</summary>
+        /// <summary>After the car changed: show it, let the clock run for the work, and save it all</summary>
         private async void Finish(int partsHandled)
         {
             Refresh();
-            _save();
 
             try
             {
+                // Before saving: the time the work took belongs in the save, and so does the new day it may end in
                 await _spendMinutes(MinutesPerPart * Math.Min(partsHandled, 6));
             }
             catch (Exception ex)
@@ -319,7 +336,22 @@ namespace Street_Rod_AC.Screens.Garage
                 _logger.Warning("Could not spend the time for the work: {Error}", ex.Message);
             }
 
+            Save();
             StateChanged?.Invoke();
+        }
+
+        /// <summary>Nothing above this catches: a save that fails must not take the game down with it</summary>
+        private void Save()
+        {
+            try
+            {
+                _save();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not save the game after working on the car");
+                SaveFailed?.Invoke(ex);
+            }
         }
 
         /// <summary>Brings the saved tree to life again, fills the shelf, and puts the engine on the dyno</summary>
@@ -400,7 +432,6 @@ namespace Street_Rod_AC.Screens.Garage
         private void NotifySheet()
         {
             OnPropertyChanged(nameof(HasEngine));
-            OnPropertyChanged(nameof(EngineRuns));
             OnPropertyChanged(nameof(EngineName));
             OnPropertyChanged(nameof(PowerDisplay));
             OnPropertyChanged(nameof(TorqueDisplay));
@@ -434,8 +465,7 @@ namespace Street_Rod_AC.Screens.Garage
             Name = definition.DisplayName ?? definition.Name;
             Kind = PartKinds.GroupOf(definition);
 
-            var attached = part.SelfAndDescendants().Count() - 1;
-            Detail = $"{part.Wear * 100:0}%" + (attached > 0 ? $"  ·  with {attached} more part{(attached == 1 ? "" : "s")}" : "");
+            Detail = PartTrees.Describe(part);
             WorthDisplay = $"${PartPricing.Round(PartPricing.WorthOfAssembly(catalog, part)):N0}";
         }
 

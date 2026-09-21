@@ -5,6 +5,7 @@ using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Parts;
+using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Parts;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
@@ -173,16 +174,15 @@ namespace Street_Rod_AC.Screens.UsedParts
 
             try
             {
-                // Catalog, first ads and the fit check take a moment the first time: not on the UI thread
+                // Catalog, first ads and the fit check take a moment the first time: not on the UI thread.
+                // The game state itself is only changed on it.
                 var car = SelectedCar;
-                _fitting = await Task.Run(() =>
+                if (await Task.Run(() => _shopService.IsAvailable))
                 {
-                    if (!_shopService.IsAvailable) return new HashSet<string>();
-
-                    if (car != null) _partsService.EnsureParts(car);
-                    if (_gameState.NewspaperAds.Parts.Count == 0) _shopService.RefreshAds(_gameState, _gameState.Date);
-                    return _shopService.FindFittingParts(car);
-                });
+                    if (car != null) await _partsService.EnsurePartsAsync(car);
+                    if (_gameState.NewspaperAds.Parts.Count == 0) await _shopService.RefreshAdsAsync(_gameState, _gameState.Date);
+                    _fitting = await Task.Run(() => _shopService.FindFittingParts(car));
+                }
 
                 OnPropertyChanged(nameof(IsAvailable));
                 OnPropertyChanged(nameof(CanFilterByFit));
@@ -200,8 +200,18 @@ namespace Street_Rod_AC.Screens.UsedParts
                 StatusText = "The parts pages could not be opened.";
             }
 
-            // Spend time for visiting the used parts shop (30 min)
-            _ = ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.VisitUsedParts);
+            try
+            {
+                // Spend time for visiting the used parts shop (30 min)
+                var spent = await ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.VisitUsedParts);
+
+                // Late in the evening that is the next morning, with another paper
+                if (spent.NewDayStarted) LoadOffers();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not spend the time for the parts pages");
+            }
         }
 
         private void LoadOffers()
@@ -218,7 +228,7 @@ namespace Street_Rod_AC.Screens.UsedParts
             {
                 PartsShopTab.Used => _gameState.NewspaperAds.Parts
                     .Where(ad => catalog.Get(ad.Part.DefinitionId) != null)
-                    .Select(ad => PartOfferViewModel.ForAd(ad, catalog.Get(ad.Part.DefinitionId)!, catalog)),
+                    .Select(ad => PartOfferViewModel.ForAd(ad, catalog.Get(ad.Part.DefinitionId)!)),
                 PartsShopTab.New => _shopService.Assortment.Select(p => PartOfferViewModel.ForNew(p, _shopService.NewPrice(p))),
                 _ => _gameState.Player.Parts
                     .Where(p => catalog.Get(p.DefinitionId) != null)
@@ -259,10 +269,17 @@ namespace Street_Rod_AC.Screens.UsedParts
 
             if (!done)
             {
-                _dialogService.ShowDialog(new InformationDialogViewModel(
-                    _dialogService,
-                    offer.Owned != null ? "That part is no longer on your shelf." : "You don't have enough money for this part.",
-                    offer.Owned != null ? "Not Sold" : "Insufficient Funds"));
+                var (message, title) = offer switch
+                {
+                    { Owned: not null } => ("That part is no longer on your shelf.", "Not Sold"),
+                    { Ad: { } ad } when !_gameState.NewspaperAds.Parts.Contains(ad) => ("Somebody was quicker: that ad is no longer in the paper.", "Already Sold"),
+                    _ => ("You don't have enough money for this part.", "Insufficient Funds")
+                };
+                _dialogService.ShowDialog(new InformationDialogViewModel(_dialogService, message, title));
+
+                // Whatever went wrong, the rows are out of date
+                OnPropertyChanged(nameof(BankrollDisplay));
+                LoadOffers();
                 return;
             }
 
@@ -322,24 +339,18 @@ namespace Street_Rod_AC.Screens.UsedParts
 
         public static PartOfferViewModel ForNew(PartDefinition definition, decimal price) => new(definition, price, "Order");
 
-        public static PartOfferViewModel ForAd(PartAd ad, PartDefinition definition, PartsCatalog catalog) =>
+        public static PartOfferViewModel ForAd(PartAd ad, PartDefinition definition) =>
             new(definition, ad.AskingPrice, "Buy")
             {
                 Ad = ad,
-                Detail = $"{Describe(ad.Part)}  ·  {ad.SellerName}"
+                Detail = $"{PartTrees.Describe(ad.Part)}  ·  {ad.SellerName}"
             };
 
         public static PartOfferViewModel ForSale(PartInstance part, PartDefinition definition, decimal price) =>
             new(definition, price, "Sell")
             {
                 Owned = part,
-                Detail = Describe(part)
+                Detail = PartTrees.Describe(part)
             };
-
-        private static string Describe(PartInstance part)
-        {
-            var attached = part.SelfAndDescendants().Count() - 1;
-            return $"{part.Wear * 100:0}%" + (attached > 0 ? $", complete with {attached} part{(attached == 1 ? "" : "s")}" : "");
-        }
     }
 }

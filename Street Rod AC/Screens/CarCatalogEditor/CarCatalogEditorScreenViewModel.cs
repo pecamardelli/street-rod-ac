@@ -239,7 +239,21 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
             foreach (var item in dirtyItems)
             {
                 item.ApplyChanges();
-                _profileRepo.UpsertProfile(item.Profile);
+
+                // The factory engines are suggested in the background after the game starts: one that came in
+                // since this profile was read stays, unless an engine was picked here
+                var edited = item.Profile;
+                var updated = _profileRepo.UpdateProfile(edited.CarDefinitionId, stored =>
+                {
+                    if (!edited.StockEngineIsManual)
+                    {
+                        edited.StockEngineBuildId = stored.StockEngineBuildId;
+                        edited.StockEngineIsManual = stored.StockEngineIsManual;
+                    }
+
+                    return edited;
+                });
+                if (!updated) _profileRepo.UpsertProfile(edited);
                 _logger.Debug("Saved profile for {CarId}", item.Definition.Id);
             }
 

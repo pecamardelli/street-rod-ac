@@ -127,10 +127,8 @@ namespace Street_Rod_AC
 
             // Scheduler and Time Service
             Scheduler = new GameTimeScheduler();
-            Scheduler.RegisterTask(new MarketRefreshTask(MarketService));
-            Scheduler.RegisterTask(new PartsAdsRefreshTask(PartsShopService));
             Scheduler.RegisterTask(new Services.Scheduler.Tasks.RaceSimulatorTask(new Services.Simulation.RaceSimulatorService()));
-            // Note: EventGenerationTask registered after RaceEventService is created
+            // Note: EventGenerationTask, and after it the market and parts ads tasks, are registered once RaceEventService is created
             GameTimeService = new GameTimeService(Scheduler);
 
             // Opponent services (must be initialized before GameStateRepository)
@@ -160,6 +158,11 @@ namespace Street_Rod_AC
 
             // Register event generation task (must be after RaceEventService is created)
             Scheduler.RegisterTask(new Services.Scheduler.Tasks.EventGenerationTask(RaceEventService));
+
+            // Last: these two put engines together on a worker thread and hand the day back before they are
+            // done. What comes before them is finished by the time whoever spent the time carries on.
+            Scheduler.RegisterTask(new MarketRefreshTask(MarketService));
+            Scheduler.RegisterTask(new PartsAdsRefreshTask(PartsShopService));
 
             // Race result services
             var raceResultValidator = new Services.Race.Validation.RaceResultValidator();

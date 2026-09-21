@@ -16,7 +16,10 @@ namespace Street_Rod_AC.Services.Parts
 
         EngineBuildIndex Builds { get; }
 
-        /// <summary>False when there are no converted parts to work with; cars then simply have no part trees</summary>
+        /// <summary>
+        /// False when there are no converted parts to work with, or they could not be read; cars then simply
+        /// have no part trees. Never throws.
+        /// </summary>
         bool IsAvailable { get; }
 
         /// <summary>Loads the catalog and gives every car profile without a factory engine its suggestion</summary>
@@ -31,13 +34,16 @@ namespace Street_Rod_AC.Services.Parts
         /// </summary>
         bool EnsureParts(Car car);
 
+        /// <summary>
+        /// <see cref="EnsureParts"/> for a screen: the engine is put together on a worker thread, the car is
+        /// changed on the thread that called. Saving the car is the caller's, on that thread as well.
+        /// </summary>
+        Task<bool> EnsurePartsAsync(Car car);
+
         /// <summary>The engine of a car that has been around: the factory build, now and then worked on</summary>
         BuiltEngine? CreateUsedEngine(CarDefinition car, double condition);
 
-        /// <summary>Runs the car's engine through the part scripts and the dyno; null when it has none</summary>
-        EngineReport? Evaluate(Car car);
-
-        /// <summary>An engine in a few words, e.g. "GM 327-396 small, 258 hp"</summary>
+        /// <summary>An engine in a few words, e.g. "GM 327-396 small block, 258 hp"</summary>
         string? Describe(PartInstance engine, EngineReport? report);
     }
 }

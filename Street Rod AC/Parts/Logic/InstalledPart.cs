@@ -60,8 +60,7 @@ public sealed class InstalledPart
     }
 
     /// <summary>True when the part's script descends from the class, given by simple name: "Block", "Transmission"</summary>
-    public bool Is(string className) =>
-        Definition.ClassChain.Any(c => c.EndsWith("." + className, StringComparison.Ordinal));
+    public bool Is(string className) => PartKinds.Is(Definition, className);
 
     public override string ToString() => Definition.DisplayName ?? Definition.Id;
 }
