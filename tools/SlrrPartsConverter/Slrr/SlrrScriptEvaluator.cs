@@ -17,6 +17,9 @@ public sealed class SlrrPartScript
     /// <summary>Values that updatevariables() changes on a freshly built, uninstalled part</summary>
     public Dictionary<string, object> Derived { get; init; } = new();
 
+    /// <summary>Fields addStockParts() sets; car chassis fill their stock part lists there</summary>
+    public Dictionary<string, object> StockState { get; init; } = new();
+
     public List<SlrrStockPart> StockParts { get; init; } = new();
     public List<SlrrSlotRule> RequiredSlots { get; init; } = new();
 
@@ -53,20 +56,35 @@ public sealed class SlrrScriptEvaluator
     /// <summary>Static fields of every class evaluated so far, by class name</summary>
     public SortedDictionary<string, Dictionary<string, object>> Constants { get; } = new(StringComparer.Ordinal);
 
-    public SlrrPartScript? Evaluate(string scriptFile)
+    /// <summary>True when the script's class descends from <paramref name="className"/>; cheap, nothing is run</summary>
+    public bool Extends(string scriptFile, string className)
     {
         var script = SlrrClassFile.Load(scriptFile);
-        if (script == null) return null;
+        return script != null && Chain(script, scriptFile).Skip(1).Any(c => c.ClassName == className);
+    }
 
+    private List<SlrrClassFile> Chain(SlrrClassFile script, string scriptFile)
+    {
+        var folder = Path.GetDirectoryName(scriptFile) ?? string.Empty;
         var chain = new List<SlrrClassFile> { script };
         for (var current = script; chain.Count < 32;)
         {
-            var parent = current.BaseClass == null ? null : FindClass(current.BaseClass);
+            var parent = current.BaseClass == null ? null : FindClass(current.BaseClass, folder);
             if (parent == null || chain.Contains(parent)) break;
 
             chain.Add(parent);
             current = parent;
         }
+
+        return chain;
+    }
+
+    public SlrrPartScript? Evaluate(string scriptFile)
+    {
+        var script = SlrrClassFile.Load(scriptFile);
+        if (script == null) return null;
+
+        var chain = Chain(script, scriptFile);
 
         var machine = new Machine(chain);
         machine.Construct();
@@ -74,6 +92,8 @@ public sealed class SlrrScriptEvaluator
         foreach (var (type, constants) in machine.Constants()) Constants.TryAdd(type, constants);
 
         machine.Call("addStockParts", 1);
+        var stockState = Changes(properties, machine.Snapshot());
+        machine.Restore(stockState.Keys);
         machine.CollectRules("isDynoable");
         machine.CollectRules("isDriveable");
 
@@ -85,9 +105,7 @@ public sealed class SlrrScriptEvaluator
         var rules = machine.Rules.GroupBy(r => r.Slot).Select(g => g.First()).ToList();
 
         machine.Call("updatevariables", 0);
-        var derived = machine.Snapshot()
-            .Where(p => !properties.TryGetValue(p.Key, out var before) || !SameValue(before, p.Value))
-            .ToDictionary(p => p.Key, p => p.Value);
+        var derived = Changes(properties, machine.Snapshot());
 
         return new SlrrPartScript
         {
@@ -95,10 +113,14 @@ public sealed class SlrrScriptEvaluator
             ClassChain = chain.Skip(1).Select(c => c.ClassName ?? string.Empty).ToList(),
             Properties = properties,
             Derived = derived,
+            StockState = stockState,
             StockParts = stockParts,
             RequiredSlots = rules
         };
     }
+
+    private static Dictionary<string, object> Changes(Dictionary<string, object> before, Dictionary<string, object> after) =>
+        after.Where(p => !before.TryGetValue(p.Key, out var old) || !SameValue(old, p.Value)).ToDictionary(p => p.Key, p => p.Value);
 
     private static bool SameValue(object a, object b)
     {
@@ -109,11 +131,16 @@ public sealed class SlrrScriptEvaluator
     /// <summary>
     /// java.game.parts.engines.Mopar.X lives in parts\engines\Mopar\scripts\X.class, but the shared
     /// classes of java.game.parts.enginepart.block live in parts\scripts\enginepart\block:
-    /// the scripts folder may sit at any level of the package path.
+    /// the scripts folder may sit at any level of the package path. Cars share the package java.game.cars
+    /// while each keeps its classes in its own folder, so the folder of the referring script is tried first.
     /// </summary>
-    private SlrrClassFile? FindClass(string className)
+    private SlrrClassFile? FindClass(string className, string folder)
     {
-        if (_classes.TryGetValue(className, out var cached)) return cached;
+        var sibling = Path.Combine(folder, className[(className.LastIndexOf('.') + 1)..] + ".class");
+        if (_classes.TryGetValue(sibling, out var cached) || _classes.TryGetValue(className, out cached)) return cached;
+
+        if (File.Exists(sibling) && SlrrClassFile.Load(sibling) is { } local && local.ClassName == className)
+            return _classes[sibling] = local;
 
         SlrrClassFile? result = null;
         if (className.StartsWith(ClassPrefix, StringComparison.Ordinal))
@@ -207,6 +234,8 @@ public sealed class SlrrScriptEvaluator
                                   ?? type.Methods.FirstOrDefault(m => m.Name == "<init>");
                 if (constructor != null) Invoke(i, constructor, new[] { UnknownValue }, false, 0);
             }
+
+            _constructed = new Dictionary<string, Value>(_fields);
         }
 
         private static Value DefaultValue(string signature) => signature switch
@@ -215,6 +244,20 @@ public sealed class SlrrScriptEvaluator
             "I" or "Z" or "B" or "S" or "C" or "J" => new Number(0, true),
             _ => NullValue
         };
+
+        private Dictionary<string, Value>? _constructed;
+
+        /// <summary>Back to the state right after construction, for the fields named</summary>
+        public void Restore(IEnumerable<string> changed)
+        {
+            if (_constructed == null) return;
+
+            foreach (var name in changed)
+            {
+                if (_constructed.TryGetValue(name, out var value)) _fields[name] = value;
+                else _fields.Remove(name);
+            }
+        }
 
         public void Call(string method, int argumentCount)
         {
@@ -628,6 +671,7 @@ public sealed class SlrrScriptEvaluator
         private void Assign(Value target, Value value, Dictionary<int, Value> locals, bool unsure)
         {
             // What an unknown value was read from stays known, so later checks on it can still be attributed
+            var original = value;
             if (unsure && value is not Unknown) value = UnknownValue;
 
             switch (target)
@@ -638,9 +682,16 @@ public sealed class SlrrScriptEvaluator
                 case FieldRef field when !unsure:
                     _fields[field.Name] = value;
                     break;
-                case ElementRef element when !unsure:
-                    if (Resolve(element.Array, locals) is ArrayValue array && Resolve(element.Index, locals) is Number { IsInteger: true } position)
-                        array.Items[(int)position.Amount] = value;
+
+                // Lists of parts filled inside random branches (one engine or another): the first alternative wins
+                case FieldRef field when original is ArrayValue && (!_fields.TryGetValue(field.Name, out var existing) || existing is Null):
+                    _fields[field.Name] = original;
+                    break;
+
+                case ElementRef element when !unsure || original is Resource:
+                    if (Resolve(element.Array, locals) is ArrayValue array && Resolve(element.Index, locals) is Number { IsInteger: true } position
+                        && (!unsure || !array.Items.ContainsKey((int)position.Amount)))
+                        array.Items[(int)position.Amount] = original;
                     break;
             }
         }

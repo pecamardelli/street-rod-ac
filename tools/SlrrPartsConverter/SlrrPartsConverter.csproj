@@ -23,6 +23,7 @@
   <!-- The converted part format is owned by the game; the converter only writes it -->
   <ItemGroup>
     <Compile Include="..\..\Street Rod AC\Parts\PartDefinition.cs" Link="Parts\PartDefinition.cs" />
+    <Compile Include="..\..\Street Rod AC\Parts\EngineBuild.cs" Link="Parts\EngineBuild.cs" />
   </ItemGroup>
 
 </Project>

@@ -16,22 +16,32 @@ public static class Program
     private const string BasePackId = "stock";
     private const string SlotRoleSuffix = "_slot_ID";
     private const string ConstantsFile = "script_constants.json";
+    private const string NotesOption = "--notes";
 
     private sealed record SourcePart(SlrrRpk Rpk, SlrrRpkEntry Entry, string ConfigFile, string? ScriptPath, string Id, string Name);
 
     public static int Main(string[] args)
     {
-        if (args.Length < 2)
+        // --notes <folder>: text files with engine builds written down as stock_parts_list_E lines
+        string? notes = null;
+        var positional = new List<string>();
+        for (var i = 0; i < args.Length; i++)
         {
-            Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter]");
+            if (args[i] == NotesOption && i + 1 < args.Length) notes = args[++i];
+            else positional.Add(args[i]);
+        }
+
+        if (positional.Count < 2)
+        {
+            Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""C:\Games\AC\content\parts"" engines/Mopar");
             return 1;
         }
 
-        var game = new SlrrGame(args[0]);
+        var game = new SlrrGame(positional[0]);
         var scripts = new SlrrScriptEvaluator(game);
-        var output = args[1];
-        var filter = args.Length > 2 ? args[2] : null;
+        var output = positional[1];
+        var filter = positional.Count > 2 ? positional[2] : null;
 
         var partsRoot = Path.Combine(game.Root, PartsFolder);
         if (!Directory.Exists(partsRoot))
@@ -112,7 +122,17 @@ public static class Program
         // Constants of the shared script classes (fuel types, price factors...), for the game's part logic.
         // A filtered run has not seen them all.
         if (filter == null)
+        {
             File.WriteAllText(Path.Combine(output, ConstantsFile), JsonConvert.SerializeObject(scripts.Constants, Formatting.Indented));
+
+            var engineBuilds = new SlrrEngineBuilds(game, partIds);
+            var builds = engineBuilds.FromCars(scripts);
+            if (notes != null && Directory.Exists(notes)) builds.AddRange(engineBuilds.FromNotes(notes));
+
+            File.WriteAllText(Path.Combine(output, EngineBuild.FileName), JsonConvert.SerializeObject(builds, Formatting.Indented));
+            Console.WriteLine($"  {builds.Count} engine builds ({builds.Count(b => b.RatedPower != null)} with a rated power, " +
+                              $"{builds.Count(b => b.Parts.All(p => p.Part != null))} fully resolved)");
+        }
 
         Console.WriteLine();
         Console.WriteLine($"Converted {converted} parts ({withoutModel} without a model) in {stopwatch.Elapsed.TotalSeconds:0.0} s");
