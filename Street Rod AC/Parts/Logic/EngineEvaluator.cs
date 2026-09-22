@@ -31,6 +31,18 @@ public sealed class EngineReport
     /// <summary>Limited slip lock, 0..1</summary>
     public double DiffLock { get; init; }
 
+    /// <summary>
+    /// The engine's own drag when it is pushed, the oil pan's figure over the losses of the moving parts,
+    /// as the block leaves it on the car; 0 when there is no figure
+    /// </summary>
+    public double Friction { get; init; }
+
+    /// <summary>The clutch's clamp figure (the script's maxF); 0 without a clutch</summary>
+    public double ClutchCapacity { get; init; }
+
+    /// <summary>Whether an exhaust-driven charger is on the engine: boost comes with a lag, and a gauge</summary>
+    public bool Turbocharged { get; init; }
+
     /// <summary>Kilograms, all parts of the build</summary>
     public double Mass { get; init; }
 
@@ -74,6 +86,7 @@ public static class EngineEvaluator
         double Ratio(int index) => ratios != null && ratios.Items.GetValueOrDefault(index) is ScriptNumber ratio ? ratio.Amount : 0;
 
         var parts = tree.Root.SelfAndDescendants().ToList();
+        var clutch = parts.FirstOrDefault(p => p.Is("Clutch"));
         return new EngineReport
         {
             Problem = problem,
@@ -87,6 +100,9 @@ public static class EngineEvaluator
             FinalRatio = chassis?.Number("rearend_ratio") ?? 0,
             DriveType = gears > 0 ? (int)(chassis?.Number("drive_type") ?? 0) : 0,
             DiffLock = chassis?.Number("diff_lock") ?? 0,
+            Friction = chassis?.Number("engine_friction_fwd") ?? 0,
+            ClutchCapacity = clutch == null ? 0 : runtime.ObjectOf(clutch)?.Number("maxF") ?? clutch.Definition.Number("maxF"),
+            Turbocharged = parts.Any(p => p.Is("TurboCharger")),
             Mass = parts.Sum(p => (double)p.Definition.Mass),
             Value = parts.Sum(p => p.Definition.Number("value")),
             Unplaced = tree.Unplaced

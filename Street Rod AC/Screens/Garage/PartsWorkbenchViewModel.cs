@@ -28,6 +28,7 @@ namespace Street_Rod_AC.Screens.Garage
 
         private Car? _car;
         private LiveTree? _live;
+        private readonly List<(int CarSlot, LiveTree Tree)> _gearTrees = new();
         private int _evaluation;
 
         public PartsWorkbenchViewModel(ICarPartsService parts, Models.GameState.GameState gameState, Action save, Func<int, Task> spendMinutes)
@@ -95,6 +96,15 @@ namespace Street_Rod_AC.Screens.Garage
         {
             get => _engine;
             private set => Set(ref _engine, value);
+        }
+
+        private IReadOnlyList<CarPart>? _gear;
+
+        /// <summary>What sits on the car's wheel slots, each with what is on it</summary>
+        public IReadOnlyList<CarPart>? Gear
+        {
+            get => _gear;
+            private set => Set(ref _gear, value);
         }
 
         private IReadOnlyList<MountCandidate>? _candidates;
@@ -175,7 +185,7 @@ namespace Street_Rod_AC.Screens.Garage
         public double SelectedCondition => _selectedPart?.Wear ?? 0;
         public string SelectedConditionDisplay => _selectedPart == null ? string.Empty : $"{_selectedPart.Wear * 100:0}%";
 
-        public string SelectedWorthDisplay => _selectedPart != null && _live?.Saved.GetValueOrDefault(_selectedPart) is { } saved
+        public string SelectedWorthDisplay => _selectedPart != null && SavedOf(_selectedPart) is { } saved
             ? $"${PartPricing.Round(PartPricing.Worth(_selectedPart.Definition, saved)):N0}"
             : string.Empty;
 
@@ -273,12 +283,18 @@ namespace Street_Rod_AC.Screens.Garage
         /// </summary>
         private InstalledPart? InCurrentTree(InstalledPart? part)
         {
-            if (part == null || _live == null || _live.Saved.ContainsKey(part)) return part;
+            if (part == null || SavedOf(part) != null) return part;
 
             return part.InstanceId == Guid.Empty
                 ? part
-                : _live.Root.SelfAndDescendants().FirstOrDefault(p => p.InstanceId == part.InstanceId);
+                : Trees.SelectMany(t => t.Root.SelfAndDescendants()).FirstOrDefault(p => p.InstanceId == part.InstanceId);
         }
+
+        /// <summary>Every tree on the car: the engine and the running gear</summary>
+        private IEnumerable<LiveTree> Trees => (_live == null ? Enumerable.Empty<LiveTree>() : new[] { _live }).Concat(_gearTrees.Select(g => g.Tree));
+
+        /// <summary>The saved part behind a part on screen, whichever tree of the car it is in</summary>
+        private PartInstance? SavedOf(InstalledPart part) => Trees.Select(t => t.Saved.GetValueOrDefault(part)).FirstOrDefault(p => p != null);
 
         public void OnCandidateClicked(MountCandidate candidate)
         {
@@ -298,7 +314,7 @@ namespace Street_Rod_AC.Screens.Garage
 
         private void RemoveSelected()
         {
-            if (_car == null || _selectedPart == null || _live?.Saved.GetValueOrDefault(_selectedPart) is not { } saved) return;
+            if (_car == null || _selectedPart == null || SavedOf(_selectedPart) is not { } saved) return;
             if (!Workbench.Remove(_car.Parts, saved)) return;
 
             _gameState.Player.Parts.Add(saved);
@@ -371,6 +387,17 @@ namespace Street_Rod_AC.Screens.Garage
             Engine = _live?.Root;
             _report = null;
 
+            _gearTrees.Clear();
+            if (catalog != null && _car != null)
+            {
+                foreach (var part in _car.Parts.Where(p => RunningGear.CornerOf(p.ParentSlot) >= 0))
+                {
+                    if (PartTrees.ToInstalled(catalog, part) is { } tree) _gearTrees.Add((part.ParentSlot, tree));
+                }
+            }
+
+            Gear = _gearTrees.Select(g => new CarPart(g.CarSlot, g.Tree.Root)).ToList();
+
             Shelf.Clear();
             if (catalog != null)
             {
@@ -416,7 +443,7 @@ namespace Street_Rod_AC.Screens.Garage
             }
 
             var places = Workbench.FindPlaces(catalog, _car.Parts, item.Part);
-            var installedOf = _live?.Saved.ToDictionary(p => p.Value, p => p.Key) ?? new Dictionary<PartInstance, InstalledPart>();
+            var installedOf = Trees.SelectMany(t => t.Saved).ToDictionary(p => p.Value, p => p.Key);
 
             var candidates = new List<MountCandidate>();
             foreach (var place in places)

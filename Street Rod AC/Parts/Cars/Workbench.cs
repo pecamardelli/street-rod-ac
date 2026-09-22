@@ -29,11 +29,37 @@ public static class Workbench
 
         var looseGroup = PartKinds.GroupOf(looseDefinition);
         var looseSlots = looseDefinition.Slots.Where(s => loose.Children.All(c => c.ParentSlot != s.Id)).ToList();
+        var mountsBy = looseSlots.FirstOrDefault(s => s.Id == 1)?.Id ?? looseSlots.FirstOrDefault()?.Id ?? 0;
+
+        // The running gear goes on the car's own wheel slots: a rim, a brake, a spring or a shock on every free
+        // corner. A tyre goes on a mounted rim it fits (same diameter, a rim width the tyre takes).
+        if (looseGroup == PartKinds.Tyres)
+        {
+            foreach (var rim in carParts.Where(p => RunningGear.CornerOf(p.ParentSlot) >= 0 && p.ParentSlot == RunningGear.WheelSlot(RunningGear.CornerOf(p.ParentSlot))))
+            {
+                if (rim.Children.Any(c => c.ParentSlot == RunningGear.TyreSlotOnRim)) continue;
+                if (catalog.Get(rim.DefinitionId) is { } rimDefinition && RunningGear.TyreFitsRim(looseDefinition, rimDefinition))
+                    places.Add(new MountPlace(rim, RunningGear.TyreSlotOnRim, mountsBy));
+            }
+
+            return places;
+        }
+
+        if (RunningGear.IsRunningGear(looseGroup))
+        {
+            foreach (var carSlot in RunningGear.CarSlotsFor(looseGroup))
+            {
+                if (carParts.All(p => p.ParentSlot != carSlot)) places.Add(new MountPlace(null, carSlot, mountsBy));
+            }
+
+            return places;
+        }
 
         foreach (var parent in carParts.SelectMany(p => p.SelfAndDescendants()))
         {
             if (catalog.Get(parent.DefinitionId) is not { } parentDefinition) continue;
             if (PartKinds.NeverStacks(looseGroup) && PartKinds.GroupOf(parentDefinition) == looseGroup) continue;
+            if (RunningGear.IsRunningGear(PartKinds.GroupOf(parentDefinition))) continue;
 
             foreach (var slot in parentDefinition.Slots)
             {

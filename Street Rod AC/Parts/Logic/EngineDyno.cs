@@ -174,12 +174,18 @@ public static class EngineDyno
         return Math.Clamp(1 - error * error, 0.5, 1);
     }
 
-    /// <summary>Chargers spin with the engine; boost peaks where they work best and the wastegate caps it</summary>
-    private static double Boost(DynoInputs inputs, double rpm)
+    /// <summary>
+    /// Chargers spin with the engine; boost peaks where they work best and the wastegate caps it. A blower's
+    /// script hands over its working band (engine speeds) multiplied by the square of its drive ratio, so the
+    /// speed it is compared with is the engine's times that square: a roots blower geared 4:1 with its band at
+    /// 900-4400 rpm makes its boost there, not at 10,000.
+    /// </summary>
+    public static double Boost(DynoInputs inputs, double rpm)
     {
         if (inputs.BoostMax <= 0 || inputs.TurboRpmRange <= 0) return 0;
 
-        var chargerRpm = rpm * Math.Max(1, inputs.TurboRpmMultiplier);
+        var multiplier = Math.Max(1, inputs.TurboRpmMultiplier);
+        var chargerRpm = rpm * multiplier * multiplier;
         var offset = (chargerRpm - inputs.TurboRpmOptimum) / inputs.TurboRpmRange;
         var boost = inputs.BoostMax * Math.Exp(-0.5 * offset * offset);
         return inputs.BoostWastegate > 0 ? Math.Min(boost, inputs.BoostWastegate) : boost;

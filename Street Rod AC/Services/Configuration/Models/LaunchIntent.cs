@@ -28,6 +28,12 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// Optional metadata for tracking execution context
         /// </summary>
         public Dictionary<string, object> Metadata { get; set; } = new();
+
+        /// <summary>
+        /// Data files the cars of this launch race with, as their parts make them, by car folder. Put into
+        /// the install for the launch and taken out after it.
+        /// </summary>
+        public List<Race.RaceCarData> CarData { get; set; } = new();
     }
 
     /// <summary>

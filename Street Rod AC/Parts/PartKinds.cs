@@ -29,8 +29,17 @@ public static class PartKinds
         ("SuperCharger", "Superchargers and turbos"), ("TurboCharger", "Superchargers and turbos"),
         ("NOSInjectorSystem", "Nitrous"), ("Canister", "Nitrous"),
         ("ExhaustHeader", "Exhaust"), ("ExhaustPipe", "Exhaust"), ("ExhaustTip", "Exhaust"),
-        ("OilPan", "Oil pans")
+        ("OilPan", "Oil pans"),
+        ("Tyre", Tyres), ("Wheel", Rims), ("Brake", Brakes), ("Spring", Springs), ("ShockAbsorber", Shocks),
+        ("Swaybar", "Sway bars"), ("Suspension", "Suspension arms")
     };
+
+    // The running gear: what goes on the car's own wheel slots, and what goes on it
+    public const string Tyres = "Tyres";
+    public const string Rims = "Rims";
+    public const string Brakes = "Brakes";
+    public const string Springs = "Springs";
+    public const string Shocks = "Shock absorbers";
 
     /// <summary>
     /// Simple name of the framework class nearest to the part, "" for parts without a script class.

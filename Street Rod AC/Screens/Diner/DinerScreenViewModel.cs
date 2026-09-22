@@ -686,6 +686,18 @@ namespace Street_Rod_AC.Screens.Diner
                 return;
             }
 
+            // The car races on what its parts make of it; a car that will not go stays home
+            var app = (App)System.Windows.Application.Current;
+            var playerData = await PrepareCarData(app, playerCar);
+            if (playerData is { CanDrive: false })
+            {
+                _dialogService.ShowDialog(new InformationDialogViewModel(
+                    _dialogService,
+                    $"Your car is not going anywhere: {playerData.Problem}.\n\nSort it out in the garage first.",
+                    "Car Won't Run"));
+                return;
+            }
+
             // Get opponent's car
             var opponentCar = SelectedOpponent.Opponent.Cars.FirstOrDefault();
             if (opponentCar == null)
@@ -732,11 +744,34 @@ namespace Street_Rod_AC.Screens.Diner
 
             var opponentCarDef = SelectedOpponent.CarDefinition;
 
+            // The opponent's car races on its own parts too; one that does not run is left as its author made it
+            var opponentData = await PrepareCarData(app, opponentCar);
+            if (opponentData is { CanDrive: false })
+            {
+                _logger.Warning("{Opponent}'s car would not run ({Problem}): it races as its author made it", setup.Opponent.Name, opponentData.Problem);
+                opponentData = null;
+            }
+
             // Launch the race immediately
-            await LaunchRace(setup, playerCarDef, opponentCarDef);
+            await LaunchRace(setup, playerCarDef, opponentCarDef, new[] { playerData, opponentData }.Where(d => d != null).ToList()!);
         }
 
-        private Task LaunchRace(ChallengeSetup setup, CarDefinition playerCarDef, CarDefinition opponentCarDef)
+        /// <summary>The car's data as its parts make it, put together off the UI thread; null when it races as it is</summary>
+        private async Task<Street_Rod_AC.Services.Race.RaceCarData?> PrepareCarData(App app, Car car)
+        {
+            try
+            {
+                await app.CarPartsService.EnsurePartsAsync(car);
+                return await Task.Run(() => app.RaceCarDataService.Prepare(car));
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not prepare the data of {Car}: it races as it is", car.DefinitionId);
+                return null;
+            }
+        }
+
+        private Task LaunchRace(ChallengeSetup setup, CarDefinition playerCarDef, CarDefinition opponentCarDef, List<Street_Rod_AC.Services.Race.RaceCarData> carData)
         {
             _logger.Information("LaunchRace called - Player: {PlayerCar}, Opponent: {OpponentName} in {OpponentCar}, RaceType: {RaceType}",
                 playerCarDef.Id, setup.Opponent.Name, opponentCarDef.Id, setup.RaceType);
@@ -760,7 +795,8 @@ namespace Street_Rod_AC.Screens.Diner
                 IsPinkSlip = setup.IsPinkSlip,
                 OpponentAILevel = setup.Opponent.Skill,
                 OpponentAIAggression = setup.Opponent.Aggression,
-                RaceType = setup.RaceType
+                RaceType = setup.RaceType,
+                CarData = carData
             };
 
             // Create race context and store in metadata

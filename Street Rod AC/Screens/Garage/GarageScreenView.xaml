@@ -60,6 +60,7 @@
                                 PartsCatalog="{Binding Workbench.Catalog}"
                                 PartsVisible="{Binding Workbench.IsOpen}"
                                 Engine="{Binding Workbench.Engine}"
+                                Gear="{Binding Workbench.Gear}"
                                 Candidates="{Binding Workbench.Candidates}"
                                 SelectedPart="{Binding Workbench.SelectedPart}"
                                 FadeInOnReady="False"/>

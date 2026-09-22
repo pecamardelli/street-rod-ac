@@ -42,6 +42,8 @@ namespace Street_Rod_AC
         public Services.Parts.IPartsShopService PartsShopService { get; private set; }
         public IIniModificationService IniModificationService { get; private set; }
         public Services.Race.IRaceResultIngestionService RaceResultIngestionService { get; private set; }
+        public CarDataOverlay CarDataOverlay { get; private set; }
+        public Services.Race.RaceCarDataService RaceCarDataService { get; private set; }
         public IOpponentRepository OpponentRepository { get; private set; }
         public IOpponentInitializationService OpponentInitializationService { get; private set; }
         public IOpponentChallengeService OpponentChallengeService { get; private set; }
@@ -175,8 +177,12 @@ namespace Street_Rod_AC
                 raceResultProcessor,
                 sessionRepository);
 
+            // The cars' data for a race: what their parts make of them, put into the install and taken out again
+            CarDataOverlay = new CarDataOverlay();
+            RaceCarDataService = new Services.Race.RaceCarDataService(CarPartsService);
+
             // Pass race result service to launcher
-            Launcher = new AssettoCorsaLauncher(IniModificationService, RaceResultIngestionService);
+            Launcher = new AssettoCorsaLauncher(IniModificationService, RaceResultIngestionService, CarDataOverlay);
 
             // NavigationService (must be created after all its dependencies)
             NavigationService = new NavigationService(
@@ -214,6 +220,17 @@ namespace Street_Rod_AC
                 DialogService.ShowDialog(errorDialog);
                 Shutdown();
                 return;
+            }
+
+            // A race that ended badly (a crash, the power) may have left cars with changed data
+            try
+            {
+                var restored = CarDataOverlay.RestoreAll();
+                if (restored > 0) logger.Warning("Data of {Count} car(s) put back from an earlier race", restored);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Could not put the cars' data back");
             }
 
             logger.Information("Assetto Corsa installation validated at {ACPath}",

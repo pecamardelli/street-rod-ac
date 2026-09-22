@@ -4,7 +4,10 @@ using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Cars;
+using Street_Rod_AC.Parts.Export;
 using Street_Rod_AC.Parts.Logic;
+using System.Collections.Concurrent;
+using System.IO;
 using Street_Rod_AC.Services.Catalog;
 
 namespace Street_Rod_AC.Services.Parts
@@ -25,6 +28,7 @@ namespace Street_Rod_AC.Services.Parts
         private readonly Lazy<PartsCatalog> _catalog;
         private readonly Lazy<EngineBuildIndex> _builds;
         private readonly object _assignLock = new();
+        private readonly ConcurrentDictionary<string, AcCarSpecs?> _specs = new();
 
         public CarPartsService(IContentCatalogRepository catalogRepo, ICarProfileRepository profileRepo)
         {
@@ -69,21 +73,53 @@ namespace Street_Rod_AC.Services.Parts
 
         public bool EnsureParts(Car car)
         {
-            if (car.HasPartsAssigned || !IsAvailable) return false;
+            if (car.HasPartsAssigned && car.HasRunningGearAssigned) return false;
+            if (!IsAvailable) return false;
 
-            return Assign(car, CreateFactoryEngine(car.DefinitionId, car.EngineHealth));
+            var engine = car.HasPartsAssigned ? null : CreateFactoryEngine(car.DefinitionId, car.EngineHealth);
+            var gear = car.HasRunningGearAssigned ? null : CreateFactoryRunningGear(car.DefinitionId, car.TireCondition);
+            return Assign(car, engine, gear);
         }
 
         public async Task<bool> EnsurePartsAsync(Car car)
         {
-            if (car.HasPartsAssigned) return false;
+            if (car.HasPartsAssigned && car.HasRunningGearAssigned) return false;
 
-            // The engine is put together away from the caller's thread; the car is only touched back on it
+            // The parts are put together away from the caller's thread; the car is only touched back on it
             var definitionId = car.DefinitionId;
-            var condition = car.EngineHealth;
-            var engine = await Task.Run(() => IsAvailable ? CreateFactoryEngine(definitionId, condition) : null);
-            return Assign(car, engine);
+            var (needsEngine, needsGear) = (!car.HasPartsAssigned, !car.HasRunningGearAssigned);
+            var (engineCondition, tyreCondition) = (car.EngineHealth, car.TireCondition);
+            var (engine, gear) = await Task.Run(() => IsAvailable
+                ? (needsEngine ? CreateFactoryEngine(definitionId, engineCondition) : null, needsGear ? CreateFactoryRunningGear(definitionId, tyreCondition) : null)
+                : (null, null));
+            return Assign(car, engine, gear);
         }
+
+        public EngineReport? Evaluate(Car car) => IsAvailable && car.Engine is { } engine ? EngineFactory.Evaluate(Catalog, engine) : null;
+
+        public double? FactoryEngineMass(Car car)
+        {
+            var definition = _catalogRepo.GetCar(car.DefinitionId);
+            var build = definition == null ? null : GetStockBuild(definition);
+            var tree = build == null ? null : PartTreeBuilder.BuildEngine(Catalog, build.Build);
+            return tree == null ? null : EngineEvaluator.Evaluate(Catalog, tree).Mass;
+        }
+
+        public AcCarSpecs? Specs(string carDefinitionId) => _specs.GetOrAdd(carDefinitionId, id =>
+        {
+            try
+            {
+                return AcCarSpecs.Read(AcCarDataReader.ForCar(Path.Combine(AppSettings.Instance.CarsPath, id)));
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Could not read the data of {Car}: {Error}", id, ex.Message);
+                return null;
+            }
+        });
+
+        public (RunningGearFactory.AxleParts Front, RunningGearFactory.AxleParts Rear)? FactoryRunningGear(Car car) =>
+            IsAvailable && Specs(car.DefinitionId) is { } specs ? RunningGearFactory.Choose(Catalog, specs) : null;
 
         public bool BringUpToDate(GameState game)
         {
@@ -186,6 +222,14 @@ namespace Street_Rod_AC.Services.Parts
             return name;
         }
 
+        private List<PartInstance>? CreateFactoryRunningGear(string carDefinitionId, double condition)
+        {
+            var specs = Specs(carDefinitionId);
+            var gear = specs == null ? null : RunningGearFactory.Create(Catalog, specs, condition);
+            if (gear is not { Count: > 0 }) _logger.Warning("No factory running gear for {Car}", carDefinitionId);
+            return gear is { Count: > 0 } ? gear : null;
+        }
+
         private BuiltEngine? CreateFactoryEngine(string carDefinitionId, double condition)
         {
             var definition = _catalogRepo.GetCar(carDefinitionId);
@@ -196,21 +240,30 @@ namespace Street_Rod_AC.Services.Parts
         }
 
         /// <summary>Two screens may ask for the same car at the same moment: only the first engine goes in</summary>
-        private bool Assign(Car car, BuiltEngine? engine)
+        private bool Assign(Car car, BuiltEngine? engine, List<PartInstance>? gear)
         {
-            if (engine == null) return false;
-
+            var changed = false;
             lock (_assignLock)
             {
-                if (car.HasPartsAssigned) return false;
+                if (engine != null && !car.HasPartsAssigned)
+                {
+                    car.Parts.Add(engine.Root);
+                    car.HasPartsAssigned = true;
+                    changed = true;
+                    _logger.Information("{Car} given its factory engine: {Block}, {Power:0} hp", car.DefinitionId, engine.Root.DefinitionId,
+                        engine.Report.Dyno?.MaxPowerHp ?? 0);
+                }
 
-                car.Parts.Add(engine.Root);
-                car.HasPartsAssigned = true;
+                if (gear != null && !car.HasRunningGearAssigned)
+                {
+                    car.Parts.AddRange(gear);
+                    car.HasRunningGearAssigned = true;
+                    changed = true;
+                    _logger.Information("{Car} given its factory running gear: {Count} parts", car.DefinitionId, gear.Count);
+                }
             }
 
-            _logger.Information("{Car} given its factory engine: {Block}, {Power:0} hp", car.DefinitionId, engine.Root.DefinitionId,
-                engine.Report.Dyno?.MaxPowerHp ?? 0);
-            return true;
+            return changed;
         }
 
         // A Lazy keeps the exception of a load that failed and throws it at everybody who asks afterwards.

@@ -1,4 +1,5 @@
 using System.Numerics;
+using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Parts.Logic;
 
 namespace Street_Rod_AC.Parts;
@@ -9,6 +10,11 @@ public sealed record CarAnchors(Vector3 WheelLF, Vector3 WheelRF, Vector3 WheelL
     public Vector3 FrontAxle => (WheelLF + WheelRF) / 2f;
     public Vector3 RearAxle => (WheelLR + WheelRR) / 2f;
     public float Wheelbase => Vector3.Distance(FrontAxle, RearAxle);
+
+    /// <summary>Hub of a corner as the running gear numbers them: 0 front left, 1 front right, 2 rear left, 3 rear right</summary>
+    public Vector3 Hub(int corner) => corner switch { 0 => WheelLF, 1 => WheelRF, 2 => WheelLR, _ => WheelRR };
+
+    public Vector3 Axle(int corner) => RunningGear.IsFront(corner) ? FrontAxle : RearAxle;
 
     /// <summary>Unit vector from the rear axle to the front axle, level with the ground</summary>
     public Vector3 Forward
@@ -24,8 +30,8 @@ public sealed record CarAnchors(Vector3 WheelLF, Vector3 WheelRF, Vector3 WheelL
 
 /// <summary>
 /// Estimates where a car's parts sit from its wheel hubs alone, since AC cars know nothing about
-/// engine bays or suspension mounts: a front, longitudinal engine with the gearbox behind it,
-/// brakes on the hubs, a coil spring and a shock next to every wheel.
+/// engine bays or suspension mounts: a front, longitudinal engine with the gearbox behind it, the wheel
+/// and the brake on the hub, a coil spring and a shock next to every wheel.
 /// Part models have their front towards -Z while AC cars face +Z, hence the frames below.
 /// </summary>
 public static class CarPartsLayout
@@ -40,37 +46,37 @@ public static class CarPartsLayout
     private const float SpringInboard = 0.24f;
     private const float SpringSeatBelowHub = 0.06f;
 
-    private const string BrakeDisc = "brakes/stock/disc_brake";
-    private const string Spring = "suspension/stock/spring";
-    private const string ShockAbsorber = "suspension/stock/shock_absorber";
-
     /// <param name="engine">The car's engine block with everything on it; null for an empty engine bay</param>
-    public static List<PlacedPart> Build(PartsCatalog catalog, CarAnchors anchors, InstalledPart? engine)
+    /// <param name="gear">What sits on the car's wheel slots, each with what is on it (the tyre on the rim)</param>
+    public static List<PlacedPart> Build(PartsCatalog catalog, CarAnchors anchors, InstalledPart? engine, IReadOnlyList<CarPart>? gear = null)
     {
         var result = new List<PlacedPart>();
         var forward = anchors.Forward;
 
         if (engine != null) result.AddRange(PartAssembler.Assemble(engine, EnginePlacement(anchors, engine.Definition)));
 
-        foreach (var (hub, axle) in new[]
-                 {
-                     (anchors.WheelLF, anchors.FrontAxle), (anchors.WheelRF, anchors.FrontAxle),
-                     (anchors.WheelLR, anchors.RearAxle), (anchors.WheelRR, anchors.RearAxle)
-                 })
+        foreach (var part in gear ?? Array.Empty<CarPart>())
         {
-            var inboard = axle - hub;
+            var corner = RunningGear.CornerOf(part.CarSlot);
+            if (corner < 0) continue;
+
+            var hub = anchors.Hub(corner);
+            var inboard = anchors.Axle(corner) - hub;
             inboard.Y = 0f;
             if (inboard.LengthSquared() < 1e-6f) continue;
             inboard = Vector3.Normalize(inboard);
 
             // Every wheel-side part is modelled for one side; turning it around the vertical axis gives the other
             var side = SideFrame(forward, inboard);
+            var slot = part.CarSlot;
 
-            Add(catalog, BrakeDisc, side * Matrix4x4.CreateTranslation(hub + inboard * BrakeInboard), result);
-
-            var springSeat = hub + inboard * SpringInboard - Vector3.UnitY * SpringSeatBelowHub;
-            AddBySlot(catalog, Spring, side, springSeat, result);
-            AddBySlot(catalog, ShockAbsorber, side, springSeat, result);
+            if (slot == RunningGear.WheelSlot(corner)) result.AddRange(PartAssembler.Assemble(part.Root, BySlot(part.Root.Definition, side, hub)));
+            else if (slot == RunningGear.BrakeSlot(corner)) result.AddRange(PartAssembler.Assemble(part.Root, BySlot(part.Root.Definition, side, hub + inboard * BrakeInboard)));
+            else
+            {
+                var springSeat = hub + inboard * SpringInboard - Vector3.UnitY * SpringSeatBelowHub;
+                result.AddRange(PartAssembler.Assemble(part.Root, BySlot(part.Root.Definition, side, springSeat)));
+            }
         }
 
         return result;
@@ -89,22 +95,13 @@ public static class CarPartsLayout
         return frame * Matrix4x4.CreateTranslation(origin);
     }
 
-    private static void Add(PartsCatalog catalog, string partId, Matrix4x4 world, List<PlacedPart> result)
-    {
-        var part = catalog.Get(partId);
-        if (part != null) result.Add(new PlacedPart(part, world));
-    }
-
     /// <summary>Places a part so that its first slot (where it meets the car) lands on a point</summary>
-    private static void AddBySlot(PartsCatalog catalog, string partId, Matrix4x4 frame, Vector3 target, List<PlacedPart> result)
+    private static Matrix4x4 BySlot(PartDefinition part, Matrix4x4 frame, Vector3 target)
     {
-        var part = catalog.Get(partId);
-        if (part == null) return;
-
-        var slot = part.Slots.FirstOrDefault();
+        var slot = part.Slots.FirstOrDefault(s => s.Id == 1) ?? part.Slots.FirstOrDefault();
         var slotLocal = slot == null ? Vector3.Zero : new Vector3(slot.Position[0], slot.Position[1], slot.Position[2]);
         var origin = target - Vector3.TransformNormal(slotLocal, frame);
-        result.Add(new PlacedPart(part, frame * Matrix4x4.CreateTranslation(origin)));
+        return frame * Matrix4x4.CreateTranslation(origin);
     }
 
     /// <summary>Rotation that turns a part model (front towards -Z) to face the way the car does</summary>

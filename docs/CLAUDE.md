@@ -17,7 +17,7 @@ Street Rod-style career mode manager for Assetto Corsa. WPF app manages game log
 - **Navigation**: Single `NavigationService` with typed factory methods. Screens never instantiate other screens.
 - **Dialogs**: Modal overlays, never nested. One dialog at a time.
 - **INI Files**: Declare intent, apply minimally, always restore after AC exits.
-- **AC Content**: Import to catalog, never modify AC installation.
+- **AC Content**: Import to catalog, never modify AC installation. The one exception is a race: a car's data files, as its parts make them, go in through `CarDataOverlay` (originals kept with a manifest, put back in the launcher's `finally` and at start-up).
 - **Logging**: Structured, via `IAppLogger`. Categories: App, Import, Market, Navigation, etc.
 
 ## Data Models
@@ -42,8 +42,9 @@ Street Rod-style career mode manager for Assetto Corsa. WPF app manages game log
 | Time | GameTimeScheduler, IScheduledTask | Time-based task execution |
 | Race | AssettoCorsaLauncher, IniModificationService | Launch AC, modify configs |
 | Dialogs | DialogService | Modal overlays |
-| Parts | PartsCatalog, PartScriptRuntime, EngineDyno, AcEngineData | SLRR parts: run their scripts on the player's build, dyno, AC data (see `docs/systems/parts-system.md`) |
-| Cars' parts | CarPartsService, PartsShopService, Workbench, EngineFactory | Factory engine per car (`CarProfile.StockEngineBuildId`), part trees on cars, plausibly tuned used cars, garage workbench (parts picked in 3D), parts shop |
+| Parts | PartsCatalog, PartScriptRuntime, EngineDyno, AcEngineData, AcRunningGearData | SLRR parts: run their scripts on the player's build, dyno, AC data (see `docs/systems/parts-system.md`) |
+| Cars' parts | CarPartsService, PartsShopService, Workbench, EngineFactory, RunningGearFactory | Factory engine and running gear per car, part trees on cars, plausibly tuned used cars, garage workbench (parts picked in 3D), parts shop |
+| Race data | RaceCarDataService, CarDataOverlay | What the parts make of a car goes into its AC data for a race and comes out after (see `docs/systems/parts-system.md`, "Apply and restore") |
 
 ## File Structure
 ```
