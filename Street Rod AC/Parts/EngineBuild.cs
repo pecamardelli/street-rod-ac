@@ -12,6 +12,7 @@ public class EngineBuild
 
     public const string OriginCar = "car";
     public const string OriginNotes = "notes";
+    public const string OriginKit = "kit";
 
     /// <summary>Unique id, e.g. "cars/Charger69_RT/stock" or "notes/MOPAR/mopar-340-six-pack-290-hp"</summary>
     [JsonProperty("id")]
@@ -20,7 +21,7 @@ public class EngineBuild
     [JsonProperty("name")]
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>Where the list comes from: a car script of the source game, or a text file of build notes</summary>
+    /// <summary>Where the list comes from: a car script of the source game, a text file of build notes, or an engine kit of a pack</summary>
     [JsonProperty("origin")]
     public string Origin { get; set; } = string.Empty;
 

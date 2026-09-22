@@ -16,6 +16,19 @@ public sealed class ScriptClassLoader
     private const string ScriptsFolder = "scripts";
     private const int MaxChain = 32;
 
+    /// <summary>
+    /// Classes mods extend that the game never shipped, made from the one their author copied: what to copy,
+    /// what it extends instead, and the methods left out. Block_Inline_OHV (the Ford six's blocks) is
+    /// Block_Vee_OHV with one cylinder head; its author's source sits among the SLRR notes, never compiled.
+    /// </summary>
+    private static readonly Dictionary<string, (string CopiedFrom, string BaseClass, string[] DroppedMethods)> StandIns =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["java.game.parts.enginepart.block.block_inline.Block_Inline_OHV"] =
+                ("java.game.parts.enginepart.block.block_vee.Block_Vee_OHV", "java.game.parts.enginepart.block.Block_Inline",
+                    new[] { "getLeftCylinderHead", "getRightCylinderHead" })
+        };
+
     private readonly Dictionary<string, ScriptClass?> _classes = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _lock = new();
 
@@ -74,6 +87,9 @@ public sealed class ScriptClassLoader
                     .Concat(package[..level]).Append(ScriptsFolder).Concat(package[level..]).Append(file).ToArray()));
             }
         }
+
+        if (result == null && StandIns.TryGetValue(className, out var standIn) && FindLocked(standIn.CopiedFrom, null) is { } original)
+            result = original.DerivedAs(className, standIn.BaseClass, standIn.DroppedMethods);
 
         return _classes[className] = result;
     }

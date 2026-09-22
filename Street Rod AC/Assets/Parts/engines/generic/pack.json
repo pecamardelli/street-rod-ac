@@ -1,6 +1,6 @@
 {
   "id": "engines/generic",
-  "source": "parts\\engines\\Chrysler_V8_pak.rpk, parts\\engines\\DEXTERV8s.rpk, parts\\engines\\GM_V8_pak.rpk",
+  "source": "parts\\engines\\Chrysler_V8_pak.rpk, parts\\engines\\ford_v8s.rpk, parts\\engines\\GM_V8_pak.rpk",
   "parts": [
     {
       "id": "engines/generic/Air_cleaner_HOLLEY",
@@ -248,11 +248,6 @@
               "part": "engines/chrysler/carter_4barrel_carb",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xC131"
-            },
-            {
-              "part": "engines/generic/Universal_4_barrel_carburetor",
-              "slot": 11,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
             }
           ],
           "compatible_with": [],
@@ -756,16 +751,6 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/ford/Ford_dual_4_barrel_intake_manifold",
-              "slot": 311,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x00BE"
-            },
-            {
-              "part": "engines/generic/Universal_blower",
-              "slot": 311,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0A85"
-            },
-            {
               "part": "engines/chrysler/Intake_manifold_big_2x4brl_TrickFlow",
               "slot": 311,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x03EB"
@@ -883,9 +868,9 @@
           "id": 11,
           "name": "",
           "position": [
-            0.0,
-            -0.113,
-            -0.0
+            0.015,
+            -0.092999995,
+            -0.10000001
           ],
           "rotation": [
             0.0,
@@ -3378,344 +3363,9 @@
       "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\dualcarb_scoop.class"
     },
     {
-      "id": "engines/generic/Universal_blower_scoop",
-      "name": "Universal_blower_scoop",
-      "display_name": "BDS Blower Scoop",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "BDS Blower Scoop",
-        "description": "",
-        "value": 355.871886,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 25.8,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 100.0,
-        "dusted_efficiency": 100.0,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Universal_blower_scoop.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "blower_scoop_out",
-          "position": [
-            0.004,
-            0.04,
-            0.05
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/ford/Ford_dual_4_barrel_intake_manifold",
-              "slot": 311,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x00BE"
-            },
-            {
-              "part": "engines/generic/Universal_blower",
-              "slot": 311,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0A85"
-            }
-          ],
-          "compatible_with": [],
-          "fits": [
-            "air:2x4"
-          ]
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 73,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_blower_scoop.class"
-    },
-    {
-      "id": "engines/generic/Universal_blower",
-      "name": "Universal_blower",
-      "display_name": "BDS Stage 4.5 Blower",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-        "java.game.parts.enginepart.airfueldeliverysystem.Charger",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "BDS Stage 4.5 Blower",
-        "description": "",
-        "value": 4519.572954,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 105.05,
-        "prestige_calc_weight": 90.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "rpm_turbo_mul": 1.0,
-        "rpm_turbo_opt": 3500.0,
-        "rpm_turbo_range": 3000.0,
-        "P_turbo_max": 0.95,
-        "P_turbo_waste": 0.0,
-        "pulley_diameter": 60.0,
-        "pulley_width": 60.0,
-        "default_rpm_turbo_mul": 1.37
-      },
-      "derived": {
-        "rpm_turbo_mul": 1.37,
-        "max_wear": 9000000.0
-      },
-      "slot_roles": {},
-      "stock_parts": [
-        {
-          "part": "engines/ford/Universal_blower_belt",
-          "name": "Roots_type_supercharger_drive_belt",
-          "conditional": false,
-          "source": "parts\\engines\\DEXTERV8s.rpk#0x0087"
-        }
-      ],
-      "required_slots": [
-        {
-          "slot": 9,
-          "message": "the supercharger is missing the fuel system."
-        },
-        {
-          "slot": 15,
-          "message": "the supercharger is missing the drive belt."
-        }
-      ],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Universal_blower.kn5",
-      "mass": 14.5,
-      "slots": [
-        {
-          "id": 8,
-          "name": "roots_type_supercharger_OUT",
-          "position": [
-            0.004,
-            -0.003,
-            0.11
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/ford/Ford_blower_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x00A1"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0085"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xD013"
-            }
-          ],
-          "compatible_with": [],
-          "fits": [
-            "blower:roots"
-          ]
-        },
-        {
-          "id": 9,
-          "name": "roots_type_supercharger_mixture_IN",
-          "position": [
-            0.004,
-            0.153,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": [],
-          "takes": [
-            "carb:4bbl"
-          ]
-        },
-        {
-          "id": 15,
-          "name": "roots_type_supercharger_drive_belt_IN",
-          "position": [
-            -0.054,
-            0.066,
-            -0.342
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        },
-        {
-          "id": 301,
-          "name": "roots_type_supercharger_mixture_IN",
-          "position": [
-            0.004,
-            0.153,
-            0.22
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": [],
-          "takes": [
-            "carb:4bbl"
-          ]
-        },
-        {
-          "id": 311,
-          "name": "air cleaner over the carburettors",
-          "position": [
-            -0.039,
-            0.261,
-            0.07
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": [],
-          "takes": [
-            "air:2x4"
-          ]
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 2693,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_blower.class"
-    },
-    {
-      "id": "engines/generic/Universal_dual_4_barrel_carburetors",
-      "name": "Universal_dual_4_barrel_carburetors",
-      "display_name": "Holley 1150 Four Barrel Race Carburetor",
+      "id": "engines/generic/Holley_street_carburetor",
+      "name": "Holley_street_carburetor",
+      "display_name": "Holley Street Carburetor",
       "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
       "class_chain": [
         "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
@@ -3724,12 +3374,12 @@
         "java.game.parts.Part"
       ],
       "properties": {
-        "name": "Dual Holley 1150 Four Barrel Race Carburetors",
+        "name": "Holley Street Carburetor",
         "description": "",
-        "value": 740.380783,
+        "value": 320.451975,
         "police_check_fine_value": 0.0,
         "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 58.53,
+        "brand_new_prestige_value": 38.53,
         "prestige_calc_weight": 25.0,
         "price_catalog": 1.0,
         "price_shop": 0.9,
@@ -3748,7 +3398,7 @@
         "prev_prestige": 0.0,
         "mixture_ratio": 13.5,
         "optimal_mixture_ratio": 13.5,
-        "max_fuel_consumption": 0.12,
+        "max_fuel_consumption": 0.06,
         "max_air_consumption": 1E-05,
         "fuel_type": 1,
         "mixture_H": 1.0,
@@ -3768,7 +3418,7 @@
         "max_wear": 226000000.0
       },
       "derived": {
-        "max_air_consumption": 1.2,
+        "max_air_consumption": 0.6,
         "mixture_H": 1705000.0,
         "time_burn": 0.000618,
         "optimal_burn_time_base": 0.00247,
@@ -3777,14 +3427,7 @@
         "maxComp": 17.05
       },
       "slot_roles": {},
-      "stock_parts": [
-        {
-          "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
-          "name": "oval air filter",
-          "conditional": false,
-          "source": "parts\\engines\\DEXTERV8s.rpk#0x0086"
-        }
-      ],
+      "stock_parts": [],
       "required_slots": [],
       "categories": [
         "carburetors",
@@ -3792,12 +3435,12 @@
         "Air",
         "engine"
       ],
-      "model": "Carburetors_2x4BRL_Dominator_HOLLEY.kn5",
+      "model": "Carburetors_4BRL_street_HOLLEY.kn5",
       "mass": 6.4,
       "slots": [
         {
-          "id": 10,
-          "name": "twin_carbs_mixture_OUT",
+          "id": 7,
+          "name": "",
           "position": [
             -0.003,
             -0.066,
@@ -3811,29 +3454,54 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/ford/Ford_dual_4_barrel_intake_manifold",
+              "part": "engines/ford/Ford_292_4brl_intake_manifold",
               "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x00BE"
+              "source": "parts\\engines\\ford_v8s.rpk#0x00BE"
             },
             {
-              "part": "engines/generic/Universal_blower",
+              "part": "engines/ford/Ford_390_4brl_intake_manifold",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x30BE"
+            },
+            {
+              "part": "engines/ford/Ford_460_4brl_intake_manifold",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x40BE"
+            },
+            {
+              "part": "engines/ford/Ford_racing_4brl_intake_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x08BE"
+            },
+            {
+              "part": "engines/ford/Holley_4brl_intake_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x58BE"
+            },
+            {
+              "part": "engines/generic/Edelbrock_supercharger_small_block",
               "slot": 9,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0A85"
+              "source": "parts\\engines\\ford_v8s.rpk#0x0085"
             },
             {
               "part": null,
               "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0047"
+              "source": "parts\\engines\\ford_v8s.rpk#0x18BE"
             },
             {
-              "part": null,
-              "slot": 9,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0A99"
-            },
-            {
-              "part": null,
+              "part": "engines/ford/Ford_302_4brl_intake_manifold",
               "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xD014"
+              "source": "parts\\engines\\ford_v8s.rpk#0x6BBE"
+            },
+            {
+              "part": "engines/ford/Ford_260_4brl_intake_manifold",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x80BE"
+            },
+            {
+              "part": "engines/ford/Ford_312_4brl_intake_manifold",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x90BE"
             }
           ],
           "compatible_with": [],
@@ -3843,10 +3511,10 @@
         },
         {
           "id": 11,
-          "name": "twin_carbs_air_IN",
+          "name": "air",
           "position": [
             -0.046,
-            0.053,
+            0.042,
             -0.041
           ],
           "rotation": [
@@ -3874,12 +3542,12 @@
         ]
       },
       "source_type_id": 139,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_dual_4_barrel_carburetors.class"
+      "source_script": "parts\\engines\\ford_v8s\\scripts\\Holley_street_carburetor.class"
     },
     {
-      "id": "engines/generic/Universal_4_barrel_carburetor",
-      "name": "Universal_4_barrel_carburetor",
-      "display_name": "Holley 650 Four Barrel Street Carburetor",
+      "id": "engines/generic/Edelbrock_4brl_carburetor",
+      "name": "Edelbrock_4brl_carburetor",
+      "display_name": "Edelbrock Performer series 500 CFM four-barrel carburetor",
       "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
       "class_chain": [
         "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
@@ -3888,12 +3556,12 @@
         "java.game.parts.Part"
       ],
       "properties": {
-        "name": "Holley 650 Four Barrel Street Carburetor",
+        "name": "Edelbrock Performer series 500 CFM four-barrel carburetor",
         "description": "",
-        "value": 740.380783,
+        "value": 445.007135,
         "police_check_fine_value": 0.0,
         "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 58.53,
+        "brand_new_prestige_value": 42.53,
         "prestige_calc_weight": 25.0,
         "price_catalog": 1.0,
         "price_shop": 0.9,
@@ -3910,11 +3578,11 @@
         "drag_own": 0.0,
         "C_drag": 0.0,
         "prev_prestige": 0.0,
-        "mixture_ratio": 12.5,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.06,
+        "mixture_ratio": 13.6,
+        "optimal_mixture_ratio": 14.0,
+        "max_fuel_consumption": 0.07,
         "max_air_consumption": 1E-05,
-        "fuel_type": 0,
+        "fuel_type": 2,
         "mixture_H": 1.0,
         "time_burn": 0.1,
         "nitro_H": 1.0,
@@ -3933,22 +3601,15 @@
       },
       "derived": {
         "max_air_consumption": 0.6,
-        "mixture_H": 1704225.0,
-        "time_burn": 0.000625,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 6.8169,
-        "maxComp": 17.04225
+        "mixture_H": 1679907.180935,
+        "time_burn": 0.000617,
+        "optimal_burn_time_base": 0.00242,
+        "optimal_burn_time_offset": 0.00065,
+        "minComp": 6.719629,
+        "maxComp": 16.799072
       },
       "slot_roles": {},
-      "stock_parts": [
-        {
-          "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
-          "name": "oval air filter",
-          "conditional": false,
-          "source": "parts\\engines\\DEXTERV8s.rpk#0x0086"
-        }
-      ],
+      "stock_parts": [],
       "required_slots": [],
       "categories": [
         "carburetors",
@@ -3956,15 +3617,15 @@
         "Air",
         "engine"
       ],
-      "model": "Carburetors_4BRL_street_HOLLEY.kn5",
+      "model": "Carburetors_4BRL_Edelbrock.kn5",
       "mass": 6.4,
       "slots": [
         {
-          "id": 10,
-          "name": "twin_carbs_mixture_OUT",
+          "id": 7,
+          "name": "",
           "position": [
-            -0.003,
-            -0.066,
+            0.0,
+            -0.065,
             -0.001
           ],
           "rotation": [
@@ -3975,19 +3636,29 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/ford/Ford_4_barrel_intake_manifold",
+              "part": "engines/ford/Ford_292_4brl_intake_manifold",
               "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
+              "source": "parts\\engines\\ford_v8s.rpk#0x00BE"
+            },
+            {
+              "part": "engines/ford/Ford_racing_4brl_intake_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x08BE"
+            },
+            {
+              "part": "engines/generic/Edelbrock_supercharger_small_block",
+              "slot": 9,
+              "source": "parts\\engines\\ford_v8s.rpk#0x0085"
+            },
+            {
+              "part": "engines/ford/Holley_4brl_intake_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x58BE"
             },
             {
               "part": null,
               "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0043"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xD012"
+              "source": "parts\\engines\\ford_v8s.rpk#0x18BE"
             }
           ],
           "compatible_with": [],
@@ -4027,13 +3698,13 @@
           "1"
         ]
       },
-      "source_type_id": 163,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_4_barrel_carburetor.class"
+      "source_type_id": 2187,
+      "source_script": "parts\\engines\\ford_v8s\\scripts\\Edelbrock_4brl_carburetor.class"
     },
     {
-      "id": "engines/generic/Universal_dual_4_barrel_carburetors_2",
-      "name": "Universal_dual_4_barrel_carburetors_2",
-      "display_name": "Drag Race Methanol Carburetor",
+      "id": "engines/generic/Edelbrock_4brl_carburetor_2",
+      "name": "Edelbrock_4brl_carburetor_2",
+      "display_name": "Edelbrock Performer Marine series 600 CFM four-barrel carburetor",
       "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
       "class_chain": [
         "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
@@ -4042,12 +3713,12 @@
         "java.game.parts.Part"
       ],
       "properties": {
-        "name": "Dual Drag Race  Methanol Carburetors",
+        "name": "Edelbrock Performer Marine series 600 CFM four-barrel carburetor",
         "description": "",
-        "value": 7402.302491,
+        "value": 533.975089,
         "police_check_fine_value": 0.0,
         "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 58.53,
+        "brand_new_prestige_value": 43.53,
         "prestige_calc_weight": 25.0,
         "price_catalog": 1.0,
         "price_shop": 0.9,
@@ -4064,11 +3735,11 @@
         "drag_own": 0.0,
         "C_drag": 0.0,
         "prev_prestige": 0.0,
-        "mixture_ratio": 16.0,
-        "optimal_mixture_ratio": 16.0,
-        "max_fuel_consumption": 0.12,
+        "mixture_ratio": 13.6,
+        "optimal_mixture_ratio": 14.0,
+        "max_fuel_consumption": 0.07,
         "max_air_consumption": 1E-05,
-        "fuel_type": 3,
+        "fuel_type": 2,
         "mixture_H": 1.0,
         "time_burn": 0.1,
         "nitro_H": 1.0,
@@ -4086,24 +3757,16 @@
         "max_wear": 226000000.0
       },
       "derived": {
-        "police_check_fine_value": 200.0,
-        "max_air_consumption": 100.0,
-        "mixture_H": 2170000.0,
-        "time_burn": 0.000562,
-        "optimal_burn_time_base": 0.00225,
-        "optimal_burn_time_offset": 0.0004,
-        "minComp": 8.68,
-        "maxComp": 21.7
+        "max_air_consumption": 0.6,
+        "mixture_H": 1679907.180935,
+        "time_burn": 0.000617,
+        "optimal_burn_time_base": 0.00242,
+        "optimal_burn_time_offset": 0.00065,
+        "minComp": 6.719629,
+        "maxComp": 16.799072
       },
       "slot_roles": {},
-      "stock_parts": [
-        {
-          "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
-          "name": "oval air filter",
-          "conditional": false,
-          "source": "parts\\engines\\DEXTERV8s.rpk#0x0086"
-        }
-      ],
+      "stock_parts": [],
       "required_slots": [],
       "categories": [
         "carburetors",
@@ -4111,15 +3774,15 @@
         "Air",
         "engine"
       ],
-      "model": "Carburetors_2x4BRL_Dominator_HOLLEY.kn5",
+      "model": "Carburetors_4BRL_Edelbrock.kn5",
       "mass": 6.4,
       "slots": [
         {
-          "id": 10,
-          "name": "twin_carbs_mixture_OUT",
+          "id": 7,
+          "name": "",
           "position": [
-            -0.003,
-            -0.066,
+            0.0,
+            -0.065,
             -0.001
           ],
           "rotation": [
@@ -4130,29 +3793,29 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/ford/Ford_dual_4_barrel_intake_manifold",
+              "part": "engines/ford/Ford_292_4brl_intake_manifold",
               "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x00BE"
+              "source": "parts\\engines\\ford_v8s.rpk#0x00BE"
             },
             {
-              "part": "engines/generic/Universal_blower",
+              "part": "engines/ford/Ford_racing_4brl_intake_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x08BE"
+            },
+            {
+              "part": "engines/generic/Edelbrock_supercharger_small_block",
               "slot": 9,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0A85"
+              "source": "parts\\engines\\ford_v8s.rpk#0x0085"
+            },
+            {
+              "part": "engines/ford/Holley_4brl_intake_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x58BE"
             },
             {
               "part": null,
               "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0047"
-            },
-            {
-              "part": null,
-              "slot": 9,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0A99"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xD014"
+              "source": "parts\\engines\\ford_v8s.rpk#0x18BE"
             }
           ],
           "compatible_with": [],
@@ -4165,7 +3828,7 @@
           "name": "twin_carbs_air_IN",
           "position": [
             -0.046,
-            0.053,
+            0.042,
             -0.041
           ],
           "rotation": [
@@ -4192,8 +3855,890 @@
           "1"
         ]
       },
-      "source_type_id": 3467,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_dual_4_barrel_carburetors_2.class"
+      "source_type_id": 43147,
+      "source_script": "parts\\engines\\ford_v8s\\scripts\\Edelbrock_4brl_carburetor_2.class"
+    },
+    {
+      "id": "engines/generic/Edelbrock_supercharger_small_block",
+      "name": "Edelbrock_supercharger_small_block",
+      "display_name": "Edelbrock 7.0 psi roots type supercharger",
+      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
+      "class_chain": [
+        "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
+        "java.game.parts.enginepart.airfueldeliverysystem.Charger",
+        "java.game.parts.enginepart.AirFuelDeliverySystem",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Edelbrock 7.0 psi roots type supercharger (260/292/332)",
+        "description": "",
+        "value": 3558.718861,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 105.05,
+        "prestige_calc_weight": 90.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "mixture_ratio": 1.0,
+        "optimal_mixture_ratio": 1.0,
+        "max_fuel_consumption": 1E-06,
+        "max_air_consumption": 1E-05,
+        "fuel_type": 0,
+        "mixture_H": 1.0,
+        "time_burn": 0.1,
+        "nitro_H": 1.0,
+        "nitro_cooling": 1.0,
+        "nitro_consumption": 1.0,
+        "nitro_minRPM": 0.0,
+        "nitro_maxRPM": -1.0,
+        "nitro_minThrottle": 0.0,
+        "optimal_burn_time_base": 0.003,
+        "optimal_burn_time_offset": 0.001,
+        "minComp": 0.0,
+        "maxComp": 0.0,
+        "rpm_turbo_mul": 1.0,
+        "rpm_turbo_opt": 1700.0,
+        "rpm_turbo_range": 800.0,
+        "P_turbo_max": 1.15,
+        "P_turbo_waste": 0.0,
+        "pulley_diameter": 60.0,
+        "pulley_width": 60.0,
+        "default_rpm_turbo_mul": 2.5
+      },
+      "derived": {
+        "rpm_turbo_mul": 2.5,
+        "max_wear": 9000000.0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 9,
+          "message": "the supercharger is missing the fuel system."
+        },
+        {
+          "slot": 15,
+          "message": "the supercharger is missing the drive belt."
+        }
+      ],
+      "categories": [
+        "superchargers",
+        "air",
+        "Air",
+        "engine"
+      ],
+      "model": "Edelbrock_supercharger_small_block.kn5",
+      "mass": 14.5,
+      "slots": [
+        {
+          "id": 7,
+          "name": "roots_type_supercharger_OUT",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford/Ford_supercharger_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0xC8BE"
+            },
+            {
+              "part": "engines/ford/Ford_supercharger_manifold_big_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x48BE"
+            }
+          ],
+          "compatible_with": [],
+          "fits": [
+            "blower:roots"
+          ]
+        },
+        {
+          "id": 9,
+          "name": "carbs",
+          "position": [
+            0.004,
+            0.078,
+            0.176
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "engines/ford/Trickflow_2x4brl_intake_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x78BE"
+            }
+          ],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 15,
+          "name": "drive_belt",
+          "position": [
+            -0.008,
+            -0.24,
+            -0.359
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 4,
+          "name": "NOS_IN",
+          "position": [
+            0.0,
+            0.076,
+            0.17
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "engines/ford/Trickflow_2x4brl_intake_manifold_small_block",
+              "slot": 4,
+              "source": "parts\\engines\\ford_v8s.rpk#0x78BE"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 133,
+      "source_script": "parts\\engines\\ford_v8s\\scripts\\Edelbrock_supercharger_small_block.class"
+    },
+    {
+      "id": "engines/generic/Edelbrock_supercharger_drive_belt_small_block",
+      "name": "Edelbrock_supercharger_drive_belt_small_block",
+      "display_name": "Edelbrock roots type supercharger drive belt",
+      "base_class": "java.game.parts.EnginePart",
+      "class_chain": [
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Edelbrock roots type supercharger drive belt (260/292/332)",
+        "description": "",
+        "value": 31.508897,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 48.6,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 160000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Edelbrock_supercharger_drive_belt_small_block.kn5",
+      "mass": 0.5,
+      "slots": [
+        {
+          "id": 14,
+          "name": "roots_type_supercharger_drive_belt_OUT",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/generic/Edelbrock_supercharger_small_block",
+              "slot": 15,
+              "source": "parts\\engines\\ford_v8s.rpk#0x0085"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 135,
+      "source_script": "parts\\engines\\ford_v8s\\scripts\\Edelbrock_supercharger_drive_belt_small_block.class"
+    },
+    {
+      "id": "engines/generic/Edelbrock_2x4brl_carburetors",
+      "name": "Edelbrock_2x4brl_carburetors",
+      "display_name": "Edelbrock Performer 500 CFM four-barrel carburetor (dual-quad jetting)",
+      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
+      "class_chain": [
+        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
+        "java.game.parts.enginepart.AirFuelDeliverySystem",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Edelbrock Performer series 500 CFM dual four-barrel carburetors",
+        "description": "",
+        "value": 889.846975,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 62.53,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "mixture_ratio": 13.5,
+        "optimal_mixture_ratio": 14.0,
+        "max_fuel_consumption": 0.14,
+        "max_air_consumption": 1E-05,
+        "fuel_type": 2,
+        "mixture_H": 1.0,
+        "time_burn": 0.1,
+        "nitro_H": 1.0,
+        "nitro_cooling": 1.0,
+        "nitro_consumption": 1.0,
+        "nitro_minRPM": 0.0,
+        "nitro_maxRPM": -1.0,
+        "nitro_minThrottle": 0.0,
+        "optimal_burn_time_base": 0.003,
+        "optimal_burn_time_offset": 0.001,
+        "minComp": 0.0,
+        "maxComp": 0.0,
+        "default_mixture_ratio": 1.0,
+        "default_fuel_type": 0,
+        "max_wear": 326000000.0
+      },
+      "derived": {
+        "max_air_consumption": 0.9,
+        "mixture_H": 1673791.363897,
+        "time_burn": 0.00062,
+        "optimal_burn_time_base": 0.00242,
+        "optimal_burn_time_offset": 0.00065,
+        "minComp": 6.695165,
+        "maxComp": 16.737914
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "carburetors",
+        "fuel",
+        "Air",
+        "engine"
+      ],
+      "model": "Edelbrock_2x4brl_carburetors.kn5",
+      "mass": 6.4,
+      "slots": [
+        {
+          "id": 7,
+          "name": "",
+          "position": [
+            0.0,
+            -0.072,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford/Trickflow_2x4brl_intake_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x78BE"
+            }
+          ],
+          "compatible_with": [],
+          "fits": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 11,
+          "name": "twin_carbs_air_IN",
+          "position": [
+            -0.0,
+            0.039,
+            0.008
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 30859,
+      "source_script": "parts\\engines\\ford_v8s\\scripts\\Edelbrock_2x4brl_carburetors.class"
+    },
+    {
+      "id": "engines/generic/Edelbrock_2x4brl_carburetors_2",
+      "name": "Edelbrock_2x4brl_carburetors_2",
+      "display_name": "Edelbrock Marine 600 CFM four-barrel carburetor (dual-quad jetting)",
+      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
+      "class_chain": [
+        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
+        "java.game.parts.enginepart.AirFuelDeliverySystem",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Edelbrock Marine series 600 CFM dual four-barrel carburetors",
+        "description": "",
+        "value": 1067.782918,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 72.53,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "mixture_ratio": 13.5,
+        "optimal_mixture_ratio": 14.0,
+        "max_fuel_consumption": 0.18,
+        "max_air_consumption": 1E-05,
+        "fuel_type": 2,
+        "mixture_H": 1.0,
+        "time_burn": 0.1,
+        "nitro_H": 1.0,
+        "nitro_cooling": 1.0,
+        "nitro_consumption": 1.0,
+        "nitro_minRPM": 0.0,
+        "nitro_maxRPM": -1.0,
+        "nitro_minThrottle": 0.0,
+        "optimal_burn_time_base": 0.003,
+        "optimal_burn_time_offset": 0.001,
+        "minComp": 0.0,
+        "maxComp": 0.0,
+        "default_mixture_ratio": 1.0,
+        "default_fuel_type": 0,
+        "max_wear": 376000000.0
+      },
+      "derived": {
+        "max_air_consumption": 1.1,
+        "mixture_H": 1673791.363897,
+        "time_burn": 0.00062,
+        "optimal_burn_time_base": 0.00242,
+        "optimal_burn_time_offset": 0.00065,
+        "minComp": 6.695165,
+        "maxComp": 16.737914
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "carburetors",
+        "fuel",
+        "Air",
+        "engine"
+      ],
+      "model": "Edelbrock_2x4brl_carburetors_2.kn5",
+      "mass": 6.4,
+      "slots": [
+        {
+          "id": 7,
+          "name": "",
+          "position": [
+            0.0,
+            -0.072,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford/Trickflow_2x4brl_intake_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x78BE"
+            }
+          ],
+          "compatible_with": [],
+          "fits": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 11,
+          "name": "twin_carbs_air_IN",
+          "position": [
+            -0.0,
+            0.039,
+            0.008
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 30858,
+      "source_script": "parts\\engines\\ford_v8s\\scripts\\Edelbrock_2x4brl_carburetors_2.class"
+    },
+    {
+      "id": "engines/generic/Holley_street_4brl_carburetor",
+      "name": "Holley_street_4brl_carburetor",
+      "display_name": "Holley Street four-barrel carburetor",
+      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
+      "class_chain": [
+        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
+        "java.game.parts.enginepart.AirFuelDeliverySystem",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Holley Street four-barrel carburetor",
+        "description": "Maximized fuel consumption and 100-octane gas capable.",
+        "value": 373.832758,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 39.53,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "mixture_ratio": 13.5,
+        "optimal_mixture_ratio": 14.0,
+        "max_fuel_consumption": 0.07,
+        "max_air_consumption": 1E-05,
+        "fuel_type": 2,
+        "mixture_H": 1.0,
+        "time_burn": 0.1,
+        "nitro_H": 1.0,
+        "nitro_cooling": 1.0,
+        "nitro_consumption": 1.0,
+        "nitro_minRPM": 0.0,
+        "nitro_maxRPM": -1.0,
+        "nitro_minThrottle": 0.0,
+        "optimal_burn_time_base": 0.003,
+        "optimal_burn_time_offset": 0.001,
+        "minComp": 0.0,
+        "maxComp": 0.0,
+        "default_mixture_ratio": 1.0,
+        "default_fuel_type": 0,
+        "max_wear": 226000000.0
+      },
+      "derived": {
+        "max_air_consumption": 0.6,
+        "mixture_H": 1673791.363897,
+        "time_burn": 0.00062,
+        "optimal_burn_time_base": 0.00242,
+        "optimal_burn_time_offset": 0.00065,
+        "minComp": 6.695165,
+        "maxComp": 16.737914
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "carburetors",
+        "fuel",
+        "Air",
+        "engine"
+      ],
+      "model": "Carburetors_4BRL_street_HOLLEY.kn5",
+      "mass": 6.4,
+      "slots": [
+        {
+          "id": 7,
+          "name": "",
+          "position": [
+            -0.003,
+            -0.066,
+            -0.001
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford/Ford_292_4brl_intake_manifold",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x00BE"
+            },
+            {
+              "part": "engines/ford/Ford_390_4brl_intake_manifold",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x30BE"
+            },
+            {
+              "part": "engines/ford/Ford_460_4brl_intake_manifold",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x40BE"
+            },
+            {
+              "part": "engines/ford/Ford_racing_4brl_intake_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x08BE"
+            },
+            {
+              "part": "engines/ford/Holley_4brl_intake_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x58BE"
+            },
+            {
+              "part": "engines/generic/Edelbrock_supercharger_small_block",
+              "slot": 9,
+              "source": "parts\\engines\\ford_v8s.rpk#0x0085"
+            },
+            {
+              "part": null,
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x18BE"
+            },
+            {
+              "part": "engines/ford/Ford_302_4brl_intake_manifold",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x6BBE"
+            },
+            {
+              "part": "engines/ford/Ford_260_4brl_intake_manifold",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x80BE"
+            },
+            {
+              "part": "engines/ford/Ford_312_4brl_intake_manifold",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x90BE"
+            }
+          ],
+          "compatible_with": [],
+          "fits": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 11,
+          "name": "twin_carbs_air_IN",
+          "position": [
+            -0.046,
+            0.042,
+            -0.041
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 14475,
+      "source_script": "parts\\engines\\ford_v8s\\scripts\\Holley_street_4brl_carburetor.class"
+    },
+    {
+      "id": "engines/generic/Holley_2x4brl_carburetors",
+      "name": "Holley_2x4brl_carburetors",
+      "display_name": "Holley street four-barrel carburetor (dual-quad jetting)",
+      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
+      "class_chain": [
+        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
+        "java.game.parts.enginepart.AirFuelDeliverySystem",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Holley street dual four-barrel carburetors",
+        "description": "",
+        "value": 747.498221,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 42.53,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "mixture_ratio": 13.5,
+        "optimal_mixture_ratio": 14.0,
+        "max_fuel_consumption": 0.12,
+        "max_air_consumption": 1E-05,
+        "fuel_type": 2,
+        "mixture_H": 1.0,
+        "time_burn": 0.1,
+        "nitro_H": 1.0,
+        "nitro_cooling": 1.0,
+        "nitro_consumption": 1.0,
+        "nitro_minRPM": 0.0,
+        "nitro_maxRPM": -1.0,
+        "nitro_minThrottle": 0.0,
+        "optimal_burn_time_base": 0.003,
+        "optimal_burn_time_offset": 0.001,
+        "minComp": 0.0,
+        "maxComp": 0.0,
+        "default_mixture_ratio": 1.0,
+        "default_fuel_type": 0,
+        "max_wear": 326000000.0
+      },
+      "derived": {
+        "max_air_consumption": 0.7,
+        "mixture_H": 1673791.363897,
+        "time_burn": 0.00062,
+        "optimal_burn_time_base": 0.00242,
+        "optimal_burn_time_offset": 0.00065,
+        "minComp": 6.695165,
+        "maxComp": 16.737914
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "carburetors",
+        "fuel",
+        "Air",
+        "engine"
+      ],
+      "model": "Carburetors_2x4BRL_Dominator_HOLLEY.kn5",
+      "mass": 6.4,
+      "slots": [
+        {
+          "id": 7,
+          "name": "",
+          "position": [
+            -0.003,
+            -0.066,
+            -0.001
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford/Trickflow_2x4brl_intake_manifold_small_block",
+              "slot": 7,
+              "source": "parts\\engines\\ford_v8s.rpk#0x78BE"
+            }
+          ],
+          "compatible_with": [],
+          "fits": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 11,
+          "name": "twin_carbs_air_IN",
+          "position": [
+            -0.046,
+            0.053,
+            -0.041
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "engines/generic/Edelbrock_2x4brl_carburetors",
+              "slot": 11,
+              "source": "parts\\engines\\ford_v8s.rpk#0x788B"
+            }
+          ],
+          "takes": [
+            "air:single"
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 17035,
+      "source_script": "parts\\engines\\ford_v8s\\scripts\\Holley_2x4brl_carburetors.class"
     },
     {
       "id": "engines/generic/Custom_horns",
@@ -6476,9 +7021,9 @@
           "id": 10,
           "name": "",
           "position": [
-            -0.001,
+            0.009,
             -0.051,
-            0.041
+            -0.13399997
           ],
           "rotation": [
             0.0,

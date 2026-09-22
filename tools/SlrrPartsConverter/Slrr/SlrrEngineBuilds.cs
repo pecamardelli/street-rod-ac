@@ -7,12 +7,14 @@ namespace Street_Rod_AC.Slrr;
 
 /// <summary>
 /// Collects complete engines as part lists: the stock_parts_list_E of every car chassis script
-/// (with its stage 1 and 2 kits), and the same kind of list from text files of build notes.
+/// (with its stage 1 and 2 kits), the same kind of list from text files of build notes, and the engine kits
+/// the packs themselves ship.
 /// </summary>
 public sealed class SlrrEngineBuilds
 {
     private const string CarsFolder = @"cars\racers";
     private const string ChassisClass = "java.game.parts.bodypart.Chassis";
+    private const string SetClass = "java.game.parts.Set";
 
     private static readonly (string Field, string Stage)[] Stages =
     {
@@ -88,6 +90,43 @@ public sealed class SlrrEngineBuilds
                         Parts = parts
                     });
                 }
+            }
+        }
+
+        return builds;
+    }
+
+    /// <summary>
+    /// The kits a pack ships: Set classes whose build() puts a list of the pack's parts in the inventory. Where a
+    /// mod's author wrote complete engines that way (the Ford six and V8 packs, one per displacement), they are
+    /// builds like any other; an upgrade kit (a blower with its manifold) is too short to be one.
+    /// </summary>
+    public List<EngineBuild> FromKits(SlrrScriptEvaluator scripts, IEnumerable<SlrrRpk> rpks)
+    {
+        var builds = new List<EngineBuild>();
+        foreach (var rpk in rpks)
+        {
+            var pack = Path.GetFileNameWithoutExtension(rpk.RelativePath);
+            foreach (var entry in rpk.Entries.Values)
+            {
+                var scriptPath = entry.FirstValue("script");
+                if (string.IsNullOrEmpty(scriptPath)) continue;
+
+                var scriptFile = Path.Combine(_game.Root, scriptPath);
+                if (!File.Exists(scriptFile) || !scripts.Extends(scriptFile, SetClass)) continue;
+
+                var kit = scripts.Kit(scriptFile);
+                if (kit == null || kit.Parts.Count < MinBuildParts) continue;
+
+                var className = Path.GetFileNameWithoutExtension(scriptPath);
+                builds.Add(new EngineBuild
+                {
+                    Id = $"kits/{pack}/{Slug(className)}",
+                    Name = kit.Name is { Length: > 0 } ? kit.Name : className,
+                    Origin = EngineBuild.OriginKit,
+                    Source = SlrrGame.Describe(rpk, entry.TypeId),
+                    Parts = kit.Parts.Select(p => Reference(p.Rpk, p.TypeId)).ToList()
+                });
             }
         }
 

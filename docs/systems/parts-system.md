@@ -38,7 +38,7 @@ private.
 
 ## Converter (`tools/SlrrPartsConverter`)
 
-`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>[*<count>],...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] [--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] [--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>,...]`
+`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>[*<count>],...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] [--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] [--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>,...] [--previous <earlier conversion>] [--twin <old part id>=<new part id or ->,...] [--measure <part id pattern>,...]`
 
 The content in use is made with `tools/convert-parts.ps1` (both Chrysler packs are installed in the SLRR folder, see
 "Replacing a pack"). It comes out as:
@@ -79,29 +79,39 @@ scripted parts, plus what the engine builds use (batteries).
 as well. A save that holds such a part: see `BringUpToDate` under "Replacing a pack". What is dropped, for a game set
 in 1960s America and mechanical parts only: the fictional and modern engine packs whole (Baiern/Emer OHC sixes,
 Einvagen/Duhen/Ishima fours, the OHC V6 pack, the Buick LC2 turbo V6, SLRR's own MC/Prime/SuperDuty OHC V8s), Dexter's
-Dodge and Chevrolet engines (one generic block mesh with numbers on it; the Chrysler and GM packs do them properly) and
-its fictional drag block, two 2000s crate blocks (BluePrint 360, GM Performance Parts 427), SL Tuners' `wheels.rpk`
-(142 of its 151 rims are 17"-21"), and everything that is body or interior: `interior` (seats, steering wheels),
-`wings`, and the base game's neons, plates, woofers and body-part roots (routed to `body/stock`, then dropped), and
-Dexter's 2-bar "Super Blower". The Ford six (`ford_six`) is a reskin of the Baiern OHC six but stands on its own: its
-parts attach to each other, not to Baiern parts.
+Dodge and Chevrolet engines and his drag block (his pack is replaced by the user's Ford V8s, but a replaced pack's parts
+are paired with the new one's, and a Duster with a Ford 292 is no Duster), two 2000s crate blocks (BluePrint 360, GM
+Performance Parts 427), SL Tuners' `wheels.rpk` (142 of its 151 rims are 17"-21"), everything that is body or
+interior: `interior` (seats, steering wheels), `wings`, and the base game's neons, plates, woofers and body-part roots
+(routed to `body/stock`, then dropped), Dexter's 2-bar "Super Blower", and the Ford V8 pack's scriptless dress-up and
+nitrous bits (a part without a script pairs with anything). The Ford V8s (`engines/ford`, rpk `ford_v8s`) are the
+user's own too (Nov 2016, `MODS ENGINES\OTHER MODS ENGINES\ford_v8s`): 260, 292, 302, 312, 332, 351 Boss, 390, 429
+Cobra Jet and 460 with their period boxes (Borg-Warner T10/Super T10/T18, Ford HED/HEG 3-speeds), a Mopar-pack clone
+by mesh (all 283 identical to Chrysler 4.5's) with Ford scripts and 80 Ford textures, and the 2010 Mopar slot
+numbering (carburettor 7, blower pad 9); its aftermarket carburettors and Edelbrock blower are universal-fit like
+the other packs' (see "Parts that fit any engine"), its air filters keep their Ford decals and stay Ford parts. The
+Ford six (`ford_six`, rpk `ford_l6`) is the user's own Ford Falcon 188/221/221 SP
+pack (Dec 2016, `MODS ENGINES\OTHER MODS ENGINES\ford_l6`): a pushrod engine with 47 meshes they modelled (block,
+heads, manifolds, carbs, timing set, pump, distributor, radiator...) and the Baiern/Emer parts it was grown from still
+inside, dropped here. It replaces the Ford 221 pack (`fordi6_data`, Nov 2016, Baiern DOHC meshes with Ford scripts)
+that car scripts and build notes name, see "Replacing a pack"; the 2012 Baiern reskin that stood in before both
+("ford falcon block") is archived next to them, its ids answered through "An earlier conversion". Its blocks extend
+`Block_Inline_OHV`, a class SLRR never shipped: see "Script VM", stand-in classes.
 
 `--merge` leaves parts out too, but names the part that stands in for each: builds, saves (through
 `part_aliases.json`), stock-part lists and the attach lines of other parts that named a merged part get the stand-in,
 and the stand-in inherits the merged part's fit (its attach and compatible lines are grafted onto the stand-in's slot
 of the same id; a part that mounts by a single slot mounts by it whatever the number, Ford's air cleaners hang by 12
 where Chrysler's hang by 11). Used for the same part twice with the same script values (the Chrysler pack's plain
-Holley 4-bbl next to its "street" one, Dexter's two Edelbrock-lookalike air filters) and for **transmissions from
-after the 1960s**, which builds and saves swap for the period box of the same engine: TKO 500/600 → A833; Tremec T-56
-and TKO, Richmond 5- and 6-speeds → Richmond Super T-10; TH-700-R4 → TH-400; TH-200-4R → TH-180C; 4L30-E → TH-125C;
-the Ford six's two Baiern 6-speeds → its Tourist 5-speed; Dexter's "6-speed AWD" → his "VR4E lock-up" 3-speed. The
-last two are placeholders: the Ford packs hold no period transmission at all (a Toploader or C6 would need another
-source), and the Cadillac 500's TH-125C is a 1980s box kept because it is the 500's only one. The converter prints a
-merge whose stand-in lacks a slot the merged part fitted by.
+Holley 4-bbl next to its "street" one) and for **transmissions from after the 1960s**, which builds and saves swap for
+the period box of the same engine: TKO 500/600 → A833; Tremec T-56 and TKO, Richmond 5- and 6-speeds → Richmond Super
+T-10; TH-700-R4 → TH-400; TH-200-4R → TH-180C; 4L30-E → TH-125C; the Ford V8s' Tremec T45/T56 → Borg-Warner Super
+T10. The Cadillac 500's TH-125C is a 1980s box kept because it is the 500's only one. The converter prints a merge
+whose stand-in lacks a slot the merged part fitted by.
 
 Carburettors of different packs are **not** merged even when they are the same product: the carburettor script sets
 the engine's mixture (the Chrysler pack runs 8:1 on gasoline, GM's Dominators 9-14:1 on fuel type 3, Dexter's Fords
-12.5-13.5:1) and its fuel cap, and every pack's engines were rated with their own. A trial that merged them re-tuned
+ran 12.5-13.5:1) and its fuel cap, and every pack's engines were rated with their own. A trial that merged them re-tuned
 whole engines (the GM 427 fell from 659 to 419 hp). Nor are the two GM Weiand 8-71s merged: same mesh, different
 boost.
 
@@ -135,6 +145,16 @@ Summit scoop on a 340, the Chrysler Weiand on a GM 8-71 manifold and the GM one 
 Holley 650 on Dexter's Ford 302, the GTO Tri-Power filters on the borrowed tri-power; and every pack's own
 carburettor on its own manifold, unchanged.
 
+`--measure <part id pattern>,...` (`convert-parts.ps1 -Measure`) is how a convention is read before a fitting lets
+two packs meet: it converts nothing and prints every matching part's slots next to the bounds of its meshes, in the
+model's space and before any shift. The user's Ford V8 pack (2026-09-22) measured as a 2010 Mopar clone by cfg as
+well as by mesh: its carburettors' slot 7 at the carburettor's centre, its pads 2 cm over the manifold top, its
+Edelbrock blower's pad 9 where Chrysler's is - the same figures on the shared meshes, so the same 6.2 cm down to the
+flange for its carburettors (routed to `engines/generic`, drawn with the Chrysler models: their scripts run 13.5:1
+where Chrysler's run 8:1, so they are parts of their own, not merges), its pads and the blower's pad. Its air filters
+already carried Chrysler's offsets on the shared meshes within 1.5 cm, except three that sat at their mesh centre (the
+K&N and Edelbrock 2x4 ovals, the Motorcraft 2x4 scoop) and got the Chrysler part's offset by `--shift`.
+
 Factory carburettors and air cleaners (Carter AVS, GM's stock 2/4-bbl and Quadrajet-style cleaners, the Mopar pie
 tins, Six Pack cleaners, the Shaker, the GTO Tri-Power and Corvette air boxes) keep their attach lines and stay with
 their brand: a used car tuned by `EngineFactory` gets aftermarket parts of any make, never another make's factory
@@ -147,19 +167,22 @@ folder and the ids change). The GM and Ford packs' carburettors are crude blocks
 `--model` draws a part with **another part's model**, its own script untouched: the model is converted again under
 the borrower's name (into the borrower's pack folder) and the borrower's slots take the donor's positions, since slot
 positions are in the model's space (a part that mounts by a single slot takes the donor's mounting slot whatever its
-number: GM carburettors hang by 10, the Carter by 12). Ten carbs borrow: GM's Holley 2-bbl, 1050 Dominator,
-"hardcore" 1050, 750 Dominator and blower 2-bbl, Dexter's Holley 650 and both dual-quad sets, and GM's factory
-carburettors, which get the Carter AVS (a factory carburettor's looks rather than another Holley's). GM's injection
+number: GM carburettors hang by 10, the Carter by 12). The borrowers: GM's Holley 2-bbl, 1050 Dominator,
+"hardcore" 1050, 750 Dominator and blower 2-bbl, the Ford V8 pack's two Holley streets, two Edelbrocks and Holley
+dual-quad set, and GM's factory carburettors, which get the Carter AVS (a factory carburettor's looks rather than
+another Holley's). GM's injection
 (the Weiand methanol stacks, the '63 fuelie rail, the Holley rails) is decent and GM-only and keeps its own models.
 
 ### Placement mode in the garage (F5, `SlotShifts`)
 
 A tool for fitting the converted parts by eye, not gameplay. With a part picked in the workbench, **F5** turns
 placement mode on: the arrows move the part across and fore-aft, PgUp/PgDn up and down, in the *engine's* axes
-(right, up, towards the radiator), whatever the camera does; a step is 5 mm, Ctrl 1 mm, Shift 2 cm. **Tab** moves the
-pad the part sits on instead of the part (a carburettor wrong on one manifold is the pad's fault, one wrong everywhere
-is its own), **R** takes the slot back to where the packs put it, F5 or Esc ends the mode; a readout in the part card
-says what is being moved and by how much so far. `CarViewport3D` turns the step into a move of a slot in that slot's
+(right, up, towards the radiator), whatever the camera does; a step is 5 mm, Ctrl 1 mm, Shift 2 cm. **Tab** switches
+between the part's own slot and the pad the part sits on (a carburettor wrong on one manifold is the pad's fault, one
+wrong everywhere is its own). A part's own slot is the part's wherever it goes, so nudging it moves every copy: a part
+that is one of several of the same on its parent (the carburettors of a dual quad or Six Pack, the filters on them)
+starts on its pad instead, which is that place's alone. **R** takes the slot back to where the packs put it, F5 or
+Esc ends the mode; a readout in the part card says what is being moved and by how much so far. `CarViewport3D` turns the step into a move of a slot in that slot's
 part's space (the part's own mounting slot moves the other way, since the part hangs so that its slot lands on the
 pad), `PartsCatalog.ShiftSlot` changes the part in place, and the parts are laid out again without rebuilding the
 model (`GarageRenderer.PlacePart`).
@@ -230,6 +253,14 @@ text files given with `--notes`. A note title like `MOPAR 340 Six Pack 290 hp` a
 engine model is checked against. A title names and rates only the first list under it. Prose inside a list
 (`// heads`) is a comment: after a comment the numbering counts on, after a title it starts over.
 
+**Engine kits** (`origin` "kit", `SlrrEngineBuilds.FromKits`): the `Set` classes a pack's rpk names, whose `build()`
+puts parts in the inventory (`SlrrScriptEvaluator.Kit` runs it against an inventory of no class and notes every
+`insertItem`). Where a mod's author wrote complete engines that way they are builds like the others: the user's Ford
+six (`kit_188`, `kit_221`, `kit_221_SP`) and V8 packs (one kit per displacement), GM's crate engines, Chrysler's
+`Kit_318_block`... A kit without a block is an upgrade (a blower with its manifold), no engine; one whose parts a car
+or notes build already lists (with a battery on top, say) adds nothing and is left out, so a rated notes build wins
+over the kit it was written from.
+
 A run with a pack filter adds that pack's script classes to `_scripts`; only a full run replaces the folder and
 writes `engine_builds.json`, `script_constants.json` and `part_aliases.json`.
 
@@ -250,7 +281,9 @@ pixels differ. The converter prints every mesh it touched.
 A later release of a mod takes the place of the one it grew out of: `engines/Mopar` (MagnumForce, 2010) was replaced
 by `engines/chrysler` (Chrysler V8 Pack 4.5 Reboot, rpk `Chrysler_V8_pak`: the same meshes, 108 more parts, 4 more
 blocks). Car scripts and build notes keep naming the old rpk, so the old pack **stays installed in the SLRR folder**;
-it is read but not converted, and its output folder is removed.
+it is read but not converted, and its output folder is removed. The same way, the user's Ford six (`ford_l6`)
+replaced their Ford 221 pack (`fordi6_data`) and their Ford V8s (`ford_v8s`) replaced Dexter's `DEXTERV8s`
+(2026-09-22): three replacements, each with the old pack still installed.
 
 Nothing carries over by id or name: the new release renames the files, renumbers the rpk and some slots (oil pan
 9 → 10, carburettor 7 → 10), rebalances the scripts and says "small/big block" where the old one said "340/440".
@@ -275,12 +308,46 @@ only part that comes off is the Hemi fan some 383 builds wore, which 4.5 no long
 check after the packs were renamed (2026-09-21): all 132 engines of the previous conversion come up to date, nothing
 comes off.
 
+Where the matcher has nothing to go on, `--twin <old part id>=<new part id>` writes the pair by hand, and
+`--twin <old part id>=-` says the new release does without the part. The Ford six needed 16: the old pack was a DOHC
+reskin, the new one is the pushrod engine, so its exhaust camshafts and camshaft bearing bridge have no twin, the
+intake camshafts are the single camshafts, the drive belt is the timing chain, and the Sprint and racing head,
+manifold and header have their look-alikes but the matcher settled for the stock ones. A rule naming a part that is
+not there stops the run. The old builds still do not run on the new pack: its blocks demand a timing cover, fuel pump,
+distributor, coil, water pump, radiator and starter that the old pack never had, so the car builds and old saves of
+the Ford six come up to date but "missing the timing cover" (`renew` says so); the pack's own kits are the builds that
+run, see "Engine builds".
+
+### An earlier conversion (`--previous`, `EarlierConversion`)
+
+A release of a mod that keeps its rpk but renames its files (the Ford six: `Baiern_Kraftwerk_2_5_block.cfg` became
+`Ford_188_Block.cfg`, same resource `0x41`) changes part ids without there being two packs to pair. Part ids are the
+cfg names, but the SLRR game knows a part by its rpk resource id alone, and the converted parts keep it
+(`source_type_id`, the pack's `source` says the rpk). `--previous <folder>` names an earlier conversion, normally the
+content the game runs on: `convert-parts.ps1` passes the repo's `Assets\Parts` whatever folder the run writes to, so a
+scratch run sees the same. Read before anything is written, it adds to `part_aliases.json`:
+
+- every part it had whose id the run no longer produces, pointed at the part its resource is now (a pack fed by
+  several rpks is tried against each; two answering differently is nobody's part), unless a rule already aliases it;
+- its own aliases, kept while they still lead to a part through the aliases as they end up (the game follows chains
+  of up to 8).
+
+So the ids ratchet: an alias once written stays as long as its target exists, and a save made with any earlier content
+loads. Checked the way a replaced pack is: `EngineBench <new parts> renew <old parts>` after the Ford six swap brought
+all 12 engines of the old pack up to date, nothing came off.
+
 ## Script VM (`Parts/Scripting`)
 
 - `ScriptClass`: the "TUFA" class file. Sections CONS (pool), FILD, MTHD, TREE. Code is postfix expression trees
   with a source line per node; see the bytecode reference at the end.
 - `ScriptClassLoader`: finds classes under a root laid out like SLRR. The `scripts` folder may sit at any level of the
-  package path; classes next to the referring class win (cars share one package across folders).
+  package path; classes next to the referring class win (cars share one package across folders). **Stand-in
+  classes**: a class a mod extends that the game never shipped is made from the one its author copied
+  (`ScriptClass.DerivedAs`: the pool's names swapped, methods that only made sense for the original left out).
+  `Block_Inline_OHV` (the Ford six's blocks) is `Block_Vee_OHV` less the second cylinder head; its author's source sits
+  in the SLRR notes, never compiled, as does their `OHV_CylinderHead` that would accept it - so an object of a stand-in
+  also passes `instanceof` the class it was copied from (`ScriptClass.CopiedFrom`), which is what the stock head asks.
+  A compiled class file, once there, wins over the stand-in.
 - `ScriptVm`: objects, virtual calls, `super`, statics, arrays, casts, `instanceof`, loops, short-circuit logic.
   Natives go to an `IScriptHost`. What the host does not provide is **unknown**; code behind unknown conditions is
   walked without taking effect. `partOnSlot(n)` with no game around returns an unknown tagged with slot `n`, which is

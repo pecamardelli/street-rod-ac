@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Street_Rod_AC.Parts.Scripting;
 
@@ -86,6 +87,13 @@ public sealed class ScriptClass
     /// <summary>Folder the class was loaded from; classes of one car or pack refer to each other from there</summary>
     public string Folder { get; private set; } = string.Empty;
 
+    /// <summary>
+    /// The class this one is a copy of (<see cref="DerivedAs"/>): an object of it is also an instance of that,
+    /// as far as the scripts that test for it can tell (the OHV cylinder head asks its block for the camshaft
+    /// only when the block is a Block_Vee_OHV)
+    /// </summary>
+    public string? CopiedFrom { get; private set; }
+
     public string? ClassName => Text(0);
     public string? BaseClass => Pool.Count > 3 && Pool[3].Kind == ScriptConstantKind.Class ? Text(Pool[3].A) : Text(2);
 
@@ -133,6 +141,28 @@ public sealed class ScriptClass
 
         var owner = Pool[index].A;
         return owner >= 0 && owner < Pool.Count ? Text(Pool[owner].A) : null;
+    }
+
+    /// <summary>
+    /// The same code under another name: a class a mod extends that the game never shipped, which its author
+    /// wrote by copying one it did (an inline OHV block is the vee one less the second cylinder head). Every
+    /// mention of the copied class and of its base is swapped, and the methods that only made sense for the
+    /// original are left out. The trees are shared: nothing in them names a class.
+    /// </summary>
+    public ScriptClass DerivedAs(string className, string baseClass, IEnumerable<string> droppedMethods)
+    {
+        var oldName = Regex.Escape(ClassName ?? string.Empty) + @"(?!\w)";
+        var oldBase = Regex.Escape(BaseClass ?? string.Empty) + @"(?!\w)";
+        var dropped = droppedMethods.ToHashSet(StringComparer.Ordinal);
+
+        var derived = new ScriptClass { Folder = Folder, CopiedFrom = ClassName };
+        derived.Pool.AddRange(Pool.Select(c => c.Text == null ? c : c with { Text = Swap(c.Text) }));
+        derived.Fields.AddRange(Fields.Select(f => f with { Signature = Swap(f.Signature) }));
+        derived.Methods.AddRange(Methods.Where(m => !dropped.Contains(m.Name)).Select(m => m with { Signature = Swap(m.Signature) }));
+        derived.Trees.AddRange(Trees);
+        return derived;
+
+        string Swap(string text) => Regex.Replace(Regex.Replace(text, oldName, className), oldBase, baseClass);
     }
 
     public static ScriptClass? Load(string filename)

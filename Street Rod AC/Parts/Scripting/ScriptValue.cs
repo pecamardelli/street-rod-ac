@@ -97,8 +97,8 @@ public sealed class ScriptObject
 
     public string ClassName => Chain[0].ClassName ?? string.Empty;
 
-    /// <summary>instanceof, by full class name</summary>
-    public bool Is(string className) => Chain.Any(c => c.ClassName == className);
+    /// <summary>instanceof, by full class name; a class made from another passes for that one too</summary>
+    public bool Is(string className) => Chain.Any(c => c.ClassName == className || c.CopiedFrom == className);
 
     /// <summary>Declared type of a field, from the nearest class that has it</summary>
     public string? FieldSignature(string field)
