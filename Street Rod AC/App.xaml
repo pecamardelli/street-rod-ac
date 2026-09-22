@@ -9,6 +9,8 @@
              xmlns:loadGame="clr-namespace:Street_Rod_AC.Screens.LoadGame"
              xmlns:newspaper="clr-namespace:Street_Rod_AC.Screens.Newspaper"
              xmlns:usedCarMarket="clr-namespace:Street_Rod_AC.Screens.UsedCarMarket"
+             xmlns:dealerMap="clr-namespace:Street_Rod_AC.Screens.DealerMap"
+             xmlns:dealerLot="clr-namespace:Street_Rod_AC.Screens.DealerLot"
              xmlns:usedParts="clr-namespace:Street_Rod_AC.Screens.UsedParts"
              xmlns:garage="clr-namespace:Street_Rod_AC.Screens.Garage"
              xmlns:carSelection="clr-namespace:Street_Rod_AC.Screens.CarSelection"
@@ -64,6 +66,14 @@
 
             <DataTemplate DataType="{x:Type newspaper:NewspaperScreenViewModel}">
                 <newspaper:NewspaperScreenView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type dealerMap:DealerMapScreenViewModel}">
+                <dealerMap:DealerMapScreenView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type dealerLot:DealerLotScreenViewModel}">
+                <dealerLot:DealerLotScreenView/>
             </DataTemplate>
 
             <DataTemplate DataType="{x:Type usedCarMarket:UsedCarMarketScreenViewModel}">

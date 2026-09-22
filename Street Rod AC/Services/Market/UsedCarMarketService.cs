@@ -3,6 +3,7 @@ using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Dealers;
 using Street_Rod_AC.Services.Parts;
 
 namespace Street_Rod_AC.Services.Market
@@ -10,11 +11,12 @@ namespace Street_Rod_AC.Services.Market
     /// <summary>
     /// Implements used car market spawning and management
     /// </summary>
-    public class UsedCarMarketService(IContentCatalogRepository catalogRepo, ICarProfileRepository profileRepo, ICarPartsService? partsService = null) : IUsedCarMarketService
+    public class UsedCarMarketService(IContentCatalogRepository catalogRepo, ICarProfileRepository profileRepo, ICarPartsService? partsService = null, IDealerCatalog? dealerCatalog = null) : IUsedCarMarketService
     {
         private readonly IContentCatalogRepository _catalogRepo = catalogRepo;
         private readonly ICarProfileRepository _profileRepo = profileRepo;
         private readonly ICarPartsService? _partsService = partsService;
+        private readonly IDealerCatalog? _dealerCatalog = dealerCatalog;
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("Market");
         private readonly Random _random = new();
 
@@ -27,6 +29,10 @@ namespace Street_Rod_AC.Services.Market
         private const int MaxMileage = 60000;
         private const float PriceVariationPercent = 0.2f; // ±20%
         private const double ModificationsPriceShare = 0.5; // money put into an engine never comes back in full
+
+        /// <summary>How hard a dealer pulls condition toward its own standard. At 1 the shift is the full
+        /// distance between that standard and the middle of the range</summary>
+        private const float DealerConditionPull = 1.4f;
 
         public async Task<List<UsedCarListing>> SpawnListingsAsync(List<DealerLocation> dealers, DateTime currentDate)
         {
@@ -45,6 +51,9 @@ namespace Street_Rod_AC.Services.Market
 
             _logger.Information("Found {CarCount} active cars to spawn from", activeCars.Count);
 
+            // Where each car sits in the market's price range decides which lot it lands on
+            var priceLadder = GetPriceLadder(activeCars);
+
             // Spawn listings based on precedence
             foreach (var car in activeCars)
             {
@@ -60,7 +69,7 @@ namespace Street_Rod_AC.Services.Market
 
                 for (int i = 0; i < instanceCount; i++)
                 {
-                    var listing = CreateListing(car, profile, dealers, currentDate);
+                    var listing = CreateListing(car, profile, dealers, currentDate, priceLadder);
                     listings.Add(listing);
                 }
             }
@@ -169,9 +178,14 @@ namespace Street_Rod_AC.Services.Market
             }
         }
 
-        private UsedCarListing CreateListing(CarDefinition carDef, CarProfile profile, List<DealerLocation> dealers, DateTime currentDate)
+        private UsedCarListing CreateListing(CarDefinition carDef, CarProfile profile, List<DealerLocation> dealers, DateTime currentDate,
+            List<decimal> priceLadder)
         {
-            var condition = GenerateCondition();
+            // The lot comes first: a cheap lot's cars are rougher, and that is what the price is worked out from
+            var dealer = PickDealer(profile.BasePrice, dealers, priceLadder);
+            var definition = _dealerCatalog?.Get(dealer.Id);
+
+            var condition = GenerateCondition(definition);
             var mileage = GenerateMileage();
             var price = CalculatePrice(profile.BasePrice, condition);
 
@@ -181,8 +195,6 @@ namespace Street_Rod_AC.Services.Market
             {
                 skinId = carDef.AvailableSkins[_random.Next(carDef.AvailableSkins.Count)];
             }
-
-            var dealer = dealers[_random.Next(dealers.Count)];
 
             var listing = new UsedCarListing
             {
@@ -244,11 +256,82 @@ namespace Street_Rod_AC.Services.Market
             }
         }
 
-        private float GenerateCondition()
+        /// <summary>
+        /// Every base price in the market, sorted. A car is placed by how many cars it is dearer than rather
+        /// than by where it falls between the cheapest and the dearest: one half-million-dollar car in the
+        /// install would otherwise push everything else down into the bottom tenth of the range and leave the
+        /// smart showroom with an empty floor.
+        /// </summary>
+        private List<decimal> GetPriceLadder(List<CarDefinition> activeCars)
+        {
+            var prices = activeCars
+                .Select(car => _profileRepo.GetProfile(car.Id))
+                .Where(profile => profile != null && profile.BasePrice > 0)
+                .Select(profile => profile!.BasePrice)
+                .ToList();
+
+            prices.Sort();
+            return prices;
+        }
+
+        /// <summary>
+        /// Which lot a car ends up on. Dealers claim a slice of the price range, so the smart showroom gets the
+        /// expensive metal and the dirt lot gets the cheap. Where slices overlap, the roll decides.
+        ///
+        /// Without dealer definitions there is nothing to go on and it falls back to the old free-for-all.
+        /// </summary>
+        private DealerLocation PickDealer(decimal basePrice, List<DealerLocation> dealers, List<decimal> priceLadder)
+        {
+            if (dealers.Count == 0) throw new InvalidOperationException("No dealers to put a car with");
+
+            if (_dealerCatalog == null || _dealerCatalog.All.Count == 0 || priceLadder.Count == 0)
+            {
+                return dealers[_random.Next(dealers.Count)];
+            }
+
+            // Where this car sits in the market, 0 cheapest to 1 dearest: the share of cars it is dearer than
+            var below = priceLadder.Count(p => p < basePrice);
+            var rank = priceLadder.Count == 1 ? 0.5f : (float)below / (priceLadder.Count - 1);
+            rank = Math.Clamp(rank, 0f, 1f);
+
+            var fits = dealers
+                .Where(d => _dealerCatalog.Get(d.Id) is { } def && rank >= def.PriceBandLow && rank <= def.PriceBandHigh)
+                .ToList();
+
+            if (fits.Count > 0) return fits[_random.Next(fits.Count)];
+
+            // Outside everybody's band: give it to whoever reaches closest
+            var nearest = dealers
+                .Select(d => new { Dealer = d, Definition = _dealerCatalog.Get(d.Id) })
+                .Where(x => x.Definition != null)
+                .OrderBy(x => Math.Min(Math.Abs(rank - x.Definition!.PriceBandLow), Math.Abs(rank - x.Definition!.PriceBandHigh)))
+                .FirstOrDefault();
+
+            return nearest?.Dealer ?? dealers[_random.Next(dealers.Count)];
+        }
+
+        /// <summary>
+        /// How straight the car is. A dealer pulls the roll toward the sort of stock it keeps, but the roll
+        /// still has the bigger say, so a gem turns up on the dirt lot now and then and a dog turns up in the
+        /// smart showroom. That is what makes looking round worth the drive.
+        /// </summary>
+        private float GenerateCondition(DealerDefinition? dealer)
         {
             // Generate condition between min and max
             var range = MaxCondition - MinCondition;
-            return MinCondition + (float)(_random.NextDouble() * range);
+            var roll = MinCondition + (float)(_random.NextDouble() * range);
+
+            if (dealer == null) return roll;
+
+            // One car in twelve is not what the lot usually keeps: the trade-in nobody looked at properly,
+            // or the tired one that slipped into the smart showroom. This is what makes the drive worth it.
+            if (_random.Next(12) == 0) return roll;
+
+            // The roll leads; the dealer shifts it by how far its own standard sits from the middle of the
+            // range. A weighted average instead would squeeze every lot into the same narrow band.
+            var middle = (MinCondition + MaxCondition) / 2f;
+            var shifted = roll + (dealer.ConditionCenter - middle) * DealerConditionPull;
+            return Math.Clamp(shifted, 0.15f, 1f);
         }
 
         private int GenerateMileage()

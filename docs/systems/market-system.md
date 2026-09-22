@@ -46,10 +46,22 @@ Based on `DealerPrecedence`:
 - Round to nearest $100
 
 ## Dealer Locations
-Five default dealers with regions:
+Five dealers, defined in `Assets/Dealers/dealers.json` and read by `DealerCatalog`:
 - Downtown Motors, Eastside Garage, Suburban Autos, Riverside Cars, Industrial Motors
 
+The save holds only `DealerLocation` (Id, Name, Region). Map position, showroom, parking bays and stock
+character live in the JSON and are merged over the save on load, so new fields reach old saves. See
+`docs/screens/dealer-lot.md`.
+
+## Which Dealer Gets a Car
+Not random. Each dealer claims a slice of the market's price range (`priceBandLow`/`priceBandHigh`); a car
+goes to one of the dealers whose slice covers where its base price sits, or to the nearest slice if none
+does. `conditionCenter` then pulls the condition roll toward that dealer's standard (two parts dealer, one
+part roll), so a cheap lot has rough cars without making a good find impossible.
+
 ## Purchase Flow
+`CarPurchaseService` owns this, shared by the listings screen and the dealer lot.
+
 1. Validate funds and availability
 2. Create `CarInstance` from listing
 3. Add to `GameState.Player.Cars`
@@ -66,6 +78,9 @@ Five default dealers with regions:
 
 ## Files
 - `Services/Market/UsedCarMarketService.cs`
+- `Services/Market/CarPurchaseService.cs`
+- `Services/Dealers/DealerCatalog.cs`
+- `Assets/Dealers/dealers.json`
 - `Services/Market/IUsedCarMarketService.cs`
 - `Models/GameState/UsedCarListing.cs`
 - `Models/GameState/DealerLocation.cs`

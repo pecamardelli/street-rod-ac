@@ -38,6 +38,8 @@ namespace Street_Rod_AC
         public ICarProfileRepository ProfileRepository { get; private set; }
         public ICarProfileService ProfileService { get; private set; }
         public IUsedCarMarketService MarketService { get; private set; }
+        public Services.Dealers.IDealerCatalog DealerCatalog { get; private set; }
+        public ICarPurchaseService PurchaseService { get; private set; }
         public Services.Parts.ICarPartsService CarPartsService { get; private set; }
         public Services.Parts.IPartsShopService PartsShopService { get; private set; }
         public IIniModificationService IniModificationService { get; private set; }
@@ -125,7 +127,8 @@ namespace Street_Rod_AC
             ProfileService = new CarProfileService(CatalogRepository, ProfileRepository);
             CarPartsService = new Services.Parts.CarPartsService(CatalogRepository, ProfileRepository);
             PartsShopService = new Services.Parts.PartsShopService(CarPartsService);
-            MarketService = new UsedCarMarketService(CatalogRepository, ProfileRepository, CarPartsService);
+            DealerCatalog = new Services.Dealers.DealerCatalog();
+            MarketService = new UsedCarMarketService(CatalogRepository, ProfileRepository, CarPartsService, DealerCatalog);
 
             // Scheduler and Time Service
             Scheduler = new GameTimeScheduler();
@@ -140,6 +143,7 @@ namespace Street_Rod_AC
 
             // Game state repository (depends on opponent initialization service)
             GameStateRepository = new GameStateRepository(OpponentInitializationService);
+            PurchaseService = new CarPurchaseService(GameStateRepository);
 
             // Career services
             CarFilterService = new CarFilterService();
@@ -196,7 +200,9 @@ namespace Street_Rod_AC
                 MarketService,
                 GameSettingsService,
                 ProfileService,
-                TalkService);
+                TalkService,
+                DealerCatalog,
+                PurchaseService);
         }
 
         protected override async void OnStartup(StartupEventArgs e)

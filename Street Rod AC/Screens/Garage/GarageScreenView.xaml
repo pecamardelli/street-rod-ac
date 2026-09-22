@@ -487,6 +487,22 @@
                 VerticalAlignment="Center"
                 Margin="30,0,0,0"/>
 
+        <!-- Car dealers (left, above the newspaper) -->
+        <Button x:Name="CarDealersButton"
+                Grid.Row="0"
+                Style="{StaticResource OverlayTileButtonStyle}"
+                Command="{Binding CarDealersCommand}"
+                Tag="Car dealers"
+                helpers:Reveal.IsShown="{Binding ShowNavigation}"
+                helpers:Reveal.OffsetX="-60"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Margin="30,0,0,134">
+            <Button.Background>
+                <ImageBrush ImageSource="/Assets/Images/Buttons/used_cars.png" Stretch="Uniform"/>
+            </Button.Background>
+        </Button>
+
         <!-- Newspaper (bottom left) -->
         <Button x:Name="NewspaperButton"
                 Grid.Row="0"

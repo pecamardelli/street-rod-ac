@@ -1,0 +1,121 @@
+{
+  "_comment": [
+    "Static dealer data. The save keeps a dealer's Id and nothing else, so this file is the truth and is",
+    "merged over the saved dealers on load. Adding a field here reaches every existing save.",
+    "",
+    "mapX/mapY are fractions of the WHOLE los_angeles_map.jpg, measured from its top left. The screen shows",
+    "a crop of that image; the crop rectangle lives in DealerMapScreenViewModel, so moving the crop does not",
+    "mean moving every pin.",
+    "",
+    "bays are where the cars stand, in metres from the middle of the lot. heading is the yaw put on the car",
+    "model in degrees. If every car on every lot faces the same wrong way, it is the model's own forward",
+    "axis, not this data: fix it with ModelHeadingOffset in DealerLotViewport3D."
+  ],
+  "dealers": [
+    {
+      "id": "downtown_motors",
+      "name": "Downtown Motors",
+      "region": "Downtown",
+      "blurb": "Clean cars under a clean roof. You pay for the polish.",
+      "mapX": 0.72,
+      "mapY": 0.47,
+      "showroomId": "showroom",
+      "priceBandLow": 0.55,
+      "priceBandHigh": 1.0,
+      "conditionCenter": 0.82,
+      "travelHours": 1.0,
+      "bays": [
+        { "x": -6.5, "z": -4.5, "heading": 200 },
+        { "x": 0.0, "z": -4.5, "heading": 200 },
+        { "x": 6.5, "z": -4.5, "heading": 200 },
+        { "x": -6.5, "z": 4.5, "heading": 20 },
+        { "x": 0.0, "z": 4.5, "heading": 20 },
+        { "x": 6.5, "z": 4.5, "heading": 20 }
+      ]
+    },
+    {
+      "id": "eastside_garage",
+      "name": "Eastside Garage",
+      "region": "Eastside",
+      "blurb": "Whatever rolled in this week, parked on the dirt where it stopped.",
+      "mapX": 0.82,
+      "mapY": 0.52,
+      "showroomId": "Hangar",
+      "priceBandLow": 0.0,
+      "priceBandHigh": 0.35,
+      "conditionCenter": 0.42,
+      "travelHours": 1.5,
+      "bays": [
+        { "x": -7.2, "z": -3.0, "heading": 165 },
+        { "x": -1.0, "z": -5.2, "heading": 185 },
+        { "x": 5.8, "z": -3.6, "heading": 155 },
+        { "x": -6.0, "z": 4.8, "heading": 12 },
+        { "x": 0.8, "z": 5.6, "heading": 340 },
+        { "x": 7.0, "z": 4.2, "heading": 25 }
+      ]
+    },
+    {
+      "id": "suburban_autos",
+      "name": "Suburban Autos",
+      "region": "Suburbs",
+      "blurb": "Family trade-ins on the front line, pennants over the lot.",
+      "mapX": 0.42,
+      "mapY": 0.24,
+      "showroomId": "industrial",
+      "priceBandLow": 0.25,
+      "priceBandHigh": 0.7,
+      "conditionCenter": 0.68,
+      "travelHours": 2.0,
+      "bays": [
+        { "x": -6.8, "z": -4.0, "heading": 210 },
+        { "x": -0.2, "z": -4.4, "heading": 205 },
+        { "x": 6.4, "z": -4.0, "heading": 200 },
+        { "x": -6.8, "z": 4.6, "heading": 25 },
+        { "x": -0.2, "z": 5.0, "heading": 20 },
+        { "x": 6.4, "z": 4.6, "heading": 15 }
+      ]
+    },
+    {
+      "id": "riverside_cars",
+      "name": "Riverside Cars",
+      "region": "Riverside",
+      "blurb": "Down by the river, where the asphalt runs out.",
+      "mapX": 0.70,
+      "mapY": 0.36,
+      "showroomId": "industrial",
+      "priceBandLow": 0.1,
+      "priceBandHigh": 0.5,
+      "conditionCenter": 0.55,
+      "travelHours": 1.5,
+      "bays": [
+        { "x": -7.0, "z": -3.4, "heading": 195 },
+        { "x": -0.6, "z": -4.8, "heading": 215 },
+        { "x": 6.0, "z": -3.2, "heading": 190 },
+        { "x": -6.2, "z": 5.0, "heading": 18 },
+        { "x": 0.4, "z": 4.4, "heading": 30 },
+        { "x": 6.8, "z": 5.2, "heading": 8 }
+      ]
+    },
+    {
+      "id": "industrial_motors",
+      "name": "Industrial Motors",
+      "region": "Industrial District",
+      "blurb": "Work cars and hard miles, cheap if you know what you are looking at.",
+      "mapX": 0.74,
+      "mapY": 0.60,
+      "showroomId": "Hangar",
+      "priceBandLow": 0.0,
+      "priceBandHigh": 0.45,
+      "conditionCenter": 0.48,
+      "travelHours": 1.0,
+      "bays": [
+        { "x": -6.6, "z": -4.2, "heading": 175 },
+        { "x": 0.2, "z": -3.4, "heading": 195 },
+        { "x": 6.6, "z": -4.6, "heading": 165 },
+        { "x": -5.8, "z": 4.4, "heading": 5 },
+        { "x": 1.0, "z": 5.2, "heading": 350 },
+        { "x": 7.2, "z": 4.0, "heading": 20 }
+      ]
+    }
+  ]
+}

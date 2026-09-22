@@ -1,8 +1,6 @@
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using AcTools.Render.Kn5Specific.Objects;
@@ -11,8 +9,6 @@ using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Logic;
-using D3D9 = Vortice.Direct3D9;
-using D3D11 = SlimDX.Direct3D11;
 
 namespace Street_Rod_AC.Controls;
 
@@ -46,14 +42,9 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("Viewport3D");
     private readonly System.Windows.Controls.Image _image;
-    private readonly D3DImage _d3dImage = new();
+    private readonly SharedTextureBridge _bridge = new();
 
     private GarageRenderer? _renderer;
-    private D3D9.IDirect3D9Ex? _d3d9;
-    private D3D9.IDirect3DDevice9Ex? _d3d9Device;
-    private D3D9.IDirect3DTexture9? _sharedTexture;
-    private D3D9.IDirect3DSurface9? _sharedSurface;
-    private IntPtr _boundTarget;
 
     private string? _loadedCarDirectory;
     private bool _isLoading;
@@ -93,7 +84,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
         _image = new System.Windows.Controls.Image
         {
-            Source = _d3dImage,
+            Source = _bridge.Image,
             Stretch = Stretch.Fill,
             Opacity = 0
         };
@@ -125,7 +116,10 @@ public class CarViewport3D : System.Windows.Controls.Grid
         Unloaded += (_, _) => DisposeRenderer();
         IsVisibleChanged += (_, _) => RequestLoad();
         SizeChanged += (_, _) => UpdateRendererSize();
-        _d3dImage.IsFrontBufferAvailableChanged += OnFrontBufferAvailableChanged;
+        _bridge.FrontBufferRestored += (_, _) =>
+        {
+            if (_renderer != null) _renderer.IsDirty = true;
+        };
     }
 
     /// <summary>Raised once when the first 3D frame is on screen</summary>
@@ -409,7 +403,6 @@ public class CarViewport3D : System.Windows.Controls.Grid
             try
             {
                 await Task.Run(() => renderer.Initialize());
-                EnsureD3D9Device();
             }
             catch
             {
@@ -417,12 +410,15 @@ public class CarViewport3D : System.Windows.Controls.Grid
                 throw;
             }
 
-            // The control may have been unloaded while the car was loading
+            // The control may have been unloaded while the car was loading. Check before raising a device,
+            // or one is left behind on a control that will never draw again.
             if (!IsLoaded)
             {
                 renderer.Dispose();
                 return;
             }
+
+            _bridge.EnsureDevice();
 
             _renderer = renderer;
             ResetCamera();
@@ -917,7 +913,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
         _lastRenderingTime = args.RenderingTime;
 
         var renderer = _renderer;
-        if (renderer == null || !IsVisible || !_d3dImage.IsFrontBufferAvailable) return;
+        if (renderer == null || !IsVisible || !_bridge.IsFrontBufferAvailable) return;
 
         var now = DateTime.Now;
         if (renderer.IsDirty && _animateUntil < now + SettleWindow)
@@ -926,22 +922,12 @@ public class CarViewport3D : System.Windows.Controls.Grid
         }
 
         var animating = renderer.AutoRotate || now < _animateUntil;
-        if (!animating && _boundTarget != IntPtr.Zero) return;
+        if (!animating && _bridge.BoundTarget != IntPtr.Zero) return;
 
         try
         {
             renderer.Draw();
-
-            // The render target is recreated on resize, so rebind whenever the pointer changes
-            var target = renderer.GetRenderTarget();
-            if (target != _boundTarget)
-            {
-                BindRenderTarget(target);
-            }
-
-            _d3dImage.Lock();
-            _d3dImage.AddDirtyRect(new Int32Rect(0, 0, _d3dImage.PixelWidth, _d3dImage.PixelHeight));
-            _d3dImage.Unlock();
+            _bridge.Present(renderer.GetRenderTarget());
 
             if (!IsReady)
             {
@@ -961,83 +947,6 @@ public class CarViewport3D : System.Windows.Controls.Grid
         {
             _logger.Error(ex, "3D viewport render loop failed");
             Fail();
-        }
-    }
-
-    private void EnsureD3D9Device()
-    {
-        if (_d3d9Device != null) return;
-
-        _d3d9 = D3D9.D3D9.Direct3DCreate9Ex();
-        var parameters = new D3D9.PresentParameters
-        {
-            Windowed = true,
-            SwapEffect = D3D9.SwapEffect.Discard,
-            DeviceWindowHandle = GetDesktopWindow(),
-            PresentationInterval = D3D9.PresentInterval.Immediate,
-            BackBufferWidth = 1,
-            BackBufferHeight = 1
-        };
-
-        _d3d9Device = _d3d9.CreateDeviceEx(0, D3D9.DeviceType.Hardware, IntPtr.Zero,
-            D3D9.CreateFlags.HardwareVertexProcessing | D3D9.CreateFlags.Multithreaded | D3D9.CreateFlags.FpuPreserve,
-            parameters);
-    }
-
-    /// <summary>
-    /// Opens the renderer's shared DX11 texture on the D3D9Ex device and hands its surface to the D3DImage
-    /// </summary>
-    private void BindRenderTarget(IntPtr target)
-    {
-        ReleaseSharedSurface();
-
-        // Owned by the renderer - do not dispose
-        var texture = D3D11.Texture2D.FromPointer(target);
-        var description = texture.Description;
-
-        IntPtr sharedHandle;
-        using (var resource = new SlimDX.DXGI.Resource(texture))
-        {
-            sharedHandle = resource.SharedHandle;
-        }
-
-        if (sharedHandle == IntPtr.Zero)
-            throw new InvalidOperationException("Render target is not a shared resource");
-
-        _sharedTexture = _d3d9Device!.CreateTexture((uint)description.Width, (uint)description.Height, 1,
-            D3D9.Usage.RenderTarget, D3D9.Format.A8R8G8B8, D3D9.Pool.Default, ref sharedHandle);
-        _sharedSurface = _sharedTexture.GetSurfaceLevel(0);
-
-        _d3dImage.Lock();
-        _d3dImage.SetBackBuffer(D3DResourceType.IDirect3DSurface9, _sharedSurface.NativePointer);
-        _d3dImage.Unlock();
-
-        _boundTarget = target;
-    }
-
-    private void ReleaseSharedSurface()
-    {
-        if (_boundTarget != IntPtr.Zero)
-        {
-            _d3dImage.Lock();
-            _d3dImage.SetBackBuffer(D3DResourceType.IDirect3DSurface9, IntPtr.Zero);
-            _d3dImage.Unlock();
-        }
-
-        _sharedSurface?.Dispose();
-        _sharedSurface = null;
-        _sharedTexture?.Dispose();
-        _sharedTexture = null;
-        _boundTarget = IntPtr.Zero;
-    }
-
-    private void OnFrontBufferAvailableChanged(object sender, DependencyPropertyChangedEventArgs e)
-    {
-        // Front buffer is lost on lock screen / remote desktop; force a rebind and redraw when it returns
-        if (_d3dImage.IsFrontBufferAvailable && _renderer != null)
-        {
-            _boundTarget = IntPtr.Zero;
-            _renderer.IsDirty = true;
         }
     }
 
@@ -1063,16 +972,14 @@ public class CarViewport3D : System.Windows.Controls.Grid
     {
         CompositionTarget.Rendering -= OnRendering;
 
-        ReleaseSharedSurface();
+        // The target belongs to the renderer: let go of it before the renderer goes
+        _bridge.ReleaseSurface();
 
         _renderer?.Dispose();
         _renderer = null;
         _loadedCarDirectory = null;
 
-        _d3d9Device?.Dispose();
-        _d3d9Device = null;
-        _d3d9?.Dispose();
-        _d3d9 = null;
+        _bridge.Dispose();
 
         IsReady = false;
         HasCar = false;
@@ -1088,9 +995,6 @@ public class CarViewport3D : System.Windows.Controls.Grid
         HasFailed = true;
         Failed?.Invoke(this, EventArgs.Empty);
     }
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetDesktopWindow();
 
     #endregion
 

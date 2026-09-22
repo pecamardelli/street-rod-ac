@@ -37,6 +37,7 @@
 
   <ItemGroup>
     <Resource Include="Assets\Images\Backgrounds\*.png" />
+    <Resource Include="Assets\Images\Backgrounds\*.jpg" />
     <Resource Include="Assets\Images\Buttons\*.png" />
     <Resource Include="Assets\Images\Icons\*.png" />
     <Resource Include="Assets\Images\UI\*.png" />
@@ -51,6 +52,9 @@
 
   <ItemGroup>
     <None Update="..\..\actools\Libraries\SlimDX-x64\SlimDX.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Dealers\dealers.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Opponents\opponent_definitions.json">
