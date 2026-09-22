@@ -33,13 +33,15 @@ private.
 
 ## Converter (`tools/SlrrPartsConverter`)
 
-`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...]`
+`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>,...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...]`
 
 The content in use is made with `tools/convert-parts.ps1` (both Chrysler packs are installed in the SLRR folder, see
 "Replacing a pack"). It comes out as:
 
 ```
 engines/chrysler, gm, ford, ford_six   the engine packs (GM has Pontiac and Cadillac too; ford_six is the Falcon's engine)
+engines/generic                        universal-fit induction parts out of the engine packs: aftermarket carburettors,
+                                       air cleaners, scoops, roots blowers (see "Parts that fit any engine")
 engines/stock                          the base game's engine bits: batteries, N2O, and the engine-part roots
 rims/mopar, falcon, hudson, opala, goodyear_eagle, stock
 tyres/mopar, camaro69, goodyear_eagle, stock
@@ -54,10 +56,13 @@ part of every part id, so `engines/chrysler/_Engine_block_340` where the rpk is 
 out go there: those descending from a script class of that name, filed under a category of that name, or named so
 themselves (`*` for anything). Selector rules apply in the order given, first match wins, the rest of the rpk goes
 where its plain rename says. One rpk may so become several packs (rims and tyres out of `wheels.rpk`, six packs out of
-the base game's `parts.rpk`); a replaced or replacing pack takes the whole rpk with it. Every other option names packs
-by their new names. The old ids go into `part_aliases.json` like those of a replaced pack, so saves made before keep
-working (see "Replacing a pack"). A full run removes converted packs it no longer produces (renamed, replaced or
-dropped whole); the catalog would otherwise load both.
+the base game's `parts.rpk`), and several rpks may feed one pack (`engines/generic` takes parts of three engine
+packs; part names must not clash); a replaced or replacing pack takes the whole rpk with it. Every other option names
+packs by their new names. The old ids go into `part_aliases.json` like those of a replaced pack, so saves made before
+keep working (see "Replacing a pack"): a part picked out by a selector is aliased both from the rpk's name and from
+the pack the rest of the rpk goes to (`engines/chrysler/Air_cleaner_HOLLEY` → `engines/generic/Air_cleaner_HOLLEY`).
+A full run removes converted packs it no longer produces (renamed, replaced or dropped whole); the catalog would
+otherwise load both.
 
 `stock` (the base game's `parts.rpk`) holds 96 scriptless entries without a model: the roots that every mod declares
 its fit against (`stock/Wheel` is what every rim and tyre mounts by, `stock/ExhaustTip` every muffler, `stock/Brake`,
@@ -72,9 +77,61 @@ Einvagen/Duhen/Ishima fours, the OHC V6 pack, the Buick LC2 turbo V6, SLRR's own
 Dodge and Chevrolet engines (one generic block mesh with numbers on it; the Chrysler and GM packs do them properly) and
 its fictional drag block, two 2000s crate blocks (BluePrint 360, GM Performance Parts 427), SL Tuners' `wheels.rpk`
 (142 of its 151 rims are 17"-21"), and everything that is body or interior: `interior` (seats, steering wheels),
-`wings`, and the base game's neons, plates, woofers and body-part roots (routed to `body/stock`, then dropped). The
-Ford six (`ford_six`) is a reskin of the Baiern OHC six but stands on its own: its parts attach to each other, not to
-Baiern parts.
+`wings`, and the base game's neons, plates, woofers and body-part roots (routed to `body/stock`, then dropped), and
+Dexter's 2-bar "Super Blower". The Ford six (`ford_six`) is a reskin of the Baiern OHC six but stands on its own: its
+parts attach to each other, not to Baiern parts.
+
+`--merge` leaves parts out too, but names the part that stands in for each: builds, saves (through
+`part_aliases.json`), stock-part lists and the attach lines of other parts that named a merged part get the stand-in,
+and the stand-in inherits the merged part's fit (its attach and compatible lines are grafted onto the stand-in's slot
+of the same id; a part that mounts by a single slot mounts by it whatever the number, Ford's air cleaners hang by 12
+where Chrysler's hang by 11). Used for the same part twice with the same script values (the Chrysler pack's plain
+Holley 4-bbl next to its "street" one, Dexter's two Edelbrock-lookalike air filters) and for **transmissions from
+after the 1960s**, which builds and saves swap for the period box of the same engine: TKO 500/600 → A833; Tremec T-56
+and TKO, Richmond 5- and 6-speeds → Richmond Super T-10; TH-700-R4 → TH-400; TH-200-4R → TH-180C; 4L30-E → TH-125C;
+the Ford six's two Baiern 6-speeds → its Tourist 5-speed; Dexter's "6-speed AWD" → his "VR4E lock-up" 3-speed. The
+last two are placeholders: the Ford packs hold no period transmission at all (a Toploader or C6 would need another
+source), and the Cadillac 500's TH-125C is a 1980s box kept because it is the 500's only one. The converter prints a
+merge whose stand-in lacks a slot the merged part fitted by.
+
+Carburettors of different packs are **not** merged even when they are the same product: the carburettor script sets
+the engine's mixture (the Chrysler pack runs 8:1 on gasoline, GM's Dominators 9-14:1 on fuel type 3, Dexter's Fords
+12.5-13.5:1) and its fuel cap, and every pack's engines were rated with their own. A trial that merged them re-tuned
+whole engines (the GM 427 fell from 659 to 419 hp). Nor are the two GM Weiand 8-71s merged: same mesh, different
+boost.
+
+### Parts that fit any engine (`--fit`, `--model`, `engines/generic`)
+
+An aftermarket carburettor bolts to a flange pattern, not a brand; an air cleaner sits on the carburettor's air horn;
+a roots blower on a blower manifold. SLRR packs know nothing of each other, so their attach lines lock every such
+part to its own pack (three Holley four-barrels, each fitting one make). `--fit` gives a slot a **standard fitting**
+(`fits` in pack.json): `carb:2bbl`, `carb:4bbl`, `carb:2x4`, `carb:3x2` on carburettor bases, `air:single` and
+`air:inline` (a 2x4 or 3x2 set) on air cleaners and scoops, `blower:roots` on blowers. The slots that **take** a
+fitting (`takes`) are found from the attach lines: every slot a fitted slot attaches to, written on either side, so a
+pack's own carburettors tell which of its manifold pads are 4-bbl pads. The game (`PartsCatalog.CanMate`,
+`FindMountable`) mates two slots by a shared fitting as well as by name, through stand-ins on either side (a blower's
+carburettor pad that stands in for a dual-quad manifold pad takes what that pad takes). Slot numbering is the engine
+framework's (manifold pad 7, carburettor base 10, its air horn 11, blower pad 9, drive belt 15) and slot positions
+mark the physical interface, so parts of different packs sit right on each other; checked with harness close-ups of
+a Chrysler Holley and Edelbrock cleaner on a GM 327, a Summit scoop on a 340, the Chrysler Weiand on a GM 8-71
+manifold and the GM one on a 440, Demon dual quads on Dexter's Ford 302.
+
+Factory carburettors and air cleaners (Carter AVS, GM's stock 2/4-bbl and Quadrajet-style cleaners, the Mopar pie
+tins, Six Pack cleaners, the Shaker, the GTO Tri-Power and Corvette air boxes) keep their attach lines and stay with
+their brand: a used car tuned by `EngineFactory` gets aftermarket parts of any make, never another make's factory
+part. Kits stay too: the Paxton and Edelbrock E-Force superchargers, the Hemi crossram carburettors. Blowers bring
+their own pack's drive belt (belts are positioned in the blower's frame, and reach the crank pulley of any V8 near
+enough).
+
+The universal-fit parts are routed into `engines/generic` (the shop and the catalog never read pack ids, only the
+folder and the ids change). The GM and Ford packs' Holleys are crude blocks next to the Chrysler pack's; `--model`
+draws a part with **another part's model**, its own script untouched: the model is converted again under the
+borrower's name (into the borrower's pack folder) and the borrower's slots take the donor's positions, since slot
+positions are in the model's space (GM's air-horn slot sits 4 cm higher than the Chrysler model's horn). Eight carbs
+borrow: GM's Holley 2-bbl, 1050 Dominator, "hardcore" 1050, dual quads and tri-power, Dexter's Holley 650 and both
+dual-quad sets. Checked: `EngineBench rated` unchanged to the horsepower, `renew` brings all 114 engines of the
+previous content up to date (transmission swaps move a horsepower or two through inertia), `bench` round trips on 12
+builds, harness close-ups of the borrowed models with their air cleaners.
 
 Per part, from its compiled script (run with no game around, see `SlrrScriptEvaluator`):
 

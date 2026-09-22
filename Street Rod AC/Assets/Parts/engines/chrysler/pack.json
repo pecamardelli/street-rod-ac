@@ -26916,22 +26916,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_2BRL_HOLLEY",
+              "part": "engines/generic/Carburetors_2BRL_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00A3"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             }
@@ -27037,22 +27037,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -27163,22 +27163,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -27289,27 +27289,27 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_2BRL_HOLLEY",
+              "part": "engines/generic/Carburetors_2BRL_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00A3"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -27420,22 +27420,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_2BRL_HOLLEY",
+              "part": "engines/generic/Carburetors_2BRL_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00A3"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -27546,22 +27546,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -27677,22 +27677,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -27808,22 +27808,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -27939,22 +27939,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -28070,22 +28070,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -28645,22 +28645,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -28776,22 +28776,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -28822,762 +28822,6 @@
       },
       "source_type_id": 3249,
       "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_cleaner_Mopar_MAGNUM.class"
-    },
-    {
-      "id": "engines/chrysler/Air_cleaner_HOLLEY",
-      "name": "Air_cleaner_HOLLEY",
-      "display_name": "HOLLEY 4BRL Air Cleaner",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "HOLLEY 4BRL Air Cleaner",
-        "description": "",
-        "value": 95.90747,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 65.950005,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.5,
-        "dusted_efficiency": 0.25,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Air_cleaner_HOLLEY.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.006,
-            0.02,
-            -0.048
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
-            },
-            {
-              "part": "engines/chrysler/Fireful0_engine_works_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE404"
-            },
-            {
-              "part": "engines/chrysler/carter_4barrel_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xC131"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 3250,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_cleaner_HOLLEY.class"
-    },
-    {
-      "id": "engines/chrysler/Air_cleaner_Edelbrock",
-      "name": "Air_cleaner_Edelbrock",
-      "display_name": "Edelbrock 4BRL Air Cleaner",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Edelbrock 4BRL Air Cleaner",
-        "description": "",
-        "value": 184.519573,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 95.950005,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.5,
-        "dusted_efficiency": 0.25,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Air_cleaner_Edelbrock.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.046,
-            0.006,
-            -0.04
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
-            },
-            {
-              "part": "engines/chrysler/Fireful0_engine_works_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE404"
-            },
-            {
-              "part": "engines/chrysler/carter_4barrel_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xC131"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 3251,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_cleaner_Edelbrock.class"
-    },
-    {
-      "id": "engines/chrysler/Air_cleaner_Edelbrock_Signature_Series",
-      "name": "Air_cleaner_Edelbrock_Signature_Series",
-      "display_name": "Edelbrock Signature Series 4BRL Air Cleaner",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Edelbrock Signature Series 4BRL Air Cleaner",
-        "description": "",
-        "value": 103.024907,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 75.15,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.5,
-        "dusted_efficiency": 0.25,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Air_cleaner_Edelbrock_Signature_Series.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.046,
-            0.009,
-            -0.04
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
-            },
-            {
-              "part": "engines/chrysler/Fireful0_engine_works_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE404"
-            },
-            {
-              "part": "engines/chrysler/carter_4barrel_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xC131"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 3252,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_cleaner_Edelbrock_Signature_Series.class"
-    },
-    {
-      "id": "engines/chrysler/Air_cleaner_Edelbrock_racing",
-      "name": "Air_cleaner_Edelbrock_racing",
-      "display_name": "Edelbrock Racing 4BRL Air Cleaner",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Edelbrock Racing 4BRL Air Cleaner",
-        "description": "",
-        "value": 109.608541,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 75.65,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.6,
-        "dusted_efficiency": 0.25,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Air_cleaner_Edelbrock_racing.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.046,
-            0.009,
-            -0.048
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
-            },
-            {
-              "part": "engines/chrysler/Fireful0_engine_works_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE404"
-            },
-            {
-              "part": "engines/chrysler/carter_4barrel_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xC131"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 3253,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_cleaner_Edelbrock_racing.class"
-    },
-    {
-      "id": "engines/chrysler/Air_cleaner_KN_2x4BRL",
-      "name": "Air_cleaner_KN_2x4BRL",
-      "display_name": "KN 2x4BRL Air Cleaner",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "KN 2x4BRL Air Cleaner",
-        "description": "",
-        "value": 211.743772,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 120.5,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.6,
-        "dusted_efficiency": 0.25,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Air_cleaner_KN_2x4BRL.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.052,
-            0.015,
-            -0.045
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x090B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x091B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_King_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x092B"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 3254,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_cleaner_KN_2x4BRL.class"
-    },
-    {
-      "id": "engines/chrysler/Air_cleaner_Edelbrock_Oval_2x4BRL",
-      "name": "Air_cleaner_Edelbrock_Oval_2x4BRL",
-      "display_name": "Edelbrock Oval 2x4BRL Air Cleaner",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Edelbrock Oval 2x4BRL Air Cleaner",
-        "description": "",
-        "value": 344.839858,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 125.8,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.6,
-        "dusted_efficiency": 0.25,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Air_cleaner_Edelbrock_Oval_2x4BRL.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.05,
-            -0.004,
-            -0.082
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x090B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x091B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_King_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x092B"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 3255,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_cleaner_Edelbrock_Oval_2x4BRL.class"
     },
     {
       "id": "engines/chrysler/Air_cleaner_Six_pack_340",
@@ -29663,12 +28907,12 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+              "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
             },
             {
-              "part": "engines/chrysler/Carburetors_3x2BRL_Road_Demon_six_pack",
+              "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
             }
@@ -29774,12 +29018,12 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+              "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
             },
             {
-              "part": "engines/chrysler/Carburetors_3x2BRL_Road_Demon_six_pack",
+              "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
             }
@@ -29885,12 +29129,12 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+              "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
             },
             {
-              "part": "engines/chrysler/Carburetors_3x2BRL_Road_Demon_six_pack",
+              "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
             }
@@ -29996,12 +29240,12 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+              "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
             },
             {
-              "part": "engines/chrysler/Carburetors_3x2BRL_Road_Demon_six_pack",
+              "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
             }
@@ -30107,12 +29351,12 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+              "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
             },
             {
-              "part": "engines/chrysler/Carburetors_3x2BRL_Road_Demon_six_pack",
+              "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
             }
@@ -30218,12 +29462,12 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+              "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
             },
             {
-              "part": "engines/chrysler/Carburetors_3x2BRL_Road_Demon_six_pack",
+              "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
             }
@@ -30244,727 +29488,6 @@
       },
       "source_type_id": 3270,
       "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_cleaner_Shaker.class"
-    },
-    {
-      "id": "engines/chrysler/Air_cleaner_Six_pack_HOLLEY",
-      "name": "Air_cleaner_Six_pack_HOLLEY",
-      "display_name": "Holley 3x2BRL Air Cleaner",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley 3x2BRL Air Cleaner",
-        "description": "",
-        "value": 450.88968,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 155.5,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.4,
-        "dusted_efficiency": 0.25,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Air_cleaner_Six_pack_HOLLEY.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            0.0,
-            -0.113,
-            -0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_3x2BRL_Road_Demon_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 3271,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_cleaner_Six_pack_HOLLEY.class"
-    },
-    {
-      "id": "engines/chrysler/Air_scoop_HOLLEY",
-      "name": "Air_scoop_HOLLEY",
-      "display_name": "Holley 4BRL Air Scoop",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley 4BRL Air Scoop",
-        "description": "",
-        "value": 427.046263,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 140.4,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 1.0,
-        "dusted_efficiency": 1.5,
-        "max_wear": 500000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Air_scoop_HOLLEY.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.051,
-            0.013,
-            0.002
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
-            },
-            {
-              "part": "engines/chrysler/Fireful0_engine_works_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE404"
-            },
-            {
-              "part": "engines/chrysler/carter_4barrel_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xC131"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 508,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_scoop_HOLLEY.class"
-    },
-    {
-      "id": "engines/chrysler/Air_scoop_Edelbrock",
-      "name": "Air_scoop_Edelbrock",
-      "display_name": "Edelbrock 4BRL Air Scoop",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Edelbrock 4BRL Air Scoop",
-        "description": "",
-        "value": 488.256228,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 150.5,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 1.0,
-        "dusted_efficiency": 1.5,
-        "max_wear": 500000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Air_scoop_Edelbrock.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.044,
-            -0.025,
-            -0.015
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
-            },
-            {
-              "part": "engines/chrysler/Fireful0_engine_works_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE404"
-            },
-            {
-              "part": "engines/chrysler/carter_4barrel_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xC131"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 764,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_scoop_Edelbrock.class"
-    },
-    {
-      "id": "engines/chrysler/Air_scoop_Edelbrock_2x4BRL",
-      "name": "Air_scoop_Edelbrock_2x4BRL",
-      "display_name": "Edelbrock 2x4BRL Air Scoop",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Edelbrock 2x4BRL Air Scoop",
-        "description": "",
-        "value": 713.879004,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 185.85,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 1.5,
-        "dusted_efficiency": 1.9,
-        "max_wear": 500000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Air_scoop_Edelbrock_2x4BRL.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.044,
-            -0.025,
-            0.01
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x090B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x091B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_King_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x092B"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 1020,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_scoop_Edelbrock_2x4BRL.class"
-    },
-    {
-      "id": "engines/chrysler/Air_scoop_HOLLEY_2x4BR",
-      "name": "Air_scoop_HOLLEY_2x4BR",
-      "display_name": "Holley 2x4BRL Air Scoop",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley 2x4BRL Air Scoop",
-        "description": "",
-        "value": 856.939502,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 185.85,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 1.5,
-        "dusted_efficiency": 1.9,
-        "max_wear": 500000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Air_scoop_HOLLEY_2x4BR.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.05,
-            -0.065,
-            -0.05
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x090B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x091B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_King_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x092B"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 1276,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_scoop_HOLLEY_2x4BR.class"
-    },
-    {
-      "id": "engines/chrysler/Air_scoop_HOLLEY_2x4BR_F",
-      "name": "Air_scoop_HOLLEY_2x4BR_F",
-      "display_name": "Holley 2x4BRL Air Scoop (Cleaner)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley 2x4BRL Air Scoop (Cleaner)",
-        "description": "",
-        "value": 1102.491103,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 195.95,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 1.5,
-        "dusted_efficiency": 1.9,
-        "max_wear": 500000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Air_scoop_HOLLEY_2x4BR_F.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.05,
-            -0.065,
-            -0.05
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x090B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x091B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_King_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x092B"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 1532,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Air_scoop_HOLLEY_2x4BR_F.class"
     },
     {
       "id": "engines/chrysler/Supercharger_Edelbrock",
@@ -31090,7 +29613,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
         },
         {
           "id": 15,
@@ -31254,6 +29780,9 @@
               "slot": 7,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x78BE"
             }
+          ],
+          "takes": [
+            "carb:2x4"
           ]
         },
         {
@@ -31287,1344 +29816,6 @@
       },
       "source_type_id": 184,
       "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Supercharger_Edelbrock_2.class"
-    },
-    {
-      "id": "engines/chrysler/Carburetors_2BRL_HOLLEY",
-      "name": "Carburetors_2BRL_HOLLEY",
-      "display_name": "HOLLEY 2BRL Carburetors",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "HOLLEY 2BRL Carburetors",
-        "description": "",
-        "value": 444.306071,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 25.25,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 8.0,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.04,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 390000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.6,
-        "mixture_H": 1481417.781744,
-        "time_burn": 0.000756,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 5.925671,
-        "maxComp": 14.814178
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Carburetors_2BRL_HOLLEY.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            -0.001,
-            0.011,
-            0.041
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Intake_manifold_small_2brl_B",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02A1"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_2brl_O",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x03BE"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.046,
-            0.042,
-            -0.041
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 163,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Carburetors_2BRL_HOLLEY.class"
-    },
-    {
-      "id": "engines/chrysler/Carburetors_4BRL_Holley",
-      "name": "Carburetors_4BRL_Holley",
-      "display_name": "HOLLEY 4BRL Carburetors",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "HOLLEY 4BRL Carburetors",
-        "description": "",
-        "value": 675.978648,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 35.35,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 8.0,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.04,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 390000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.6,
-        "mixture_H": 1481417.781744,
-        "time_burn": 0.000756,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 5.925671,
-        "maxComp": 14.814178
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Carburetors_4BRL_Holley.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            -0.003,
-            -0.004,
-            -0.001
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_B",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x06FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_Edelbrock",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x05FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_Edelbrock_2",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x01EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_O",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x07FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_HEMI_4brl",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x06EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_HEMI_HOLLEY",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x08EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_B",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00A1"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_Edelbrock",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x004B"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_HOLLEY",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x01FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_HOLLEY_2",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_O",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00BE"
-            },
-            {
-              "part": "engines/chrysler/Supercharger_Edelbrock",
-              "slot": 9,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0085"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.046,
-            0.042,
-            -0.041
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 139,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Carburetors_4BRL_Holley.class"
-    },
-    {
-      "id": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
-      "name": "Carburetors_4BRL_street_HOLLEY",
-      "display_name": "HOLLEY Street 4BRL Carburetors",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "HOLLEY Street 4BRL Carburetors",
-        "description": "",
-        "value": 741.103203,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 45.45,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 8.0,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.04,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 390000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.6,
-        "mixture_H": 1481417.781744,
-        "time_burn": 0.000756,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 5.925671,
-        "maxComp": 14.814178
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Carburetors_4BRL_street_HOLLEY.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            -0.003,
-            -0.004,
-            -0.001
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_B",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x06FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_Edelbrock",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x05FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_Edelbrock_2",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x01EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_O",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x07FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_HEMI_4brl",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x06EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_HEMI_HOLLEY",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x08EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_B",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00A1"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_Edelbrock",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x004B"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_HOLLEY",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x01FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_HOLLEY_2",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_O",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00BE"
-            },
-            {
-              "part": "engines/chrysler/Supercharger_Edelbrock",
-              "slot": 9,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0085"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.046,
-            0.042,
-            -0.041
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 2187,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Carburetors_4BRL_street_HOLLEY.class"
-    },
-    {
-      "id": "engines/chrysler/Carburetors_4BRL_Edelbrock",
-      "name": "Carburetors_4BRL_Edelbrock",
-      "display_name": "Edelbrock 4BRL Carburetors",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Edelbrock 4BRL Carburetors",
-        "description": "",
-        "value": 809.074733,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 50.5,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 8.0,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.04,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 390000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.6,
-        "mixture_H": 1481417.781744,
-        "time_burn": 0.000756,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 5.925671,
-        "maxComp": 14.814178
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Carburetors_4BRL_Edelbrock.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            0.0,
-            -0.003,
-            -0.001
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_B",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x06FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_Edelbrock",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x05FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_Edelbrock_2",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x01EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_O",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x07FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_HEMI_4brl",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x06EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_HEMI_HOLLEY",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x08EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_B",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00A1"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_Edelbrock",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x004B"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_HOLLEY",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x01FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_HOLLEY_2",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_O",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00BE"
-            },
-            {
-              "part": "engines/chrysler/Supercharger_Edelbrock",
-              "slot": 9,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0085"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.046,
-            0.042,
-            -0.041
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 2443,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Carburetors_4BRL_Edelbrock.class"
-    },
-    {
-      "id": "engines/chrysler/Carburetors_4BRL_Demon",
-      "name": "Carburetors_4BRL_Demon",
-      "display_name": "Demon 4BRL Carburetors",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Demon 4BRL Carburetors",
-        "description": "",
-        "value": 1058.184982,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 70.7,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 8.0,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.04,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 390000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.6,
-        "mixture_H": 1481417.781744,
-        "time_burn": 0.000756,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 5.925671,
-        "maxComp": 14.814178
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Carburetors_4BRL_Demon.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            0.0,
-            0.002,
-            -0.001
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_B",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x06FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_Edelbrock",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x05FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_Edelbrock_2",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x01EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_4brl_O",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x07FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_HEMI_4brl",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x06EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_HEMI_HOLLEY",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x08EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_B",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00A1"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_Edelbrock",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x004B"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_HOLLEY",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x01FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_HOLLEY_2",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_4brl_O",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00BE"
-            },
-            {
-              "part": "engines/chrysler/Supercharger_Edelbrock",
-              "slot": 9,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0085"
-            },
-            {
-              "part": "engines/chrysler/Supercharger_Paxton_Kit",
-              "slot": 9,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0F85"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.046,
-            0.088,
-            -0.041
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 2203,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Carburetors_4BRL_Demon.class"
-    },
-    {
-      "id": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
-      "name": "Carburetors_2x4BRL_Dominator_HOLLEY",
-      "display_name": "HOLLEY Dominator 2x4BRL Carburetors",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "HOLLEY Dominator 2x4BRL Carburetors",
-        "description": "",
-        "value": 1464.590747,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 90.9,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 8.0,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.04,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 390000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.6,
-        "mixture_H": 1481417.781744,
-        "time_burn": 0.000756,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 5.925671,
-        "maxComp": 14.814178
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Carburetors_2x4BRL_Dominator_HOLLEY.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            -0.003,
-            -0.004,
-            -0.001
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Intake_manifold_big_2x4brl_TrickFlow",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x03EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_2x4brl_TrickFlow",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x03FB"
-            },
-            {
-              "part": "engines/chrysler/Supercharger_Edelbrock_2",
-              "slot": 9,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00B8"
-            },
-            {
-              "part": "engines/chrysler/Supercharger_Weiand",
-              "slot": 9,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0BB8"
-            },
-            {
-              "part": "engines/chrysler/dualquad_intake",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE008"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.046,
-            0.053,
-            -0.041
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 2315,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Carburetors_2x4BRL_Dominator_HOLLEY.class"
-    },
-    {
-      "id": "engines/chrysler/Carburetors_2x4BRL_Edelbrock",
-      "name": "Carburetors_2x4BRL_Edelbrock",
-      "display_name": "Edelbrock 2x4BRL Carburetors",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Edelbrock 2x4BRL Carburetors",
-        "description": "",
-        "value": 1618.327402,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 95.950005,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 8.0,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.04,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 390000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.6,
-        "mixture_H": 1481417.781744,
-        "time_burn": 0.000756,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 5.925671,
-        "maxComp": 14.814178
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Carburetors_2x4BRL_Edelbrock.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            -0.003,
-            -0.004,
-            -0.001
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Intake_manifold_big_2x4brl_TrickFlow",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x03EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_2x4brl_TrickFlow",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x03FB"
-            },
-            {
-              "part": "engines/chrysler/Supercharger_Edelbrock_2",
-              "slot": 9,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00B8"
-            },
-            {
-              "part": "engines/chrysler/Supercharger_Weiand",
-              "slot": 9,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0BB8"
-            },
-            {
-              "part": "engines/chrysler/dualquad_intake",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE008"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.046,
-            0.042,
-            -0.041
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 2331,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Carburetors_2x4BRL_Edelbrock.class"
-    },
-    {
-      "id": "engines/chrysler/Carburetors_2x4BRL_King_Demon",
-      "name": "Carburetors_2x4BRL_King_Demon",
-      "display_name": "King Demon 2x4BRL Carburetors",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "King Demon 2x4BRL Carburetors",
-        "description": "",
-        "value": 2120.106762,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 115.950005,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 8.0,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.04,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 390000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.6,
-        "mixture_H": 1481417.781744,
-        "time_burn": 0.000756,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 5.925671,
-        "maxComp": 14.814178
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Carburetors_2x4BRL_King_Demon.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            -0.003,
-            -0.004,
-            -0.001
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Intake_manifold_big_2x4brl_TrickFlow",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x03EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_small_2x4brl_TrickFlow",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x03FB"
-            },
-            {
-              "part": "engines/chrysler/Supercharger_Edelbrock_2",
-              "slot": 9,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00B8"
-            },
-            {
-              "part": "engines/chrysler/Supercharger_Weiand",
-              "slot": 9,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0BB8"
-            },
-            {
-              "part": "engines/chrysler/dualquad_intake",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE008"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.046,
-            0.042,
-            -0.041
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 2347,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Carburetors_2x4BRL_King_Demon.class"
     },
     {
       "id": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
@@ -32909,298 +30100,6 @@
       "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Carburetors_2x4BRL_crossram_Edelbrock.class"
     },
     {
-      "id": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
-      "name": "Carburetors_3x2BRL_HOLLE_six_pack",
-      "display_name": "HOLLE Six Pack 3x2BRL Carburetors",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "HOLLE Six Pack 3x2BRL Carburetors",
-        "description": "",
-        "value": 1143.594235,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 80.8,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 8.0,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.04,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 390000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.6,
-        "mixture_H": 1481417.781744,
-        "time_burn": 0.000756,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 5.925671,
-        "maxComp": 14.814178
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Carburetors_3x2BRL_HOLLE_six_pack.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            -0.003,
-            -0.004,
-            -0.001
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Intake_manifold_small_SIXPACK",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008A"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_B",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x08FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_HOLLEY",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_O",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09FB"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            0.0,
-            0.007,
-            -0.007
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 2395,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Carburetors_3x2BRL_HOLLE_six_pack.class"
-    },
-    {
-      "id": "engines/chrysler/Carburetors_3x2BRL_Road_Demon_six_pack",
-      "name": "Carburetors_3x2BRL_Road_Demon_six_pack",
-      "display_name": "Road Demon Six Pack 3x2BRL Carburetors",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Road Demon Six Pack 3x2BRL Carburetors",
-        "description": "",
-        "value": 1382.740214,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 95.950005,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 8.0,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.04,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 390000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.6,
-        "mixture_H": 1481417.781744,
-        "time_burn": 0.000756,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 5.925671,
-        "maxComp": 14.814178
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Carburetors_3x2BRL_Road_Demon_six_pack.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            -0.003,
-            -0.004,
-            -0.001
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Intake_manifold_small_SIXPACK",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008A"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_B",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x08FB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_HOLLEY",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02EB"
-            },
-            {
-              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_O",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09FB"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            0.0,
-            0.007,
-            -0.007
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 2411,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Carburetors_3x2BRL_Road_Demon_six_pack.class"
-    },
-    {
       "id": "engines/chrysler/E_F_I_Systems_Hilborn",
       "name": "E_F_I_Systems_Hilborn",
       "display_name": "HILBORN Electronic Fuel Injector Systems",
@@ -33307,7 +30206,7 @@
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00B8"
             },
             {
-              "part": "engines/chrysler/Supercharger_Weiand",
+              "part": "engines/generic/Supercharger_Weiand",
               "slot": 9,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0BB8"
             }
@@ -33476,7 +30375,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
         }
       ],
       "config": {
@@ -33623,7 +30525,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
         }
       ],
       "config": {
@@ -33780,7 +30685,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
         }
       ],
       "config": {
@@ -33937,7 +30845,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
         }
       ],
       "config": {
@@ -34084,7 +30995,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:3x2"
+          ]
         }
       ],
       "config": {
@@ -34241,7 +31155,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
         },
         {
           "id": 8,
@@ -34415,7 +31332,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
         },
         {
           "id": 8,
@@ -34589,7 +31509,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
         },
         {
           "id": 8,
@@ -34763,7 +31686,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:2x4"
+          ]
         },
         {
           "id": 8,
@@ -35088,6 +32014,9 @@
               "slot": 7,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00BE"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
           ]
         }
       ],
@@ -35256,6 +32185,9 @@
               "slot": 7,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00BE"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
           ]
         }
       ],
@@ -35403,7 +32335,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:3x2"
+          ]
         }
       ],
       "config": {
@@ -35550,7 +32485,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:3x2"
+          ]
         }
       ],
       "config": {
@@ -35723,6 +32661,9 @@
               "slot": 7,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00BE"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
           ]
         }
       ],
@@ -35896,6 +32837,9 @@
               "slot": 7,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00BE"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
           ]
         }
       ],
@@ -36043,7 +32987,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:3x2"
+          ]
         }
       ],
       "config": {
@@ -36222,6 +33169,9 @@
               "slot": 7,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x78BE"
             }
+          ],
+          "takes": [
+            "carb:2x4"
           ]
         }
       ],
@@ -36515,6 +33465,9 @@
               "slot": 7,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00BE"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
           ]
         }
       ],
@@ -36781,6 +33734,9 @@
               "slot": 7,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00BE"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
           ]
         },
         {
@@ -41475,330 +38431,6 @@
       },
       "source_type_id": 3977,
       "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Transmission_A833_4spd.class"
-    },
-    {
-      "id": "engines/chrysler/Transmission_TKO500_5spd",
-      "name": "Transmission_TKO500_5spd",
-      "display_name": "TKO 500 5-Speed transmission M",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "TKO 500 5-Speed transmission M",
-        "description": "",
-        "value": 1829.71516,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 185.85,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 0.81,
-        "maxRPM": 13000.0,
-        "gears": 5,
-        "ratio": [
-          0.0,
-          3.27,
-          1.98,
-          1.34,
-          1.0,
-          0.68,
-          0,
-          -3.0
-        ],
-        "end_ratio": 3.23,
-        "starter_torque": 50.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 7,
-        "drive_front_min": 0.0,
-        "drive_front_max": 0.0,
-        "def_drive_front": 0.0,
-        "drive_front": 0.0,
-        "drive_type": 2,
-        "def_diff_lock": 0.2,
-        "diff_lock": 0.2,
-        "diff_lock_min": 0.0,
-        "diff_lock_max": 1.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 520000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "Transmission_TKO500_5spd.kn5",
-      "mass": 41.0,
-      "slots": [
-        {
-          "id": 5,
-          "name": "",
-          "position": [
-            0.0,
-            -0.028,
-            0.155
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/_Engine_block_318",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE318"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_340",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE340"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_360",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE360"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE36B"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_361",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE361"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_383",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE383"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_400",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE400"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_440",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE440"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_426_XEMI",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE426"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 3984,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Transmission_TKO500_5spd.class"
-    },
-    {
-      "id": "engines/chrysler/Transmission_TKO600_5spd",
-      "name": "Transmission_TKO600_5spd",
-      "display_name": "TKO 600 5-Speed transmission M",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "TKO 600 5-Speed transmission M",
-        "description": "",
-        "value": 2031.494662,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 195.95,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 0.81,
-        "maxRPM": 13000.0,
-        "gears": 5,
-        "ratio": [
-          0.0,
-          2.87,
-          1.89,
-          1.28,
-          1.0,
-          0.64,
-          0,
-          -3.0
-        ],
-        "end_ratio": 3.23,
-        "starter_torque": 50.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 7,
-        "drive_front_min": 0.0,
-        "drive_front_max": 0.0,
-        "def_drive_front": 0.0,
-        "drive_front": 0.0,
-        "drive_type": 2,
-        "def_diff_lock": 0.2,
-        "diff_lock": 0.2,
-        "diff_lock_min": 0.0,
-        "diff_lock_max": 1.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 520000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "Transmission_TKO500_5spd.kn5",
-      "mass": 41.0,
-      "slots": [
-        {
-          "id": 5,
-          "name": "",
-          "position": [
-            0.0,
-            -0.028,
-            0.155
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/_Engine_block_318",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE318"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_340",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE340"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_360",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE360"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE36B"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_361",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE361"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_383",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE383"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_400",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE400"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_440",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE440"
-            },
-            {
-              "part": "engines/chrysler/_Engine_block_426_XEMI",
-              "slot": 5,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE426"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 3985,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Transmission_TKO600_5spd.class"
     },
     {
       "id": "engines/chrysler/E_F_I_Fuel_Systems",
@@ -47383,7 +44015,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
         },
         {
           "id": 59,
@@ -47997,7 +44632,7 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             }
@@ -48301,7 +44936,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "blower:roots"
+          ]
         }
       ],
       "config": {
@@ -48317,182 +44955,6 @@
       },
       "source_type_id": 1515,
       "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Intake_manifold_big_Charger_Weiand.class"
-    },
-    {
-      "id": "engines/chrysler/Supercharger_Weiand",
-      "name": "Supercharger_Weiand",
-      "display_name": "Weiand roots type Supercharger RB/B",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-        "java.game.parts.enginepart.airfueldeliverysystem.Charger",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Weiand roots type Supercharger RB/B",
-        "description": "",
-        "value": 2065.124555,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 195.95,
-        "prestige_calc_weight": 90.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "rpm_turbo_mul": 1.0,
-        "rpm_turbo_opt": 2000.0,
-        "rpm_turbo_range": 1500.0,
-        "P_turbo_max": 1.5,
-        "P_turbo_waste": 0.0,
-        "pulley_diameter": 55.6,
-        "pulley_width": 55.6,
-        "default_rpm_turbo_mul": 3.5
-      },
-      "derived": {
-        "rpm_turbo_mul": 3.5,
-        "max_wear": 9000000.0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [
-        {
-          "slot": 9,
-          "message": "the supercharger is missing the fuel system."
-        },
-        {
-          "slot": 15,
-          "message": "the supercharger is missing the drive belt."
-        }
-      ],
-      "categories": [],
-      "model": "Supercharger_Weiand.kn5",
-      "mass": 14.5,
-      "slots": [
-        {
-          "id": 7,
-          "name": "",
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Intake_manifold_big_Charger_Weiand",
-              "slot": 7,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x05EB"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 9,
-          "name": "carbs",
-          "position": [
-            0.0,
-            0.177,
-            0.156
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        },
-        {
-          "id": 15,
-          "name": "drive_belt",
-          "position": [
-            -0.0,
-            -0.239,
-            -0.357
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        },
-        {
-          "id": 4,
-          "name": "NOS_IN",
-          "position": [
-            0.0,
-            0.11,
-            0.085
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": [
-            {
-              "part": null,
-              "slot": 4,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x78BE"
-            }
-          ]
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 3000,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Supercharger_Weiand.class"
     },
     {
       "id": "engines/chrysler/Water_pomp_Weiand",
@@ -48849,7 +45311,7 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Supercharger_Weiand",
+              "part": "engines/generic/Supercharger_Weiand",
               "slot": 15,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0BB8"
             }
@@ -49559,115 +46021,6 @@
       "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\NOS_system_injector_Hilborn_2.class"
     },
     {
-      "id": "engines/chrysler/velocity_stack",
-      "name": "velocity_stack",
-      "display_name": "Velocity Stack",
-      "base_class": "java.game.parts.Part",
-      "class_chain": [
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Velocity Stack",
-        "description": "Made by Fireful0",
-        "value": 545.45,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 10.0,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "max_wear": 100000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "veesix",
-        "engine"
-      ],
-      "model": "velocity_stack.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
-            },
-            {
-              "part": "engines/chrysler/Fireful0_engine_works_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE404"
-            },
-            {
-              "part": "engines/chrysler/carter_4barrel_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xC131"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 53812,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\velocity_stack.class"
-    },
-    {
       "id": "engines/chrysler/air_cleaner_426",
       "name": "air_cleaner_426",
       "display_name": "426 Hemi Air Cleaner",
@@ -49729,22 +46082,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -49935,7 +46288,10 @@
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0085"
             }
           ],
-          "compatible_with": []
+          "compatible_with": [],
+          "fits": [
+            "carb:4bbl"
+          ]
         },
         {
           "id": 11,
@@ -49952,7 +46308,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
         }
       ],
       "config": {
@@ -49968,115 +46327,6 @@
       },
       "source_type_id": 58372,
       "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Fireful0_engine_works_carb.class"
-    },
-    {
-      "id": "engines/chrysler/air_scoop",
-      "name": "air_scoop",
-      "display_name": "Black Air Scoop",
-      "base_class": "java.game.parts.Part",
-      "class_chain": [
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Black Air Scoop",
-        "description": "Made by Fireful0",
-        "value": 545.45,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 15.0,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "max_wear": 100000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "veesix",
-        "engine"
-      ],
-      "model": "air_scoop.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.046,
-            0.062,
-            -0.042
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
-            },
-            {
-              "part": "engines/chrysler/Fireful0_engine_works_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE404"
-            },
-            {
-              "part": "engines/chrysler/carter_4barrel_carb",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xC131"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 58387,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\air_scoop.class"
     },
     {
       "id": "engines/chrysler/defiant_aircleaner",
@@ -50140,22 +46390,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -50323,6 +46573,9 @@
               "slot": 7,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00BE"
             }
+          ],
+          "takes": [
+            "carb:2x4"
           ]
         }
       ],
@@ -50402,17 +46655,17 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
+              "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x090B"
             },
             {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_2x4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x091B"
             },
             {
-              "part": "engines/chrysler/Carburetors_2x4BRL_King_Demon",
+              "part": "engines/generic/Carburetors_2x4BRL_King_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x092B"
             }
@@ -50586,7 +46839,10 @@
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0085"
             }
           ],
-          "compatible_with": []
+          "compatible_with": [],
+          "fits": [
+            "carb:4bbl"
+          ]
         },
         {
           "id": 11,
@@ -50603,7 +46859,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
         }
       ],
       "config": {
@@ -50682,22 +46941,22 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Edelbrock",
+              "part": "engines/generic/Carburetors_4BRL_Edelbrock",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x098B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Demon",
+              "part": "engines/generic/Carburetors_4BRL_Demon",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x089B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_Holley",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008B"
             },
             {
-              "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+              "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
               "slot": 11,
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
             },
@@ -50728,100 +46987,6 @@
       },
       "source_type_id": 49496,
       "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\Mstmdrnaircleaner.class"
-    },
-    {
-      "id": "engines/chrysler/dualcarb_scoop",
-      "name": "dualcarb_scoop",
-      "display_name": "Hood Scoop For Dual Quad Carbs",
-      "base_class": "java.game.parts.Part",
-      "class_chain": [
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Hood Scoop For Dual Quad Carbs",
-        "description": "Hood Scoop For Dual Quad Carbs. 3d by IJC / Fireful0 in Aug of 2016. Finished 2/5/18.",
-        "value": 545.45,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 15.0,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "max_wear": 100000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "veesix",
-        "engine"
-      ],
-      "model": "dualcarb_scoop.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            -0.048,
-            0.015,
-            -0.045
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x090B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x091B"
-            },
-            {
-              "part": "engines/chrysler/Carburetors_2x4BRL_King_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x092B"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 45650,
-      "source_script": "parts\\engines\\Chrysler_V8_pak\\scripts\\dualcarb_scoop.class"
     }
   ]
 }

@@ -22,8 +22,20 @@ public static class Program
     private const string ReplaceOption = "--replace";
     private const string DropOption = "--drop";
     private const string RenameOption = "--rename";
+    private const string MergeOption = "--merge";
+    private const string FitOption = "--fit";
+    private const string ModelOption = "--model";
 
     private sealed record SourcePart(SlrrRpk Rpk, SlrrRpkEntry Entry, string ConfigFile, string? ScriptPath, string Id, string Name);
+
+    /// <summary>A part that is left out, with the part that takes its place everywhere it was named or fitted</summary>
+    private sealed record MergeRule(Regex Pattern, string KeptId);
+
+    /// <summary>A standard fitting given to a slot of every part a pattern picks out</summary>
+    private sealed record FitRule(Regex Pattern, int Slot, List<string> Fittings);
+
+    /// <summary>Parts that are drawn with another part's model (the same product modelled better in another pack)</summary>
+    private sealed record ModelRule(Regex Pattern, string DonorId);
 
     /// <summary>
     /// Where the parts of an rpk go: all of them (no selector), or those a selector picks out, by the name of a
@@ -42,10 +54,19 @@ public static class Program
         // --drop <part id pattern>: parts left out altogether (a pack's take on engines another pack does better)
         // --rename <rpk pack>[:<selector>]=<pack id>: the pack, or the parts of it a selector picks out, go by a name
         //   of our own (the mod's file name says nothing to a player, and one rpk may hold rims and tyres both)
+        // --merge <part id pattern>=<part id>: the parts are left out and the named part stands in for them: it is
+        //   what builds, saves and attach lines naming them get, and it fits wherever they fitted
+        // --fit <part id pattern>:<slot>=<fitting>[+<fitting>]: the slot mounts by a standard fitting, so it goes on
+        //   every slot that takes it, whatever the pack; the slots that take it are found from the attach lines
+        // --model <part id pattern>=<part id>: the parts are drawn with the named part's model (and its slot
+        //   geometry), keeping their own scripts: the same product, modelled better in another pack
         string? notes = null;
         var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var renames = new List<RenameRule>();
         var drops = new List<Regex>();
+        var merges = new List<MergeRule>();
+        var fits = new List<FitRule>();
+        var modelRules = new List<ModelRule>();
         var positional = new List<string>();
         for (var i = 0; i < args.Length; i++)
         {
@@ -53,6 +74,47 @@ public static class Program
             else if (args[i] == DropOption && i + 1 < args.Length)
             {
                 drops.AddRange(args[++i].Split(',').Select(p => Pattern(p.Trim())));
+            }
+            else if (args[i] == MergeOption && i + 1 < args.Length)
+            {
+                foreach (var pair in args[++i].Split(',').Select(p => p.Split('=')))
+                {
+                    if (pair.Length != 2)
+                    {
+                        Console.WriteLine($"{MergeOption} takes <part id pattern>=<part id>, e.g. engines/gm/Holley_4brl_carburator=engines/generic/Carburetors_4BRL_street_HOLLEY");
+                        return 1;
+                    }
+
+                    merges.Add(new MergeRule(Pattern(pair[0].Trim()), pair[1].Trim()));
+                }
+            }
+            else if (args[i] == ModelOption && i + 1 < args.Length)
+            {
+                foreach (var pair in args[++i].Split(',').Select(p => p.Split('=')))
+                {
+                    if (pair.Length != 2)
+                    {
+                        Console.WriteLine($"{ModelOption} takes <part id pattern>=<part id>, e.g. engines/generic/Holley_4brl_carburator=engines/generic/Carburetors_4BRL_street_HOLLEY");
+                        return 1;
+                    }
+
+                    modelRules.Add(new ModelRule(Pattern(pair[0].Trim()), pair[1].Trim()));
+                }
+            }
+            else if (args[i] == FitOption && i + 1 < args.Length)
+            {
+                foreach (var rule in args[++i].Split(','))
+                {
+                    var pair = rule.Split('=', 2);
+                    var colon = pair[0].LastIndexOf(':');
+                    if (pair.Length != 2 || colon < 0 || !int.TryParse(pair[0][(colon + 1)..], out var slot))
+                    {
+                        Console.WriteLine($"{FitOption} takes <part id pattern>:<slot>=<fitting>[+<fitting>], e.g. engines/generic/Carburetors_4BRL_*:10=carb:4bbl");
+                        return 1;
+                    }
+
+                    fits.Add(new FitRule(Pattern(pair[0][..colon].Trim()), slot, pair[1].Split('+').Select(f => f.Trim()).ToList()));
+                }
             }
             else if (args[i] == ReplaceOption && i + 1 < args.Length)
             {
@@ -89,7 +151,9 @@ public static class Program
         if (positional.Count < 2)
         {
             Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] " +
-                              "[--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...]");
+                              "[--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] " +
+                              "[--merge <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] " +
+                              "[--model <part id pattern>=<part id>,...]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""Street Rod AC\Assets\Parts"" engines/Mopar  (the full run: tools\convert-parts.ps1)");
             return 1;
         }
@@ -151,9 +215,21 @@ public static class Program
                 foreach (var part in pack)
                 {
                     partIds[(part.Rpk, part.Entry.TypeId)] = part.Id;
+                    // A part routed out of the rpk's own pack by a selector went by that pack's name in a save
+                    // made before the selector was written
                     if (pack.Key != rpkId) aliases[$"{rpkId}/{part.Name}"] = part.Id;
+                    if (pack.Key != rest) aliases[$"{rest}/{part.Name}"] = part.Id;
                 }
             }
+        }
+
+        // Several rpks may be routed to one pack (the universal-fit parts of every engine pack); ids are the pack
+        // plus the cfg name, unique within an rpk only
+        var clashes = packs.SelectMany(p => p.Parts).GroupBy(p => p.Id, StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1).ToList();
+        if (clashes.Count > 0)
+        {
+            Console.WriteLine($"{RenameOption} routes parts of the same name into one pack: {string.Join(", ", clashes.Select(g => g.Key))}");
+            return 1;
         }
 
         // A pack is named by what it holds: the parts a selector picks out go first, the rest where the rpk goes.
@@ -213,32 +289,90 @@ public static class Program
             return named.Parts == null ? new() : packs.Where(p => p.Rpk == named.Rpk).ToList();
         }
 
-        // Second pass: models and definitions
+        // Merged parts leave their packs; whatever pointed at one (a twin of a replaced pack included) points at
+        // the part that stands in for it. Their configs are kept: the stand-in inherits where they fitted
+        var merged = new List<(SourcePart Source, string KeptId)>();
+        foreach (var (_, _, parts) in packs)
+        {
+            foreach (var part in parts.ToList())
+            {
+                var rule = merges.FirstOrDefault(m => m.Pattern.IsMatch(part.Id) && !m.KeptId.Equals(part.Id, StringComparison.OrdinalIgnoreCase));
+                if (rule == null) continue;
+
+                var keptId = rule.KeptId;
+                parts.Remove(part);
+                merged.Add((part, keptId));
+                aliases[part.Id] = keptId;
+                foreach (var key in partIds.Where(p => p.Value.Equals(part.Id, StringComparison.OrdinalIgnoreCase)).Select(p => p.Key).ToList())
+                {
+                    partIds[key] = keptId;
+                }
+            }
+        }
+
+        var remaining = packs.SelectMany(p => p.Parts).Select(p => p.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var unknownKept = merged.Select(m => m.KeptId).Where(id => !remaining.Contains(id)).Distinct().ToList();
+        var unusedMerges = merges.Where(m => !merged.Any(p => m.Pattern.IsMatch(p.Source.Id))).ToList();
+        if (unknownKept.Count > 0 || unusedMerges.Count > 0)
+        {
+            if (unknownKept.Count > 0) Console.WriteLine($"{MergeOption} names parts that are not there to stand in: {string.Join(", ", unknownKept)}");
+            if (unusedMerges.Count > 0) Console.WriteLine($"{MergeOption} patterns that match no part: {string.Join(", ", unusedMerges.Select(m => m.Pattern))}");
+            return 1;
+        }
+
+        if (merged.Count > 0) Console.WriteLine($"  {merged.Count} parts merged into {merged.Select(m => m.KeptId).Distinct().Count()}");
+
+        // Parts drawn with another part's model: the donor is any remaining part
+        var sources = packs.SelectMany(p => p.Parts).ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
+        var donors = new Dictionary<string, SourcePart>(StringComparer.OrdinalIgnoreCase);
+        foreach (var rule in modelRules)
+        {
+            var borrowers = sources.Values.Where(p => rule.Pattern.IsMatch(p.Id) && !p.Id.Equals(rule.DonorId, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (borrowers.Count == 0 || !sources.TryGetValue(rule.DonorId, out var donor))
+            {
+                Console.WriteLine(borrowers.Count == 0
+                    ? $"{ModelOption} {rule.Pattern} matches no part"
+                    : $"{ModelOption} names a model donor that is not there: {rule.DonorId}");
+                return 1;
+            }
+
+            foreach (var borrower in borrowers) donors[borrower.Id] = donor;
+        }
+
+        if (donors.Count > 0) Console.WriteLine($"  {donors.Count} parts drawn with another part's model");
+
+        // Second pass: models and definitions. The definitions are written once every pack is converted: a merged
+        // part's fit is grafted onto its stand-in, and fittings are found across packs
         var converted = 0;
         var withoutModel = 0;
         var failures = new List<string>();
+        var written = new Dictionary<string, (string Folder, PartPack Pack, Dictionary<string, string?> Models)>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var (packId, rpk, parts) in packs)
         {
             if (filter != null && !packId.Equals(filter, StringComparison.OrdinalIgnoreCase)) continue;
 
-            var packFolder = Path.Combine(output, packId.Replace('/', Path.DirectorySeparatorChar));
-            if (!PrepareFolder(packFolder))
+            // A pack fed by several rpks is prepared once and takes the rest as they come
+            if (!written.TryGetValue(packId, out var target))
             {
-                Console.WriteLine($"Skipped {packId}: {packFolder} exists and is not a converted pack");
-                continue;
+                var packFolder = Path.Combine(output, packId.Replace('/', Path.DirectorySeparatorChar));
+                if (!PrepareFolder(packFolder))
+                {
+                    Console.WriteLine($"Skipped {packId}: {packFolder} exists and is not a converted pack");
+                    continue;
+                }
+
+                written[packId] = target = (packFolder, new PartPack { Id = packId, Source = rpk.RelativePath }, new Dictionary<string, string?>());
             }
+            else target.Pack.Source += ", " + rpk.RelativePath;
 
-            var pack = new PartPack { Id = packId, Source = rpk.RelativePath };
-            var models = new Dictionary<string, string?>();
             var texturePrefix = packId.Replace('/', '_').ToLowerInvariant() + "__";
-
             foreach (var source in parts)
             {
                 try
                 {
-                    var definition = Convert(game, scripts, source, partIds, packFolder, texturePrefix, models);
-                    pack.Parts.Add(definition);
+                    var definition = Convert(game, scripts, source, donors.GetValueOrDefault(source.Id), partIds, target.Folder, texturePrefix, target.Models);
+                    target.Pack.Parts.Add(definition);
 
                     converted++;
                     if (definition.Model == null) withoutModel++;
@@ -249,8 +383,16 @@ public static class Program
                 }
             }
 
-            File.WriteAllText(Path.Combine(packFolder, PartPack.FileName), JsonConvert.SerializeObject(pack, Formatting.Indented));
-            Console.WriteLine($"  {packId,-45} {pack.Parts.Count,4} parts, {models.Values.Count(m => m != null),4} models");
+            Console.WriteLine($"  {packId,-45} {parts.Count,4} parts from {rpk.RelativePath}");
+        }
+
+        var definitions = written.Values.SelectMany(w => w.Pack.Parts).ToDictionary(d => d.Id, StringComparer.OrdinalIgnoreCase);
+        Graft(game, merged, definitions, partIds);
+        Fit(fits, definitions);
+        foreach (var (folder, pack, models) in written.Values)
+        {
+            File.WriteAllText(Path.Combine(folder, PartPack.FileName), JsonConvert.SerializeObject(pack, Formatting.Indented));
+            Console.WriteLine($"  {pack.Id,-45} {pack.Parts.Count,4} parts, {models.Values.Count(m => m != null),4} models");
         }
 
         // The game runs the part scripts itself. A filtered run adds the classes of its packs to what is there;
@@ -337,10 +479,24 @@ public static class Program
         return parts;
     }
 
-    private static PartDefinition Convert(SlrrGame game, SlrrScriptEvaluator scripts, SourcePart source,
+    /// <param name="donor">A part whose model this one is drawn with; its slots of the same ids give the geometry</param>
+    private static PartDefinition Convert(SlrrGame game, SlrrScriptEvaluator scripts, SourcePart source, SourcePart? donor,
         Dictionary<(SlrrRpk, int), string> partIds, string packFolder, string texturePrefix, Dictionary<string, string?> models)
     {
         var config = SlrrPartConfig.Load(source.ConfigFile);
+
+        // Slot positions are in the model's space: the donor's model comes with the donor's geometry
+        var geometry = config.Slots.ToDictionary(s => s, s => s);
+        if (donor != null)
+        {
+            var donorConfig = SlrrPartConfig.Load(donor.ConfigFile);
+            foreach (var slot in config.Slots)
+            {
+                var counterpart = donorConfig.Slots.FirstOrDefault(s => s.Id == slot.Id);
+                if (counterpart == null) Console.WriteLine($"    {source.Id} slot {slot.Id}: {donor.Id} has none, it keeps its place on the old model");
+                else geometry[slot] = counterpart;
+            }
+        }
 
         var scriptFile = source.ScriptPath == null ? null : Path.Combine(game.Root, source.ScriptPath);
         var script = scriptFile != null && File.Exists(scriptFile) ? scripts.Evaluate(scriptFile) : null;
@@ -366,7 +522,9 @@ public static class Program
             RequiredSlots = (script?.RequiredSlots ?? new List<ScriptSlotRule>())
                 .Select(r => new PartSlotRule { Slot = r.Slot, Message = r.Message }).ToList(),
             Categories = game.Categories(source.Rpk, source.Entry),
-            Model = ConvertModel(game, source, config, packFolder, texturePrefix, models),
+            Model = donor == null
+                ? ConvertModel(game, source, config, packFolder, texturePrefix, models)
+                : ConvertModel(game, donor, SlrrPartConfig.Load(donor.ConfigFile), packFolder, texturePrefix, models, source.Name),
             Mass = config.Mass,
             Config = config.Other,
             SourceTypeId = source.Entry.TypeId,
@@ -375,11 +533,11 @@ public static class Program
             {
                 Id = slot.Id,
                 Name = slot.Name,
-                Position = new[] { slot.Position.X, slot.Position.Y, slot.Position.Z },
-                Rotation = new[] { slot.YawPitchRoll.X, slot.YawPitchRoll.Y, slot.YawPitchRoll.Z },
+                Position = new[] { geometry[slot].Position.X, geometry[slot].Position.Y, geometry[slot].Position.Z },
+                Rotation = new[] { geometry[slot].YawPitchRoll.X, geometry[slot].YawPitchRoll.Y, geometry[slot].YawPitchRoll.Z },
                 DamageMode = slot.DamageMode,
-                AttachesTo = slot.AttachesTo.Select(r => Reference(r.PartId, r.SlotId)).ToList(),
-                CompatibleWith = slot.CompatibleWith.Select(r => Reference(r.PartId, r.SlotId)).ToList()
+                AttachesTo = slot.AttachesTo.Select(r => Reference(game, source.Rpk, r.PartId, r.SlotId, partIds)).ToList(),
+                CompatibleWith = slot.CompatibleWith.Select(r => Reference(game, source.Rpk, r.PartId, r.SlotId, partIds)).ToList()
             }).ToList()
         };
 
@@ -395,17 +553,130 @@ public static class Program
                 Source = $"{stock.Rpk}#0x{stock.TypeId:X4}"
             };
         }
+    }
 
-        PartSlotReference Reference(int partId, int slotId)
+    /// <summary>A slot reference of a part's cfg resolved to a part id; the id of a merged part is its stand-in's</summary>
+    private static PartSlotReference Reference(SlrrGame game, SlrrRpk sourceRpk, int partId, int slotId, Dictionary<(SlrrRpk, int), string> partIds)
+    {
+        var (targetRpk, target) = game.Resolve(sourceRpk, partId);
+        return new PartSlotReference
         {
-            var (targetRpk, target) = game.Resolve(source.Rpk, partId);
-            return new PartSlotReference
+            Part = targetRpk != null && target != null && partIds.TryGetValue((targetRpk, target.TypeId), out var id) ? id : null,
+            Slot = slotId,
+            Source = SlrrGame.Describe(sourceRpk, partId)
+        };
+    }
+
+    /// <summary>
+    /// Gives every merged part's fit to the part standing in for it: what the merged part's slots attached to and
+    /// stood in for, its stand-in's slots of the same ids do too. Slots are mostly numbered alike across packs (the
+    /// engine framework fixes them: a carburettor hangs by 10, a transmission by 2); where a pack numbers a mounting
+    /// slot its own way (air cleaners: 11 or 12), a part that mounts by a single slot mounts by it whatever its
+    /// number. A slot the stand-in still lacks is a merge worth a look and is reported.
+    /// </summary>
+    private static void Graft(SlrrGame game, List<(SourcePart Source, string KeptId)> merged,
+        Dictionary<string, PartDefinition> definitions, Dictionary<(SlrrRpk, int), string> partIds)
+    {
+        foreach (var (source, keptId) in merged)
+        {
+            // A filtered run converts one pack; the stand-in may be in another
+            if (!definitions.TryGetValue(keptId, out var kept)) continue;
+
+            var config = SlrrPartConfig.Load(source.ConfigFile);
+            var mounting = config.Slots.Where(s => s.AttachesTo.Count > 0).ToList();
+            var keptMounting = kept.Slots.Where(s => s.AttachesTo.Count > 0).ToList();
+            foreach (var slot in config.Slots.Where(s => s.AttachesTo.Count > 0 || s.CompatibleWith.Count > 0))
             {
-                Part = targetRpk != null && target != null && partIds.TryGetValue((targetRpk, target.TypeId), out var id) ? id : null,
-                Slot = slotId,
-                Source = SlrrGame.Describe(source.Rpk, partId)
-            };
+                var target = kept.Slots.FirstOrDefault(s => s.Id == slot.Id)
+                             ?? (mounting.Count == 1 && keptMounting.Count == 1 && slot == mounting[0] ? keptMounting[0] : null);
+                if (target == null)
+                {
+                    Console.WriteLine($"    {source.Id} slot {slot.Id} has no counterpart on {keptId}: what fitted there is lost");
+                    continue;
+                }
+
+                Add(target.AttachesTo, slot.AttachesTo.Select(r => Reference(game, source.Rpk, r.PartId, r.SlotId, partIds)));
+                Add(target.CompatibleWith, slot.CompatibleWith.Select(r => Reference(game, source.Rpk, r.PartId, r.SlotId, partIds)));
+            }
+
+            void Add(List<PartSlotReference> references, IEnumerable<PartSlotReference> grafted)
+            {
+                foreach (var reference in grafted)
+                {
+                    // The stand-in itself (the merged part named it, or was named by it as a sibling) is no fit
+                    if (reference.Part != null && reference.Part.Equals(kept.Id, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (references.Any(r => r.Slot == reference.Slot && (r.Part ?? r.Source).Equals(reference.Part ?? reference.Source, StringComparison.OrdinalIgnoreCase))) continue;
+
+                    references.Add(reference);
+                }
+            }
         }
+    }
+
+    /// <summary>
+    /// Gives slots their standard fittings, then finds the slots that take each: every slot a fitted slot attaches
+    /// to by an attach line, written on either side. The game then mates by the fitting as well as by name, so a
+    /// part fitted "carb:4bbl" goes on every pad that takes it, in any pack (a slot that stands in for such a pad
+    /// takes it too: the game follows those at run time).
+    /// </summary>
+    private static void Fit(List<FitRule> rules, Dictionary<string, PartDefinition> definitions)
+    {
+        if (rules.Count == 0) return;
+
+        foreach (var rule in rules)
+        {
+            var fitted = 0;
+            foreach (var definition in definitions.Values.Where(d => rule.Pattern.IsMatch(d.Id)))
+            {
+                var slot = definition.Slots.FirstOrDefault(s => s.Id == rule.Slot);
+                if (slot == null)
+                {
+                    Console.WriteLine($"    {FitOption} {rule.Pattern}: {definition.Id} has no slot {rule.Slot}");
+                    continue;
+                }
+
+                foreach (var fitting in rule.Fittings.Where(f => !slot.Fits.Contains(f, StringComparer.OrdinalIgnoreCase))) slot.Fits.Add(fitting);
+                fitted++;
+            }
+
+            if (fitted == 0) Console.WriteLine($"    {FitOption} {rule.Pattern}: no part has it");
+        }
+
+        // A cfg may declare a slot id twice; every one of them is the slot
+        var slots = definitions.Values
+            .SelectMany(d => d.Slots.Select(s => (Part: d, Slot: s)))
+            .ToLookup(e => (e.Part.Id.ToLowerInvariant(), e.Slot.Id), e => e.Slot);
+
+        foreach (var slot in definitions.Values.SelectMany(d => d.Slots))
+        {
+            foreach (var reference in slot.AttachesTo.Where(r => r.Part != null))
+            {
+                foreach (var other in slots[(reference.Part!.ToLowerInvariant(), reference.Slot)])
+                {
+                    // The fitted slot names the pad, or the pad names the fitted slot
+                    Take(other, slot.Fits);
+                    Take(slot, other.Fits);
+                }
+            }
+        }
+
+        var fittings = definitions.Values.SelectMany(d => d.Slots).SelectMany(s => s.Fits.Concat(s.Takes)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(f => f);
+        foreach (var fitting in fittings)
+        {
+            var fitters = definitions.Values.Where(d => d.Slots.Any(s => s.Fits.Contains(fitting, StringComparer.OrdinalIgnoreCase))).ToList();
+            var takers = definitions.Values.Where(d => d.Slots.Any(s => s.Takes.Contains(fitting, StringComparer.OrdinalIgnoreCase))).ToList();
+            Console.WriteLine($"    {fitting,-14} {fitters.Count,3} parts fit it, {takers.Count,3} take it: {Packs(fitters)} -> {Packs(takers)}");
+        }
+
+        static void Take(PartSlot slot, List<string> fittings)
+        {
+            foreach (var fitting in fittings.Where(f => !slot.Takes.Contains(f, StringComparer.OrdinalIgnoreCase))) slot.Takes.Add(fitting);
+        }
+
+        static string Packs(List<PartDefinition> parts) => string.Join(", ", parts
+            .GroupBy(p => p.Id[..p.Id.LastIndexOf('/')], StringComparer.OrdinalIgnoreCase)
+            .OrderBy(g => g.Key)
+            .Select(g => $"{g.Key} {g.Count()}"));
     }
 
     /// <summary>
@@ -413,8 +684,9 @@ public static class Program
     /// plus every render outside the LOD set. Renders that are not meshes (exhaust smoke, lights) drop out.
     /// Parts that draw the same meshes with the same textures share one model file.
     /// </summary>
+    /// <param name="name">Name of the model file, the part's own unless it is drawn with another part's model</param>
     private static string? ConvertModel(SlrrGame game, SourcePart source, SlrrPartConfig config, string packFolder,
-        string texturePrefix, Dictionary<string, string?> models)
+        string texturePrefix, Dictionary<string, string?> models, string? name = null)
     {
         var selected = SelectRenders(game, source, config);
         if (selected.Count == 0) return null;
@@ -423,11 +695,12 @@ public static class Program
             $"{r.MeshFile}:{string.Join(',', r.TextureFiles)}:{r.Render.Position}:{r.Render.YawPitchRoll}")).ToLowerInvariant();
         if (models.TryGetValue(key, out var existing)) return existing;
 
+        name ??= source.Name;
         var pieces = selected.Select(r => new SlrrKn5Builder.Piece(SlrrMesh.Load(r.MeshFile), r.TextureFiles, r.Render.Matrix));
-        var kn5 = SlrrKn5Builder.Build(source.Name, pieces, texturePrefix, simplified => Console.WriteLine($"    {simplified}"));
+        var kn5 = SlrrKn5Builder.Build(name, pieces, texturePrefix, simplified => Console.WriteLine($"    {simplified}"));
         if (kn5.RootNode.Children.Count == 0) return models[key] = null;
 
-        var model = source.Name + ".kn5";
+        var model = name + ".kn5";
         kn5.Save(Path.Combine(packFolder, model));
         return models[key] = model;
     }

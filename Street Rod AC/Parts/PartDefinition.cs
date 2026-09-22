@@ -153,6 +153,22 @@ public class PartSlot
     /// </summary>
     [JsonProperty("compatible_with")]
     public List<PartSlotReference> CompatibleWith { get; set; } = new();
+
+    /// <summary>
+    /// Standard fittings this slot mounts by, e.g. "carb:4bbl" on a four-barrel carburettor's base: it goes on
+    /// any slot that <see cref="Takes"/> one of them, whatever pack the other part is from. Empty for slots that
+    /// only fit what their attach lines name.
+    /// </summary>
+    [JsonProperty("fits")]
+    public List<string> Fits { get; set; } = new();
+
+    /// <summary>Standard fittings this slot receives, e.g. "carb:4bbl" on a manifold's carburettor pad</summary>
+    [JsonProperty("takes")]
+    public List<string> Takes { get; set; } = new();
+
+    public bool ShouldSerializeFits() => Fits.Count > 0;
+
+    public bool ShouldSerializeTakes() => Takes.Count > 0;
 }
 
 public class PartStockReference

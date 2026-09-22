@@ -121,7 +121,7 @@
         "source": "parts\\engines\\fordi6_data.rpk#0x0048"
       },
       {
-        "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+        "part": "engines/ford_six/Baiern_Tourist_transmission",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\fordi6_data.rpk#0x00BC"
@@ -250,7 +250,7 @@
         "source": "parts\\engines\\fordi6_data.rpk#0x0048"
       },
       {
-        "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+        "part": "engines/ford_six/Baiern_Tourist_transmission",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\fordi6_data.rpk#0x00BC"
@@ -379,7 +379,7 @@
         "source": "parts\\engines\\fordi6_data.rpk#0x0048"
       },
       {
-        "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+        "part": "engines/ford_six/Baiern_Tourist_transmission",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\fordi6_data.rpk#0x00BC"
@@ -508,7 +508,7 @@
         "source": "parts\\engines\\fordi6_data.rpk#0x0048"
       },
       {
-        "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+        "part": "engines/ford_six/Baiern_Tourist_transmission",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\fordi6_data.rpk#0x00BC"
@@ -649,7 +649,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
       },
       {
-        "part": "engines/gm/Summit_air_filter",
+        "part": "engines/generic/Summit_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A5"
@@ -772,13 +772,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB0A1"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_carburator",
+        "part": "engines/generic/Holley_2x4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_filter",
+        "part": "engines/generic/Holley_2x4brl_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
@@ -910,7 +910,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -973,13 +973,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0BE"
       },
       {
-        "part": "engines/gm/Holley_4brl_carburator",
+        "part": "engines/generic/Holley_4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -1111,7 +1111,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -1258,13 +1258,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -1357,7 +1357,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -1489,7 +1489,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x80A7"
       },
       {
-        "part": "engines/gm/GM_500_4spd_gearbox",
+        "part": "engines/gm/GM_500_3spd_gearbox",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x8098"
@@ -1636,7 +1636,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
       },
       {
-        "part": "engines/gm/Summit_air_filter",
+        "part": "engines/generic/Summit_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A5"
@@ -1843,7 +1843,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/Summit_air_filter",
+        "part": "engines/generic/Summit_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A5"
@@ -1966,13 +1966,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB0A1"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_carburator",
+        "part": "engines/generic/Holley_2x4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_filter",
+        "part": "engines/generic/Holley_2x4brl_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
@@ -2104,7 +2104,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -2167,13 +2167,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0BE"
       },
       {
-        "part": "engines/gm/Holley_4brl_carburator",
+        "part": "engines/generic/Holley_4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -2305,7 +2305,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -2374,13 +2374,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB0A1"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_carburator",
+        "part": "engines/generic/Holley_2x4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_filter",
+        "part": "engines/generic/Holley_2x4brl_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
@@ -2512,7 +2512,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -2575,7 +2575,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0BE"
       },
       {
-        "part": "engines/gm/Holley_4brl_carburator",
+        "part": "engines/generic/Holley_4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
@@ -2713,7 +2713,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -3073,7 +3073,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -3268,13 +3268,13 @@
         "source": "parts\\engines\\Mopar.rpk#0x33BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
+        "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x428B"
       },
       {
-        "part": "engines/chrysler/Air_cleaner_Edelbrock_Oval_2x4BRL",
+        "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x0386"
@@ -3469,7 +3469,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -3859,13 +3859,13 @@
         "source": "parts\\engines\\Mopar.rpk#0x33BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
+        "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x428B"
       },
       {
-        "part": "engines/chrysler/Air_cleaner_Edelbrock_Oval_2x4BRL",
+        "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x0386"
@@ -4060,7 +4060,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -4255,7 +4255,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x40BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_4BRL_Holley",
+        "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x008B"
@@ -4468,7 +4468,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x40BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_4BRL_Holley",
+        "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x008B"
@@ -4681,7 +4681,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x40BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_4BRL_Holley",
+        "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x008B"
@@ -4894,7 +4894,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x40BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_4BRL_Holley",
+        "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x008B"
@@ -5095,7 +5095,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x4084"
       },
       {
-        "part": "engines/chrysler/Transmission_TKO600_5spd",
+        "part": "engines/chrysler/Transmission_A833_4spd",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x0899"
@@ -5107,13 +5107,13 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_Road_Demon_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x01A3"
       },
       {
-        "part": "engines/chrysler/Air_cleaner_Six_pack_HOLLEY",
+        "part": "engines/generic/Air_cleaner_Six_pack_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x4BA5"
@@ -5320,7 +5320,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x40BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_4BRL_Holley",
+        "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x008B"
@@ -5728,7 +5728,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/RG_4spd_plus_tranny_2",
+        "part": "engines/gm/RG_4spd_plus_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x1B99"
@@ -5827,13 +5827,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0BE"
       },
       {
-        "part": "engines/gm/Holley_4brl_carburator",
+        "part": "engines/generic/Holley_4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -5965,7 +5965,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -6034,13 +6034,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0BE"
       },
       {
-        "part": "engines/gm/Holley_4brl_carburator",
+        "part": "engines/generic/Holley_4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -6172,7 +6172,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -6247,7 +6247,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -6379,7 +6379,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/GM_427_4spd_tranny",
+        "part": "engines/gm/GM_427_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x3798"
@@ -6448,7 +6448,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -6580,7 +6580,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x80A7"
       },
       {
-        "part": "engines/gm/GM_500_4spd_gearbox",
+        "part": "engines/gm/GM_500_3spd_gearbox",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x8098"
@@ -6721,7 +6721,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -6745,7 +6745,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/RG_4spd_plus_tranny_2",
+        "part": "engines/gm/RG_4spd_plus_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x1B99"
@@ -6850,7 +6850,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -6982,7 +6982,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x80A7"
       },
       {
-        "part": "engines/gm/GM_500_4spd_gearbox",
+        "part": "engines/gm/GM_500_3spd_gearbox",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x8098"
@@ -7051,7 +7051,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -7183,7 +7183,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -7246,13 +7246,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x36A1"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_carburator",
+        "part": "engines/generic/Holley_2x4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_filter",
+        "part": "engines/generic/Holley_2x4brl_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
@@ -7384,7 +7384,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -7525,7 +7525,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -7549,7 +7549,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/RG_4spd_plus_tranny_2",
+        "part": "engines/gm/RG_4spd_plus_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x1B99"
@@ -7726,7 +7726,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -7750,7 +7750,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/RG_4spd_plus_tranny_2",
+        "part": "engines/gm/RG_4spd_plus_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x1B99"
@@ -7927,7 +7927,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -7951,7 +7951,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/RG_4spd_plus_tranny_2",
+        "part": "engines/gm/RG_4spd_plus_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x1B99"
@@ -8050,13 +8050,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x36A1"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_carburator",
+        "part": "engines/generic/Holley_2x4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_filter",
+        "part": "engines/generic/Holley_2x4brl_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
@@ -8188,7 +8188,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -8329,7 +8329,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -8353,7 +8353,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/RG_4spd_plus_tranny_2",
+        "part": "engines/gm/RG_4spd_plus_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x1B99"
@@ -8458,7 +8458,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -8590,7 +8590,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/GM_427_4spd_tranny",
+        "part": "engines/gm/GM_427_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x3798"
@@ -8653,13 +8653,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0BE"
       },
       {
-        "part": "engines/gm/Holley_4brl_carburator",
+        "part": "engines/generic/Holley_4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -8791,7 +8791,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -8938,13 +8938,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -9037,7 +9037,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -9169,7 +9169,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/GM_427_4spd_tranny",
+        "part": "engines/gm/GM_427_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x3798"
@@ -9334,7 +9334,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -9535,7 +9535,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x00A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -9736,7 +9736,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -9937,7 +9937,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x00A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -10138,7 +10138,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -10339,7 +10339,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -11125,7 +11125,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -11302,13 +11302,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -11467,7 +11467,7 @@
         "source": "parts\\engines\\fordi6_data.rpk#0x0048"
       },
       {
-        "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+        "part": "engines/ford_six/Baiern_Tourist_transmission",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\fordi6_data.rpk#0x00BC"
@@ -11602,13 +11602,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -11773,13 +11773,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -11968,7 +11968,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x00A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -12169,7 +12169,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x00A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -12364,13 +12364,13 @@
         "source": "parts\\engines\\Mopar.rpk#0x33BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
+        "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x428B"
       },
       {
-        "part": "engines/chrysler/Air_cleaner_Edelbrock_Oval_2x4BRL",
+        "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x0386"
@@ -12664,7 +12664,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -12796,7 +12796,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/GM_427_4spd_tranny",
+        "part": "engines/gm/GM_427_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x3798"
@@ -12865,7 +12865,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -12997,7 +12997,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x80A7"
       },
       {
-        "part": "engines/gm/GM_500_4spd_gearbox",
+        "part": "engines/gm/GM_500_3spd_gearbox",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x8098"
@@ -13132,7 +13132,7 @@
         "source": "parts\\engines\\fordi6_data.rpk#0x0048"
       },
       {
-        "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+        "part": "engines/ford_six/Baiern_Tourist_transmission",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\fordi6_data.rpk#0x00BC"
@@ -13267,13 +13267,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -13438,13 +13438,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -13609,13 +13609,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -13702,13 +13702,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0BE"
       },
       {
-        "part": "engines/gm/Holley_4brl_carburator",
+        "part": "engines/generic/Holley_4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -13840,7 +13840,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -13981,7 +13981,7 @@
         "source": "parts\\engines\\fordi6_data.rpk#0x0048"
       },
       {
-        "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+        "part": "engines/ford_six/Baiern_Tourist_transmission",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\fordi6_data.rpk#0x00BC"
@@ -14116,13 +14116,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -14287,13 +14287,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -14452,7 +14452,7 @@
         "source": "parts\\engines\\fordi6_data.rpk#0x0048"
       },
       {
-        "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+        "part": "engines/ford_six/Baiern_Tourist_transmission",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\fordi6_data.rpk#0x00BC"
@@ -14509,13 +14509,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x10A1"
       },
       {
-        "part": "engines/gm/Holley_3x2brl_carbs",
+        "part": "engines/generic/Holley_3x2brl_carbs",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
       },
       {
-        "part": "engines/gm/Summit_2x4_3x2_air_filter",
+        "part": "engines/generic/Summit_2x4_3x2_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x20A5"
@@ -14647,7 +14647,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -14716,13 +14716,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x10A1"
       },
       {
-        "part": "engines/gm/Holley_3x2brl_carbs",
+        "part": "engines/generic/Holley_3x2brl_carbs",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
       },
       {
-        "part": "engines/gm/Summit_2x4_3x2_air_filter",
+        "part": "engines/generic/Summit_2x4_3x2_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x20A5"
@@ -14854,7 +14854,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -15025,7 +15025,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x40BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_4BRL_Holley",
+        "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x008B"
@@ -15226,7 +15226,7 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -15811,13 +15811,13 @@
         "source": "parts\\engines\\Mopar.rpk#0x33BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
+        "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x428B"
       },
       {
-        "part": "engines/chrysler/Air_cleaner_Edelbrock_Oval_2x4BRL",
+        "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x0386"
@@ -15916,7 +15916,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -16048,7 +16048,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x80A7"
       },
       {
-        "part": "engines/gm/GM_500_4spd_gearbox",
+        "part": "engines/gm/GM_500_3spd_gearbox",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x8098"
@@ -16111,13 +16111,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0BE"
       },
       {
-        "part": "engines/gm/Holley_4brl_carburator",
+        "part": "engines/generic/Holley_4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -16249,7 +16249,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -16396,7 +16396,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -16597,7 +16597,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -16798,7 +16798,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -17005,7 +17005,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
       },
       {
-        "part": "engines/gm/Summit_air_filter",
+        "part": "engines/generic/Summit_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A5"
@@ -17212,7 +17212,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
       },
       {
-        "part": "engines/gm/Summit_air_filter",
+        "part": "engines/generic/Summit_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A5"
@@ -17341,7 +17341,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -17473,7 +17473,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/GM_427_4spd_tranny",
+        "part": "engines/gm/GM_427_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x3798"
@@ -17731,13 +17731,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x10A1"
       },
       {
-        "part": "engines/gm/Holley_3x2brl_carbs",
+        "part": "engines/generic/Holley_3x2brl_carbs",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
       },
       {
-        "part": "engines/gm/Summit_2x4_3x2_air_filter",
+        "part": "engines/generic/Summit_2x4_3x2_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x20A5"
@@ -17869,7 +17869,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -18016,13 +18016,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -18187,7 +18187,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -18394,7 +18394,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
       },
       {
-        "part": "engines/gm/Summit_air_filter",
+        "part": "engines/generic/Summit_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A5"
@@ -18517,13 +18517,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB0A1"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_carburator",
+        "part": "engines/generic/Holley_2x4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_filter",
+        "part": "engines/generic/Holley_2x4brl_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
@@ -18655,7 +18655,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -18796,7 +18796,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -18919,13 +18919,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0BE"
       },
       {
-        "part": "engines/gm/Holley_4brl_carburator",
+        "part": "engines/generic/Holley_4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -19057,7 +19057,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -19126,13 +19126,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB0A1"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_carburator",
+        "part": "engines/generic/Holley_2x4brl_carburator",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_filter",
+        "part": "engines/generic/Holley_2x4brl_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
@@ -19264,7 +19264,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -19405,7 +19405,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -19606,13 +19606,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -20167,13 +20167,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -20338,13 +20338,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_oval_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x0086"
@@ -20503,7 +20503,7 @@
         "source": "parts\\engines\\fordi6_data.rpk#0x0048"
       },
       {
-        "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+        "part": "engines/ford_six/Baiern_Tourist_transmission",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\fordi6_data.rpk#0x00BC"
@@ -20632,7 +20632,7 @@
         "source": "parts\\engines\\fordi6_data.rpk#0x0048"
       },
       {
-        "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+        "part": "engines/ford_six/Baiern_Tourist_transmission",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\fordi6_data.rpk#0x00BC"
@@ -20767,13 +20767,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -20944,7 +20944,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
       },
       {
-        "part": "engines/gm/Summit_air_filter",
+        "part": "engines/generic/Summit_air_filter",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A5"
@@ -21169,7 +21169,7 @@
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_2BRL_HOLLEY",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": "Carburetors_2BRL_HOLLEY",
         "conditional": false,
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00A3"
@@ -21382,7 +21382,7 @@
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+        "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
         "name": "Carburetors_4BRL_street_HOLLEY",
         "conditional": false,
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
@@ -21595,7 +21595,7 @@
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x03BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_2BRL_HOLLEY",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": "Carburetors_2BRL_HOLLEY",
         "conditional": false,
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00A3"
@@ -21808,7 +21808,7 @@
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x06FB"
       },
       {
-        "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+        "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
         "name": "Carburetors_4BRL_street_HOLLEY",
         "conditional": false,
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
@@ -22021,7 +22021,7 @@
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x06FB"
       },
       {
-        "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+        "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
         "name": "Carburetors_4BRL_street_HOLLEY",
         "conditional": false,
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
@@ -22234,7 +22234,7 @@
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x07FB"
       },
       {
-        "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+        "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
         "name": "Carburetors_4BRL_street_HOLLEY",
         "conditional": false,
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
@@ -22447,7 +22447,7 @@
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x07FB"
       },
       {
-        "part": "engines/chrysler/Carburetors_4BRL_street_HOLLEY",
+        "part": "engines/generic/Carburetors_4BRL_street_HOLLEY",
         "name": "Carburetors_4BRL_street_HOLLEY",
         "conditional": false,
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x088B"
@@ -22849,13 +22849,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": "Dexter Ford 4 Barrel Carburetor",
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": "Dexter Universal_round_air_filter",
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -23020,13 +23020,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": "Dexter Ford 4 Barrel Carburetor",
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": "Dexter Universal_round_air_filter",
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -23191,13 +23191,13 @@
         "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
       },
       {
-        "part": "engines/ford/Universal_4_barrel_carburetor",
+        "part": "engines/generic/Universal_4_barrel_carburetor",
         "name": "Dexter Ford 4 Barrel Carburetor",
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
       },
       {
-        "part": "engines/ford/Universal_round_air_filter",
+        "part": "engines/generic/Air_cleaner_Edelbrock",
         "name": "Dexter Universal_round_air_filter",
         "conditional": false,
         "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -24739,7 +24739,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": "MOROSO Air Filter",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -24964,7 +24964,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/RG_4spd_plus_tranny_2",
+        "part": "engines/gm/RG_4spd_plus_tranny",
         "name": "RG 5spd tranny",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x1B99"
@@ -25147,7 +25147,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
       },
       {
-        "part": "engines/gm/Summit_air_filter",
+        "part": "engines/generic/Summit_air_filter",
         "name": "Summit air filter",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A5"
@@ -25270,13 +25270,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x10A1"
       },
       {
-        "part": "engines/gm/Holley_3x2brl_carbs",
+        "part": "engines/generic/Holley_3x2brl_carbs",
         "name": "Holley 3x2brl carbs",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
       },
       {
-        "part": "engines/gm/Summit_2x4_3x2_air_filter",
+        "part": "engines/generic/Summit_2x4_3x2_air_filter",
         "name": "Summit 2x4 3x2 air filter",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x20A5"
@@ -25408,7 +25408,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": "GM 4spd tranny",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -25477,13 +25477,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0BE"
       },
       {
-        "part": "engines/gm/Holley_4brl_carburator",
+        "part": "engines/generic/Holley_4brl_carburator",
         "name": "Holley rejetted dominator",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": "MOROSO air filter",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -25615,7 +25615,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0084"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": "GM 4spd tranny",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -25684,13 +25684,13 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xB0A1"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_carburator",
+        "part": "engines/generic/Holley_2x4brl_carburator",
         "name": "Holley 2x4brl carbs",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
       },
       {
-        "part": "engines/gm/Holley_2x4brl_filter",
+        "part": "engines/generic/Holley_2x4brl_filter",
         "name": "Holley Dual 2x4 air filter",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
@@ -25822,7 +25822,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/V8_4spd_tranny_GM",
+        "part": "engines/gm/V8_3spd_tranny",
         "name": "GM 4spd tranny",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x0099"
@@ -25891,7 +25891,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": "MOROSO air filter",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -26023,7 +26023,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x80A7"
       },
       {
-        "part": "engines/gm/GM_500_4spd_gearbox",
+        "part": "engines/gm/GM_500_3spd_gearbox",
         "name": "GM 500 4spd tranny",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x8098"
@@ -26092,7 +26092,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
       },
       {
-        "part": "engines/gm/MOROSO_air_filter",
+        "part": "engines/generic/MOROSO_air_filter",
         "name": "MOROSO air filter",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x01A5"
@@ -26224,7 +26224,7 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x00A7"
       },
       {
-        "part": "engines/gm/GM_427_4spd_tranny",
+        "part": "engines/gm/GM_427_3spd_tranny",
         "name": "GM 427 4spd 2,78:1 tranny",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x3798"
@@ -26389,7 +26389,7 @@
         "source": "parts\\engines\\MOPAR.rpk#0x00A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": "MOPAR_six_pack_340_carbs",
         "conditional": false,
         "source": "parts\\engines\\MOPAR.rpk#0x00A3"
@@ -26584,13 +26584,13 @@
         "source": "parts\\engines\\MOPAR.rpk#0x33BE"
       },
       {
-        "part": "engines/chrysler/Carburetors_2x4BRL_Dominator_HOLLEY",
+        "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
         "name": "Holley 2x4 barrel carburetors",
         "conditional": false,
         "source": "parts\\engines\\MOPAR.rpk#0x428B"
       },
       {
-        "part": "engines/chrysler/Air_cleaner_Edelbrock_Oval_2x4BRL",
+        "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
         "name": "Holley_2x4brl_air_cleaner",
         "conditional": false,
         "source": "parts\\engines\\MOPAR.rpk#0x0386"
@@ -26980,7 +26980,7 @@
         "source": "parts\\engines\\MOPAR.rpk#0x50A1"
       },
       {
-        "part": "engines/chrysler/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
         "name": "MOPAR six_pack_340_carbs",
         "conditional": false,
         "source": "parts\\engines\\MOPAR.rpk#0x00A3"
@@ -27292,7 +27292,7 @@
         "source": "parts\\engines\\fordi6_data.rpk#0x0048"
       },
       {
-        "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+        "part": "engines/ford_six/Baiern_Tourist_transmission",
         "name": "Gearbox_Saginaw_4spd",
         "conditional": false,
         "source": "parts\\engines\\fordi6_data.rpk#0x00BC"
@@ -27427,7 +27427,7 @@
         "source": "parts\\engines\\fordi6_data.rpk#0x0048"
       },
       {
-        "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+        "part": "engines/ford_six/Baiern_Tourist_transmission",
         "name": "Gearbox_Saginaw_4spd",
         "conditional": false,
         "source": "parts\\engines\\fordi6_data.rpk#0x00BC"

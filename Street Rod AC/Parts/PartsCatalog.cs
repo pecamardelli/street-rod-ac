@@ -99,17 +99,21 @@ public sealed class PartsCatalog
     /// <summary>
     /// Whether two slots go together. A slot names the slots it attaches to, on either side of the joint (a header
     /// names the head it bolts to, a block names the radiator it takes), and a slot may stand in for the slot of
-    /// another part: whatever fits there fits here.
+    /// another part: whatever fits there fits here. Slots also go together by a standard fitting: a carburettor
+    /// base that fits "carb:4bbl" goes on any manifold pad that takes it, whatever pack either is from.
     /// </summary>
     public bool CanMate(PartDefinition part, PartSlot slot, PartDefinition other, PartSlot otherSlot)
     {
         var mine = Equivalents(part, slot);
         var theirs = Equivalents(other, otherSlot);
-        return Names(mine, theirs) || Names(theirs, mine);
+        return Names(mine, theirs) || Names(theirs, mine) || Fits(mine, theirs) || Fits(theirs, mine);
 
         static bool Names(List<(PartDefinition Part, PartSlot Slot)> from, List<(PartDefinition Part, PartSlot Slot)> to) =>
             from.Any(f => f.Slot.AttachesTo.Any(a => a.Part != null && to.Any(t =>
                 t.Slot.Id == a.Slot && t.Part.Id.Equals(a.Part, StringComparison.OrdinalIgnoreCase))));
+
+        static bool Fits(List<(PartDefinition Part, PartSlot Slot)> from, List<(PartDefinition Part, PartSlot Slot)> to) =>
+            from.Any(f => f.Slot.Fits.Any(fitting => to.Any(t => t.Slot.Takes.Contains(fitting, StringComparer.OrdinalIgnoreCase))));
     }
 
     /// <summary>
@@ -132,6 +136,8 @@ public sealed class PartsCatalog
             {
                 if (target.Part != null) Add(index.StandIns.GetValueOrDefault(Key(target.Part, target.Slot)));
             }
+
+            foreach (var fitting in equivalent.Slot.Takes) Add(index.FittedBy.GetValueOrDefault(fitting));
         }
 
         return result;
@@ -162,6 +168,9 @@ public sealed class PartsCatalog
         /// <summary>Slots that stand in for a slot, the slot itself included</summary>
         public Dictionary<(string PartId, int SlotId), List<(PartDefinition Part, PartSlot Slot)>> StandIns { get; } = new();
 
+        /// <summary>Slots that mount by a standard fitting, themselves or through a slot they stand in for</summary>
+        public Dictionary<string, List<(PartDefinition Part, PartSlot Slot)>> FittedBy { get; } = new(StringComparer.OrdinalIgnoreCase);
+
         public MatingIndex(PartsCatalog catalog)
         {
             foreach (var part in catalog._parts.Values)
@@ -175,12 +184,15 @@ public sealed class PartsCatalog
                         {
                             if (target.Part != null) Add(NamedBy, Key(target.Part, target.Slot), (part, slot));
                         }
+
+                        foreach (var fitting in equivalent.Slot.Fits) Add(FittedBy, fitting, (part, slot));
                     }
                 }
             }
         }
 
-        private static void Add(Dictionary<(string, int), List<(PartDefinition, PartSlot)>> map, (string, int) key, (PartDefinition, PartSlot) value)
+        private static void Add<TKey>(Dictionary<TKey, List<(PartDefinition, PartSlot)>> map, TKey key, (PartDefinition, PartSlot) value)
+            where TKey : notnull
         {
             if (!map.TryGetValue(key, out var list)) map[key] = list = new();
             list.Add(value);
