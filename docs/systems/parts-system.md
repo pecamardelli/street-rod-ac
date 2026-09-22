@@ -5,7 +5,8 @@ reimplement SLRR's part logic, it runs it: the compiled part scripts of the SLRR
 against the player's own assembly of parts. Only what SLRR itself kept in native code is written in C#: the engine
 simulation and, new here, the export to Assetto Corsa physics data.
 
-Scope: mechanical parts only (engine, transmission; running gear next). Car bodies stay Assetto Corsa's.
+Scope: mechanical parts only: engine, transmission and running gear (tyres, rims, brakes, springs, shocks). Car bodies
+stay Assetto Corsa's.
 
 ```
 SLRR install ──SlrrPartsConverter──▶ Assets\Parts\                         (one-off, offline)
@@ -16,6 +17,10 @@ SLRR install ──SlrrPartsConverter──▶ Assets\Parts\                    
 
 Assets\Parts ──PartsCatalog──▶ PartTreeBuilder ──▶ PartScriptRuntime ──▶ EngineDyno ──▶ EngineReport ──▶ AcEngineData
                 definitions     build → tree        scripts run on it     torque curve    verdict+figures   AC data files
+
+Car.Parts ──RunningGear.Mounted──▶ AcRunningGearData ─┐
+                                                       ├──▶ AcCarBuild ──▶ RaceCarDataService ──▶ CarDataOverlay ──▶ acs.exe
+Car.Engine ──EngineEvaluator──▶ AcEngineData ──────────┘     all files      per car of a race     apply, race, restore
 ```
 
 The converted content lives in the repo, `Street Rod AC\Assets\Parts` (187 MB), and is copied next to the exe at build;
@@ -407,6 +412,25 @@ worth `value x tear x (0.3 + 0.7 x wear)` as in SLRR, ads ask around 60% of that
 now take turns through `CatalogDatabase.Open` (a semaphore, given back when the connection is disposed, whatever
 happens while closing; a call must not open the database again while it has it open).
 
+**Running gear** (`Parts/Cars/RunningGear`, `RunningGearFactory`). Every car also carries its wheels: on the car's own
+slots as the chassis script numbers them (rim 101+i, brake 111+i, shock 301+i, spring 311+i for corner i: 0-1 front,
+2-3 rear, even numbers left), the tyre on the rim's slot 2. `Car.HasRunningGearAssigned` works like `HasPartsAssigned`:
+a car without it gets its factory set the first time it is looked at (`EnsureParts`), worn like its tyres. The factory
+set is matched to what the car's own Assetto Corsa data says (`AcCarSpecs`, read from the car's `tyres.ini`,
+`brakes.ini`, `suspensions.ini`, `car.ini`, folder or `data.acd`): the tyre nearest in width (one tyre for the car
+unless it is staggered by 3 cm or more, the plainest compound of that width), the plainest rim that takes it, and the
+brake, spring and shock nearest to the car's figures, which is the smallest the catalog has more often than not, since
+the source game's parts are all stiffer and stronger than a road car of 1970 (so what the shop sells is an upgrade).
+The choice is deterministic: it is also the baseline the export measures against. A tyre only goes on a rim of the
+same diameter whose width it takes (`RunningGear.TyreFitsRim`, the tyre script's own rule); rims, brakes, springs and
+shocks go on any free corner (`Workbench.FindPlaces`). What each part does to the car is read off its script fields
+with the framework's formulas: brake torque = clamp force × calipers × pad-on-disc friction × disc radius, less with
+wear; spring rate; bump damping and rebound (gas, oil, gas-oil); tyre width, radius, rim radius, grip (less as it
+wears), load capacity, rolling resistance, pressure; rim offset and mass. Sway bars and suspension arms are inert in
+the source game (their physics calls are commented out) and stay out of the shop. In the garage the running gear is
+drawn at the hubs (`CarPartsLayout`, `CarViewport3D.Gear`) and picked, taken off and put back like engine parts.
+Check: `EngineBench <parts> gear <AC cars folder>`.
+
 **Threads.** The game state and the save file belong to the UI thread. Whatever takes long (loading the catalog,
 putting engines together for ads, market listings and cars without parts) runs on a worker thread on objects nobody
 else has yet, and the result goes into the game state back on the calling thread (`RefreshAdsAsync`,
@@ -417,22 +441,75 @@ event generation are finished first, and whoever saves after spending time await
 
 ## Assetto Corsa export (`Parts/Export`)
 
-`AcEngineData.Generate(report, readFile)` returns the data files an engine build changes, made from the car's own
-files with minimal edits (`IniText` keeps comments and order):
+What a car's parts make of it goes into the car's own data files for a race, by changing them as little as possible
+(`IniText` keeps comments, order and untouched lines; a section that occurs twice, a second tyre compound, is reached
+by occurrence). `AcCarBuild.Generate(catalog, CarBuild, readFile)` puts it together: the engine's files, then the
+running gear's over them, and a list of `Problems` that keep the car from being driven (no engine, an engine that does
+not run, a corner without a wheel, brake, spring or shock). `AcCarData.Open(carDirectory)` reads a car's data whether
+it is a folder or `data.acd` (`AcdFile` reads the packed form; the key is worked out from the folder name the way the
+game does it, checked against every packed car of both installs on this machine).
+
+**Engine and transmission** (`AcEngineData`): the curve **replaces** the car's. The file says what the dyno says.
 
 | File | Changes |
 |---|---|
-| `power.lut` | Flywheel torque × drivetrain efficiency (0.87 default; AC has no drivetrain loss of its own) |
-| `engine.ini` | `INERTIA`, `LIMITER`, `MINIMUM`, `COAST_REF`, `DAMAGE/RPM_THRESHOLD` = what the weakest rotating part survives; `TURBO_n` removed (boost is in the curve) |
-| `drivetrain.ini` | `GEARS` count/ratios/reverse/final, `DIFFERENTIAL` lock, clutch torque raised if needed, `AUTO_SHIFTER` `UP`/`DOWN` when the car has them. `TRACTION` is left alone: the body decides |
+| `power.lut` | Flywheel torque, exactly (no drivetrain loss taken off: `DrivetrainEfficiency` = 1) |
+| `engine.ini` | `INERTIA`, `LIMITER`, `MINIMUM`; `COAST_REF` = 12 Nm per litre at the limiter × the build's friction over a stock oil pan's (`engine_friction_fwd`, 0.0002 is the median of the builds, clamped ½..2: a racing pan lets the engine spin freer); `DAMAGE/RPM_THRESHOLD` = what the weakest rotating part survives; the car's own `TURBO_n` removed |
+| `engine.ini [TURBO_0]` | Only with a turbocharger part: the game's own turbo (lag, gauge, boost damage) fitted to how much more the boosted curve makes than the same engine without its charger: `MAX_BOOST` = `WASTEGATE` = the peak gain, `REFERENCE_RPM` where 95% of it is reached, `GAMMA` by least squares on the way up. The lut is divided by the boost the game adds back, so the torque with the throttle open stays the dyno's. A supercharger is crank-driven and has no lag: it stays baked into the curve |
+| `drivetrain.ini` | `GEARS` count/ratios/reverse/final, `DIFFERENTIAL` lock; `CLUTCH/MAX_TORQUE` = the clutch part's clamp figure (`maxF`) × 2.6 Nm, set so every factory engine's clutch holds it (the big-block packs put a 300 behind 770 Nm): a built engine outgrows a stock clutch and it slips; `AUTO_SHIFTER` `UP`/`DOWN` when the car has them. `TRACTION` is left alone: the body decides |
 | `ai.ini` | Shift points: `UP` near peak power below the limiter; `DOWN` at most 90% of where the widest gear step lands after an upshift, so wide-ratio boxes do not hunt |
 | `setup.ini` | Gear ratio selectors removed; they would override the transmission |
+| `car.ini` | `TOTALMASS` moves by what the engine weighs more or less than the car's factory build (`FactoryEngineMass`) |
 
 A car without `engine.ini` or `drivetrain.ini` throws (`FileNotFoundException`) instead of producing skeleton files; a
 build without a limiter (`RPM_limit` 0) is limited at the end of its curve.
 
-`AcCarDataReader.ForCar(dir)` reads a car's data whether folder or `data.acd`. **Nothing writes into the AC install
-yet**: applying the files for a race and restoring them afterwards (the rule for every AC change) is the next step.
+Blowers: the dyno's boost peaks where the charger script says it works best. The script hands over its working band
+in engine speeds multiplied by the square of the drive ratio, so `EngineDyno.Boost` compares it with the engine speed
+times that square (it compared it with the speed times the ratio before, which put a 4:1 roots blower's peak at
+10,600 rpm and made it behave like a big turbo: 55% boost at 3,000 rpm and rising). No build of `engine_builds.json`
+is blown, so the rated table did not move; a mounted blower now makes its torque low down.
+
+**Running gear** (`AcRunningGearData`): the car's figures are **scaled**, never replaced. Whatever units the source
+game and Assetto Corsa think in, the car's author set its numbers for its factory parts; what is mounted moves each
+number by its ratio to the factory part, averaged over the two corners of the axle. A car on its factory parts comes
+out byte for byte (a factor of one leaves the line alone; a file without an edit is not written), a worn car a little
+weaker (brake torque `0.2 + 0.8 √wear`, grip `0.85 + 0.15 wear`).
+
+| File | Scaled by mounted / factory |
+|---|---|
+| `tyres.ini`, every `FRONT*`/`REAR*` compound | `WIDTH`, `RADIUS`, `RIM_RADIUS` (and `ANGULAR_INERTIA` by radius²), `DX_REF`/`DY_REF`/`DX0`/`DY0` by grip, `FZ0` by load capacity, `ROLLING_RESISTANCE_0/1`, `PRESSURE_STATIC`/`PRESSURE_IDEAL` |
+| `brakes.ini` | `MAX_TORQUE` and `FRONT_SHARE` from the front and rear torques scaled separately; `HANDBRAKE_TORQUE` by the rear |
+| `suspensions.ini` | `SPRING_RATE` (or a coil-over's `RATE`), `DAMP_BUMP`/`DAMP_FAST_BUMP`, `DAMP_REBOUND`/`DAMP_FAST_REBOUND`; `TRACK` moves by twice the rim offset difference, `HUB_MASS` by the unsprung mass difference |
+| `car.ini` | `TOTALMASS` by the running gear's mass difference |
+
+What has no lever on either side stays a gate: batteries, alternators, water pumps, radiators, distributors and the
+like are plain `Part`s in the source game (no physics fields) and Assetto Corsa has no battery or cooling model (CSP
+only synthesises gauge channels). They matter through `required_slots`: without them the engine does not run, and a car
+whose engine does not run does not race.
+
+## Apply and restore (`Services/CarDataOverlay`, `Services/Race/RaceCarDataService`)
+
+The rule for every change to the Assetto Corsa install: the originals are kept aside first, the change is the
+smallest that does the job, and whatever happens the originals go back. `CarDataOverlay.Apply(carId, files)` keeps the
+car's originals under `%APPDATA%\StreetRodAC\AcRestore\<car>\files` with a `manifest.json` (which files, whether
+each existed), written before anything in the install changes, then writes the files into the car's `data` folder.
+A car that ships packed (`data.acd`, no folder: the GT500) gets the whole of its data unpacked into a `data` folder
+for the race, since the game reads the folder when there is one, and the folder removed after. `Restore`/`RestoreAll`
+put everything back and delete the kept copies; the launcher calls `RestoreAll` in its `finally`, and `App.OnStartup`
+calls it too, for what a crash or a power cut left behind.
+
+The diner prepares the data before a race (`RaceCarDataService.Prepare(car)`: the engine on the dyno, the running gear
+against the factory's, for the player's car and the opponent's, each on its own parts). A player's car with problems
+does not race ("Your car is not going anywhere: no brake front right"); an opponent's car with problems races as its
+author made it. The files ride on the `LaunchIntent` (`CarData`) and the launcher applies them after the race config
+and before `acs.exe`. Two cars of one model share one folder: the diner skips the opponent's pass and it drives the
+player's data (the launcher refuses a second `Apply` to a car changed for the same race, in case). A manifest an earlier
+race could not restore is put back before the car's data is changed again. A car without parts (no catalog, an older
+save) races on the data its author gave it.
+
+Check: `EngineBench <parts> car <AC car folder> <build id> [output folder]` writes every file the car's parts change,
+with the factory running gear mounted (so only the engine files differ).
 
 ## Bench (`tools/EngineBench`)
 
@@ -443,19 +520,21 @@ EngineBench <parts folder> cars <AC cars folder>       factory engine suggested 
 EngineBench <parts folder> tune <build id> [count]     engines a used car of that build may turn up with
 EngineBench <parts folder> bench <build id>            every part comes off and has to find its way back
 EngineBench <parts folder> renew <older parts folder>  engines as a save made with an older conversion holds them, brought up to date
+EngineBench <parts folder> gear <AC cars folder>       factory running gear chosen for every car, against its own data
+EngineBench <parts folder> car <AC car folder> <build id> [output folder]   every data file the car's parts change
 ```
 
 ## Not done yet
 
-- Applying exported data for a race, with restore. Open question for that step: a factory build does not make
-  exactly the power of the AC car it stands for (the matcher picks the nearest engine, the dyno is within ~15%), so
-  either the parts' curve replaces the car's, or the car's own curve is scaled by tuned/factory from the dyno.
-- Opponents' cars get their parts lazily (`EnsureParts`) but nothing uses them yet.
+- Two cars of one model in a race share one data folder: the opponent drives the player's data. A clone of the car
+  folder for the race (with the sound bank's GUIDs renamed, as Content Manager does) would give each its own.
 - Working on an engine outside a car (an engine stand): on the shelf an assembly can be taken apart, but parts only
   go together on a car.
-- Running gear (tyres, brakes, suspension): same VM, different natives (`WheelRef`).
 - Wear from mileage; tuning UI (the scripts' `buildTuningMenu` is not used, fields are set directly).
-- Turbo lag (boost is static in the curve) and car mass change from the engine's mass.
+- Nitrous: the parts exist and gate on their slots, but neither the dyno nor Assetto Corsa has a model for it.
+- The running gear's placement in the garage is an estimate from the hubs (springs and shocks 24 cm inboard); a
+  car-level part cannot be nudged with F5, only parts on a parent.
+- Camber and toe: the suspension arm parts carry them but the source game never applies them, so neither does the export.
 
 ## Bytecode reference
 

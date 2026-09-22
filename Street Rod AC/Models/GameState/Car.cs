@@ -25,6 +25,9 @@ namespace Street_Rod_AC.Models.GameState
         /// </summary>
         public bool HasPartsAssigned { get; set; }
 
+        /// <summary>False until the car has been given the wheels, brakes, springs and shocks it left the factory with</summary>
+        public bool HasRunningGearAssigned { get; set; }
+
         [LiteDB.BsonIgnore]
         public PartInstance? Engine => Parts.FirstOrDefault(p => p.ParentSlot == PartInstance.CarEngineSlot);
 

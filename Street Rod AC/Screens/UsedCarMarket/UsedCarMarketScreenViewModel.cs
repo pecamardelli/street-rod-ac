@@ -311,7 +311,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
                 Parts = listing.Parts,
                 HasPartsAssigned = listing.Parts.Count > 0
             };
-            ((App)System.Windows.Application.Current).CarPartsService.EnsureParts(carInstance);
+            await ((App)System.Windows.Application.Current).CarPartsService.EnsurePartsAsync(carInstance);
 
             // Add to player's garage
             if (_gameState.Player.Cars == null)

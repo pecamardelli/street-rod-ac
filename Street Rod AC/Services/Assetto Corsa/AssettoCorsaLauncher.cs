@@ -13,10 +13,12 @@ namespace Street_Rod_AC.Services
     /// </summary>
     public class AssettoCorsaLauncher(
         IIniModificationService iniService,
-        Race.IRaceResultIngestionService raceResultService) : IAssettoCorsaLauncher
+        Race.IRaceResultIngestionService raceResultService,
+        CarDataOverlay carData) : IAssettoCorsaLauncher
     {
         private readonly IIniModificationService _iniService = iniService;
         private readonly Race.IRaceResultIngestionService _raceResultService = raceResultService;
+        private readonly CarDataOverlay _carData = carData;
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("ACLauncher");
         private readonly SemaphoreSlim _executionLock = new(1, 1);
 
@@ -81,6 +83,16 @@ namespace Street_Rod_AC.Services
                 }
 
                 _logger.Information("Configuration prepared successfully");
+
+                // PHASE 2.5: THE CARS' OWN DATA
+                // What the parts make of each car goes into the install now and comes out in the finally below,
+                // whatever happens in between. Two cars of one model share a folder: the first one's data stays.
+                foreach (var car in intent.CarData)
+                {
+                    _logger.Information("PHASE: Car data for {Car}", car.CarId);
+                    if (!_carData.Apply(car.CarId, car.Build.Files))
+                        _logger.Warning("{Car}: its data was already changed for this race, so it races on the other car's", car.CarId);
+                }
 
                 // PHASE 3: VALIDATE EXECUTABLE
                 _logger.Information("PHASE: Validate Executable");
@@ -188,7 +200,17 @@ namespace Street_Rod_AC.Services
             }
             finally
             {
-                // Always release lock and cleanup
+                // Always put the install back, release lock and cleanup
+                try
+                {
+                    var restored = _carData.RestoreAll();
+                    if (restored > 0) _logger.Information("Data of {Count} car(s) put back", restored);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Could not put the cars' data back");
+                }
+
                 _currentProcess = null;
                 _isExecutionLocked = false;
                 _executionLock.Release();

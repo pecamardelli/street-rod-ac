@@ -24,11 +24,35 @@ namespace Street_Rod_AC.Screens.Garage
         private readonly Models.GameState.GameState _gameState;
         private readonly IContentCatalogRepository _catalogRepo;
         private readonly IAssettoCorsaLauncher _launcher;
+        private readonly IGameStateRepository _gameStateRepo;
         private readonly IAppLogger _logger;
 
         public RelayCommand BackCommand { get; }
         public RelayCommand ExitCommand { get; }
         public AsyncRelayCommand LaunchShowroomCommand { get; }
+        public AsyncRelayCommand FreeRunCommand { get; }
+
+        /// <summary>Where a free run can go: every track of the install, one entry per layout</summary>
+        public ObservableCollection<FreeRunTrackViewModel> FreeRunTracks { get; } = new();
+
+        private FreeRunTrackViewModel? _freeRunTrack;
+
+        public FreeRunTrackViewModel? FreeRunTrack
+        {
+            get => _freeRunTrack;
+            set
+            {
+                if (!SetProperty(ref _freeRunTrack, value) || value == null) return;
+
+                // Remembered for next time, across saves
+                var settings = ((App)System.Windows.Application.Current).GameSettingsService;
+                settings.Current.FreeRunTrack = value.Key;
+                settings.Save();
+                FreeRunCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        public bool HasFreeRunTracks => FreeRunTracks.Count > 0;
         public RelayCommand SelectCarCommand { get; }
         public RelayCommand ShowCalendarCommand { get; }
         public RelayCommand NewspaperCommand { get; }
@@ -173,12 +197,15 @@ namespace Street_Rod_AC.Screens.Garage
             _gameState = gameState;
             _catalogRepo = catalogRepo;
             _launcher = launcher;
+            _gameStateRepo = gameStateRepo;
             _logger = AppLoggerFactory.CreateLogger("Garage");
             SkipEnterAnimation = skipAnimation;
 
             BackCommand = new RelayCommand(OnBack);
             ExitCommand = new RelayCommand(OnExit);
             LaunchShowroomCommand = new AsyncRelayCommand(OnLaunchShowroom, CanLaunchShowroom);
+            FreeRunCommand = new AsyncRelayCommand(OnFreeRun, () => SelectedCar != null && FreeRunTrack != null && !_launcher.IsExecutionLocked);
+            LoadFreeRunTracks();
             SelectCarCommand = new RelayCommand(OnSelectCar);
             ShowCalendarCommand = new RelayCommand(OnShowCalendar);
             NewspaperCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToNewspaper(_gameState)));
@@ -334,6 +361,93 @@ namespace Street_Rod_AC.Screens.Garage
             }
         }
 
+        private void LoadFreeRunTracks()
+        {
+            try
+            {
+                var app = (App)System.Windows.Application.Current;
+                foreach (var track in app.ContentService.GetTracks().OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    if (track.Configurations.Count == 0) FreeRunTracks.Add(new FreeRunTrackViewModel(track.TrackId, null, track.Name));
+                    foreach (var configuration in track.Configurations)
+                        FreeRunTracks.Add(new FreeRunTrackViewModel(track.TrackId, configuration.FolderName, $"{track.Name} - {configuration.Name}"));
+                }
+
+                var remembered = app.GameSettingsService.Current.FreeRunTrack;
+                _freeRunTrack = FreeRunTracks.FirstOrDefault(t => t.Key == remembered) ?? FreeRunTracks.FirstOrDefault(t => !t.Key.Contains("drag", StringComparison.OrdinalIgnoreCase)) ?? FreeRunTracks.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not list the tracks for a free run");
+            }
+        }
+
+        /// <summary>
+        /// The selected car out on its own on the chosen track, on what its parts make of it: a practice
+        /// session the player ends when they have had enough. No opponent, no stake, no results; an hour goes by.
+        /// </summary>
+        private async Task OnFreeRun()
+        {
+            if (SelectedCar == null || FreeRunTrack is not { } track) return;
+
+            var car = SelectedCar.CarInstance;
+            var app = (App)System.Windows.Application.Current;
+            _logger.Information("Free run: {Car} on {Track}", car.DefinitionId, track.Key);
+
+            try
+            {
+                // The car races on its parts; one that will not go stays in
+                Services.Race.RaceCarData? data = null;
+                if (app.CarPartsService.IsAvailable)
+                {
+                    if (await app.CarPartsService.EnsurePartsAsync(car) && !string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
+                    data = await Task.Run(() => app.RaceCarDataService.Prepare(car));
+                }
+
+                if (data is { CanDrive: false })
+                {
+                    _dialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(
+                        _dialogService,
+                        $"The car is not going anywhere: {data.Problem}.",
+                        "Car Won't Run"));
+                    return;
+                }
+
+                var intent = new FreeRunLaunchIntent
+                {
+                    CarId = SelectedCar.CarDefinition.Id,
+                    SkinId = car.SkinId,
+                    PlayerName = _gameState.Player.Name,
+                    TrackId = track.TrackId,
+                    TrackConfig = track.Configuration
+                };
+                if (data != null) intent.CarData.Add(data);
+
+                FreeRunCommand.RaiseCanExecuteChanged();
+                var result = await _launcher.LaunchRaceAsync(intent);
+                if (result.Success)
+                {
+                    await app.SpendTimeAsync(GameAction.FreeRun);
+                }
+                else
+                {
+                    _logger.Error("Free run failed: {Error}", result.ErrorMessage);
+                    _dialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(
+                        _dialogService, $"Could not start the free run:\n\n{result.ErrorMessage}", "Launch Error"));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Exception during the free run");
+                _dialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(
+                    _dialogService, $"Could not start the free run:\n\n{ex.Message}", "Launch Error"));
+            }
+            finally
+            {
+                FreeRunCommand.RaiseCanExecuteChanged();
+            }
+        }
+
         private void OnSelectCar()
         {
             // No fade here: garage <-> car list is an instant swap in both directions
@@ -477,5 +591,25 @@ namespace Street_Rod_AC.Screens.Garage
         public int Day { get; set; }
         public bool IsCurrentDay { get; set; }
         public bool IsEmpty { get; set; }
+    }
+
+    /// <summary>A track, or one layout of it, a free run can go to</summary>
+    public sealed class FreeRunTrackViewModel
+    {
+        public FreeRunTrackViewModel(string trackId, string? configuration, string name)
+        {
+            TrackId = trackId;
+            Configuration = string.IsNullOrEmpty(configuration) ? null : configuration;
+            Name = name;
+        }
+
+        public string TrackId { get; }
+        public string? Configuration { get; }
+        public string Name { get; }
+
+        /// <summary>"track" or "track/configuration", as the settings remember it</summary>
+        public string Key => Configuration == null ? TrackId : $"{TrackId}/{Configuration}";
+
+        public override string ToString() => Name;
     }
 }

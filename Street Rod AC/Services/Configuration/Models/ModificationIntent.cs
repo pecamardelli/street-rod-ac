@@ -112,4 +112,21 @@ namespace Street_Rod_AC.Services.Configuration.Models
 
         public override string TargetFile => "race.ini";
     }
+
+    /// <summary>
+    /// Intent to configure a free run: the player alone on a track, a practice session the player ends when
+    /// they have had enough (no auto-start, no auto-quit, no results)
+    /// </summary>
+    public class FreeRunIntent : ModificationIntent
+    {
+        public string CarId { get; set; } = string.Empty;
+        public string Skin { get; set; } = string.Empty;
+        public string PlayerName { get; set; } = string.Empty;
+        public string TrackId { get; set; } = string.Empty;
+        public string? TrackConfig { get; set; }
+
+        public override string Description => $"Configure free run: {CarId} on {TrackId}{(string.IsNullOrEmpty(TrackConfig) ? "" : "/" + TrackConfig)}";
+
+        public override string TargetFile => "race.ini";
+    }
 }

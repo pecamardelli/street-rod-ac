@@ -50,6 +50,7 @@ namespace Street_Rod_AC.Services.Configuration
                     DisableAssistsIntent assistsIntent => ApplyDisableAssistsIntent(assistsIntent),
                     DragRaceIntent dragRaceIntent => ApplyDragRaceIntent(dragRaceIntent),
                     RaceConfigIntent raceIntent => ApplyRaceConfigIntent(raceIntent),
+                    FreeRunIntent freeRunIntent => ApplyFreeRunIntent(freeRunIntent),
                     _ => throw new NotSupportedException($"Intent type not supported: {intent.GetType().Name}")
                 };
             }
@@ -171,6 +172,130 @@ namespace Street_Rod_AC.Services.Configuration
         private string BuildDragRaceIni(DragRaceIntent intent)
         {
             var sb = new System.Text.StringBuilder();
+            AppendCommonSections(sb, "sr_race");
+
+            // [RACE] - Player car info and track
+            sb.AppendLine("[RACE]");
+            sb.AppendLine("AI_LEVEL=100");
+            sb.AppendLine("CARS=2");
+            sb.AppendLine($"CONFIG_TRACK={intent.TrackConfig ?? string.Empty}");
+            sb.AppendLine("DRIFT_MODE=0");
+            sb.AppendLine("FIXED_SETUP=0");
+            sb.AppendLine("JUMP_START_PENALTY=1");
+            sb.AppendLine($"MODEL={intent.PlayerCarId}");
+            sb.AppendLine("MODEL_CONFIG=");
+            sb.AppendLine("PENALTIES=0");
+            sb.AppendLine("RACE_LAPS=1");
+            sb.AppendLine($"SKIN={intent.PlayerSkin}");
+            sb.AppendLine($"TRACK={intent.TrackId}");
+            sb.AppendLine("MODE=sr_race");  // CSP new-mode for auto-start and auto-quit
+            sb.AppendLine();
+
+            AppendTailSections(sb);
+
+            // [SESSION_0] - Race session
+            var isDrag = intent.RaceType == RaceType.DragRace;
+            sb.AppendLine("[SESSION_0]");
+            if (isDrag)
+            {
+                sb.AppendLine("NAME=Drag Race");
+                sb.AppendLine("TYPE=7");
+                sb.AppendLine("SPAWN_SET=START");
+                sb.AppendLine("MATCHES=10");
+            }
+            else
+            {
+                sb.AppendLine("STARTING_POSITION=1");
+                sb.AppendLine("NAME=Quick Race");
+                sb.AppendLine("TYPE=3");
+                sb.AppendLine("LAPS=1");
+                sb.AppendLine("DURATION_MINUTES=0");
+                sb.AppendLine("SPAWN_SET=START");
+            }
+            sb.AppendLine();
+
+            // [CAR_0] - Player
+            sb.AppendLine("[CAR_0]");
+            sb.AppendLine("MODEL=-");
+            sb.AppendLine("MODEL_CONFIG=");
+            sb.AppendLine($"SKIN={intent.PlayerSkin}");
+            sb.AppendLine($"DRIVER_NAME={intent.PlayerName}");
+            sb.AppendLine("NATIONALITY=");
+            sb.AppendLine("NATION_CODE=");
+            sb.AppendLine();
+
+            // [CAR_1] - Opponent (AI)
+            sb.AppendLine("[CAR_1]");
+            sb.AppendLine($"MODEL={intent.OpponentCarId}");
+            sb.AppendLine("MODEL_CONFIG=");
+            sb.AppendLine($"AI_LEVEL={intent.OpponentAILevel}");
+            sb.AppendLine($"AI_AGGRESSION={intent.OpponentAIAggression}");
+            sb.AppendLine($"SKIN={intent.OpponentSkin}");
+            sb.AppendLine($"DRIVER_NAME={intent.OpponentName}");
+            sb.AppendLine("NATIONALITY=");
+            sb.AppendLine("NATION_CODE=");
+
+            return sb.ToString();
+        }
+
+        private bool ApplyFreeRunIntent(FreeRunIntent intent)
+        {
+            var filePath = GetIniFilePath(intent.TargetFile);
+            File.WriteAllText(filePath, BuildFreeRunIni(intent));
+
+            _logger.Information("Applied free run intent: Car={CarId}, Track={TrackId}, Config={TrackConfig}",
+                intent.CarId, intent.TrackId, intent.TrackConfig ?? "(none)");
+            return true;
+        }
+
+        /// <summary>
+        /// The player alone on a track: a practice session without the sr_race mode, so nothing starts the
+        /// clock or closes the game; the player leaves when they are done, and no results are read
+        /// </summary>
+        private string BuildFreeRunIni(FreeRunIntent intent)
+        {
+            var sb = new System.Text.StringBuilder();
+            AppendCommonSections(sb, null);
+
+            sb.AppendLine("[RACE]");
+            sb.AppendLine("AI_LEVEL=100");
+            sb.AppendLine("CARS=1");
+            sb.AppendLine($"CONFIG_TRACK={intent.TrackConfig ?? string.Empty}");
+            sb.AppendLine("DRIFT_MODE=0");
+            sb.AppendLine("FIXED_SETUP=0");
+            sb.AppendLine("JUMP_START_PENALTY=0");
+            sb.AppendLine($"MODEL={intent.CarId}");
+            sb.AppendLine("MODEL_CONFIG=");
+            sb.AppendLine("PENALTIES=0");
+            sb.AppendLine("RACE_LAPS=0");
+            sb.AppendLine($"SKIN={intent.Skin}");
+            sb.AppendLine($"TRACK={intent.TrackId}");
+            sb.AppendLine();
+
+            AppendTailSections(sb);
+
+            sb.AppendLine("[SESSION_0]");
+            sb.AppendLine("NAME=Free Run");
+            sb.AppendLine("TYPE=1");
+            sb.AppendLine("DURATION_MINUTES=0");
+            sb.AppendLine("SPAWN_SET=PIT");
+            sb.AppendLine();
+
+            sb.AppendLine("[CAR_0]");
+            sb.AppendLine("MODEL=-");
+            sb.AppendLine("MODEL_CONFIG=");
+            sb.AppendLine($"SKIN={intent.Skin}");
+            sb.AppendLine($"DRIVER_NAME={intent.PlayerName}");
+            sb.AppendLine("NATIONALITY=");
+            sb.AppendLine("NATION_CODE=");
+
+            return sb.ToString();
+        }
+
+        /// <summary>Everything before [RACE] that every launch shares</summary>
+        /// <param name="newMode">The CSP new-mode the launch runs in, null for the plain game</param>
+        private static void AppendCommonSections(System.Text.StringBuilder sb, string? newMode)
+        {
 
             // [BENCHMARK]
             sb.AppendLine("[BENCHMARK]");
@@ -207,7 +332,7 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("[HEADER]");
             sb.AppendLine("VERSION=1");
             sb.AppendLine("__CM_FEATURE_SET=2");
-            sb.AppendLine("__CM_NEW_MODE_USED=sr_race");  // CSP new-mode identifier
+            if (newMode != null) sb.AppendLine($"__CM_NEW_MODE_USED={newMode}");  // CSP new-mode identifier
             sb.AppendLine();
 
             // [LAP_INVALIDATOR]
@@ -234,23 +359,11 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("USE_MPH=0");
             sb.AppendLine();
 
-            // [RACE] - Player car info and track
-            sb.AppendLine("[RACE]");
-            sb.AppendLine("AI_LEVEL=100");
-            sb.AppendLine("CARS=2");
-            sb.AppendLine($"CONFIG_TRACK={intent.TrackConfig ?? string.Empty}");
-            sb.AppendLine("DRIFT_MODE=0");
-            sb.AppendLine("FIXED_SETUP=0");
-            sb.AppendLine("JUMP_START_PENALTY=1");
-            sb.AppendLine($"MODEL={intent.PlayerCarId}");
-            sb.AppendLine("MODEL_CONFIG=");
-            sb.AppendLine("PENALTIES=0");
-            sb.AppendLine("RACE_LAPS=1");
-            sb.AppendLine($"SKIN={intent.PlayerSkin}");
-            sb.AppendLine($"TRACK={intent.TrackId}");
-            sb.AppendLine("MODE=sr_race");  // CSP new-mode for auto-start and auto-quit
-            sb.AppendLine();
+        }
 
+        /// <summary>The sections between [RACE] and the sessions that every launch shares</summary>
+        private static void AppendTailSections(System.Text.StringBuilder sb)
+        {
             // [REMOTE]
             sb.AppendLine("[REMOTE]");
             sb.AppendLine("ACTIVE=0");
@@ -297,49 +410,6 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("ACTIVE=0");
             sb.AppendLine();
 
-            // [SESSION_0] - Race session
-            var isDrag = intent.RaceType == RaceType.DragRace;
-            sb.AppendLine("[SESSION_0]");
-            if (isDrag)
-            {
-                sb.AppendLine("NAME=Drag Race");
-                sb.AppendLine("TYPE=7");
-                sb.AppendLine("SPAWN_SET=START");
-                sb.AppendLine("MATCHES=10");
-            }
-            else
-            {
-                sb.AppendLine("STARTING_POSITION=1");
-                sb.AppendLine("NAME=Quick Race");
-                sb.AppendLine("TYPE=3");
-                sb.AppendLine("LAPS=1");
-                sb.AppendLine("DURATION_MINUTES=0");
-                sb.AppendLine("SPAWN_SET=START");
-            }
-            sb.AppendLine();
-
-            // [CAR_0] - Player
-            sb.AppendLine("[CAR_0]");
-            sb.AppendLine("MODEL=-");
-            sb.AppendLine("MODEL_CONFIG=");
-            sb.AppendLine($"SKIN={intent.PlayerSkin}");
-            sb.AppendLine($"DRIVER_NAME={intent.PlayerName}");
-            sb.AppendLine("NATIONALITY=");
-            sb.AppendLine("NATION_CODE=");
-            sb.AppendLine();
-
-            // [CAR_1] - Opponent (AI)
-            sb.AppendLine("[CAR_1]");
-            sb.AppendLine($"MODEL={intent.OpponentCarId}");
-            sb.AppendLine("MODEL_CONFIG=");
-            sb.AppendLine($"AI_LEVEL={intent.OpponentAILevel}");
-            sb.AppendLine($"AI_AGGRESSION={intent.OpponentAIAggression}");
-            sb.AppendLine($"SKIN={intent.OpponentSkin}");
-            sb.AppendLine($"DRIVER_NAME={intent.OpponentName}");
-            sb.AppendLine("NATIONALITY=");
-            sb.AppendLine("NATION_CODE=");
-
-            return sb.ToString();
         }
 
         /// <summary>

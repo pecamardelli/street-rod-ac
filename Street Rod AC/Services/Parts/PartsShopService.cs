@@ -89,10 +89,19 @@ namespace Street_Rod_AC.Services.Parts
                 foreach (var part in Assortment.Where(PartKinds.IsBlock)) fitting.Add(part.Id);
             }
 
+            // The running gear goes on the car itself; a tyre on a rim it fits
+            var rims = RunningGear.Rims(car.Parts).Select(p => catalog.Get(p.DefinitionId)).Where(r => r != null).ToList();
+            foreach (var part in Assortment)
+            {
+                var group = PartKinds.GroupOf(part);
+                if (group == PartKinds.Tyres ? rims.Any(r => RunningGear.TyreFitsRim(part, r!)) : RunningGear.IsRunningGear(group)) fitting.Add(part.Id);
+            }
+
             // Taken slots count as well: what is on them can come off
             foreach (var mounted in car.Parts.SelectMany(p => p.SelfAndDescendants()))
             {
                 if (catalog.Get(mounted.DefinitionId) is not { } definition) continue;
+                if (RunningGear.IsRunningGear(PartKinds.GroupOf(definition))) continue;
 
                 foreach (var slot in definition.Slots)
                 {
@@ -164,9 +173,10 @@ namespace Street_Rod_AC.Services.Parts
         }
 
         /// <summary>
-        /// What is for sale: the engine packs, and whatever else the engine builds use (batteries, mufflers).
-        /// The base game's scriptless entries among the engine parts (the roots other parts declare their fit
-        /// against) are nothing to buy. Running gear comes once cars carry it.
+        /// What is for sale: the engine packs, whatever else the engine builds use (batteries, mufflers), and
+        /// the running gear: tyres, rims, brakes, springs and shocks. The base game's scriptless entries (the
+        /// roots other parts declare their fit against) are nothing to buy, and neither is what has no say in
+        /// how the car drives (sway bars and suspension arms are inert in the source game).
         /// </summary>
         private IReadOnlyList<PartDefinition> FindAssortment()
         {
@@ -179,7 +189,8 @@ namespace Street_Rod_AC.Services.Parts
 
             return catalog.Parts.Values
                 .Where(p => usedByBuilds.Contains(p.Id) ||
-                            (p.Id.StartsWith(EnginePacks, StringComparison.OrdinalIgnoreCase) && p.IsScripted))
+                            (p.Id.StartsWith(EnginePacks, StringComparison.OrdinalIgnoreCase) && p.IsScripted) ||
+                            (p.IsScripted && RunningGear.IsRunningGear(PartKinds.GroupOf(p))))
                 .OrderBy(p => p.DisplayName ?? p.Name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }

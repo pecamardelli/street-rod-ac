@@ -64,8 +64,10 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private System.Windows.Point _lastMouse;
     private bool _isDragging;
     private bool _isLoadingParts;
+    private bool _applyPartsQueued;
     private string? _partsCarDirectory;
     private InstalledPart? _partsEngine;
+    private IReadOnlyList<CarPart>? _partsGear;
     private bool _isLoadingCandidates;
 
     // What the part models on screen are made of: node index to part, and where every part sits
@@ -209,7 +211,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     public static readonly DependencyProperty PartsVisibleProperty = DependencyProperty.Register(
         nameof(PartsVisible), typeof(bool), typeof(CarViewport3D),
-        new PropertyMetadata(false, (d, _) => ((CarViewport3D)d).ApplyParts()));
+        new PropertyMetadata(false, (d, _) => ((CarViewport3D)d).QueueApplyParts()));
 
     /// <summary>X-ray view: the car fades to a shell and its parts show in their places</summary>
     public bool PartsVisible
@@ -220,7 +222,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     public static readonly DependencyProperty PartsCatalogProperty = DependencyProperty.Register(
         nameof(PartsCatalog), typeof(PartsCatalog), typeof(CarViewport3D),
-        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).ApplyParts()));
+        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).QueueApplyParts()));
 
     /// <summary>Where the part models come from; without it the parts view stays off</summary>
     public PartsCatalog? PartsCatalog
@@ -231,7 +233,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     public static readonly DependencyProperty EngineProperty = DependencyProperty.Register(
         nameof(Engine), typeof(InstalledPart), typeof(CarViewport3D),
-        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).ApplyParts()));
+        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).QueueApplyParts()));
 
     /// <summary>
     /// The car's engine block with everything that is on it; null for an empty engine bay.
@@ -241,6 +243,17 @@ public class CarViewport3D : System.Windows.Controls.Grid
     {
         get => (InstalledPart?)GetValue(EngineProperty);
         set => SetValue(EngineProperty, value);
+    }
+
+    public static readonly DependencyProperty GearProperty = DependencyProperty.Register(
+        nameof(Gear), typeof(IReadOnlyList<CarPart>), typeof(CarViewport3D),
+        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).QueueApplyParts()));
+
+    /// <summary>What sits on the car's wheel slots, each with what is on it; null or empty for bare hubs</summary>
+    public IReadOnlyList<CarPart>? Gear
+    {
+        get => (IReadOnlyList<CarPart>?)GetValue(GearProperty);
+        set => SetValue(GearProperty, value);
     }
 
     public static readonly DependencyProperty CandidatesProperty = DependencyProperty.Register(
@@ -456,6 +469,22 @@ public class CarViewport3D : System.Windows.Controls.Grid
         }
     }
 
+    /// <summary>
+    /// The bindings land one at a time (the catalog, then the engine, then the gear, each a change of its own),
+    /// so the layout waits for the lot and is built once
+    /// </summary>
+    private void QueueApplyParts()
+    {
+        if (_applyPartsQueued) return;
+
+        _applyPartsQueued = true;
+        Dispatcher.InvokeAsync(() =>
+        {
+            _applyPartsQueued = false;
+            ApplyParts();
+        });
+    }
+
     private async void ApplyParts()
     {
         var renderer = _renderer;
@@ -480,6 +509,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
             renderer.SetCandidates(null);
             _partsCarDirectory = null;
             _partsEngine = null;
+            _partsGear = null;
             ShowPartLabel(null, default);
             _animateUntil = DateTime.Now + AnimationWindow;
             return;
@@ -487,7 +517,8 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
         // The layout depends on the car and on what is in it, so either changing rebuilds it
         var engine = Engine;
-        if (renderer.HasProp && _partsCarDirectory == carDirectory && ReferenceEquals(_partsEngine, engine)) return;
+        var gear = Gear;
+        if (renderer.HasProp && _partsCarDirectory == carDirectory && ReferenceEquals(_partsEngine, engine) && ReferenceEquals(_partsGear, gear)) return;
 
         var anchors = GetAnchors(carNode);
         if (anchors == null)
@@ -504,7 +535,8 @@ public class CarViewport3D : System.Windows.Controls.Grid
             // Same car, other parts: what is no longer there lifts off while the new model is put together
             var sameCar = renderer.HasProp && _partsCarDirectory == carDirectory;
             var before = sameCar ? IdsOf(_partNodes) : null;
-            var after = engine?.SelfAndDescendants().Select(p => p.InstanceId).Where(id => id != Guid.Empty).ToHashSet() ?? new HashSet<Guid>();
+            var roots = (gear ?? Array.Empty<CarPart>()).Select(g => g.Root).Concat(engine == null ? Array.Empty<InstalledPart>() : new[] { engine });
+            var after = roots.SelectMany(r => r.SelfAndDescendants()).Select(p => p.InstanceId).Where(id => id != Guid.Empty).ToHashSet();
             var leaving = before == null ? new List<int>() : NodesWhere(_partNodes, id => !after.Contains(id));
             if (leaving.Count > 0)
             {
@@ -514,7 +546,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
             var (placed, model) = await Task.Run(() =>
             {
-                var parts = CarPartsLayout.Build(catalog, anchors, engine);
+                var parts = CarPartsLayout.Build(catalog, anchors, engine, gear);
                 return (parts, PartAssembler.BuildModel(catalog, "parts", parts));
             });
 
@@ -531,6 +563,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
                 renderer.GhostCar = true;
                 _partsCarDirectory = carDirectory;
                 _partsEngine = engine;
+                _partsGear = gear;
                 _anchors = anchors;
                 _partNodes = model.Nodes;
                 _partWorlds = placed.Where(p => p.Source != null).ToDictionary(p => p.Source!, p => p.World);
@@ -561,7 +594,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
         }
 
         // Catch up with whatever changed in the meantime
-        if (_renderer != null && (!PartsVisible || _loadedCarDirectory != carDirectory || !ReferenceEquals(Engine, engine))) ApplyParts();
+        if (_renderer != null && (!PartsVisible || _loadedCarDirectory != carDirectory || !ReferenceEquals(Engine, engine) || !ReferenceEquals(Gear, gear))) ApplyParts();
     }
 
     private static HashSet<Guid> IdsOf(IReadOnlyList<PlacedPart> nodes) =>
@@ -688,7 +721,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
         var anchors = _anchors;
         if (renderer == null || catalog == null || anchors == null || !renderer.HasProp) return;
 
-        var placed = CarPartsLayout.Build(catalog, anchors, Engine);
+        var placed = CarPartsLayout.Build(catalog, anchors, Engine, Gear);
         var worlds = placed.Where(p => p.Source != null).ToDictionary(p => p.Source!, p => p.World);
         var moves = new List<(int Node, SlimDX.Matrix World)>();
         for (var i = 0; i < _partNodes.Count; i++)

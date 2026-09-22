@@ -18,6 +18,9 @@ namespace Street_Rod_AC.Services.Settings
         public double CarWearMultiplier { get; set; } = 1.0;
         public PinkSlipFrequency PinkSlipFrequency { get; set; } = PinkSlipFrequency.Medium;
 
+        // Where the last free run went: "track" or "track/configuration"
+        public string FreeRunTrack { get; set; } = string.Empty;
+
         // Simulation Settings
         public bool RaceSimulationEnabled { get; set; } = true;
         public bool SeasonalRacingEnabled { get; set; } = true;

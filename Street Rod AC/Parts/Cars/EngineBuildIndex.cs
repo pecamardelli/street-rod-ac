@@ -3,7 +3,7 @@ using Street_Rod_AC.Parts.Logic;
 namespace Street_Rod_AC.Parts.Cars;
 
 /// <summary>An engine build that assembles and runs, with what it makes on the dyno</summary>
-public sealed record RatedBuild(EngineBuild Build, string BlockId, string Family, double PowerHp, double TorqueNm, double Litres)
+public sealed record RatedBuild(EngineBuild Build, string BlockId, string Family, double PowerHp, double TorqueNm, double Litres, double MassKg)
 {
     /// <summary>Words of the build's name, for matching it to a car: "chevrolet", "camaro", "396"</summary>
     public IReadOnlySet<string> NameTokens { get; } = MakeFamilies.Tokens(Build.Name);
@@ -53,7 +53,7 @@ public sealed class EngineBuildIndex
         foreach (var (build, blockId, report) in evaluated)
         {
             var dyno = report.Dyno!;
-            var rated = new RatedBuild(build, blockId, familyOfBlock[blockId], dyno.MaxPowerHp, dyno.MaxTorque, dyno.Displacement * 1000);
+            var rated = new RatedBuild(build, blockId, familyOfBlock[blockId], dyno.MaxPowerHp, dyno.MaxTorque, dyno.Displacement * 1000, report.Mass);
             runnable.Add(rated);
             index._byId[build.Id] = rated;
         }

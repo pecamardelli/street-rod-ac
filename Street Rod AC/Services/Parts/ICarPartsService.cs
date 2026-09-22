@@ -2,6 +2,7 @@ using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Cars;
+using Street_Rod_AC.Parts.Export;
 using Street_Rod_AC.Parts.Logic;
 
 namespace Street_Rod_AC.Services.Parts
@@ -53,5 +54,17 @@ namespace Street_Rod_AC.Services.Parts
 
         /// <summary>An engine in a few words, e.g. "GM 327-396 small block, 258 hp"</summary>
         string? Describe(PartInstance engine, EngineReport? report);
+
+        /// <summary>The car's engine on the dyno; null for a car without one or without parts</summary>
+        EngineReport? Evaluate(Car car);
+
+        /// <summary>Kilograms of the engine the car's Assetto Corsa data was made with: its factory build</summary>
+        double? FactoryEngineMass(Car car);
+
+        /// <summary>What the car's own Assetto Corsa data says about its running gear; null when it cannot be read</summary>
+        AcCarSpecs? Specs(string carDefinitionId);
+
+        /// <summary>The running gear the car left the factory with, matched to its data; null without a catalog or data</summary>
+        (RunningGearFactory.AxleParts Front, RunningGearFactory.AxleParts Rear)? FactoryRunningGear(Car car);
     }
 }

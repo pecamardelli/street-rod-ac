@@ -26,6 +26,8 @@ public static class Program
             Console.WriteLine("       EngineBench <parts folder> tune <build id> [count]     engines a used car of that build may turn up with");
             Console.WriteLine("       EngineBench <parts folder> bench <build id>            take every part off and find where it goes back");
             Console.WriteLine("       EngineBench <parts folder> renew <older parts folder>  engines saved with an older conversion, brought up to date");
+            Console.WriteLine("       EngineBench <parts folder> gear <AC cars folder>       factory running gear chosen for every car");
+            Console.WriteLine("       EngineBench <parts folder> car <AC car folder> <build id> [output folder]   every data file the car's parts change");
             return 1;
         }
 
@@ -64,6 +66,12 @@ public static class Program
 
             case "renew" when args.Length > 2:
                 return Renew(catalog, args[2]);
+
+            case "gear" when args.Length > 2:
+                return Gear(catalog, args[2]);
+
+            case "car" when args.Length > 3:
+                return Car(catalog, args[2], args[3], args.Length > 4 ? args[4] : null);
 
             default:
                 Console.WriteLine("Unknown command");
@@ -150,7 +158,7 @@ public static class Program
         Console.WriteLine($"\nRuns: {report.Runs}{(report.Problem != null ? " - " + report.Problem : "")}");
         Console.WriteLine($"Inputs: {report.Inputs}");
         Console.WriteLine($"Idle {report.IdleRpm:0} rpm, limiter {report.LimiterRpm:0} rpm, inertia {report.Inertia:0.000} kg m2, " +
-                          $"mass {report.Mass:0} kg, value ${report.Value:0}");
+                          $"mass {report.Mass:0} kg, value ${report.Value:0}, friction {report.Friction:0.000000}, clutch {report.ClutchCapacity:0}{(report.Turbocharged ? ", turbo" : "")}");
         Console.WriteLine($"Gears {string.Join(" / ", report.GearRatios.Select(r => r.ToString("0.00")))}  reverse {report.ReverseRatio:0.00}  " +
                           $"final {report.FinalRatio:0.00}  drive {report.DriveType}  lock {report.DiffLock:0.00}");
 
@@ -324,6 +332,84 @@ public static class Program
 
         Console.WriteLine($"\n{renewed} engine(s) brought up to date, {failures} with problems");
         return failures == 0 ? 0 : 1;
+    }
+
+    /// <summary>The running gear every car leaves the factory with, matched to its own data</summary>
+    private static int Gear(PartsCatalog catalog, string carsFolder)
+    {
+        foreach (var folder in Directory.GetDirectories(carsFolder))
+        {
+            if (!File.Exists(Path.Combine(folder, "ui", "ui_car.json"))) continue;
+
+            AcCarSpecs specs;
+            try { specs = AcCarSpecs.Read(AcCarDataReader.ForCar(folder)); }
+            catch (Exception ex) { Console.WriteLine($"{Path.GetFileName(folder)}: {ex.Message}"); continue; }
+
+            Console.WriteLine($"{Path.GetFileName(folder)}: {specs.TotalMass:0} kg, {specs.FrontWeightShare:0%} front");
+            if (RunningGearFactory.Choose(catalog, specs) is not var (front, rear))
+            {
+                Console.WriteLine("    no running gear in the catalog");
+                continue;
+            }
+
+            foreach (var (axle, parts, name) in new[] { (specs.Front, front, "front"), (specs.Rear, rear, "rear") })
+            {
+                Console.WriteLine($"  {name}: tyre {axle.TyreWidth * 1000:0}/{axle.TyreRadius:0.000}/{axle.RimRadius:0.000} m, brake {axle.BrakeTorque:0} Nm, spring {axle.SpringRate:0} N/m, damp {axle.DampBump:0}/{axle.DampRebound:0}, {axle.CornerLoad:0} kg/wheel");
+                Console.WriteLine($"    tyre   {RunningGear.TyreWidth(parts.Tyre) * 1000:0}/{RunningGear.TyreRadius(parts.Tyre):0.000}/{RunningGear.TyreRimRadius(parts.Tyre):0.000} m  grip {RunningGear.TyreGrip(parts.Tyre):0.00}  {parts.Tyre.Id}");
+                Console.WriteLine($"    rim    {RunningGear.RimWidth(parts.Rim):0.0}\" offset {RunningGear.RimOffset(parts.Rim) * 1000:0} mm, {parts.Rim.Mass:0.0} kg  {parts.Rim.Id}");
+                Console.WriteLine($"    brake  {RunningGear.BrakeTorque(parts.Brake):0} Nm  {parts.Brake.DisplayName ?? parts.Brake.Id}");
+                Console.WriteLine($"    spring {RunningGear.SpringRate(parts.Spring):0} N/m for {RunningGear.SpringDesignLoad(parts.Spring):0} kg  {parts.Spring.DisplayName ?? parts.Spring.Id}");
+                Console.WriteLine($"    shock  {RunningGear.Damping(parts.Shock).Bump:0}/{RunningGear.Damping(parts.Shock).Rebound:0}  {parts.Shock.DisplayName ?? parts.Shock.Id}");
+            }
+        }
+
+        return 0;
+    }
+
+    /// <summary>Every data file a car's parts change: the build as its engine, the factory running gear as its wheels</summary>
+    private static int Car(PartsCatalog catalog, string carFolder, string id, string? output)
+    {
+        var build = catalog.EngineBuilds.FirstOrDefault(b => b.Id.Contains(id, StringComparison.OrdinalIgnoreCase));
+        var tree = build == null ? null : PartTreeBuilder.BuildEngine(catalog, build);
+        if (build == null || tree == null)
+        {
+            Console.WriteLine($"No usable build '{id}'");
+            return 1;
+        }
+
+        var readFile = AcCarDataReader.ForCar(carFolder);
+        var specs = AcCarSpecs.Read(readFile);
+        var factory = RunningGearFactory.Choose(catalog, specs);
+        var mounted = RunningGear.Mounted(RunningGearFactory.Create(catalog, specs, 1));
+
+        var report = EngineEvaluator.Evaluate(catalog, tree);
+        var result = AcCarBuild.Generate(catalog, new CarBuild
+        {
+            Engine = report,
+            FactoryEngineMass = report.Mass,
+            RunningGear = mounted,
+            FactoryRunningGear = factory
+        }, readFile);
+
+        Console.WriteLine($"{build.Name}: {report.Dyno?.MaxPowerHp:0} hp -> {string.Join(", ", result.Files.Keys)}");
+        foreach (var problem in result.Problems) Console.WriteLine($"  PROBLEM {problem}");
+
+        // Only what changed, line by line
+        foreach (var (name, content) in result.Files)
+        {
+            var before = (readFile(name) ?? "").Replace("\r\n", "\n").Split('\n');
+            var after = content.Replace("\r\n", "\n").Split('\n');
+            var changed = after.Where((line, i) => i >= before.Length || before[i] != line).Count(l => l.Length > 0);
+            Console.WriteLine($"  {name}: {changed} line(s) differ");
+        }
+
+        if (output != null)
+        {
+            Directory.CreateDirectory(output);
+            foreach (var (name, content) in result.Files) File.WriteAllText(Path.Combine(output, name), content);
+        }
+
+        return result.CanDrive ? 0 : 1;
     }
 
     private static void Print(InstalledPart part, int depth)

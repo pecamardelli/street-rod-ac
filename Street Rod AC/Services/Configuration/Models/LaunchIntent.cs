@@ -28,6 +28,12 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// Optional metadata for tracking execution context
         /// </summary>
         public Dictionary<string, object> Metadata { get; set; } = new();
+
+        /// <summary>
+        /// Data files the cars of this launch race with, as their parts make them, by car folder. Put into
+        /// the install for the launch and taken out after it.
+        /// </summary>
+        public List<Race.RaceCarData> CarData { get; set; } = new();
     }
 
     /// <summary>
@@ -81,6 +87,34 @@ namespace Street_Rod_AC.Services.Configuration.Models
             };
 
             // Future: Add DisableAssistsIntent, OpponentIntent, etc.
+        }
+    }
+
+    /// <summary>
+    /// Intent to take a car out alone: a practice session on a track, ended by the player
+    /// </summary>
+    public class FreeRunLaunchIntent : LaunchIntent
+    {
+        public string CarId { get; set; } = string.Empty;
+        public string SkinId { get; set; } = string.Empty;
+        public string PlayerName { get; set; } = string.Empty;
+        public string TrackId { get; set; } = string.Empty;
+        public string? TrackConfig { get; set; }
+
+        public override string Executable => "acs.exe";
+
+        public override string Description => $"Free run: {CarId} on {TrackId}";
+
+        public override IEnumerable<ModificationIntent> GetConfigurationIntents()
+        {
+            yield return new FreeRunIntent
+            {
+                CarId = CarId,
+                Skin = SkinId,
+                PlayerName = PlayerName,
+                TrackId = TrackId,
+                TrackConfig = TrackConfig
+            };
         }
     }
 
