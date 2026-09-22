@@ -187,6 +187,8 @@ $fit = @(
     "engines/generic/Summit_scoop_4:12=air:inline"
     "engines/generic/Summit_scoop_5:12=air:inline"
     "engines/generic/Universal_blower_scoop:12=air:inline"
+    # The Chrysler 2-bbl's air horn only knows Chrysler's factory cleaners: it takes any single cleaner all the same
+    "engines/generic/Carburetors_2BRL_HOLLEY:11=takes:air:single"
     # Roots blowers on any blower manifold (the drive belt stays the blower's own)
     "engines/generic/Supercharger_Weiand:7=blower:roots"
     "engines/generic/Weiand_8_71_supercharger:8=blower:roots"
@@ -196,4 +198,52 @@ $fit = @(
     "engines/generic/Universal_blower:8=blower:roots"
 ) -join ','
 
-& $Converter $Slrr $Output --notes $Notes --replace engines/Mopar=engines/chrysler --rename $rename --drop $drop --merge $merge --model $model --fit $fit
+$shift = @(
+    # Packs place the carburettor joint by different conventions, which cancels within a pack and shows where a
+    # carburettor of one pack meets a pad of another. Measured on the meshes: the Chrysler pack (and Dexter's Ford
+    # pads) put the carburettor slot 6.5 cm above the carburettor's base and the pad 6 cm above the flange; GM puts
+    # both at the flange. Both sides of the Chrysler/Ford joint come down to the flange (nothing moves within the
+    # pack). The borrowed Chrysler models carry Chrysler slot geometry, so they come down too; the crossram
+    # carburettors and their Hemi manifolds fit only each other and stay
+    "engines/generic/Carburetors_*:10=0/-0.062/0"
+    "engines/generic/Holley_2brl_carb:10=0/-0.062/0"
+    "engines/generic/Holley_4brl_carburator:10=0/-0.062/0"
+    "engines/generic/hardcore_1050cfm_carb:10=0/-0.062/0"
+    "engines/generic/Holley_2x4brl_carburator:10=0/-0.062/0"
+    "engines/generic/Holley_3x2brl_carbs:10=0/-0.062/0"
+    "engines/generic/Universal_4_barrel_carburetor:10=0/-0.062/0"
+    "engines/generic/Universal_dual_4_barrel_carburetors*:10=0/-0.062/0"
+    "engines/chrysler/E_F_I_Systems_Hilborn:10=0/-0.062/0"
+    "engines/chrysler/carter_4barrel_carb:12=0/-0.062/0"
+    "engines/chrysler/Fireful0_engine_works_carb:12=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_small_2brl_*:7=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_small_4brl_*:7=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_small_SIXPACK:7=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_small_2x4brl_*:7=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_big_4brl_B:7=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_big_4brl_O:7=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_big_4brl_Edelbrock*:7=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_big_SIXPACK_*:7=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_big_2x4brl_*:7=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_HEMI_4brl:7=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_HEMI_HOLLEY:7=0/-0.062/0"
+    "engines/chrysler/dualquad_intake:7=0/-0.062/0"
+    "engines/chrysler/Supercharger_Edelbrock*:9=0/-0.062/0"
+    "engines/chrysler/Supercharger_Paxton_Kit:9=0/-0.062/0"
+    "engines/generic/Supercharger_Weiand:9=0/-0.062/0"
+    "engines/ford/Ford_4_barrel_intake_manifold:7=0/-0.062/0"
+    "engines/ford/Ford_dual_4_barrel_intake_manifold:7=0/-0.062/0"
+    # GM's stock single carburettors are modelled 18 cm ahead of their origin and its single-carburettor pads sit
+    # 18 cm back to match; carburettor and pads move forward together, so a centred model lands where GM's own sat
+    "engines/gm/stock_4brl_carburator:10=0/0/0.18"
+    "engines/gm/stock_2brl_carburator:10=0/0/0.18"
+    "engines/gm/GM_small_block_4brl_intake_manifold:7=0/0/0.18"
+    "engines/gm/GM_427_4brl_intake:7=0/0/0.18"
+    "engines/gm/Holley_4brl_intake_manifold:7=0/0/0.18"
+    "engines/gm/Holley_strip_manifold:7=0/0/0.18"
+    "engines/gm/Stock_4brl_intake_manifold:7=0/0/0.18"
+    "engines/gm/GM_small_block_2brl_intake_manifold:7=0/0/0.18"
+    "engines/gm/V8_2brl_intake_manifold:7=0/0/0.18"
+) -join ','
+
+& $Converter $Slrr $Output --notes $Notes --replace engines/Mopar=engines/chrysler --rename $rename --drop $drop --merge $merge --model $model --fit $fit --shift $shift

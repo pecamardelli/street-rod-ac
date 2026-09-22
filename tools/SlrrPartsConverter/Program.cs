@@ -25,6 +25,8 @@ public static class Program
     private const string MergeOption = "--merge";
     private const string FitOption = "--fit";
     private const string ModelOption = "--model";
+    private const string ShiftOption = "--shift";
+    private const string TakesPrefix = "takes:";
 
     private sealed record SourcePart(SlrrRpk Rpk, SlrrRpkEntry Entry, string ConfigFile, string? ScriptPath, string Id, string Name);
 
@@ -36,6 +38,9 @@ public static class Program
 
     /// <summary>Parts that are drawn with another part's model (the same product modelled better in another pack)</summary>
     private sealed record ModelRule(Regex Pattern, string DonorId);
+
+    /// <summary>A slot moved in its part's space, to bring one pack's slot convention onto another's</summary>
+    private sealed record ShiftRule(Regex Pattern, int Slot, float[] Offset);
 
     /// <summary>
     /// Where the parts of an rpk go: all of them (no selector), or those a selector picks out, by the name of a
@@ -58,8 +63,11 @@ public static class Program
         //   what builds, saves and attach lines naming them get, and it fits wherever they fitted
         // --fit <part id pattern>:<slot>=<fitting>[+<fitting>]: the slot mounts by a standard fitting, so it goes on
         //   every slot that takes it, whatever the pack; the slots that take it are found from the attach lines
+        //   (a fitting written "takes:carb:4bbl" marks the slot as one that takes it instead)
         // --model <part id pattern>=<part id>: the parts are drawn with the named part's model (and its slot
         //   geometry), keeping their own scripts: the same product, modelled better in another pack
+        // --shift <part id pattern>:<slot>=<dx>/<dy>/<dz>: the slot moves in its part's space (metres), to bring
+        //   one pack's slot convention onto another's where parts of different packs meet by a fitting
         string? notes = null;
         var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var renames = new List<RenameRule>();
@@ -67,6 +75,7 @@ public static class Program
         var merges = new List<MergeRule>();
         var fits = new List<FitRule>();
         var modelRules = new List<ModelRule>();
+        var shifts = new List<ShiftRule>();
         var positional = new List<string>();
         for (var i = 0; i < args.Length; i++)
         {
@@ -99,6 +108,24 @@ public static class Program
                     }
 
                     modelRules.Add(new ModelRule(Pattern(pair[0].Trim()), pair[1].Trim()));
+                }
+            }
+            else if (args[i] == ShiftOption && i + 1 < args.Length)
+            {
+                foreach (var rule in args[++i].Split(','))
+                {
+                    var pair = rule.Split('=', 2);
+                    var colon = pair[0].LastIndexOf(':');
+                    var offset = pair.Length == 2 ? pair[1].Split('/') : Array.Empty<string>();
+                    if (colon < 0 || offset.Length != 3 || !int.TryParse(pair[0][(colon + 1)..], out var slot)
+                        || !offset.All(o => float.TryParse(o, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out _)))
+                    {
+                        Console.WriteLine($"{ShiftOption} takes <part id pattern>:<slot>=<dx>/<dy>/<dz> in metres, e.g. engines/chrysler/Intake_manifold_*:7=0/-0.062/0");
+                        return 1;
+                    }
+
+                    shifts.Add(new ShiftRule(Pattern(pair[0][..colon].Trim()), slot,
+                        offset.Select(o => float.Parse(o, System.Globalization.CultureInfo.InvariantCulture)).ToArray()));
                 }
             }
             else if (args[i] == FitOption && i + 1 < args.Length)
@@ -153,7 +180,7 @@ public static class Program
             Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] " +
                               "[--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] " +
                               "[--merge <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] " +
-                              "[--model <part id pattern>=<part id>,...]");
+                              "[--model <part id pattern>=<part id>,...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""Street Rod AC\Assets\Parts"" engines/Mopar  (the full run: tools\convert-parts.ps1)");
             return 1;
         }
@@ -389,6 +416,7 @@ public static class Program
         var definitions = written.Values.SelectMany(w => w.Pack.Parts).ToDictionary(d => d.Id, StringComparer.OrdinalIgnoreCase);
         Graft(game, merged, definitions, partIds);
         Fit(fits, definitions);
+        Shift(shifts, definitions);
         foreach (var (folder, pack, models) in written.Values)
         {
             File.WriteAllText(Path.Combine(folder, PartPack.FileName), JsonConvert.SerializeObject(pack, Formatting.Indented));
@@ -614,6 +642,30 @@ public static class Program
     }
 
     /// <summary>
+    /// Moves slots in their parts' space. Packs place the same joint by different conventions (the Chrysler pack's
+    /// carburettor slot sits at the carburettor's mid-height and its pads 6 cm above the flange, GM's at the base and
+    /// the flange), which cancels within a pack and shows where parts of two packs meet by a fitting: both sides of
+    /// a pack's joint move by the same amount, so nothing moves within the pack.
+    /// </summary>
+    private static void Shift(List<ShiftRule> rules, Dictionary<string, PartDefinition> definitions)
+    {
+        foreach (var rule in rules)
+        {
+            var shifted = 0;
+            foreach (var definition in definitions.Values.Where(d => rule.Pattern.IsMatch(d.Id)))
+            {
+                foreach (var slot in definition.Slots.Where(s => s.Id == rule.Slot))
+                {
+                    for (var axis = 0; axis < 3; axis++) slot.Position[axis] += rule.Offset[axis];
+                    shifted++;
+                }
+            }
+
+            if (shifted == 0) Console.WriteLine($"    {ShiftOption} {rule.Pattern} slot {rule.Slot}: no part has it");
+        }
+    }
+
+    /// <summary>
     /// Gives slots their standard fittings, then finds the slots that take each: every slot a fitted slot attaches
     /// to by an attach line, written on either side. The game then mates by the fitting as well as by name, so a
     /// part fitted "carb:4bbl" goes on every pad that takes it, in any pack (a slot that stands in for such a pad
@@ -635,7 +687,15 @@ public static class Program
                     continue;
                 }
 
-                foreach (var fitting in rule.Fittings.Where(f => !slot.Fits.Contains(f, StringComparer.OrdinalIgnoreCase))) slot.Fits.Add(fitting);
+                // "takes:fitting" marks a slot that takes the fitting: for pads no fitted part of their own pack names
+                foreach (var fitting in rule.Fittings)
+                {
+                    var takes = fitting.StartsWith(TakesPrefix, StringComparison.OrdinalIgnoreCase);
+                    var list = takes ? slot.Takes : slot.Fits;
+                    var name = takes ? fitting[TakesPrefix.Length..] : fitting;
+                    if (!list.Contains(name, StringComparer.OrdinalIgnoreCase)) list.Add(name);
+                }
+
                 fitted++;
             }
 

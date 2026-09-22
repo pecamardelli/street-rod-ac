@@ -33,7 +33,7 @@ private.
 
 ## Converter (`tools/SlrrPartsConverter`)
 
-`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>,...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...]`
+`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>,...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...]`
 
 The content in use is made with `tools/convert-parts.ps1` (both Chrysler packs are installed in the SLRR folder, see
 "Replacing a pack"). It comes out as:
@@ -110,11 +110,25 @@ part to its own pack (three Holley four-barrels, each fitting one make). `--fit`
 fitting (`takes`) are found from the attach lines: every slot a fitted slot attaches to, written on either side, so a
 pack's own carburettors tell which of its manifold pads are 4-bbl pads. The game (`PartsCatalog.CanMate`,
 `FindMountable`) mates two slots by a shared fitting as well as by name, through stand-ins on either side (a blower's
-carburettor pad that stands in for a dual-quad manifold pad takes what that pad takes). Slot numbering is the engine
-framework's (manifold pad 7, carburettor base 10, its air horn 11, blower pad 9, drive belt 15) and slot positions
-mark the physical interface, so parts of different packs sit right on each other; checked with harness close-ups of
-a Chrysler Holley and Edelbrock cleaner on a GM 327, a Summit scoop on a 340, the Chrysler Weiand on a GM 8-71
-manifold and the GM one on a 440, Demon dual quads on Dexter's Ford 302.
+carburettor pad that stands in for a dual-quad manifold pad takes what that pad takes). A pad no fitted part of its
+own pack names gets its fitting by rule (`takes:air:single` on the Chrysler 2-bbl's air horn, which only knows
+Chrysler's factory cleaners). Slot numbering is the engine framework's (manifold pad 7, carburettor base 10, its air
+horn 11, blower pad 9, drive belt 15).
+
+**Slot conventions differ between packs**, which cancels within a pack and shows where parts of two packs meet.
+Measured on the meshes (`--shift` rules in `convert-parts.ps1`): the Chrysler pack, and Dexter's Ford pads, put the
+carburettor slot 6.5 cm above the carburettor's base and the manifold pad 6 cm above the flange; GM puts both at the
+flange; GM's stock single carburettors are modelled 18 cm ahead of their origin and its single-carburettor pads sit
+18 cm back to match. Untreated, a GM carburettor rode 7 cm above a Chrysler pad and a Chrysler one sank 7 cm into a
+GM manifold. `--shift` moves a slot in its part's space; both sides of a pack's joint move by the same amount, so
+nothing moves within the pack: Chrysler/Ford carburettor slots and pads come down to the flange (borrowed Chrysler
+models carry Chrysler geometry and come down too; crossram carburettors and Hemi crossram manifolds fit only each
+other and stay), GM's stock single carburettors and pads go forward to the centre. Blowers needed nothing. Checked
+with harness close-ups: a Chrysler Holley and Edelbrock cleaner on a GM 327, GM's stock carburettor with a K&N on a
+340, the Chrysler 2-bbl on GM's 2-bbl manifold, the borrowed-model Dominator with a Summit filter on a Hemi, a
+Summit scoop on a 340, the Chrysler Weiand on a GM 8-71 manifold and the GM one on a 440, Demon dual quads and the
+Holley 650 on Dexter's Ford 302, the GTO Tri-Power filters on the borrowed tri-power; and every pack's own
+carburettor on its own manifold, unchanged.
 
 Factory carburettors and air cleaners (Carter AVS, GM's stock 2/4-bbl and Quadrajet-style cleaners, the Mopar pie
 tins, Six Pack cleaners, the Shaker, the GTO Tri-Power and Corvette air boxes) keep their attach lines and stay with
