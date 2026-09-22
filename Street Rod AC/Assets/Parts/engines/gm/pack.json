@@ -29164,7 +29164,7 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/gm/Weiand_8_71_supercharger",
+              "part": "engines/generic/Weiand_8_71_supercharger",
               "slot": 15,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x0085"
             }
@@ -29245,7 +29245,7 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/gm/Holley_2x4_charger",
+              "part": "engines/generic/Holley_2x4_charger",
               "slot": 15,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x8B85"
             }
@@ -29326,7 +29326,7 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/gm/Holley_2x4_charger",
+              "part": "engines/generic/Holley_2x4_charger",
               "slot": 15,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x8B85"
             }
@@ -29407,7 +29407,7 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/gm/Weiand_pro_Street_supercharger",
+              "part": "engines/generic/Weiand_pro_Street_supercharger",
               "slot": 15,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xCB85"
             }
@@ -29488,7 +29488,7 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/gm/Holley_Street_supercharger",
+              "part": "engines/generic/Holley_Street_supercharger",
               "slot": 15,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xCA85"
             }
@@ -29509,1257 +29509,6 @@
       },
       "source_type_id": 51847,
       "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Holley_street_belt.class"
-    },
-    {
-      "id": "engines/gm/Custom_horns",
-      "name": "Custom_horns",
-      "display_name": "Custom horns (only for Holley 1050 Dominator)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Custom horns (only for Holley 1050 Dominator)",
-        "description": "",
-        "value": 219.078292,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 40.0,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.99,
-        "dusted_efficiency": 0.0,
-        "max_wear": 10000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Custom_horns.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "Air Filter",
-          "position": [
-            -0.01,
-            0.08,
-            0.11
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Holley_4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 57478,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Custom_horns.class"
-    },
-    {
-      "id": "engines/gm/Summit_scoop_5",
-      "name": "Summit_scoop_5",
-      "display_name": "Summit Hilborn-Style hood scoop, chrome, smooth top (for dual-quad applications)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Summit Hilborn-Style hood scoop, chrome, smooth top (for dual-quad applications)",
-        "description": "",
-        "value": 249.11032,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 90.0,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.99,
-        "dusted_efficiency": 0.0,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Summit_scoop_5.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "",
-          "position": [
-            0.017,
-            -0.032,
-            0.1
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/stock_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA1A3"
-            },
-            {
-              "part": "engines/gm/Holley_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 23205,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Summit_scoop_5.class"
-    },
-    {
-      "id": "engines/gm/Summit_scoop_3",
-      "name": "Summit_scoop_3",
-      "display_name": "Summit Street Scoop, polished, finned top (for dual-quad applications)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Summit Street Scoop, polished, finned top (for dual-quad applications)",
-        "description": "",
-        "value": 238.434164,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 80.0,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.99,
-        "dusted_efficiency": 0.0,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Summit_scoop_3.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "",
-          "position": [
-            0.022,
-            0.003,
-            0.07
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/stock_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA1A3"
-            },
-            {
-              "part": "engines/gm/Holley_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 19109,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Summit_scoop_3.class"
-    },
-    {
-      "id": "engines/gm/Summit_scoop_4",
-      "name": "Summit_scoop_4",
-      "display_name": "Summit Street Scoop, black, finned top (for dual-quad applications)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Summit Street Scoop, black, finned top (for dual-quad applications)",
-        "description": "",
-        "value": 238.434164,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 80.0,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.99,
-        "dusted_efficiency": 0.0,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Summit_scoop_4.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "",
-          "position": [
-            0.022,
-            0.003,
-            0.07
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/stock_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA1A3"
-            },
-            {
-              "part": "engines/gm/Holley_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 19365,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Summit_scoop_4.class"
-    },
-    {
-      "id": "engines/gm/Summit_scoop_1",
-      "name": "Summit_scoop_1",
-      "display_name": "Summit Street Scoop, polished, finned top (for single-4brl applications)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Summit Street Scoop, polished, finned top (for single-4brl applications)",
-        "description": "",
-        "value": 213.523132,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 70.0,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.99,
-        "dusted_efficiency": 0.0,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Summit_scoop_1.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "",
-          "position": [
-            0.01,
-            0.016,
-            0.04
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/stock_4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
-            },
-            {
-              "part": "engines/gm/Holley_4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 15013,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Summit_scoop_1.class"
-    },
-    {
-      "id": "engines/gm/Summit_scoop_2",
-      "name": "Summit_scoop_2",
-      "display_name": "Summit Street Scoop, black, finned top (for single-4brl applications)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Summit Street Scoop, black, finned top (for single-4brl applications)",
-        "description": "",
-        "value": 213.523132,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 70.0,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.99,
-        "dusted_efficiency": 0.0,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Summit_scoop_2.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "",
-          "position": [
-            0.01,
-            0.016,
-            0.04
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/stock_4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
-            },
-            {
-              "part": "engines/gm/Holley_4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 15269,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Summit_scoop_2.class"
-    },
-    {
-      "id": "engines/gm/Holley_2x4brl_filter",
-      "name": "Holley_2x4brl_filter",
-      "display_name": "Holley Dual air filter for 2x4brl applications",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley Dual air filter for 2x4brl applications",
-        "description": "",
-        "value": 169.256228,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 36.0,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.9,
-        "dusted_efficiency": 0.9,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Holley_2x4brl_filter.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "",
-          "position": [
-            0.02,
-            -0.01,
-            0.05
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/stock_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA1A3"
-            },
-            {
-              "part": "engines/gm/Holley_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 8613,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Holley_2x4brl_filter.class"
-    },
-    {
-      "id": "engines/gm/Summit_2x4_3x2_air_filter",
-      "name": "Summit_2x4_3x2_air_filter",
-      "display_name": "Summit polished-aluminium air filter (for 2x4brl and 3x2brl applications, paintable element)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Summit polished-aluminium air filter (for 2x4brl and 3x2brl applications, paintable element)",
-        "description": "",
-        "value": 190.608541,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 60.0,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.9,
-        "dusted_efficiency": 0.35,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Summit_2x4_3x2_air_filter.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "",
-          "position": [
-            0.02,
-            0.0,
-            0.03
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Holley_3x2brl_carbs",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
-            },
-            {
-              "part": "engines/gm/stock_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA1A3"
-            },
-            {
-              "part": "engines/gm/Holley_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 8357,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Summit_2x4_3x2_air_filter.class"
-    },
-    {
-      "id": "engines/gm/Summit_air_filter",
-      "name": "Summit_air_filter",
-      "display_name": "Summit billet air filter (for 2brl and 4brl single-carb app-s, paintable element)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Summit billet air filter (for 2brl and 4brl single-carb app-s, paintable element)",
-        "description": "",
-        "value": 151.462633,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 50.0,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.9,
-        "dusted_efficiency": 0.5,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Summit_air_filter.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "",
-          "position": [
-            0.0,
-            0.01,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/stock_2brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
-            },
-            {
-              "part": "engines/gm/Holley_2brl_carb",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x008B"
-            },
-            {
-              "part": "engines/gm/stock_4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
-            },
-            {
-              "part": "engines/gm/Holley_4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 165,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Summit_air_filter.class"
-    },
-    {
-      "id": "engines/gm/KN_filter",
-      "name": "KN_filter",
-      "display_name": "K&N high-flow air filter (for 2brl and 4brl single-carb app-s)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "K&N high-flow air filter (for 2brl and 4brl single-carb app-s)",
-        "description": "",
-        "value": 283.135231,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 60.0,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.9,
-        "dusted_efficiency": 0.5,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "KN_filter.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "",
-          "position": [
-            0.0,
-            0.01,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/stock_2brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
-            },
-            {
-              "part": "engines/gm/Holley_2brl_carb",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x008B"
-            },
-            {
-              "part": "engines/gm/stock_4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
-            },
-            {
-              "part": "engines/gm/Holley_4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 8629,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\KN_filter.class"
-    },
-    {
-      "id": "engines/gm/MOROSO_air_filter",
-      "name": "MOROSO_air_filter",
-      "display_name": "MOROSO anodized air filter (for 2brl and 4brl single-carb app-s, colorable)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "MOROSO anodized air filter (for 2brl and 4brl single-carb app-s, colorable)",
-        "description": "",
-        "value": 265.341637,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 60.0,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.9,
-        "dusted_efficiency": 0.4,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "MOROSO_air_filter.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "",
-          "position": [
-            0.0,
-            0.01,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/stock_2brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
-            },
-            {
-              "part": "engines/gm/Holley_2brl_carb",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x008B"
-            },
-            {
-              "part": "engines/gm/stock_4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
-            },
-            {
-              "part": "engines/gm/Holley_4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 421,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\MOROSO_air_filter.class"
     },
     {
       "id": "engines/gm/stock_4brl_filter_2",
@@ -30850,7 +29599,7 @@
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
             },
             {
-              "part": "engines/gm/Holley_4brl_carburator",
+              "part": "engines/generic/Holley_4brl_carburator",
               "slot": 11,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
             }
@@ -30961,7 +29710,7 @@
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
             },
             {
-              "part": "engines/gm/Holley_4brl_carburator",
+              "part": "engines/generic/Holley_4brl_carburator",
               "slot": 11,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
             }
@@ -31072,7 +29821,7 @@
               "source": "parts\\engines\\GM_V8_pak.rpk#0x00A3"
             },
             {
-              "part": "engines/gm/Holley_2brl_carb",
+              "part": "engines/generic/Holley_2brl_carb",
               "slot": 11,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x008B"
             },
@@ -31082,7 +29831,7 @@
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
             },
             {
-              "part": "engines/gm/Holley_4brl_carburator",
+              "part": "engines/generic/Holley_4brl_carburator",
               "slot": 11,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xB1A3"
             }
@@ -31103,782 +29852,6 @@
       },
       "source_type_id": 134,
       "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Stock_2_4brl_air_filter.class"
-    },
-    {
-      "id": "engines/gm/Holley_Street_supercharger",
-      "name": "Holley_Street_supercharger",
-      "display_name": "Holley Street Supercharger",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-        "java.game.parts.enginepart.airfueldeliverysystem.Charger",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley Street Supercharger",
-        "description": "",
-        "value": 2348.754448,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 85.05,
-        "prestige_calc_weight": 90.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "rpm_turbo_mul": 1.0,
-        "rpm_turbo_opt": 4200.0,
-        "rpm_turbo_range": 3800.0,
-        "P_turbo_max": 1.4,
-        "P_turbo_waste": 0.0,
-        "pulley_diameter": 60.0,
-        "pulley_width": 60.0,
-        "default_rpm_turbo_mul": 1.2
-      },
-      "derived": {
-        "rpm_turbo_mul": 1.2,
-        "max_wear": 10000000.0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [
-        {
-          "slot": 9,
-          "message": "the supercharger is missing the fuel system. Install any 2x4brl carbs here."
-        },
-        {
-          "slot": 15,
-          "message": "you need a Weiand supercharger drive belt here."
-        }
-      ],
-      "categories": [],
-      "model": "Holley_Street_supercharger.kn5",
-      "mass": 14.5,
-      "slots": [
-        {
-          "id": 8,
-          "name": "",
-          "position": [
-            0.0,
-            0.002,
-            0.03
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Holley_charger_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xCAA1"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 9,
-          "name": "roots_type_supercharger_mixture_IN",
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        },
-        {
-          "id": 15,
-          "name": "roots_type_supercharger_drive_belt_IN",
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 51845,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Holley_Street_supercharger.class"
-    },
-    {
-      "id": "engines/gm/Holley_2x4_charger",
-      "name": "Holley_2x4_charger",
-      "display_name": "Holley 2x4 Street Supercharger",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-        "java.game.parts.enginepart.airfueldeliverysystem.Charger",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley 2x4 Street Supercharger",
-        "description": "",
-        "value": 2775.800712,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 85.05,
-        "prestige_calc_weight": 90.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "rpm_turbo_mul": 1.0,
-        "rpm_turbo_opt": 4200.0,
-        "rpm_turbo_range": 3800.0,
-        "P_turbo_max": 2.0,
-        "P_turbo_waste": 0.0,
-        "pulley_diameter": 60.0,
-        "pulley_width": 60.0,
-        "default_rpm_turbo_mul": 1.0
-      },
-      "derived": {
-        "max_wear": 10000000.0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [
-        {
-          "slot": 9,
-          "message": "the supercharger is missing the fuel system. Install any 2x4brl carbs here."
-        },
-        {
-          "slot": 15,
-          "message": "you need a Weiand supercharger drive belt here."
-        }
-      ],
-      "categories": [],
-      "model": "Holley_2x4_charger.kn5",
-      "mass": 14.5,
-      "slots": [
-        {
-          "id": 8,
-          "name": "",
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Weiand_pro_street_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xCBA1"
-            },
-            {
-              "part": "engines/gm/Holley_charger_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xCAA1"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 9,
-          "name": "roots_type_supercharger_mixture_IN",
-          "position": [
-            0.017,
-            0.248,
-            -0.008
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": [
-            {
-              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
-            }
-          ]
-        },
-        {
-          "id": 15,
-          "name": "roots_type_supercharger_drive_belt_IN",
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 35717,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Holley_2x4_charger.class"
-    },
-    {
-      "id": "engines/gm/Weiand_pro_Street_supercharger",
-      "name": "Weiand_pro_Street_supercharger",
-      "display_name": "Weiand Pro Street Supercharger",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-        "java.game.parts.enginepart.airfueldeliverysystem.Charger",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Weiand Pro Street Supercharger",
-        "description": "",
-        "value": 2483.985765,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 85.05,
-        "prestige_calc_weight": 90.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "rpm_turbo_mul": 1.0,
-        "rpm_turbo_opt": 4350.0,
-        "rpm_turbo_range": 3150.0,
-        "P_turbo_max": 4.1,
-        "P_turbo_waste": 0.0,
-        "pulley_diameter": 30.0,
-        "pulley_width": 60.0,
-        "default_rpm_turbo_mul": 1.2
-      },
-      "derived": {
-        "rpm_turbo_mul": 1.2,
-        "max_wear": 10000000.0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [
-        {
-          "slot": 9,
-          "message": "the supercharger is missing the fuel system. Install any 2x4brl carbs here."
-        },
-        {
-          "slot": 15,
-          "message": "you need a Weiand supercharger drive belt here."
-        }
-      ],
-      "categories": [],
-      "model": "Weiand_pro_Street_supercharger.kn5",
-      "mass": 14.5,
-      "slots": [
-        {
-          "id": 8,
-          "name": "",
-          "position": [
-            0.0,
-            -0.124,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Weiand_pro_street_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xCBA1"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 9,
-          "name": "roots_type_supercharger_mixture_IN",
-          "position": [
-            0.009,
-            0.127,
-            -0.128
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": [
-            {
-              "part": "engines/gm/Stock_4brl_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x004B"
-            }
-          ]
-        },
-        {
-          "id": 15,
-          "name": "roots_type_supercharger_drive_belt_IN",
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 52101,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Weiand_pro_Street_supercharger.class"
-    },
-    {
-      "id": "engines/gm/Weiand_8_71_supercharger",
-      "name": "Weiand_8_71_supercharger",
-      "display_name": "Weiand 8-71 Street Supercharger",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-        "java.game.parts.enginepart.airfueldeliverysystem.Charger",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Weiand 8-71 Street Supercharger",
-        "description": "",
-        "value": 2953.736655,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 85.05,
-        "prestige_calc_weight": 90.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "rpm_turbo_mul": 1.0,
-        "rpm_turbo_opt": 4200.0,
-        "rpm_turbo_range": 3800.0,
-        "P_turbo_max": 2.0,
-        "P_turbo_waste": 0.0,
-        "pulley_diameter": 60.0,
-        "pulley_width": 60.0,
-        "default_rpm_turbo_mul": 1.0
-      },
-      "derived": {
-        "max_wear": 10000000.0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [
-        {
-          "slot": 9,
-          "message": "the supercharger is missing the fuel system. Install any 2x4brl carbs here."
-        },
-        {
-          "slot": 15,
-          "message": "you need a Weiand supercharger drive belt here."
-        }
-      ],
-      "categories": [],
-      "model": "Weiand_8_71_supercharger.kn5",
-      "mass": 14.5,
-      "slots": [
-        {
-          "id": 8,
-          "name": "",
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Weiand_500_charger_intake",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x81A1"
-            },
-            {
-              "part": "engines/gm/Weiand_8_71_intake",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x50A1"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 9,
-          "name": "roots_type_supercharger_mixture_IN",
-          "position": [
-            0.013,
-            0.22,
-            -0.025
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": [
-            {
-              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
-            }
-          ]
-        },
-        {
-          "id": 15,
-          "name": "roots_type_supercharger_drive_belt_IN",
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 133,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Weiand_8_71_supercharger.class"
-    },
-    {
-      "id": "engines/gm/hardcore_1050cfm_carb",
-      "name": "hardcore_1050cfm_carb",
-      "display_name": "Hardcoe 1050 CFM modified carburetor (fits all 4brl manifolds)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Hardcoe 1050 CFM modified carburetor (fits all 4brl manifolds)",
-        "description": "",
-        "value": 905.736655,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 35.0,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 13.0,
-        "optimal_mixture_ratio": 16.0,
-        "max_fuel_consumption": 0.03,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 3,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 31623300.0
-      },
-      "derived": {
-        "police_check_fine_value": 200.0,
-        "max_air_consumption": 0.5,
-        "mixture_H": 1991738.186824,
-        "time_burn": 0.000604,
-        "optimal_burn_time_base": 0.00225,
-        "optimal_burn_time_offset": 0.0004,
-        "minComp": 7.966953,
-        "maxComp": 19.917382
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [
-        {
-          "slot": 11,
-          "message": "you need air filter to prevent engine damage."
-        }
-      ],
-      "categories": [],
-      "model": "hardcore_1050cfm_carb.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            0.0,
-            -0.017,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Stock_4brl_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x004B"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "Air Filter",
-          "position": [
-            -0.01,
-            0.08,
-            0.11
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": [
-            {
-              "part": "engines/gm/stock_4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
-            }
-          ]
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 47635,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\hardcore_1050cfm_carb.class"
     },
     {
       "id": "engines/gm/Vette_63_fuel_rail",
@@ -31957,7 +29930,7 @@
           "position": [
             0.0,
             0.0,
-            0.0
+            0.18
           ],
           "rotation": [
             0.0,
@@ -31988,116 +29961,6 @@
       },
       "source_type_id": 39331,
       "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Vette_63_fuel_rail.class"
-    },
-    {
-      "id": "engines/gm/Holley_2x2brl_carbs",
-      "name": "Holley_2x2brl_carbs",
-      "display_name": "Holley Classic series 2x2-barrel carbs, 350 cfm",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley Classic series 2x2-barrel carbs, 350 cfm",
-        "description": "",
-        "value": 324.010694,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 58.53,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 9.1,
-        "optimal_mixture_ratio": 16.0,
-        "max_fuel_consumption": 0.05,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 3,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 13462000.0
-      },
-      "derived": {
-        "police_check_fine_value": 200.0,
-        "max_air_consumption": 0.5,
-        "mixture_H": 1854931.778245,
-        "time_burn": 0.000635,
-        "optimal_burn_time_base": 0.00225,
-        "optimal_burn_time_offset": 0.0004,
-        "minComp": 7.419727,
-        "maxComp": 18.549318
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [],
-      "model": "Holley_2x2brl_carbs.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            0.0,
-            -0.168,
-            -0.097
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Holley_Street_supercharger",
-              "slot": 9,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xCA85"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 51851,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Holley_2x2brl_carbs.class"
     },
     {
       "id": "engines/gm/Holley_fuel_rail",
@@ -32691,7 +30554,7 @@
           "attaches_to": [],
           "compatible_with": [
             {
-              "part": "engines/gm/Holley_2x4brl_carburator",
+              "part": "engines/generic/Holley_2x4brl_carburator",
               "slot": 11,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
             }
@@ -32711,723 +30574,6 @@
       },
       "source_type_id": 49155,
       "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Holley_2x4_FI_system.class"
-    },
-    {
-      "id": "engines/gm/Holley_2x4brl_carburator",
-      "name": "Holley_2x4brl_carburator",
-      "display_name": "Holley 750 CFM Dominator twin-carburetors (fits all 2x4brl manifolds)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley 750 CFM Dominator twin-carburetors (fits all 2x4brl manifolds)",
-        "description": "",
-        "value": 612.266904,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 30.0,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 14.0,
-        "optimal_mixture_ratio": 16.0,
-        "max_fuel_consumption": 0.03,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 3,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 21525000.0
-      },
-      "derived": {
-        "police_check_fine_value": 200.0,
-        "max_air_consumption": 0.5,
-        "mixture_H": 2042641.914211,
-        "time_burn": 0.000592,
-        "optimal_burn_time_base": 0.00225,
-        "optimal_burn_time_offset": 0.0004,
-        "minComp": 8.170568,
-        "maxComp": 20.426419
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [
-        {
-          "slot": 11,
-          "message": "you need air filter to prevent engine damage."
-        }
-      ],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Holley_2x4brl_carburator.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            0.0,
-            -0.017,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
-            },
-            {
-              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold_2",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB04B"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "Air Filter",
-          "position": [
-            0.01,
-            0.065,
-            0.05
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 49571,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Holley_2x4brl_carburator.class"
-    },
-    {
-      "id": "engines/gm/Holley_4brl_carburator",
-      "name": "Holley_4brl_carburator",
-      "display_name": "Holley 1050 CFM Dominator (fits all 4brl manifolds)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley 1050 CFM Dominator (fits all 4brl manifolds)",
-        "description": "",
-        "value": 622.94306,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 30.0,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 9.0,
-        "optimal_mixture_ratio": 16.0,
-        "max_fuel_consumption": 0.03,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 3,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 39000000.0
-      },
-      "derived": {
-        "police_check_fine_value": 200.0,
-        "max_air_consumption": 0.5,
-        "mixture_H": 1852463.168023,
-        "time_burn": 0.000636,
-        "optimal_burn_time_base": 0.00225,
-        "optimal_burn_time_offset": 0.0004,
-        "minComp": 7.409853,
-        "maxComp": 18.524632
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [
-        {
-          "slot": 11,
-          "message": "you need air filter to prevent engine damage."
-        }
-      ],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Holley_4brl_carburator.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            -0.006,
-            -0.018,
-            -0.014
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Stock_4brl_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x004B"
-            },
-            {
-              "part": "engines/gm/GM_small_block_4brl_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x104B"
-            },
-            {
-              "part": "engines/gm/Holley_4brl_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA0BE"
-            },
-            {
-              "part": "engines/gm/Holley_strip_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xC0BE"
-            },
-            {
-              "part": "engines/gm/GM_427_4brl_intake",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x30A1"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "Air Filter",
-          "position": [
-            -0.01,
-            0.08,
-            0.11
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 45475,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Holley_4brl_carburator.class"
-    },
-    {
-      "id": "engines/gm/Holley_3x2brl_carbs",
-      "name": "Holley_3x2brl_carbs",
-      "display_name": "Holley 2300 2brl 3 carbs set, 1050 cfm (fits all Tri-Power manifolds)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley 2300 2brl 3 carbs set, 1050 cfm (fits all Tri-Power manifolds)",
-        "description": "",
-        "value": 644.295374,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 78.53,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 12.5,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.05,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 31000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.5,
-        "mixture_H": 1704225.0,
-        "time_burn": 0.000625,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 6.8169,
-        "maxComp": 17.04225
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [
-        {
-          "slot": 11,
-          "message": "you need air filter to prevent engine damage."
-        }
-      ],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Holley_3x2brl_carbs.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            0.0,
-            -0.017,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Edelbrock_3x2brl_V8_intake",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x00BE"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "",
-          "position": [
-            0.0,
-            0.03,
-            0.13
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 4235,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Holley_3x2brl_carbs.class"
-    },
-    {
-      "id": "engines/gm/Holley_2brl_carb",
-      "name": "Holley_2brl_carb",
-      "display_name": "Holley 2300 series 2-barrel carb, 350 cfm (fits all)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley 2300 series 2-barrel carb, 350 cfm (fits all)",
-        "description": "",
-        "value": 252.836317,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 58.53,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 12.0,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.05,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 13462000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.5,
-        "mixture_H": 1669031.023395,
-        "time_burn": 0.000646,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 6.676124,
-        "maxComp": 16.69031
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [
-        {
-          "slot": 11,
-          "message": "you need air filter to prevent engine damage."
-        }
-      ],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Holley_2brl_carb.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            0.0,
-            -0.017,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/GM_small_block_2brl_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x00A1"
-            },
-            {
-              "part": "engines/gm/V8_2brl_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A1"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "Air Filter",
-          "position": [
-            -0.01,
-            0.07,
-            0.13
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 139,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Holley_2brl_carb.class"
-    },
-    {
-      "id": "engines/gm/stock_2x4brl_carburator",
-      "name": "stock_2x4brl_carburator",
-      "display_name": "Stock 2x4brl carburetors (fits all manifolds)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Stock 2x4brl carburetors (fits all manifolds)",
-        "description": "",
-        "value": 114.046263,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 23.53,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 12.5,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.03,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 31000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.5,
-        "mixture_H": 1704225.0,
-        "time_burn": 0.000625,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 6.8169,
-        "maxComp": 17.04225
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [
-        {
-          "slot": 11,
-          "message": "you need air filter to prevent engine damage."
-        }
-      ],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "stock_2x4brl_carburator.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            0.0,
-            -0.017,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
-            },
-            {
-              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold_2",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB04B"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "Air Filter",
-          "position": [
-            0.01,
-            0.065,
-            0.05
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 41379,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\stock_2x4brl_carburator.class"
     },
     {
       "id": "engines/gm/stock_4brl_carburator",
@@ -33514,9 +30660,9 @@
           "id": 10,
           "name": "",
           "position": [
-            0.0,
-            -0.017,
-            0.0
+            -0.003,
+            -0.066,
+            -0.001
           ],
           "rotation": [
             0.0,
@@ -33549,17 +30695,30 @@
               "part": "engines/gm/GM_427_4brl_intake",
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x30A1"
+            },
+            {
+              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold",
+              "slot": 7,
+              "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
+            },
+            {
+              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold_2",
+              "slot": 7,
+              "source": "parts\\engines\\GM_V8_pak.rpk#0xB04B"
             }
           ],
-          "compatible_with": []
+          "compatible_with": [],
+          "fits": [
+            "carb:4bbl"
+          ]
         },
         {
           "id": 11,
           "name": "Air Filter",
           "position": [
-            -0.01,
-            0.1,
-            0.13
+            -0.046,
+            0.02,
+            -0.041
           ],
           "rotation": [
             0.0,
@@ -33568,7 +30727,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
         }
       ],
       "config": {
@@ -33670,9 +30832,9 @@
           "id": 10,
           "name": "",
           "position": [
-            0.0,
-            -0.017,
-            0.0
+            -0.001,
+            -0.051,
+            0.041
           ],
           "rotation": [
             0.0,
@@ -33692,15 +30854,18 @@
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A1"
             }
           ],
-          "compatible_with": []
+          "compatible_with": [],
+          "fits": [
+            "carb:2bbl"
+          ]
         },
         {
           "id": 11,
           "name": "Air Filter",
           "position": [
-            -0.01,
-            0.07,
-            0.12
+            -0.046,
+            0.042,
+            -0.041
           ],
           "rotation": [
             0.0,
@@ -33709,7 +30874,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
         }
       ],
       "config": {
@@ -34411,7 +31579,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "blower:roots"
+          ]
         }
       ],
       "config": {
@@ -34595,7 +31766,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "blower:roots"
+          ]
         }
       ],
       "config": {
@@ -34742,7 +31916,7 @@
           "position": [
             0.015,
             0.075,
-            -0.122
+            0.058000006
           ],
           "rotation": [
             0.0,
@@ -34919,7 +32093,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "blower:roots"
+          ]
         }
       ],
       "config": {
@@ -35093,7 +32270,7 @@
           "position": [
             -0.01,
             0.065,
-            0.02
+            0.2
           ],
           "rotation": [
             0.0,
@@ -35254,7 +32431,7 @@
           "position": [
             0.018,
             0.18,
-            -0.051
+            -0.161
           ],
           "rotation": [
             0.0,
@@ -35269,6 +32446,49 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.018,
+            0.18,
+            0.059
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.025000002,
+            0.28800002,
+            -0.091
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
           ]
         }
       ],
@@ -35425,7 +32645,7 @@
           "position": [
             0.012,
             0.189,
-            -0.03
+            -0.14
           ],
           "rotation": [
             0.0,
@@ -35440,6 +32660,49 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.012,
+            0.189,
+            0.08
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.031000001,
+            0.297,
+            -0.07
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
           ]
         }
       ],
@@ -35619,7 +32882,70 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 300,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.0,
+            0.131,
+            -0.126
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 302,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.0,
+            0.131,
+            0.118
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            0.003,
+            0.204,
+            -0.01
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:3x2"
+          ]
         }
       ],
       "config": {
@@ -35785,7 +33111,7 @@
           "position": [
             0.0,
             0.042,
-            0.1
+            -0.009999998
           ],
           "rotation": [
             0.0,
@@ -35794,7 +33120,50 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.0,
+            0.042,
+            0.21000001
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.043,
+            0.15,
+            0.060000002
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
+          ]
         }
       ],
       "config": {
@@ -35966,7 +33335,7 @@
           "position": [
             0.0,
             0.097,
-            0.1
+            -0.009999998
           ],
           "rotation": [
             0.0,
@@ -35975,7 +33344,50 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.0,
+            0.097,
+            0.21000001
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.043,
+            0.20500001,
+            0.060000002
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
+          ]
         }
       ],
       "config": {
@@ -36147,7 +33559,7 @@
           "position": [
             -0.01,
             0.065,
-            0.02
+            0.2
           ],
           "rotation": [
             0.0,
@@ -36162,6 +33574,9 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x004B"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
           ]
         }
       ],
@@ -36311,7 +33726,7 @@
           "position": [
             0.0,
             0.084,
-            -0.01
+            0.17
           ],
           "rotation": [
             0.0,
@@ -36326,6 +33741,9 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x004B"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
           ]
         }
       ],
@@ -36466,7 +33884,7 @@
           "position": [
             0.018,
             0.032,
-            -0.13
+            0.050000012
           ],
           "rotation": [
             0.0,
@@ -36637,7 +34055,7 @@
           "position": [
             0.013,
             0.162,
-            -0.021
+            -0.131
           ],
           "rotation": [
             0.0,
@@ -36652,6 +34070,49 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.013,
+            0.162,
+            0.089
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.030000001,
+            0.27,
+            -0.060999997
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
           ]
         }
       ],
@@ -36808,7 +34269,7 @@
           "position": [
             0.013,
             0.028,
-            -0.117
+            0.06300001
           ],
           "rotation": [
             0.0,
@@ -36823,6 +34284,9 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x004B"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
           ]
         }
       ],
@@ -36995,7 +34459,7 @@
           "position": [
             0.0,
             0.245,
-            -0.004
+            0.17600001
           ],
           "rotation": [
             0.0,
@@ -37010,6 +34474,9 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x004B"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
           ]
         }
       ],
@@ -37182,7 +34649,7 @@
           "position": [
             0.0,
             0.075,
-            -0.004
+            0.17600001
           ],
           "rotation": [
             0.0,
@@ -37191,7 +34658,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
         }
       ],
       "config": {
@@ -37361,7 +34831,7 @@
           "position": [
             0.0,
             0.121,
-            0.015
+            0.19500001
           ],
           "rotation": [
             0.0,
@@ -37370,7 +34840,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
         }
       ],
       "config": {
@@ -37540,7 +35013,7 @@
           "position": [
             0.0,
             0.101,
-            -0.004
+            0.17600001
           ],
           "rotation": [
             0.0,
@@ -37549,7 +35022,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
         }
       ],
       "config": {
@@ -41257,534 +38733,6 @@
       "source_script": "parts\\engines\\GM_V8_pak\\scripts\\V8_flywheel.class"
     },
     {
-      "id": "engines/gm/TCI_427_4spd_tranny",
-      "name": "TCI_427_4spd_tranny",
-      "display_name": "Richmond Gear 6-Speed ROD Tranny (GM 427/454)",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Richmond Gear 6-Speed ROD Tranny (GM 427/454)",
-        "description": "",
-        "value": 2057.106762,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 43.53,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 1.26,
-        "maxRPM": 16000.0,
-        "gears": 6,
-        "ratio": [
-          0.0,
-          2.77,
-          2.13,
-          1.57,
-          1.24,
-          1.0,
-          0.62,
-          -3.23
-        ],
-        "end_ratio": 2.71,
-        "starter_torque": 80.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 4,
-        "drive_front_min": 0.0,
-        "drive_front_max": 0.0,
-        "def_drive_front": 0.0,
-        "drive_front": 0.0,
-        "drive_type": 2,
-        "def_diff_lock": 1.0,
-        "diff_lock": 1.0,
-        "diff_lock_min": 1.0,
-        "diff_lock_max": 1.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 111000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "TCI_427_4spd_tranny.kn5",
-      "mass": 38.5,
-      "slots": [
-        {
-          "id": 16,
-          "name": "",
-          "position": [
-            0.0,
-            0.0,
-            -0.672
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/GM_427_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x000A"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x100A"
-            },
-            {
-              "part": "engines/gm/WORLD_Motown_454_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x200A"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 14488,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\TCI_427_4spd_tranny.class"
-    },
-    {
-      "id": "engines/gm/Tremec_T56_tranny",
-      "name": "Tremec_T56_tranny",
-      "display_name": "Tremec T-56 6spd. Tranny (GM 427/454)",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Tremec T-56 6spd. Tranny (GM 427/454)",
-        "description": "",
-        "value": 1879.170819,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 43.53,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 1.26,
-        "maxRPM": 16000.0,
-        "gears": 6,
-        "ratio": [
-          0.0,
-          2.66,
-          1.78,
-          1.3,
-          1.0,
-          0.74,
-          0.5,
-          -3.23
-        ],
-        "end_ratio": 2.71,
-        "starter_torque": 80.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 4,
-        "drive_front_min": 0.0,
-        "drive_front_max": 0.0,
-        "def_drive_front": 0.0,
-        "drive_front": 0.0,
-        "drive_type": 2,
-        "def_diff_lock": 1.0,
-        "diff_lock": 1.0,
-        "diff_lock_min": 1.0,
-        "diff_lock_max": 1.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 111000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "Tremec_T56_tranny.kn5",
-      "mass": 38.5,
-      "slots": [
-        {
-          "id": 16,
-          "name": "",
-          "position": [
-            0.0,
-            0.0,
-            -0.672
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/GM_427_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x000A"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x100A"
-            },
-            {
-              "part": "engines/gm/WORLD_Motown_454_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x200A"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 12440,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Tremec_T56_tranny.class"
-    },
-    {
-      "id": "engines/gm/RG_427_5spd_tranny",
-      "name": "RG_427_5spd_tranny",
-      "display_name": "Richmond Gear Super Street 5-Speed Tranny (GM 427/454)",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Richmond Gear Super Street 5-Speed Tranny (GM 427/454)",
-        "description": "",
-        "value": 1736.822064,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 43.53,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 1.26,
-        "maxRPM": 16000.0,
-        "gears": 5,
-        "ratio": [
-          0.0,
-          3.33,
-          1.85,
-          1.31,
-          1.0,
-          0.77,
-          0,
-          -3.23
-        ],
-        "end_ratio": 2.71,
-        "starter_torque": 80.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 4,
-        "drive_front_min": 0.0,
-        "drive_front_max": 0.0,
-        "def_drive_front": 0.0,
-        "drive_front": 0.0,
-        "drive_type": 2,
-        "def_diff_lock": 1.0,
-        "diff_lock": 1.0,
-        "diff_lock_min": 1.0,
-        "diff_lock_max": 1.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 111000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "RG_427_5spd_tranny.kn5",
-      "mass": 38.5,
-      "slots": [
-        {
-          "id": 16,
-          "name": "",
-          "position": [
-            0.0,
-            0.0,
-            -0.672
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/GM_427_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x000A"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x100A"
-            },
-            {
-              "part": "engines/gm/WORLD_Motown_454_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x200A"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 15256,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\RG_427_5spd_tranny.class"
-    },
-    {
-      "id": "engines/gm/Tremec_TKO600_tranny",
-      "name": "Tremec_TKO600_tranny",
-      "display_name": "Tremec TKO 600 5spd. Tranny (GM 427/454)",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Tremec TKO 600 5spd. Tranny (GM 427/454)",
-        "description": "",
-        "value": 1630.060498,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 43.53,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 1.26,
-        "maxRPM": 16000.0,
-        "gears": 5,
-        "ratio": [
-          0.0,
-          2.87,
-          1.89,
-          1.28,
-          1.0,
-          0.82,
-          0,
-          -3.23
-        ],
-        "end_ratio": 2.71,
-        "starter_torque": 80.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 4,
-        "drive_front_min": 0.0,
-        "drive_front_max": 0.0,
-        "def_drive_front": 0.0,
-        "drive_front": 0.0,
-        "drive_type": 2,
-        "def_diff_lock": 1.0,
-        "diff_lock": 1.0,
-        "diff_lock_min": 1.0,
-        "diff_lock_max": 1.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 111000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "Tremec_T56_tranny.kn5",
-      "mass": 38.5,
-      "slots": [
-        {
-          "id": 16,
-          "name": "",
-          "position": [
-            0.0,
-            0.0,
-            -0.672
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/GM_427_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x000A"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x100A"
-            },
-            {
-              "part": "engines/gm/WORLD_Motown_454_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x200A"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 15000,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Tremec_TKO600_tranny.class"
-    },
-    {
       "id": "engines/gm/RG_427_4spd",
       "name": "RG_427_4spd",
       "display_name": "Richmond Gear Super T-10 4-Speed tranny (427-454)",
@@ -41865,7 +38813,7 @@
         "Transmission",
         "engine"
       ],
-      "model": "Tremec_T56_tranny.kn5",
+      "model": "RG_427_4spd.kn5",
       "mass": 38.5,
       "slots": [
         {
@@ -41915,483 +38863,6 @@
       },
       "source_type_id": 14744,
       "source_script": "parts\\engines\\GM_V8_pak\\scripts\\RG_427_4spd.class"
-    },
-    {
-      "id": "engines/gm/RG_4spd_plus_tranny_4",
-      "name": "RG_4spd_plus_tranny_4",
-      "display_name": "Richmond Gear 6-Speed ROD Transmissions (GM 283-396)",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Richmond Gear 6-Speed ROD Transmissions (GM 283-396)",
-        "description": "",
-        "value": 1843.58363,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 78.53,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 1.35,
-        "maxRPM": 12000.0,
-        "gears": 6,
-        "ratio": [
-          0.0,
-          3.28,
-          2.13,
-          1.57,
-          1.24,
-          1.0,
-          0.76,
-          -2.23
-        ],
-        "end_ratio": 2.71,
-        "starter_torque": 80.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 4,
-        "drive_front_min": 0.0,
-        "drive_front_max": 0.0,
-        "def_drive_front": 0.0,
-        "drive_front": 0.0,
-        "drive_type": 2,
-        "def_diff_lock": 1.0,
-        "diff_lock": 1.0,
-        "diff_lock_min": 1.0,
-        "diff_lock_max": 1.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 211000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "RG_4spd_plus_tranny_4.kn5",
-      "mass": 38.5,
-      "slots": [
-        {
-          "id": 16,
-          "name": "transmission_OUT",
-          "position": [
-            0.0,
-            0.128,
-            -0.612
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xAAB1"
-            },
-            {
-              "part": "engines/gm/GM_427_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x000A"
-            },
-            {
-              "part": "engines/gm/V8_small_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x003F"
-            },
-            {
-              "part": "engines/gm/GM_327_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA03F"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB03F"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 5,
-          "name": "transmission_propeller_shaft_IN",
-          "position": [
-            0.014,
-            -0.036,
-            0.264
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 7577,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\RG_4spd_plus_tranny_4.class"
-    },
-    {
-      "id": "engines/gm/RG_4spd_plus_tranny_3",
-      "name": "RG_4spd_plus_tranny_3",
-      "display_name": "Richmond Gear Street 5-Speed Transmissions (GM 283-396)",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Richmond Gear Street 5-Speed Transmissions (GM 283-396)",
-        "description": "",
-        "value": 1665.647687,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 78.53,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 1.35,
-        "maxRPM": 12000.0,
-        "gears": 5,
-        "ratio": [
-          0.0,
-          3.33,
-          1.85,
-          1.57,
-          1.31,
-          1.0,
-          0,
-          -2.23
-        ],
-        "end_ratio": 2.71,
-        "starter_torque": 80.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 4,
-        "drive_front_min": 0.0,
-        "drive_front_max": 0.0,
-        "def_drive_front": 0.0,
-        "drive_front": 0.0,
-        "drive_type": 2,
-        "def_diff_lock": 1.0,
-        "diff_lock": 1.0,
-        "diff_lock_min": 1.0,
-        "diff_lock_max": 1.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 211000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "RG_4spd_plus_tranny_3.kn5",
-      "mass": 38.5,
-      "slots": [
-        {
-          "id": 16,
-          "name": "transmission_OUT",
-          "position": [
-            0.0,
-            0.128,
-            -0.612
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xAAB1"
-            },
-            {
-              "part": "engines/gm/GM_427_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x000A"
-            },
-            {
-              "part": "engines/gm/V8_small_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x003F"
-            },
-            {
-              "part": "engines/gm/GM_327_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA03F"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB03F"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 5,
-          "name": "transmission_propeller_shaft_IN",
-          "position": [
-            0.014,
-            -0.036,
-            0.264
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 7321,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\RG_4spd_plus_tranny_3.class"
-    },
-    {
-      "id": "engines/gm/RG_4spd_plus_tranny_2",
-      "name": "RG_4spd_plus_tranny_2",
-      "display_name": "Richmond Gear 5-Speed Tranny (GM 283-396)",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Richmond Gear 5-Speed Tranny (GM 283-396)",
-        "description": "",
-        "value": 1487.711744,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 78.53,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 1.35,
-        "maxRPM": 12000.0,
-        "gears": 5,
-        "ratio": [
-          0.0,
-          3.28,
-          2.13,
-          1.57,
-          1.24,
-          1.0,
-          0,
-          -2.23
-        ],
-        "end_ratio": 2.71,
-        "starter_torque": 80.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 4,
-        "drive_front_min": 0.0,
-        "drive_front_max": 0.0,
-        "def_drive_front": 0.0,
-        "drive_front": 0.0,
-        "drive_type": 2,
-        "def_diff_lock": 1.0,
-        "diff_lock": 1.0,
-        "diff_lock_min": 1.0,
-        "diff_lock_max": 1.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 211000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "RG_4spd_plus_tranny_2.kn5",
-      "mass": 38.5,
-      "slots": [
-        {
-          "id": 16,
-          "name": "transmission_OUT",
-          "position": [
-            0.0,
-            0.128,
-            -0.612
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xAAB1"
-            },
-            {
-              "part": "engines/gm/GM_427_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x000A"
-            },
-            {
-              "part": "engines/gm/V8_small_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x003F"
-            },
-            {
-              "part": "engines/gm/GM_327_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA03F"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB03F"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 5,
-          "name": "transmission_propeller_shaft_IN",
-          "position": [
-            0.014,
-            -0.036,
-            0.264
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 7065,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\RG_4spd_plus_tranny_2.class"
     },
     {
       "id": "engines/gm/RG_4spd_plus_tranny",
@@ -42474,7 +38945,7 @@
         "Transmission",
         "engine"
       ],
-      "model": "RG_4spd_plus_tranny_4.kn5",
+      "model": "RG_4spd_plus_tranny.kn5",
       "mass": 38.5,
       "slots": [
         {
@@ -42633,7 +39104,7 @@
         "Transmission",
         "engine"
       ],
-      "model": "RG_4spd_plus_tranny_4.kn5",
+      "model": "RG_4spd_plus_tranny.kn5",
       "mass": 38.5,
       "slots": [
         {
@@ -42834,260 +39305,6 @@
       "source_script": "parts\\engines\\GM_V8_pak\\scripts\\GM_500_3spd_gearbox.class"
     },
     {
-      "id": "engines/gm/GM_500_4spd_gearbox",
-      "name": "GM_500_4spd_gearbox",
-      "display_name": "GM 4L30-E 4spd. stock tranny (500+)",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "GM 4L30-E 4spd. stock tranny (500+)",
-        "description": "",
-        "value": 989.491103,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 58.53,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 0.81,
-        "maxRPM": 13000.0,
-        "gears": 4,
-        "ratio": [
-          0.0,
-          2.4,
-          1.479,
-          1.0,
-          0.723,
-          0,
-          0,
-          -2.0
-        ],
-        "end_ratio": 3.5,
-        "starter_torque": 50.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 4,
-        "drive_front_min": 0.0,
-        "drive_front_max": 0.0,
-        "def_drive_front": 0.0,
-        "drive_front": 0.0,
-        "drive_type": 2,
-        "def_diff_lock": 0.0,
-        "diff_lock": 0.0,
-        "diff_lock_min": 0.0,
-        "diff_lock_max": 0.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 511000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "GM_500_4spd_gearbox.kn5",
-      "mass": 38.5,
-      "slots": [
-        {
-          "id": 16,
-          "name": "",
-          "position": [
-            0.0,
-            0.189,
-            -0.924
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/GM_500_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x800A"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 32920,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\GM_500_4spd_gearbox.class"
-    },
-    {
-      "id": "engines/gm/GM_427_4spd_tranny",
-      "name": "GM_427_4spd_tranny",
-      "display_name": "GM TH-700-R4 (4L60) 4 spd. tranny (427-454)",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "GM TH-700-R4 (4L60) 4 spd. tranny (427-454)",
-        "description": "",
-        "value": 633.619217,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 38.53,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 2.25,
-        "maxRPM": 12000.0,
-        "gears": 4,
-        "ratio": [
-          0.0,
-          3.059,
-          1.625,
-          1.0,
-          0.696,
-          0,
-          0,
-          -2.0
-        ],
-        "end_ratio": 3.5,
-        "starter_torque": 80.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 4,
-        "drive_front_min": 0.0,
-        "drive_front_max": 0.0,
-        "def_drive_front": 0.0,
-        "drive_front": 0.0,
-        "drive_type": 2,
-        "def_diff_lock": 0.0,
-        "diff_lock": 0.0,
-        "diff_lock_min": 0.0,
-        "diff_lock_max": 0.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 111000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "Tremec_T56_tranny.kn5",
-      "mass": 38.5,
-      "slots": [
-        {
-          "id": 16,
-          "name": "",
-          "position": [
-            0.0,
-            0.0,
-            -0.672
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/GM_427_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x000A"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x100A"
-            },
-            {
-              "part": "engines/gm/WORLD_Motown_454_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x200A"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 14232,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\GM_427_4spd_tranny.class"
-    },
-    {
       "id": "engines/gm/GM_427_3spd_tranny",
       "name": "GM_427_3spd_tranny",
       "display_name": "GM TH-400 (3L80) 3 spd. tranny (427-454)",
@@ -43220,165 +39437,6 @@
       "source_script": "parts\\engines\\GM_V8_pak\\scripts\\GM_427_3spd_tranny.class"
     },
     {
-      "id": "engines/gm/V8_4spd_tranny_GM",
-      "name": "V8_4spd_tranny_GM",
-      "display_name": "GM 283-396 TH-200-4R 4 spd. tranny",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "GM 283-396 TH-200-4R 4 spd. tranny",
-        "description": "",
-        "value": 420.096103,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 58.53,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 1.35,
-        "maxRPM": 9200.0,
-        "gears": 4,
-        "ratio": [
-          0.0,
-          2.741,
-          1.568,
-          1.0,
-          0.674,
-          0,
-          0,
-          -2.5
-        ],
-        "end_ratio": 4.0,
-        "starter_torque": 80.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 4,
-        "drive_front_min": 0.0,
-        "drive_front_max": 0.0,
-        "def_drive_front": 0.0,
-        "drive_front": 0.0,
-        "drive_type": 2,
-        "def_diff_lock": 0.0,
-        "diff_lock": 0.0,
-        "diff_lock_min": 0.0,
-        "diff_lock_max": 0.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 211000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "V8_4spd_tranny_GM.kn5",
-      "mass": 38.5,
-      "slots": [
-        {
-          "id": 16,
-          "name": "transmission_OUT",
-          "position": [
-            0.0,
-            0.128,
-            -0.612
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xAAB1"
-            },
-            {
-              "part": "engines/gm/GM_427_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x000A"
-            },
-            {
-              "part": "engines/gm/V8_small_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x003F"
-            },
-            {
-              "part": "engines/gm/GM_327_block",
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA03F"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB03F"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 5,
-          "name": "transmission_propeller_shaft_IN",
-          "position": [
-            0.014,
-            -0.036,
-            0.264
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 153,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\V8_4spd_tranny.class"
-    },
-    {
       "id": "engines/gm/V8_3spd_tranny",
       "name": "V8_3spd_tranny",
       "display_name": "GM 283-396 3 spd. TH-180C tranny",
@@ -43459,7 +39517,7 @@
         "Transmission",
         "engine"
       ],
-      "model": "RG_4spd_plus_tranny_2.kn5",
+      "model": "V8_3spd_tranny.kn5",
       "mass": 38.5,
       "slots": [
         {
@@ -48089,6 +44147,69 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x00BE"
             }
+          ],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 300,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.015,
+            0.199,
+            -0.241
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 302,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.015,
+            0.199,
+            0.0029999986
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            0.018,
+            0.272,
+            -0.125
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:3x2"
           ]
         }
       ],
@@ -48335,9 +44456,9 @@
           "id": 12,
           "name": "",
           "position": [
-            0.0,
-            0.03,
-            0.13
+            -0.053,
+            0.056,
+            0.03999999
           ],
           "rotation": [
             0.0,
@@ -48347,19 +44468,19 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/gm/Holley_3x2brl_carbs",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
+              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold",
+              "slot": 311,
+              "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
             },
             {
-              "part": "engines/gm/stock_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA1A3"
+              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold_2",
+              "slot": 311,
+              "source": "parts\\engines\\GM_V8_pak.rpk#0xB04B"
             },
             {
-              "part": "engines/gm/Holley_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+              "part": "engines/gm/Edelbrock_3x2brl_V8_intake",
+              "slot": 311,
+              "source": "parts\\engines\\GM_V8_pak.rpk#0x00BE"
             }
           ],
           "compatible_with": []
@@ -48661,7 +44782,7 @@
           "position": [
             0.013,
             0.367,
-            -0.005
+            -0.115
           ],
           "rotation": [
             0.0,
@@ -48676,6 +44797,9 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
           ]
         },
         {
@@ -48694,6 +44818,46 @@
           "damage_mode": null,
           "attaches_to": [],
           "compatible_with": []
+        },
+        {
+          "id": 301,
+          "name": "roots_type_supercharger_mixture_IN",
+          "position": [
+            0.013,
+            0.367,
+            0.105
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.030000001,
+            0.47500002,
+            -0.044999998
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
+          ]
         }
       ],
       "config": {
@@ -48845,7 +45009,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "blower:roots"
+          ]
         }
       ],
       "config": {
@@ -50681,6 +46848,69 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x00BE"
             }
+          ],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 300,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.001,
+            0.161,
+            -0.122
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 302,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.001,
+            0.161,
+            0.122
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            0.004,
+            0.234,
+            -0.006
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:3x2"
           ]
         }
       ],
@@ -50701,7 +46931,7 @@
     {
       "id": "engines/gm/GTO65_Airbox",
       "name": "GTO65_Airbox",
-      "display_name": "Pontiac GTO 389 Tri-Power air filters",
+      "display_name": "Pontiac GTO 389 Tri-Power air filter",
       "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
       "class_chain": [
         "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
@@ -50777,17 +47007,17 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/gm/Holley_3x2brl_carbs",
+              "part": "engines/generic/Holley_2brl_carb",
               "slot": 11,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
             },
             {
-              "part": "engines/gm/stock_2x4brl_carburator",
+              "part": "engines/gm/stock_4brl_carburator",
               "slot": 11,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA1A3"
             },
             {
-              "part": "engines/gm/Holley_2x4brl_carburator",
+              "part": "engines/generic/Holley_2x4brl_carburator",
               "slot": 11,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
             }

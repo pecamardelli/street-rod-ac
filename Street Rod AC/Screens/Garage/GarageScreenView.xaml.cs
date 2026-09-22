@@ -35,13 +35,29 @@ namespace Street_Rod_AC.Screens.Garage
             // Parts are picked in the 3D view; what a pick means is the workbench's business
             Viewport3D.PartClicked += part => (DataContext as GarageScreenViewModel)?.Workbench.OnPartClicked(part);
             Viewport3D.CandidateClicked += candidate => (DataContext as GarageScreenViewModel)?.Workbench.OnCandidateClicked(candidate);
+            Viewport3D.PlacementChanged += text =>
+            {
+                if (DataContext is GarageScreenViewModel viewModel) viewModel.Workbench.PlacementDisplay = text ?? string.Empty;
+            };
+
+            // Placement mode is driven from the keyboard, wherever the focus is on the screen
+            Unloaded += (_, _) => { if (_window != null) _window.PreviewKeyDown -= OnWindowKeyDown; };
         }
+
+        private Window? _window;
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             if (DataContext is GarageScreenViewModel viewModel)
             {
                 viewModel.ExitTransition = FadeOutAsync;
+            }
+
+            _window = Window.GetWindow(this);
+            if (_window != null)
+            {
+                _window.PreviewKeyDown -= OnWindowKeyDown;
+                _window.PreviewKeyDown += OnWindowKeyDown;
             }
 
             // Re-loaded with the garage already rendered (or failed): nothing to wait for
@@ -53,6 +69,47 @@ namespace Street_Rod_AC.Screens.Garage
             {
                 RevealAfter(RevealTimeout);
             }
+        }
+
+        /// <summary>
+        /// Placement mode (a tool for fitting the converted parts, not gameplay): F5 on a selected part turns it on,
+        /// then the arrows move the part across and fore-aft, PgUp/PgDn up and down, in the engine's axes; Ctrl
+        /// steps a millimetre, Shift two centimetres, plain five; Tab moves the pad it sits on instead; R takes the
+        /// slot back to where the packs put it; F5 or Esc ends it. Every step is written to the slot shifts.
+        /// </summary>
+        private void OnWindowKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (!IsLoaded) return;
+
+            if (e.Key == System.Windows.Input.Key.F5)
+            {
+                Viewport3D.TogglePlacement();
+                e.Handled = true;
+                return;
+            }
+
+            if (!Viewport3D.IsPlacing) return;
+
+            var modifiers = System.Windows.Input.Keyboard.Modifiers;
+            var step = modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control) ? 0.001f
+                : modifiers.HasFlag(System.Windows.Input.ModifierKeys.Shift) ? 0.02f
+                : 0.005f;
+
+            switch (e.Key)
+            {
+                case System.Windows.Input.Key.Left: Viewport3D.NudgePlacement(-step, 0, 0); break;
+                case System.Windows.Input.Key.Right: Viewport3D.NudgePlacement(step, 0, 0); break;
+                case System.Windows.Input.Key.Up: Viewport3D.NudgePlacement(0, 0, step); break;
+                case System.Windows.Input.Key.Down: Viewport3D.NudgePlacement(0, 0, -step); break;
+                case System.Windows.Input.Key.PageUp: Viewport3D.NudgePlacement(0, step, 0); break;
+                case System.Windows.Input.Key.PageDown: Viewport3D.NudgePlacement(0, -step, 0); break;
+                case System.Windows.Input.Key.Tab: Viewport3D.TogglePlacementTarget(); break;
+                case System.Windows.Input.Key.R: Viewport3D.ResetPlacement(); break;
+                case System.Windows.Input.Key.Escape: Viewport3D.TogglePlacement(); break;
+                default: return;
+            }
+
+            e.Handled = true;
         }
 
         /// <summary>

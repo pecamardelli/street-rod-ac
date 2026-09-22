@@ -109,7 +109,16 @@ public sealed class PartScriptRuntime
 
                     // The slot a part hangs by leads back to what it hangs on
                     if (number == part.OwnSlot && part.Parent != null) return ScriptValue.Of(_runtime.ObjectOf(part.Parent));
-                    return part.Children.TryGetValue(number, out var child) ? ScriptValue.Of(_runtime.ObjectOf(child)) : ScriptValue.Null;
+                    if (part.Children.TryGetValue(number, out var child)) return ScriptValue.Of(_runtime.ObjectOf(child));
+
+                    // A carburettor in a row with nothing on its own air horn breathes through the cleaner over the
+                    // row; only through the horn, a nitrous slot or the like stays empty
+                    var horn = part.Definition.Slots.FirstOrDefault(s => s.Id == number);
+                    if (horn is { TakesAir: true } && part.Parent != null && part.ParentSlot != PartSlot.SharedAirSlot
+                        && part.Parent.Children.TryGetValue(PartSlot.SharedAirSlot, out var shared))
+                        return ScriptValue.Of(_runtime.ObjectOf(shared));
+
+                    return ScriptValue.Null;
 
                 case "slotIDOnSlot":
                     if (part == null) return ScriptValue.Of(0);

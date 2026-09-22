@@ -126,6 +126,22 @@ public class PartDefinition
 
 public class PartSlot
 {
+    /// <summary>
+    /// Id of the slot a manifold (or blower) with a row of carburettor pads has over the row, for an air cleaner
+    /// that spans them all. A carburettor in the row whose own air horn is empty counts that cleaner as its own.
+    /// </summary>
+    public const int SharedAirSlot = 311;
+
+    /// <summary>
+    /// Fittings of air cleaners and scoops start with it ("air:single" on one carburettor's horn, "air:2x4" over a
+    /// row): a slot that takes one is an air horn
+    /// </summary>
+    public const string AirFittingPrefix = "air:";
+
+    /// <summary>Whether the slot is an air horn: it takes an air cleaner or scoop by a standard fitting</summary>
+    [JsonIgnore]
+    public bool TakesAir => Takes.Any(t => t.StartsWith(AirFittingPrefix, StringComparison.OrdinalIgnoreCase));
+
     [JsonProperty("id")]
     public int Id { get; set; }
 
@@ -153,6 +169,22 @@ public class PartSlot
     /// </summary>
     [JsonProperty("compatible_with")]
     public List<PartSlotReference> CompatibleWith { get; set; } = new();
+
+    /// <summary>
+    /// Standard fittings this slot mounts by, e.g. "carb:4bbl" on a four-barrel carburettor's base: it goes on
+    /// any slot that <see cref="Takes"/> one of them, whatever pack the other part is from. Empty for slots that
+    /// only fit what their attach lines name.
+    /// </summary>
+    [JsonProperty("fits")]
+    public List<string> Fits { get; set; } = new();
+
+    /// <summary>Standard fittings this slot receives, e.g. "carb:4bbl" on a manifold's carburettor pad</summary>
+    [JsonProperty("takes")]
+    public List<string> Takes { get; set; } = new();
+
+    public bool ShouldSerializeFits() => Fits.Count > 0;
+
+    public bool ShouldSerializeTakes() => Takes.Count > 0;
 }
 
 public class PartStockReference

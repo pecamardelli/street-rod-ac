@@ -14,37 +14,53 @@ public static class SavedParts
     /// <returns>True when the tree changed</returns>
     public static bool BringUpToDate(PartsCatalog catalog, PartInstance root, List<PartInstance> loose)
     {
-        if (root.SelfAndDescendants().All(p => catalog.CurrentId(p.DefinitionId) == p.DefinitionId)) return false;
-
-        Renew(catalog, root, loose);
-        return true;
+        // Joints are looked at whether or not ids changed: a part may keep its id and lose a slot (a set of
+        // carburettors that became one carburettor keeps its id, and what sat on the set moves over the row)
+        var renamed = root.SelfAndDescendants().Any(p => catalog.CurrentId(p.DefinitionId) != p.DefinitionId);
+        return Renew(catalog, root, loose) || renamed;
     }
 
-    private static void Renew(PartsCatalog catalog, PartInstance part, List<PartInstance> loose)
+    /// <param name="parent">What <paramref name="part"/> hangs on, when it hangs on something</param>
+    /// <returns>True when a joint was made again or a part came off</returns>
+    private static bool Renew(PartsCatalog catalog, PartInstance part, List<PartInstance> loose, PartInstance? parent = null)
     {
         part.DefinitionId = catalog.CurrentId(part.DefinitionId);
 
         var children = part.Children.ToList();
         foreach (var child in children) child.DefinitionId = catalog.CurrentId(child.DefinitionId);
 
+        var changed = false;
+        // What each child hangs on once its joint is looked at: this part, one up, or nothing
+        var hangsOn = children.ToDictionary(child => child, _ => (PartInstance?)part);
+
         // Parts the catalog does not know stay as they are: PartTrees leaves them out, and they may come back
         if (catalog.Get(part.DefinitionId) is { } definition)
         {
-            // Joints that still hold keep their slots; the others take what is free after that
+            // Joints that still hold keep their slots; the others take what is free after that, on the same part
+            // or one up (an air cleaner that sat on a set of carburettors sits over the manifold's row of them now)
             foreach (var child in children.Where(child => !Holds(catalog, definition, part, child)).ToList())
             {
+                changed = true;
                 part.Children.Remove(child);
                 if (Reseat(catalog, definition, part, child)) continue;
+                if (parent != null && catalog.Get(parent.DefinitionId) is { } parentDefinition && Reseat(catalog, parentDefinition, parent, child))
+                {
+                    hangsOn[child] = parent;
+                    continue;
+                }
 
                 child.ParentSlot = 0;
                 child.OwnSlot = 0;
+                hangsOn[child] = null;
                 loose.Add(child);
             }
         }
 
         // A part knows the slot it hangs by now, so its own joints can be looked at; one that came off
         // still carries parts of its own
-        foreach (var child in children) Renew(catalog, child, loose);
+        foreach (var child in children) changed |= Renew(catalog, child, loose, hangsOn[child]);
+
+        return changed;
     }
 
     private static bool Holds(PartsCatalog catalog, PartDefinition definition, PartInstance part, PartInstance child)

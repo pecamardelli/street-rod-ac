@@ -236,13 +236,13 @@
           "source": "parts\\engines\\DEXTERV8s.rpk#0x00A1"
         },
         {
-          "part": "engines/ford/Universal_4_barrel_carburetor",
+          "part": "engines/generic/Universal_4_barrel_carburetor",
           "name": "SuperDuty_500_carburetors",
           "conditional": true,
           "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
         },
         {
-          "part": "engines/ford/Universal_round_air_filter",
+          "part": "engines/generic/Air_cleaner_Edelbrock",
           "name": "Vee-8_airbox",
           "conditional": true,
           "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -260,7 +260,7 @@
           "source": "parts\\engines\\DEXTERV8s.rpk#0x00BE"
         },
         {
-          "part": "engines/ford/Universal_blower",
+          "part": "engines/generic/Universal_blower",
           "name": "MC_roots_type_supercharger",
           "conditional": true,
           "source": "parts\\engines\\DEXTERV8s.rpk#0x0A85"
@@ -278,7 +278,7 @@
           "source": "parts\\engines\\DEXTERV8s.rpk#0x0088"
         },
         {
-          "part": "engines/ford/Universal_oval_air_filter",
+          "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
           "name": "Vee-8_high_flow_airfilter",
           "conditional": true,
           "source": "parts\\engines\\DEXTERV8s.rpk#0x0086"
@@ -875,13 +875,13 @@
           "source": "parts\\engines\\DEXTERV8s.rpk#0x00A1"
         },
         {
-          "part": "engines/ford/Universal_4_barrel_carburetor",
+          "part": "engines/generic/Universal_4_barrel_carburetor",
           "name": "SuperDuty_500_carburetors",
           "conditional": true,
           "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
         },
         {
-          "part": "engines/ford/Universal_round_air_filter",
+          "part": "engines/generic/Air_cleaner_Edelbrock",
           "name": "Vee-8_airbox",
           "conditional": true,
           "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -899,7 +899,7 @@
           "source": "parts\\engines\\DEXTERV8s.rpk#0x00BE"
         },
         {
-          "part": "engines/ford/Universal_blower",
+          "part": "engines/generic/Universal_blower",
           "name": "MC_roots_type_supercharger",
           "conditional": true,
           "source": "parts\\engines\\DEXTERV8s.rpk#0x0A85"
@@ -917,7 +917,7 @@
           "source": "parts\\engines\\DEXTERV8s.rpk#0x0088"
         },
         {
-          "part": "engines/ford/Universal_oval_air_filter",
+          "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
           "name": "Vee-8_high_flow_airfilter",
           "conditional": true,
           "source": "parts\\engines\\DEXTERV8s.rpk#0x0086"
@@ -1514,13 +1514,13 @@
           "source": "parts\\engines\\DEXTERV8s.rpk#0x00A1"
         },
         {
-          "part": "engines/ford/Universal_4_barrel_carburetor",
+          "part": "engines/generic/Universal_4_barrel_carburetor",
           "name": "SuperDuty_500_carburetors",
           "conditional": true,
           "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
         },
         {
-          "part": "engines/ford/Universal_round_air_filter",
+          "part": "engines/generic/Air_cleaner_Edelbrock",
           "name": "Vee-8_airbox",
           "conditional": true,
           "source": "parts\\engines\\DEXTERV8s.rpk#0x00A5"
@@ -1538,7 +1538,7 @@
           "source": "parts\\engines\\DEXTERV8s.rpk#0x00BE"
         },
         {
-          "part": "engines/ford/Universal_blower",
+          "part": "engines/generic/Universal_blower",
           "name": "MC_roots_type_supercharger",
           "conditional": true,
           "source": "parts\\engines\\DEXTERV8s.rpk#0x0A85"
@@ -1556,7 +1556,7 @@
           "source": "parts\\engines\\DEXTERV8s.rpk#0x0088"
         },
         {
-          "part": "engines/ford/Universal_oval_air_filter",
+          "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
           "name": "Vee-8_high_flow_airfilter",
           "conditional": true,
           "source": "parts\\engines\\DEXTERV8s.rpk#0x0086"
@@ -6553,12 +6553,12 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/ford/Universal_blower",
+              "part": "engines/generic/Universal_blower",
               "slot": 15,
               "source": "parts\\engines\\DEXTERV8s.rpk#0x0A85"
             },
             {
-              "part": "engines/ford/Universal_blower_2",
+              "part": null,
               "slot": 15,
               "source": "parts\\engines\\DEXTERV8s.rpk#0x0A99"
             }
@@ -6579,117 +6579,6 @@
       },
       "source_type_id": 135,
       "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_blower_belt.class"
-    },
-    {
-      "id": "engines/ford/Universal_blower_scoop",
-      "name": "Universal_blower_scoop",
-      "display_name": "BDS Blower Scoop",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "BDS Blower Scoop",
-        "description": "",
-        "value": 355.871886,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 25.8,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 100.0,
-        "dusted_efficiency": 100.0,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Universal_blower_scoop.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "blower_scoop_out",
-          "position": [
-            0.004,
-            0.04,
-            0.05
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/ford/Universal_dual_4_barrel_carburetors",
-              "slot": 11,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x008B"
-            },
-            {
-              "part": "engines/ford/Universal_dual_4_barrel_carburetors_2",
-              "slot": 11,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0D8B"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 73,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_blower_scoop.class"
     },
     {
       "id": "engines/ford/Universal_alternator_drive_belt",
@@ -7076,704 +6965,6 @@
       "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_alternator.class"
     },
     {
-      "id": "engines/ford/Universal_oval_air_filter",
-      "name": "Universal_oval_air_filter",
-      "display_name": "Universal V8 Oval Air Filter",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Universal V8 Oval Air Filter",
-        "description": "",
-        "value": 355.871886,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 25.8,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.5,
-        "dusted_efficiency": 0.25,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Universal_oval_air_filter.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "oval_air_filter_air_OUT",
-          "position": [
-            0.004,
-            -0.047,
-            0.05
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/ford/Universal_dual_4_barrel_carburetors",
-              "slot": 11,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x008B"
-            },
-            {
-              "part": "engines/ford/Universal_dual_4_barrel_carburetors_2",
-              "slot": 11,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0D8B"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 134,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_oval_air_filter.class"
-    },
-    {
-      "id": "engines/ford/Universal_round_air_filter",
-      "name": "Universal_round_air_filter",
-      "display_name": "Edelbrock Round Air Filter",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Edelbrock Round Air Filter",
-        "description": "",
-        "value": 355.871886,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 25.8,
-        "prestige_calc_weight": 5.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "stock_max_air_consumption": 0.5,
-        "dusted_efficiency": 0.25,
-        "max_wear": 100000.0
-      },
-      "derived": {},
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Universal_round_air_filter.kn5",
-      "mass": 3.1,
-      "slots": [
-        {
-          "id": 12,
-          "name": "oval_air_filter_air_OUT",
-          "position": [
-            0.004,
-            -0.047,
-            0.05
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/ford/Universal_4_barrel_carburetor",
-              "slot": 11,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x00A3"
-            }
-          ],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 165,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_round_air_filter.class"
-    },
-    {
-      "id": "engines/ford/Universal_blower",
-      "name": "Universal_blower",
-      "display_name": "BDS Stage 4.5 Blower",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-        "java.game.parts.enginepart.airfueldeliverysystem.Charger",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "BDS Stage 4.5 Blower",
-        "description": "",
-        "value": 4519.572954,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 105.05,
-        "prestige_calc_weight": 90.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "rpm_turbo_mul": 1.0,
-        "rpm_turbo_opt": 3500.0,
-        "rpm_turbo_range": 3000.0,
-        "P_turbo_max": 0.95,
-        "P_turbo_waste": 0.0,
-        "pulley_diameter": 60.0,
-        "pulley_width": 60.0,
-        "default_rpm_turbo_mul": 1.37
-      },
-      "derived": {
-        "rpm_turbo_mul": 1.37,
-        "max_wear": 9000000.0
-      },
-      "slot_roles": {},
-      "stock_parts": [
-        {
-          "part": "engines/ford/Universal_blower_belt",
-          "name": "Roots_type_supercharger_drive_belt",
-          "conditional": false,
-          "source": "parts\\engines\\DEXTERV8s.rpk#0x0087"
-        }
-      ],
-      "required_slots": [
-        {
-          "slot": 9,
-          "message": "the supercharger is missing the fuel system."
-        },
-        {
-          "slot": 15,
-          "message": "the supercharger is missing the drive belt."
-        }
-      ],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Universal_blower.kn5",
-      "mass": 14.5,
-      "slots": [
-        {
-          "id": 8,
-          "name": "roots_type_supercharger_OUT",
-          "position": [
-            0.004,
-            -0.003,
-            0.11
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/ford/Ford_blower_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x00A1"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0085"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xD013"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 9,
-          "name": "roots_type_supercharger_mixture_IN",
-          "position": [
-            0.004,
-            0.153,
-            0.11
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        },
-        {
-          "id": 15,
-          "name": "roots_type_supercharger_drive_belt_IN",
-          "position": [
-            -0.054,
-            0.066,
-            -0.342
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 2693,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_blower.class"
-    },
-    {
-      "id": "engines/ford/Universal_dual_4_barrel_carburetors",
-      "name": "Universal_dual_4_barrel_carburetors",
-      "display_name": "Dual Holley 1150 Four Barrel Race Carburetors",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Dual Holley 1150 Four Barrel Race Carburetors",
-        "description": "",
-        "value": 740.380783,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 58.53,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 13.5,
-        "optimal_mixture_ratio": 13.5,
-        "max_fuel_consumption": 0.12,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 1,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 226000000.0
-      },
-      "derived": {
-        "max_air_consumption": 1.2,
-        "mixture_H": 1705000.0,
-        "time_burn": 0.000618,
-        "optimal_burn_time_base": 0.00247,
-        "optimal_burn_time_offset": 0.00075,
-        "minComp": 6.82,
-        "maxComp": 17.05
-      },
-      "slot_roles": {},
-      "stock_parts": [
-        {
-          "part": "engines/ford/Universal_oval_air_filter",
-          "name": "oval air filter",
-          "conditional": false,
-          "source": "parts\\engines\\DEXTERV8s.rpk#0x0086"
-        }
-      ],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Universal_dual_4_barrel_carburetors.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "twin_carbs_mixture_OUT",
-          "position": [
-            0.0,
-            0.03,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/ford/Ford_dual_4_barrel_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x00BE"
-            },
-            {
-              "part": "engines/ford/Universal_blower",
-              "slot": 9,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0A85"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0047"
-            },
-            {
-              "part": "engines/ford/Universal_blower_2",
-              "slot": 9,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0A99"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xD014"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "twin_carbs_air_IN",
-          "position": [
-            0.0,
-            0.045,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 139,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_dual_4_barrel_carburetors.class"
-    },
-    {
-      "id": "engines/ford/Universal_4_barrel_carburetor",
-      "name": "Universal_4_barrel_carburetor",
-      "display_name": "Holley 650 Four Barrel Street Carburetor",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Holley 650 Four Barrel Street Carburetor",
-        "description": "",
-        "value": 740.380783,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 58.53,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 12.5,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 226000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.6,
-        "mixture_H": 1704225.0,
-        "time_burn": 0.000625,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 6.8169,
-        "maxComp": 17.04225
-      },
-      "slot_roles": {},
-      "stock_parts": [
-        {
-          "part": "engines/ford/Universal_oval_air_filter",
-          "name": "oval air filter",
-          "conditional": false,
-          "source": "parts\\engines\\DEXTERV8s.rpk#0x0086"
-        }
-      ],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Universal_4_barrel_carburetor.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "twin_carbs_mixture_OUT",
-          "position": [
-            0.0,
-            0.03,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/ford/Ford_4_barrel_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x008A"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0043"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xD012"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "twin_carbs_air_IN",
-          "position": [
-            0.0,
-            0.045,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 163,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_4_barrel_carburetor.class"
-    },
-    {
       "id": "engines/ford/Ford_4_barrel_intake_manifold",
       "name": "Ford_4_barrel_intake_manifold",
       "display_name": "Ford 4 Barrel Intake Manifold",
@@ -7893,7 +7084,7 @@
           "name": "intake_manifold_mixture_IN",
           "position": [
             0.0,
-            0.101,
+            0.039000005,
             -0.004
           ],
           "rotation": [
@@ -7903,7 +7094,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
         }
       ],
       "config": {
@@ -8040,8 +7234,8 @@
           "name": "intake_manifold_mixture_IN",
           "position": [
             0.0,
-            0.101,
-            -0.004
+            0.039000005,
+            -0.114
           ],
           "rotation": [
             0.0,
@@ -8050,7 +7244,50 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.0,
+            0.039000005,
+            0.106
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.043,
+            0.14700001,
+            -0.044
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
+          ]
         }
       ],
       "config": {
@@ -8197,7 +7434,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "blower:roots"
+          ]
         }
       ],
       "config": {
@@ -9326,529 +8566,6 @@
       },
       "source_type_id": 166,
       "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_flywheel.class"
-    },
-    {
-      "id": "engines/ford/Universal_adjustable_6_speed_AWD_transmission",
-      "name": "Universal_adjustable_6_speed_AWD_transmission",
-      "display_name": "Universal V8 Adjustable 6-Speed AWD Transmission",
-      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-      "class_chain": [
-        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
-        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
-        "java.game.parts.enginepart.SlidingEnginePart",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Universal V8 Adjustable 6-Speed AWD Transmission",
-        "description": "",
-        "value": 6470.394662,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 69.86,
-        "prestige_calc_weight": 30.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "sliction_loss_multiplier": 1.0,
-        "amount_of_oil_needed": 0.0,
-        "inertia": 1.17,
-        "maxRPM": 15000.0,
-        "gears": 6,
-        "ratio": [
-          0.0,
-          3.5,
-          2.6,
-          2.0,
-          1.6,
-          1.3,
-          1.2,
-          -4.0
-        ],
-        "end_ratio": 3.0,
-        "starter_torque": 100.0,
-        "capacity": 0.0,
-        "best_lubrication_sliction": 1.0,
-        "worst_lubrication_sliction": 1.0,
-        "adjustable_gears": 7,
-        "drive_front_min": 0.0,
-        "drive_front_max": 1.0,
-        "def_drive_front": 0.5,
-        "drive_front": 0.5,
-        "drive_type": 3,
-        "def_diff_lock": 0.33,
-        "diff_lock": 0.33,
-        "diff_lock_min": 0.0,
-        "diff_lock_max": 1.0,
-        "adjustable_diff_lock": 0,
-        "adjustable_drive": 0,
-        "rev_ratio": 0.0,
-        "max_wear": 411000000.0
-      },
-      "derived": {
-        "need_update": 0
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [],
-      "categories": [
-        "transmissions",
-        "Transmission",
-        "engine"
-      ],
-      "model": "VR4E_SUPER_LOCK_UP_Racing_Transmission.kn5",
-      "mass": 38.5,
-      "slots": [
-        {
-          "id": 16,
-          "name": "transmission_OUT",
-          "position": [
-            0.014,
-            -0.006,
-            -0.264
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/ford/Ford_429_block",
-              "slot": 5,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0001"
-            },
-            {
-              "part": "engines/ford/Ford_302_block",
-              "slot": 5,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x000A"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x003F"
-            },
-            {
-              "part": "engines/ford/Ford_351_block",
-              "slot": 5,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x004E"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0044"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0A03"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xD001"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xD008"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xD019"
-            },
-            {
-              "part": null,
-              "slot": 5,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xC001"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 5,
-          "name": "transmission_propeller_shaft_IN",
-          "position": [
-            0.014,
-            -0.036,
-            0.264
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 41097,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_adjustable_6_speed_AWD_transmission.class"
-    },
-    {
-      "id": "engines/ford/Universal_blower_2",
-      "name": "Universal_blower_2",
-      "display_name": "Dexter's Super Blower",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.charger.SuperCharger",
-        "java.game.parts.enginepart.airfueldeliverysystem.Charger",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Dexter's Super Blower",
-        "description": "",
-        "value": 45195.729537,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 105.05,
-        "prestige_calc_weight": 90.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 1.0,
-        "optimal_mixture_ratio": 1.0,
-        "max_fuel_consumption": 1E-06,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "rpm_turbo_mul": 1.0,
-        "rpm_turbo_opt": 6250.0,
-        "rpm_turbo_range": 5750.0,
-        "P_turbo_max": 2.0,
-        "P_turbo_waste": 0.0,
-        "pulley_diameter": 60.0,
-        "pulley_width": 60.0,
-        "default_rpm_turbo_mul": 2.1
-      },
-      "derived": {
-        "rpm_turbo_mul": 2.1,
-        "max_wear": 9000000.0
-      },
-      "slot_roles": {},
-      "stock_parts": [
-        {
-          "part": "engines/ford/Universal_blower_belt",
-          "name": "Roots_type_supercharger_drive_belt",
-          "conditional": false,
-          "source": "parts\\engines\\DEXTERV8s.rpk#0x0087"
-        }
-      ],
-      "required_slots": [
-        {
-          "slot": 9,
-          "message": "the supercharger is missing the fuel system."
-        },
-        {
-          "slot": 15,
-          "message": "the supercharger is missing the drive belt."
-        }
-      ],
-      "categories": [
-        "filters",
-        "air",
-        "Air",
-        "engine"
-      ],
-      "model": "Universal_blower.kn5",
-      "mass": 14.5,
-      "slots": [
-        {
-          "id": 8,
-          "name": "roots_type_supercharger_OUT",
-          "position": [
-            0.004,
-            -0.003,
-            0.11
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/ford/Ford_blower_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x00A1"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0085"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xD013"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xC010"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 9,
-          "name": "roots_type_supercharger_mixture_IN",
-          "position": [
-            0.004,
-            0.153,
-            0.11
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        },
-        {
-          "id": 15,
-          "name": "roots_type_supercharger_drive_belt_IN",
-          "position": [
-            -0.054,
-            0.066,
-            -0.342
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 2713,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_blower_2.class"
-    },
-    {
-      "id": "engines/ford/Universal_dual_4_barrel_carburetors_2",
-      "name": "Universal_dual_4_barrel_carburetors_2",
-      "display_name": "Dual Drag Race  Methanol Carburetors",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Dual Drag Race  Methanol Carburetors",
-        "description": "",
-        "value": 7402.302491,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 58.53,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 16.0,
-        "optimal_mixture_ratio": 16.0,
-        "max_fuel_consumption": 0.12,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 3,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 226000000.0
-      },
-      "derived": {
-        "police_check_fine_value": 200.0,
-        "max_air_consumption": 100.0,
-        "mixture_H": 2170000.0,
-        "time_burn": 0.000562,
-        "optimal_burn_time_base": 0.00225,
-        "optimal_burn_time_offset": 0.0004,
-        "minComp": 8.68,
-        "maxComp": 21.7
-      },
-      "slot_roles": {},
-      "stock_parts": [
-        {
-          "part": "engines/ford/Universal_oval_air_filter",
-          "name": "oval air filter",
-          "conditional": false,
-          "source": "parts\\engines\\DEXTERV8s.rpk#0x0086"
-        }
-      ],
-      "required_slots": [],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "Universal_dual_4_barrel_carburetors.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "twin_carbs_mixture_OUT",
-          "position": [
-            0.0,
-            0.03,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/ford/Ford_dual_4_barrel_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x00BE"
-            },
-            {
-              "part": "engines/ford/Universal_blower",
-              "slot": 9,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0A85"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0047"
-            },
-            {
-              "part": "engines/ford/Universal_blower_2",
-              "slot": 9,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0x0A99"
-            },
-            {
-              "part": null,
-              "slot": 7,
-              "source": "parts\\engines\\DEXTERV8s.rpk#0xD014"
-            }
-          ],
-          "compatible_with": []
-        },
-        {
-          "id": 11,
-          "name": "twin_carbs_air_IN",
-          "position": [
-            0.0,
-            0.045,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": []
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 3467,
-      "source_script": "parts\\engines\\DEXTERV8s\\scripts\\Universal_dual_4_barrel_carburetors_2.class"
     },
     {
       "id": "engines/ford/L_Ford_head_cover",
