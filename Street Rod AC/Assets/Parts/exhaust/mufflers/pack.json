@@ -1,0 +1,1785 @@
+{
+  "id": "exhaust/mufflers",
+  "source": "parts\\mufflers.rpk",
+  "parts": [
+    {
+      "id": "exhaust/mufflers/muffler_01",
+      "name": "muffler_01",
+      "display_name": "SL Tuners muffler type 01",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 01",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_01.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256"
+        ]
+      },
+      "source_type_id": 2,
+      "source_script": "parts\\mufflers\\scripts\\muffler_01.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_02",
+      "name": "muffler_02",
+      "display_name": "SL Tuners muffler type 02",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 02",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_02.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256"
+        ]
+      },
+      "source_type_id": 9,
+      "source_script": "parts\\mufflers\\scripts\\muffler_02.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_03",
+      "name": "muffler_03",
+      "display_name": "SL Tuners muffler type 03",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 03",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_03.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256"
+        ]
+      },
+      "source_type_id": 10,
+      "source_script": "parts\\mufflers\\scripts\\muffler_03.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_04",
+      "name": "muffler_04",
+      "display_name": "SL Tuners muffler type 04",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 04",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_04.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256",
+          "256"
+        ]
+      },
+      "source_type_id": 17,
+      "source_script": "parts\\mufflers\\scripts\\muffler_04.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_05",
+      "name": "muffler_05",
+      "display_name": "SL Tuners muffler type 05",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 05",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_05.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256"
+        ]
+      },
+      "source_type_id": 21,
+      "source_script": "parts\\mufflers\\scripts\\muffler_05.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_06",
+      "name": "muffler_06",
+      "display_name": "SL Tuners muffler type 06",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 06",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_06.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256",
+          "256"
+        ]
+      },
+      "source_type_id": 25,
+      "source_script": "parts\\mufflers\\scripts\\muffler_06.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_07",
+      "name": "muffler_07",
+      "display_name": "SL Tuners muffler type 07",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 07",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_07.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256",
+          "256"
+        ]
+      },
+      "source_type_id": 26,
+      "source_script": "parts\\mufflers\\scripts\\muffler_07.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_08",
+      "name": "muffler_08",
+      "display_name": "SL Tuners muffler type 08",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 08",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_08.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256"
+        ]
+      },
+      "source_type_id": 27,
+      "source_script": "parts\\mufflers\\scripts\\muffler_08.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_09",
+      "name": "muffler_09",
+      "display_name": "SL Tuners muffler type 09",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 09",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_09.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256"
+        ]
+      },
+      "source_type_id": 28,
+      "source_script": "parts\\mufflers\\scripts\\muffler_09.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_10",
+      "name": "muffler_10",
+      "display_name": "SL Tuners muffler type 10",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 10",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_10.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256"
+        ]
+      },
+      "source_type_id": 29,
+      "source_script": "parts\\mufflers\\scripts\\muffler_10.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_11",
+      "name": "muffler_11",
+      "display_name": "SL Tuners muffler type 11",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 11",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_11.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256"
+        ]
+      },
+      "source_type_id": 30,
+      "source_script": "parts\\mufflers\\scripts\\muffler_11.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_12",
+      "name": "muffler_12",
+      "display_name": "SL Tuners muffler type 12",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 12",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_12.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256"
+        ]
+      },
+      "source_type_id": 31,
+      "source_script": "parts\\mufflers\\scripts\\muffler_12.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_13",
+      "name": "muffler_13",
+      "display_name": "SL Tuners muffler type 13",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 13",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_13.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256",
+          "256"
+        ]
+      },
+      "source_type_id": 32,
+      "source_script": "parts\\mufflers\\scripts\\muffler_13.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_14",
+      "name": "muffler_14",
+      "display_name": "SL Tuners muffler type 14",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 14",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_14.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256",
+          "256"
+        ]
+      },
+      "source_type_id": 33,
+      "source_script": "parts\\mufflers\\scripts\\muffler_14.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_15",
+      "name": "muffler_15",
+      "display_name": "SL Tuners muffler type 15",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 15",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_15.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256",
+          "256"
+        ]
+      },
+      "source_type_id": 34,
+      "source_script": "parts\\mufflers\\scripts\\muffler_15.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_16",
+      "name": "muffler_16",
+      "display_name": "SL Tuners muffler type 16",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 16",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_16.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256",
+          "256",
+          "256"
+        ]
+      },
+      "source_type_id": 35,
+      "source_script": "parts\\mufflers\\scripts\\muffler_16.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_17",
+      "name": "muffler_17",
+      "display_name": "SL Tuners muffler type 17",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 17",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_17.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256",
+          "256"
+        ]
+      },
+      "source_type_id": 36,
+      "source_script": "parts\\mufflers\\scripts\\muffler_17.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_18",
+      "name": "muffler_18",
+      "display_name": "SL Tuners muffler type 18",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 18",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_18.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256",
+          "256"
+        ]
+      },
+      "source_type_id": 37,
+      "source_script": "parts\\mufflers\\scripts\\muffler_18.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_19",
+      "name": "muffler_19",
+      "display_name": "SL Tuners muffler type 19",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 19",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_19.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256",
+          "256"
+        ]
+      },
+      "source_type_id": 38,
+      "source_script": "parts\\mufflers\\scripts\\muffler_19.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_20L",
+      "name": "muffler_20L",
+      "display_name": "SL Tuners muffler type 20L",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 20L",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_20L.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256",
+          "256",
+          "256"
+        ]
+      },
+      "source_type_id": 39,
+      "source_script": "parts\\mufflers\\scripts\\muffler_20L.class"
+    },
+    {
+      "id": "exhaust/mufflers/muffler_20R",
+      "name": "muffler_20R",
+      "display_name": "SL Tuners muffler type 20R",
+      "base_class": "java.game.parts.enginepart.ExhaustTip",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustTip",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "SL Tuners muffler type 20R",
+        "description": "<description not available yet>",
+        "value": 106.761566,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 40.0,
+        "prestige_calc_weight": 12.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "mufflers",
+        "Exhaust",
+        "engine"
+      ],
+      "model": "muffler_20R.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "exhaust/stock/ExhaustTip",
+              "slot": 1,
+              "source": "parts.rpk#0x0047"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "flags": [
+          "256",
+          "256",
+          "256"
+        ]
+      },
+      "source_type_id": 40,
+      "source_script": "parts\\mufflers\\scripts\\muffler_20R.class"
+    }
+  ]
+}

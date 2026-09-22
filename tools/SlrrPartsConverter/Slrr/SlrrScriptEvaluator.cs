@@ -59,6 +59,13 @@ public sealed class SlrrScriptEvaluator
         return script != null && _loader.Chain(script).Skip(1).Any(c => c.ClassName == className);
     }
 
+    /// <summary>The script's class and everything it extends, own class first; cheap, nothing is run</summary>
+    public IEnumerable<string> Classes(string scriptFile)
+    {
+        var script = _loader.Load(scriptFile);
+        return script == null ? Enumerable.Empty<string>() : _loader.Chain(script).Select(c => c.ClassName).OfType<string>();
+    }
+
     public SlrrPartScript? Evaluate(string scriptFile)
     {
         var script = _loader.Load(scriptFile);

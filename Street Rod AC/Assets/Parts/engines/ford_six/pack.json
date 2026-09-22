@@ -1,0 +1,5211 @@
+{
+  "id": "engines/ford_six",
+  "source": "parts\\engines\\fordi6_data.rpk",
+  "parts": [
+    {
+      "id": "engines/ford_six/Baiern_Devils_6SFi_3_6_block",
+      "name": "Baiern_Devils_6SFi_3_6_block",
+      "display_name": "ford falcon sprint block",
+      "base_class": "java.game.parts.enginepart.block.block_inline.Block_Inline_OHC",
+      "class_chain": [
+        "java.game.parts.enginepart.block.block_inline.Block_Inline_OHC",
+        "java.game.parts.enginepart.block.Block_Inline",
+        "java.game.parts.enginepart.Block",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "ford falcon sprint block",
+        "description": "DevilSport models use this block as the base of their engines. \n As these blocks are mechanically 100% compatible with the Baiern Kraftwerk 2.5 engine block, these can replace the stock blocks in all Baiern models and also all compatible with those. \n It's bored to 93.0 mm (3.66 inch) and support a maximum stroke of 95.0 mm (3.74 inch).",
+        "value": 676.156584,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 76.64,
+        "prestige_calc_weight": 35.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "inertia": 1.0,
+        "friction_fwd": 1.0,
+        "friction_rev": 1.0,
+        "rpm_idle": 1000.0,
+        "time_spark_min": 0.441667,
+        "time_spark_inc": 0.030556,
+        "time_spark_RPM0": 3250.0,
+        "time_spark_RPM1": 6250.0,
+        "RPM_limit": 7250.0,
+        "cylinders": 6,
+        "cylinder_length_from_top": 177.43999,
+        "crank_center_to_cylinder_top": 222.23,
+        "total_sliction_loss": 1.0,
+        "chargersOnBlock": 1,
+        "skip_end_of_update": 0,
+        "bore": 93.0,
+        "SFX_trans_fwd": "sound.rpk#0x0007",
+        "SFX_trans_rev": "sound.rpk#0x0009",
+        "SFX_ignition": "sound.rpk#0x000A",
+        "rpm_trans_fwd": 700.0,
+        "rpm_trans_rev": 700.0,
+        "sfx_starter_rpm": 200.0,
+        "redlineRecColors": [
+          -1,
+          -65536,
+          -256
+        ],
+        "redlineRecTexts": [
+          "",
+          " (over destruction point)",
+          " (over peak power point)"
+        ],
+        "idleRecColors": [
+          -1,
+          -256
+        ],
+        "idleRecTexts": [
+          "",
+          " (torque may not be enough)"
+        ],
+        "max_wear": 420000000.0
+      },
+      "derived": {},
+      "slot_roles": {
+        "crankshaft": 33,
+        "crankshaft_bearing": 41,
+        "transmission": 35,
+        "oil_pan": 31,
+        "cylinder_head": 19
+      },
+      "stock_parts": [
+        {
+          "part": "engines/ford_six/Baiern_88er_crankshaft",
+          "name": "Baiern_88er_crankshaft",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x0044"
+        },
+        {
+          "part": "engines/ford_six/Baiern_crankshaft_bearing_bridge",
+          "name": "Baiern_crankshaft_bearing_bridge",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x004E"
+        },
+        {
+          "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+          "name": "Baiern_Devils_6SFi_cylinder_head",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+        },
+        {
+          "part": "engines/ford_six/Baiern_Devils_RaceMan6_transmission",
+          "name": "Baiern_Devils_RaceMan6_transmission",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x000B"
+        },
+        {
+          "part": "engines/ford_six/Baiern_oil_pan",
+          "name": "Baiern_oil_pan",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x0049"
+        },
+        {
+          "part": "engines/ford_six/Baiern_alternator",
+          "name": "Baiern_alternator",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x004D"
+        },
+        {
+          "part": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+          "name": "Baiern_Devils_Tourist6_transmission",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x00BC"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 32,
+          "message": "the engine is missing the alternator."
+        },
+        {
+          "slot": 19,
+          "message": "It's missing the cylinder head."
+        },
+        {
+          "slot": 33,
+          "message": "it's missing the crankshaft."
+        },
+        {
+          "slot": 41,
+          "message": "it's missing the crankshaft bearing bridge."
+        },
+        {
+          "slot": 31,
+          "message": "it's missing the oil pan."
+        },
+        {
+          "slot": 35,
+          "message": "it's missing the transmission."
+        },
+        {
+          "slot": 0,
+          "message": "turbochargers attached to left exhaust header are missing air intake pipes."
+        }
+      ],
+      "categories": [
+        "blocks",
+        "Main",
+        "engine"
+      ],
+      "model": "Baiern_Devils_6SFi_3_6_block.kn5",
+      "mass": 35.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "engine_block_OUT",
+          "position": [
+            0.044,
+            -0.112,
+            -0.008
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 33,
+          "name": "engine_block_crankshaft_IN",
+          "position": [
+            0.034,
+            -0.014,
+            -0.051
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 2,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 19,
+          "name": "engine_block_cylinder_head_IN",
+          "position": [
+            0.037,
+            0.208,
+            -0.022
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 14,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 35,
+          "name": "engine_block_transmission_IN",
+          "position": [
+            0.037,
+            -0.014,
+            0.383
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 10,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 32,
+          "name": "engine_block_alternator_IN",
+          "position": [
+            -0.128,
+            -0.003,
+            -0.461
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 2,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 31,
+          "name": "engine_block_oil_pan_IN",
+          "position": [
+            0.038,
+            -0.06,
+            -0.038
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 2,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 41,
+          "name": "engine_block_crankshaft_bearing_IN",
+          "position": [
+            0.034,
+            -0.012,
+            -0.023
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 2,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 82,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Devils_6SFi_3_6_block.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Kraftwerk_2_5_block",
+      "name": "Baiern_Kraftwerk_2_5_block",
+      "display_name": "ford falcon block",
+      "base_class": "java.game.parts.enginepart.block.block_inline.Block_Inline_OHC",
+      "class_chain": [
+        "java.game.parts.enginepart.block.block_inline.Block_Inline_OHC",
+        "java.game.parts.enginepart.block.Block_Inline",
+        "java.game.parts.enginepart.Block",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "ford falcon block",
+        "description": "The Baiern Kraftwerk 2.5 block is the basic inline-6 engine block for the CoupeSport models. \n The real displacement of the engine is 2.7 litres (165 cui). Engines based on this block can be built into Baiern CoupeSport, DevilSport and Emer Nonus Street GT models sometimes with more or less modification. \n The block is bored to 80.0 mm (3.15 inch) and support a maximum stroke of 95.0 mm (3.74 inch).",
+        "value": 441.281139,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 38.32,
+        "prestige_calc_weight": 35.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "inertia": 1.0,
+        "friction_fwd": 1.0,
+        "friction_rev": 1.0,
+        "rpm_idle": 1000.0,
+        "time_spark_min": 0.441667,
+        "time_spark_inc": 0.030556,
+        "time_spark_RPM0": 3250.0,
+        "time_spark_RPM1": 6250.0,
+        "RPM_limit": 7000.0,
+        "cylinders": 6,
+        "cylinder_length_from_top": 177.43999,
+        "crank_center_to_cylinder_top": 222.23,
+        "total_sliction_loss": 1.0,
+        "chargersOnBlock": 1,
+        "skip_end_of_update": 0,
+        "bore": 80.0,
+        "SFX_trans_fwd": "sound.rpk#0x0007",
+        "SFX_trans_rev": "sound.rpk#0x0009",
+        "SFX_ignition": "sound.rpk#0x000A",
+        "rpm_trans_fwd": 700.0,
+        "rpm_trans_rev": 700.0,
+        "sfx_starter_rpm": 200.0,
+        "redlineRecColors": [
+          -1,
+          -65536,
+          -256
+        ],
+        "redlineRecTexts": [
+          "",
+          " (over destruction point)",
+          " (over peak power point)"
+        ],
+        "idleRecColors": [
+          -1,
+          -256
+        ],
+        "idleRecTexts": [
+          "",
+          " (torque may not be enough)"
+        ],
+        "max_wear": 326000000.0
+      },
+      "derived": {},
+      "slot_roles": {
+        "crankshaft": 33,
+        "crankshaft_bearing": 41,
+        "transmission": 35,
+        "oil_pan": 31,
+        "cylinder_head": 19
+      },
+      "stock_parts": [
+        {
+          "part": "engines/ford_six/Baiern_90er_crankshaft",
+          "name": "Baiern_90er_crankshaft",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x0053"
+        },
+        {
+          "part": "engines/ford_six/Baiern_crankshaft_bearing_bridge",
+          "name": "Baiern_crankshaft_bearing_bridge",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x004E"
+        },
+        {
+          "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+          "name": "Baiern_Kraftwerk_2_5_cylinder_head",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+        },
+        {
+          "part": "engines/ford_six/Baiern_Tourist_transmission",
+          "name": "Baiern_Tourist_transmission",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x0046"
+        },
+        {
+          "part": "engines/ford_six/Baiern_oil_pan",
+          "name": "Baiern_oil_pan",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x0049"
+        },
+        {
+          "part": "engines/ford_six/Baiern_alternator",
+          "name": "Baiern_alternator",
+          "conditional": true,
+          "source": "parts\\engines\\fordi6_data.rpk#0x004D"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 32,
+          "message": "the engine is missing the alternator."
+        },
+        {
+          "slot": 19,
+          "message": "It's missing the cylinder head."
+        },
+        {
+          "slot": 33,
+          "message": "it's missing the crankshaft."
+        },
+        {
+          "slot": 41,
+          "message": "it's missing the crankshaft bearing bridge."
+        },
+        {
+          "slot": 31,
+          "message": "it's missing the oil pan."
+        },
+        {
+          "slot": 35,
+          "message": "it's missing the transmission."
+        },
+        {
+          "slot": 0,
+          "message": "turbochargers attached to left exhaust header are missing air intake pipes."
+        }
+      ],
+      "categories": [
+        "blocks",
+        "Main",
+        "engine"
+      ],
+      "model": "Baiern_Devils_6SFi_3_6_block.kn5",
+      "mass": 37.5,
+      "slots": [
+        {
+          "id": 1,
+          "name": "engine_block_OUT",
+          "position": [
+            0.044,
+            -0.112,
+            -0.008
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 33,
+          "name": "engine_block_crankshaft_IN",
+          "position": [
+            0.034,
+            -0.014,
+            -0.051
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 2,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 19,
+          "name": "engine_block_cylinder_head_IN",
+          "position": [
+            0.037,
+            0.208,
+            -0.022
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 14,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 35,
+          "name": "engine_block_transmission_IN",
+          "position": [
+            0.037,
+            -0.014,
+            0.383
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 10,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 32,
+          "name": "engine_block_alternator_IN",
+          "position": [
+            -0.128,
+            -0.003,
+            -0.461
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 2,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 31,
+          "name": "engine_block_oil_pan_IN",
+          "position": [
+            0.038,
+            -0.06,
+            -0.038
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 2,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 41,
+          "name": "engine_block_crankshaft_bearing_IN",
+          "position": [
+            0.034,
+            -0.012,
+            -0.023
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 2,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 65,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Kraftwerk_2_5_block.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_GT_III_exhaust_camshaft",
+      "name": "Baiern_GT_III_exhaust_camshaft",
+      "display_name": "Baiern GT III exhaust camshaft",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.camshaft.DOHC_Camshaft",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.camshaft.DOHC_Camshaft",
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Camshaft",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern GT III exhaust camshaft",
+        "description": "This is the exhaust camshaft of the CoupeSport factory 24V DOHC cylinder head. It can be finely adjusted +- 90.0 degrees in 5.0 degree steps, but it's tuned for optimal exhaust up to 7000 RPM. \n Can only be used in DOHC heads. Weighs 5.5 kgs (12.1 pounds), gross lift is 10.9 mm (0.43 inch), duration is ? degrees at ? degrees lobe separation.",
+        "value": 647.686833,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 140.51,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.315,
+        "maxRPM": 20000.0,
+        "static_input_lobe_separation": 225.0,
+        "static_input_lift_in_open": 0.0,
+        "static_input_lift_in_close": 0.0,
+        "static_input_lift_out_open": 12.5,
+        "static_input_lift_out_close": 0.0,
+        "static_input_time_in_duration": 0.0,
+        "static_input_time_out_duration": 272.0,
+        "advance_positive_peak": 15.0,
+        "advance_negative_peak": -15.0,
+        "advance_minimum_step": 1.0,
+        "advance": 0.0,
+        "default_advance": 0.0,
+        "ins_advance": 0.0,
+        "lift_in_open": 0.0,
+        "lift_in_close": 0.0,
+        "lift_out_open": 0.0,
+        "lift_out_close": 0.0,
+        "time_in_open": 0.0,
+        "time_in_close": 0.0,
+        "time_out_open": 0.0,
+        "time_out_close": 0.0,
+        "max_wear": 390000000.0
+      },
+      "derived": {
+        "lift_out_open": 12.5,
+        "time_out_open": 0.623611,
+        "time_out_close": 0.001389
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_GT_III_exhaust_camshaft.kn5",
+      "mass": 3.5,
+      "slots": [
+        {
+          "id": 21,
+          "name": "ex_cam_OUT",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 4,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 4,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": null,
+              "slot": 4,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0081"
+            },
+            {
+              "part": null,
+              "slot": 4,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0082"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 153,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_GT_III_exhaust_camshaft.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_GT_III_intake_camshaft",
+      "name": "Baiern_GT_III_intake_camshaft",
+      "display_name": "Baiern GT III intake camshaft",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.camshaft.DOHC_Camshaft",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.camshaft.DOHC_Camshaft",
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Camshaft",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern GT III intake camshaft",
+        "description": "This shaft is for the GT III 24V DOHC cylinder heads. \n It can be finely adjusted +- 90.0 degrees in 5.0 degree steps, so you can achieve both high RPM peak power or middle range torque. \n Weighs 5.3 kgs (11.7 pounds), gross lift is 11.9 mm (0.47 inch), duration is 232 degrees, lobe center is at 132 degrees ATDC.",
+        "value": 693.950178,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 140.51,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.297,
+        "maxRPM": 20000.0,
+        "static_input_lobe_separation": 252.0,
+        "static_input_lift_in_open": 12.5,
+        "static_input_lift_in_close": 0.0,
+        "static_input_lift_out_open": 0.0,
+        "static_input_lift_out_close": 0.0,
+        "static_input_time_in_duration": 272.0,
+        "static_input_time_out_duration": 0.0,
+        "advance_positive_peak": 15.0,
+        "advance_negative_peak": -15.0,
+        "advance_minimum_step": 1.0,
+        "advance": 0.0,
+        "default_advance": 0.0,
+        "ins_advance": 0.0,
+        "lift_in_open": 0.0,
+        "lift_in_close": 0.0,
+        "lift_out_open": 0.0,
+        "lift_out_close": 0.0,
+        "time_in_open": 0.0,
+        "time_in_close": 0.0,
+        "time_out_open": 0.0,
+        "time_out_close": 0.0,
+        "max_wear": 390000000.0
+      },
+      "derived": {
+        "lift_in_open": 12.5,
+        "time_in_open": 0.961111,
+        "time_in_close": 0.338889
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_GT_III_intake_camshaft.kn5",
+      "mass": 5.3,
+      "slots": [
+        {
+          "id": 20,
+          "name": "in_cam_OUT",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 5,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 5,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": null,
+              "slot": 5,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0081"
+            },
+            {
+              "part": null,
+              "slot": 5,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0082"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 154,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_GT_III_intake_camshaft.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Kraftwerk_2_5_exhaust_camshaft",
+      "name": "Baiern_Kraftwerk_2_5_exhaust_camshaft",
+      "display_name": "Baiern Kraftwerk 2.5 exhaust camshaft",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.camshaft.DOHC_Camshaft",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.camshaft.DOHC_Camshaft",
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Camshaft",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerk 2.5 exhaust camshaft",
+        "description": "This is the stock exhaust camshaft of the CoupeSport factory 24V DOHC cylinder head. It can be finely adjusted +- 90.0 degrees in 5.0 degree steps, but it's tuned for optimal exhaust up to 7000 RPM. \n Can only be used in DOHC heads. Weighs 5.5 kgs (12.1 pounds), gross lift is 10.9 mm (0.43 inch), duration is ? degrees at ? degrees lobe separation.",
+        "value": 181.494662,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 63.87,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.495,
+        "maxRPM": 20000.0,
+        "static_input_lobe_separation": 225.0,
+        "static_input_lift_in_open": 0.0,
+        "static_input_lift_in_close": 0.0,
+        "static_input_lift_out_open": 10.9,
+        "static_input_lift_out_close": 0.0,
+        "static_input_time_in_duration": 0.0,
+        "static_input_time_out_duration": 272.0,
+        "advance_positive_peak": 15.0,
+        "advance_negative_peak": -15.0,
+        "advance_minimum_step": 1.0,
+        "advance": 0.0,
+        "default_advance": 0.0,
+        "ins_advance": 0.0,
+        "lift_in_open": 0.0,
+        "lift_in_close": 0.0,
+        "lift_out_open": 0.0,
+        "lift_out_close": 0.0,
+        "time_in_open": 0.0,
+        "time_in_close": 0.0,
+        "time_out_open": 0.0,
+        "time_out_close": 0.0,
+        "max_wear": 380000000.0
+      },
+      "derived": {
+        "lift_out_open": 10.9,
+        "time_out_open": 0.623611,
+        "time_out_close": 0.001389
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_GT_III_exhaust_camshaft.kn5",
+      "mass": 5.5,
+      "slots": [
+        {
+          "id": 21,
+          "name": "ex_cam_OUT",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 4,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 4,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": null,
+              "slot": 4,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0081"
+            },
+            {
+              "part": null,
+              "slot": 4,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0082"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 89,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Kraftwerk_2_5_exhaust_camshaft.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Kraftwerk_2_5_intake_camshaft",
+      "name": "Baiern_Kraftwerk_2_5_intake_camshaft",
+      "display_name": "Baiern Kraftwerk 2.5 intake camshaft",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.camshaft.DOHC_Camshaft",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.camshaft.DOHC_Camshaft",
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Camshaft",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerk 2.5 intake camshaft",
+        "description": "This shaft is for the stock 24V DOHC cylinder heads. \n It can be finely adjusted +- 90.0 degrees in 5.0 degree steps, so you can achieve both high RPM peak power or middle range torque. \n Weighs 5.3 kgs (11.7 pounds), gross lift is 11.9 mm (0.47 inch), duration is 232 degrees, lobe center is at 132 degrees ATDC.",
+        "value": 181.494662,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 63.87,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.477,
+        "maxRPM": 10000.0,
+        "static_input_lobe_separation": 264.0,
+        "static_input_lift_in_open": 11.9,
+        "static_input_lift_in_close": 0.0,
+        "static_input_lift_out_open": 0.0,
+        "static_input_lift_out_close": 0.0,
+        "static_input_time_in_duration": 232.0,
+        "static_input_time_out_duration": 0.0,
+        "advance_positive_peak": 15.0,
+        "advance_negative_peak": -15.0,
+        "advance_minimum_step": 1.0,
+        "advance": 0.0,
+        "default_advance": 0.0,
+        "ins_advance": 0.0,
+        "lift_in_open": 0.0,
+        "lift_in_close": 0.0,
+        "lift_out_open": 0.0,
+        "lift_out_close": 0.0,
+        "time_in_open": 0.0,
+        "time_in_close": 0.0,
+        "time_out_open": 0.0,
+        "time_out_close": 0.0,
+        "max_wear": 380000000.0
+      },
+      "derived": {
+        "lift_in_open": 11.9,
+        "time_in_open": 0.972222,
+        "time_in_close": 0.294444
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_GT_III_intake_camshaft.kn5",
+      "mass": 5.3,
+      "slots": [
+        {
+          "id": 20,
+          "name": "in_cam_OUT",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 5,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 5,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": null,
+              "slot": 5,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0081"
+            },
+            {
+              "part": null,
+              "slot": 5,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0082"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 90,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Kraftwerk_2_5_intake_camshaft.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_88er_crankshaft",
+      "name": "Baiern_88er_crankshaft",
+      "display_name": "Baiern Devils 6SFi 3.6 crankshaft",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Crankshaft",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Crankshaft",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Devils 6SFi 3.6 crankshaft",
+        "description": "A heavy - 12.3 kgs (27.1 pounds) - and ultra strong 88.0 mm (3.46 inch) stroker dinamically balanced shaft matching the bearing measures of the Baiern Kraftwerk crank to assure compatibility and tunging capability. As this crankshaft is so strong, it's weight can be reduced by dipping some balancer - about 3.5 kgs (7.7 pounds) - to maintain about 9000 peak RPM, but the stock 8000 peak should be enough for almost everyone, and you also keep durability. SL Tuners offers a full titanium replacement for this part but that's much more expensive.",
+        "value": 174.377224,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 84.3,
+        "prestige_calc_weight": 15.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 1.107,
+        "maxRPM": 9000.0,
+        "stroke": 88.0,
+        "main_bearing_diam": 0.0,
+        "con_bearing_diam": 0.0,
+        "cylinder_spacing": 0.0,
+        "stroker_count": 0,
+        "max_wear": 526000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {
+        "con_rod": 9,
+        "flywheel": 37
+      },
+      "stock_parts": [
+        {
+          "part": null,
+          "name": "Baiern_Devils_6SFi_connecting_rods",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0056"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Devils_6SFi_3_6_flywheel",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x000A"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 9,
+          "message": "It's missing the connecting rods."
+        },
+        {
+          "slot": 37,
+          "message": "It's missing the flywheel."
+        }
+      ],
+      "categories": [
+        "crankshafts",
+        "Main",
+        "engine"
+      ],
+      "model": "Baiern_88er_crankshaft.kn5",
+      "mass": 12.3,
+      "slots": [
+        {
+          "id": 34,
+          "name": "crankshaft_OUT",
+          "position": [
+            0.0,
+            0.0,
+            0.346
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_block",
+              "slot": 33,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0041"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_3_6_block",
+              "slot": 33,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0052"
+            }
+          ],
+          "compatible_with": []
+        },
+        {
+          "id": 37,
+          "name": "crankshaft_flywheel_IN",
+          "position": [
+            0.003,
+            0.0,
+            0.769
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 9,
+          "name": "crankshaft_con_rod_IN",
+          "position": [
+            0.0,
+            0.0,
+            0.392
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 68,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_88er_crankshaft.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_90er_crankshaft",
+      "name": "Baiern_90er_crankshaft",
+      "display_name": "Baiern Kraftwerk 2.5 crankshaft",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Crankshaft",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Crankshaft",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerk 2.5 crankshaft",
+        "description": "A medium heavy - 11.5 kgs (15.4 pounds) - and strong dinamically balanced 90.0 mm (3.94 inch) stroker crankshaft for the CoupeSport engines. \n Thanks to its almost perfect balance, this shaft withstands 8300 peak RPM. Some balancer can be dropped to fine tune the crank to be good for 9000-10000 peak RPM.",
+        "value": 120.996441,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 42.149998,
+        "prestige_calc_weight": 15.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 1.035,
+        "maxRPM": 9000.0,
+        "stroke": 90.0,
+        "main_bearing_diam": 0.0,
+        "con_bearing_diam": 0.0,
+        "cylinder_spacing": 0.0,
+        "stroker_count": 0,
+        "max_wear": 326000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {
+        "con_rod": 9,
+        "flywheel": 37
+      },
+      "stock_parts": [
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_connecting_rods",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0055"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_flywheel",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0045"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 9,
+          "message": "It's missing the connecting rods."
+        },
+        {
+          "slot": 37,
+          "message": "It's missing the flywheel."
+        }
+      ],
+      "categories": [
+        "crankshafts",
+        "Main",
+        "engine"
+      ],
+      "model": "Baiern_90er_crankshaft.kn5",
+      "mass": 11.5,
+      "slots": [
+        {
+          "id": 34,
+          "name": "crankshaft_OUT",
+          "position": [
+            0.0,
+            0.0,
+            0.346
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_block",
+              "slot": 33,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0041"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_3_6_block",
+              "slot": 33,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0052"
+            }
+          ],
+          "compatible_with": []
+        },
+        {
+          "id": 37,
+          "name": "crankshaft_flywheel_IN",
+          "position": [
+            0.003,
+            0.0,
+            0.769
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 9,
+          "name": "crankshaft_con_rod_IN",
+          "position": [
+            0.0,
+            0.0,
+            0.392
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 83,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_90er_crankshaft.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_crankshaft_bearing_bridge",
+      "name": "Baiern_crankshaft_bearing_bridge",
+      "display_name": "Baiern crankshaft bearing bridge",
+      "base_class": "java.game.parts.enginepart.SlidingEnginePart",
+      "class_chain": [
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern crankshaft bearing bridge",
+        "description": "It's the bearing used in all types of Baiern engines from the N/A CoupeSport 2.5 to the DevilSport BiTurbo. \n It's durability is enough for about the engine's lifetime, but not cheap to change, so take good care of your engine especially the lubrication.",
+        "value": 320.284698,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 38.32,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "max_wear": 340000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "crankshafts",
+        "Main",
+        "engine"
+      ],
+      "model": "Baiern_crankshaft_bearing_bridge.kn5",
+      "mass": 2.6,
+      "slots": [
+        {
+          "id": 40,
+          "name": "crankshaft_bearing_OUT",
+          "position": [
+            0.034,
+            -0.012,
+            -0.023
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_block",
+              "slot": 41,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0041"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_3_6_block",
+              "slot": 41,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0052"
+            },
+            {
+              "part": null,
+              "slot": 41,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007F"
+            },
+            {
+              "part": null,
+              "slot": 41,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007E"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 78,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_crankshaft_bearing_bridge.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_camshaft_bearing_bridge",
+      "name": "Baiern_camshaft_bearing_bridge",
+      "display_name": "Baiern camshaft bearing bridge",
+      "base_class": "java.game.parts.enginepart.SlidingEnginePart",
+      "class_chain": [
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern camshaft bearing bridge",
+        "description": "It's the bearing used in all Baiern/Baiern Devils cylinder heads. It's very durable, and is not too expensive to change, but take good care of your engine especially the lubrication.",
+        "value": 85.409253,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 38.32,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "max_wear": 250000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_camshaft_bearing_bridge.kn5",
+      "mass": 2.0,
+      "slots": [
+        {
+          "id": 25,
+          "name": "cam_bearing_OUT",
+          "position": [
+            0.0,
+            0.032,
+            -0.029
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 24,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 24,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 88,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_camshaft_bearing_bridge.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+      "name": "Baiern_Devils_6SFi_cylinder_head",
+      "display_name": "Baiern Devils 6SFi cylinder head",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.cylinderhead.DOHC_CylinderHead",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.cylinderhead.DOHC_CylinderHead",
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.CylinderHead",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Devils 6SFi cylinder head",
+        "description": "This head uses 2+2 valves for each 6 cylinders supported with long and strong titanium valve springs to let you choose valve lifts up to 25.4 mm (1.0 inch)! The combustion chamber has a 20.7 mm (0.82 inch) high dome. The valve head diameters are 32.0 mm (1.26 inch) on the intake side and 29.0 mm (1.14 inch) on the exhaust side. Stage II involves port optimization and polishing on both sides, stronger valve springs and lightweight reciprocating components.",
+        "value": 1992.882562,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 38.32,
+        "prestige_calc_weight": 30.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.135,
+        "maxRPM": -1.0,
+        "T_loss": 80.0,
+        "Vmin": 81.27,
+        "in_min": 0.0,
+        "out_min": 0.0,
+        "in_max": 0.0,
+        "out_max": 0.0,
+        "time_in_open": 0.0,
+        "time_in_close": 0.0,
+        "time_out_open": 0.0,
+        "time_out_close": 0.0,
+        "time_spark_min": 0.0,
+        "time_spark_inc": 0.0,
+        "time_spark_RPM0": 0.0,
+        "time_spark_RPM1": 0.0,
+        "intake_efficiency_tuning": 1.25,
+        "exhaust_efficiency_tuning": 1.25,
+        "cc_dome_safe_clearance": 18.7,
+        "intake_tunnel_area": 0.0,
+        "exhaust_tunnel_area": 0.0,
+        "intake_valve_diam": 28.0,
+        "number_of_intake_valves_per_cylinder": 2.0,
+        "exhaust_valve_diam": 25.0,
+        "number_of_exhaust_valves_per_cylinder": 2.0,
+        "bore": 1.0,
+        "no_exhaust_police_fine": 150.0,
+        "max_wear": 411000000.0
+      },
+      "derived": {},
+      "slot_roles": {
+        "intake_manifold": 11,
+        "exhaust_header": 13,
+        "camshaft_bearing": 24,
+        "cover": 18,
+        "exhaust_camshaft": 4,
+        "intake_camshaft": 5
+      },
+      "stock_parts": [
+        {
+          "part": null,
+          "name": "Baiern_GT_III_exhaust_camshaft",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0099"
+        },
+        {
+          "part": null,
+          "name": "Baiern_GT_III_intake_camshaft",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x009A"
+        },
+        {
+          "part": null,
+          "name": "Baiern_camshaft_bearing_bridge",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0058"
+        },
+        {
+          "part": null,
+          "name": "Baiern_GT_III_cylinder_head_cover",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x00BB"
+        },
+        {
+          "part": null,
+          "name": "Baiern_camshaft_drive_belt",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0047"
+        },
+        {
+          "part": null,
+          "name": "Baiern_GT_III_intake_manifold",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0097"
+        },
+        {
+          "part": null,
+          "name": "Baiern_GT_III_exhaust_header",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0098"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_exhaust_camshaft",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0059"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_intake_camshaft",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x005A"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Devils_6SFi_cylinder_head_cover",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x009B"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_intake_manifold",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x004A"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_exhaust_header",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x004C"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Devils_Turbo_6SFi_cylinder_head_cover",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x00B7"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Devils_Turbo_exhaust_header",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x007C"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Devils_BiTurbo_6SFi_cylinder_head_cover",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x00BA"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Devils_BiTurbo_exhaust_header",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x007A"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 22,
+          "message": "the engine is missing the camshaft drive belt."
+        },
+        {
+          "slot": 4,
+          "message": "It's missing the exhaust camshaft."
+        },
+        {
+          "slot": 5,
+          "message": "It's missing the intake camshaft."
+        },
+        {
+          "slot": 11,
+          "message": "It's missing the intake."
+        },
+        {
+          "slot": 24,
+          "message": "It's missing the camshaft bearing bridge."
+        },
+        {
+          "slot": 18,
+          "message": "It's missing the cylinder head cover."
+        }
+      ],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_Devils_6SFi_cylinder_head.kn5",
+      "mass": 22.0,
+      "slots": [
+        {
+          "id": 3,
+          "name": "cylinder_head_OUT",
+          "position": [
+            0.0,
+            -0.077,
+            -0.025
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_block",
+              "slot": 19,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0041"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_3_6_block",
+              "slot": 19,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0052"
+            },
+            {
+              "part": null,
+              "slot": 19,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007E"
+            },
+            {
+              "part": null,
+              "slot": 19,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007F"
+            }
+          ],
+          "compatible_with": []
+        },
+        {
+          "id": 5,
+          "name": "cylinder_head_in_cam_IN",
+          "position": [
+            -0.053,
+            0.031,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 4,
+          "name": "cylinder_head_ex_cam_IN",
+          "position": [
+            0.053,
+            0.031,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 22,
+          "name": "cylinder_head_cam_belt_IN",
+          "position": [
+            0.0,
+            0.042,
+            -0.441
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 24,
+          "name": "cylinder_head_cam_bearing_IN",
+          "position": [
+            0.0,
+            0.032,
+            -0.029
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 11,
+          "name": "cylinder_head_intake_IN",
+          "position": [
+            -0.092,
+            -0.03,
+            -0.028
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 13,
+          "name": "cylinder_head_exhaust_header_1_to_3_IN",
+          "position": [
+            0.092,
+            -0.03,
+            -0.205
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 14,
+          "name": "cylinder_head_exhaust_header_4_to_6_IN",
+          "position": [
+            0.092,
+            -0.03,
+            0.149
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 18,
+          "name": "cylinder_head_cover_IN",
+          "position": [
+            0.0,
+            0.032,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 66,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Devils_6SFi_cylinder_head.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head_cover",
+      "name": "Baiern_Devils_6SFi_cylinder_head_cover",
+      "display_name": "Baiern Devils 6SFi cylinder head cover",
+      "base_class": "java.game.parts.Part",
+      "class_chain": [
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Devils 6SFi cylinder head cover",
+        "description": "A light alloy valve cover painted to black with the Baiern Devils and 6SFi logos in red.",
+        "value": 53.380783,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 76.64,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_Devils_6SFi_cylinder_head_cover.kn5",
+      "mass": 3.14,
+      "slots": [
+        {
+          "id": 17,
+          "name": "cylinder_head_cover_OUT",
+          "position": [
+            0.0,
+            0.032,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 18,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 18,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            },
+            {
+              "part": null,
+              "slot": 18,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0081"
+            },
+            {
+              "part": null,
+              "slot": 18,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0082"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 155,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Devils_6SFi_cylinder_head_cover.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_GT_III_cylinder_head_cover",
+      "name": "Baiern_GT_III_cylinder_head_cover",
+      "display_name": "Baiern GT III cylinder head cover",
+      "base_class": "java.game.parts.Part",
+      "class_chain": [
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern GT III cylinder head cover",
+        "description": "An ultra-light valve cover painted to blue with the Baiern Racer, Baiern Devils and 6SFi GT III logos in red. The material of this valve cover helps the head dissipate more heat then the standard head covers, thus extending lifetime of the engine.",
+        "value": 160.142349,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 191.6,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 2000000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_Devils_6SFi_cylinder_head_cover.kn5",
+      "mass": 3.14,
+      "slots": [
+        {
+          "id": 17,
+          "name": "cylinder_head_cover_OUT",
+          "position": [
+            0.0,
+            0.032,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 18,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 18,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            },
+            {
+              "part": null,
+              "slot": 18,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0081"
+            },
+            {
+              "part": null,
+              "slot": 18,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0082"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 187,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_GT_III_cylinder_head_cover.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+      "name": "Baiern_Kraftwerk_2_5_cylinder_head",
+      "display_name": "Baiern Kraftwerk 2.5 cylinder head",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.cylinderhead.DOHC_CylinderHead",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.cylinderhead.DOHC_CylinderHead",
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.CylinderHead",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerk 2.5 cylinder head",
+        "description": "This head uses 4 valves for each 6 cylinders supported with long and strong titanium valve springs to let you choose valve lifts up to 25.4 mm (1.0 inch)! \n The combustion chamber has a 20.7 mm (0.82 inch) high dome. The valve head diameters are 30.0 mm (1.18 inch) on the intake side and 27.0 mm (1.06 inch) on the exhaust side.",
+        "value": 1281.13879,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 48.54,
+        "prestige_calc_weight": 30.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.162,
+        "maxRPM": 20000.0,
+        "T_loss": 80.0,
+        "Vmin": 80.74,
+        "in_min": 0.0,
+        "out_min": 0.0,
+        "in_max": 0.0,
+        "out_max": 0.0,
+        "time_in_open": 0.0,
+        "time_in_close": 0.0,
+        "time_out_open": 0.0,
+        "time_out_close": 0.0,
+        "time_spark_min": 0.0,
+        "time_spark_inc": 0.0,
+        "time_spark_RPM0": 0.0,
+        "time_spark_RPM1": 0.0,
+        "intake_efficiency_tuning": 1.0,
+        "exhaust_efficiency_tuning": 1.0,
+        "cc_dome_safe_clearance": 18.7,
+        "intake_tunnel_area": 0.0,
+        "exhaust_tunnel_area": 0.0,
+        "intake_valve_diam": 31.0,
+        "number_of_intake_valves_per_cylinder": 2.0,
+        "exhaust_valve_diam": 29.5,
+        "number_of_exhaust_valves_per_cylinder": 2.0,
+        "bore": 1.0,
+        "no_exhaust_police_fine": 150.0,
+        "max_wear": 317000000.0
+      },
+      "derived": {},
+      "slot_roles": {
+        "intake_manifold": 11,
+        "exhaust_header": 13,
+        "camshaft_bearing": 24,
+        "cover": 18,
+        "exhaust_camshaft": 4,
+        "intake_camshaft": 5
+      },
+      "stock_parts": [
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_exhaust_camshaft",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0059"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_intake_camshaft",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x005A"
+        },
+        {
+          "part": null,
+          "name": "Baiern_camshaft_bearing_bridge",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0058"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_cylinder_head_cover",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x004F"
+        },
+        {
+          "part": null,
+          "name": "Baiern_camshaft_drive_belt",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0047"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_intake_manifold",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x004A"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_exhaust_header",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x004C"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_Turbo_cylinder_head_cover",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0076"
+        },
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_Turbo_exhaust_header",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x007B"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 22,
+          "message": "the engine is missing the camshaft drive belt."
+        },
+        {
+          "slot": 4,
+          "message": "It's missing the exhaust camshaft."
+        },
+        {
+          "slot": 5,
+          "message": "It's missing the intake camshaft."
+        },
+        {
+          "slot": 11,
+          "message": "It's missing the intake."
+        },
+        {
+          "slot": 24,
+          "message": "It's missing the camshaft bearing bridge."
+        },
+        {
+          "slot": 18,
+          "message": "It's missing the cylinder head cover."
+        }
+      ],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_Kraftwerk_2_5_cylinder_head.kn5",
+      "mass": 19.5,
+      "slots": [
+        {
+          "id": 3,
+          "name": "cylinder_head_OUT",
+          "position": [
+            0.0,
+            -0.077,
+            -0.025
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_block",
+              "slot": 19,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0041"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_3_6_block",
+              "slot": 19,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0052"
+            },
+            {
+              "part": null,
+              "slot": 19,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007E"
+            },
+            {
+              "part": null,
+              "slot": 19,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007F"
+            }
+          ],
+          "compatible_with": []
+        },
+        {
+          "id": 5,
+          "name": "cylinder_head_in_cam_IN",
+          "position": [
+            -0.053,
+            0.031,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 4,
+          "name": "cylinder_head_ex_cam_IN",
+          "position": [
+            0.053,
+            0.031,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 22,
+          "name": "cylinder_head_cam_belt_IN",
+          "position": [
+            0.0,
+            0.042,
+            -0.441
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 24,
+          "name": "cylinder_head_cam_bearing_IN",
+          "position": [
+            0.0,
+            0.032,
+            -0.029
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 11,
+          "name": "cylinder_head_intake_IN",
+          "position": [
+            -0.092,
+            -0.03,
+            -0.028
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 13,
+          "name": "cylinder_head_exhaust_header_1_to_3_IN",
+          "position": [
+            0.092,
+            -0.03,
+            -0.205
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 14,
+          "name": "cylinder_head_exhaust_header_4_to_6_IN",
+          "position": [
+            0.092,
+            -0.03,
+            0.149
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 18,
+          "name": "cylinder_head_cover_IN",
+          "position": [
+            0.0,
+            0.032,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 80,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Kraftwerk_2_5_cylinder_head.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head_cover",
+      "name": "Baiern_Kraftwerk_2_5_cylinder_head_cover",
+      "display_name": "Baiern Kraftwerk 2.5 cylinder head cover",
+      "base_class": "java.game.parts.Part",
+      "class_chain": [
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerk 2.5 cylinder head cover",
+        "description": "A stylish light alloy valve cover painted to black with the Baiern, 6 cylinder and 2.5 logos polished.",
+        "value": 53.380783,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 38.32,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_Devils_6SFi_cylinder_head_cover.kn5",
+      "mass": 3.14,
+      "slots": [
+        {
+          "id": 17,
+          "name": "cylinder_head_cover_OUT",
+          "position": [
+            0.0,
+            0.032,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 18,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 18,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            },
+            {
+              "part": null,
+              "slot": 18,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0081"
+            },
+            {
+              "part": null,
+              "slot": 18,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0082"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 79,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Kraftwerk_2_5_cylinder_head_cover.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_oil_pan",
+      "name": "Baiern_oil_pan",
+      "display_name": "Baiern Kraftwerl/Devil oil pan",
+      "base_class": "java.game.parts.enginepart.OilPan",
+      "class_chain": [
+        "java.game.parts.enginepart.OilPan",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerl/Devil oil pan",
+        "description": "This is the factory stock oil pan developed in cooperation between Baiern Cars Gmbh and Emer Japanese-German Automobiles Co. It can hold up to 7.0 litres (29.54 quarts) of engine oil, but 5.5 litres (23.21 quarts) is enough for the Baiern KraftWerk 2.5 engine.",
+        "value": 64.05694,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 51.09,
+        "prestige_calc_weight": 7.5,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "friction_fwd": 0.0001,
+        "friction_rev": 0.0001,
+        "capacity": 0.0,
+        "max_wear": 500000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "oil",
+        "Main",
+        "engine"
+      ],
+      "model": "Baiern_oil_pan.kn5",
+      "mass": 12.0,
+      "slots": [
+        {
+          "id": 2,
+          "name": "oil_pan_OUT",
+          "position": [
+            0.0,
+            0.084,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_block",
+              "slot": 31,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0041"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_3_6_block",
+              "slot": 31,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0052"
+            },
+            {
+              "part": null,
+              "slot": 31,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007E"
+            },
+            {
+              "part": null,
+              "slot": 31,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007F"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 73,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_oil_pan.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Devils_6SFi_connecting_rods",
+      "name": "Baiern_Devils_6SFi_connecting_rods",
+      "display_name": "Baiern Devils 6SFi 3.6 connecting rods",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.ConnectingRod",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.ConnectingRod",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Devils 6SFi 3.6 connecting rods",
+        "description": "These high durability lightened steel rods weigh 350 grams (12.3 ounces) per piece and come in a pack of 6. \n The length is 132.5 mm (5.22 inch) to assure compatiblity with its CoupeSport ancestor. Can be built into the engine with both short and high pistons from 50.0 mm (1.97 inch) to 90.0 mm (3.54 inch).",
+        "value": 128.113879,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 63.87,
+        "prestige_calc_weight": 5.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.189,
+        "maxRPM": 10000.0,
+        "length": 132.5,
+        "crank_bearing_diam": 0.0,
+        "wrist_bearing_diam": 0.0,
+        "max_wear": 348000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {
+        "piston": 39
+      },
+      "stock_parts": [
+        {
+          "part": null,
+          "name": "Baiern_Devils_6SFi_HC_pistons",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0057"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 39,
+          "message": "It's missing the pistons."
+        }
+      ],
+      "categories": [
+        "connecting",
+        "Main",
+        "engine"
+      ],
+      "model": "Baiern_Devils_6SFi_connecting_rods.kn5",
+      "mass": 2.1,
+      "slots": [
+        {
+          "id": 38,
+          "name": "con_rod_OUT",
+          "position": [
+            -0.002,
+            -0.044,
+            0.313
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_88er_crankshaft",
+              "slot": 9,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0044"
+            },
+            {
+              "part": "engines/ford_six/Baiern_90er_crankshaft",
+              "slot": 9,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0053"
+            }
+          ],
+          "compatible_with": []
+        },
+        {
+          "id": 39,
+          "name": "con_rod_piston_IN",
+          "position": [
+            0.002,
+            0.175,
+            -0.115
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 86,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Devils_6SFi_connecting_rods.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Kraftwerk_2_5_connecting_rods",
+      "name": "Baiern_Kraftwerk_2_5_connecting_rods",
+      "display_name": "Baiern Kraftwerk 2.5 connecting rods",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.ConnectingRod",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.ConnectingRod",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerk 2.5 connecting rods",
+        "description": "These steel rods weigh 500 grams (17.6 ounces) per piece and come in a pack of 6. \n The length is 143.0 mm (5.63 inch) so you can use it with both short and high pistons from 50.0 mm (1.97 inch) to 90.0 mm (3.54 inch).",
+        "value": 85.409253,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 38.32,
+        "prestige_calc_weight": 5.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.27,
+        "maxRPM": 10000.0,
+        "length": 142.5,
+        "crank_bearing_diam": 0.0,
+        "wrist_bearing_diam": 0.0,
+        "max_wear": 278000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {
+        "piston": 39
+      },
+      "stock_parts": [
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_HC_pistons",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0054"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 39,
+          "message": "It's missing the pistons."
+        }
+      ],
+      "categories": [
+        "connecting",
+        "Main",
+        "engine"
+      ],
+      "model": "Baiern_Kraftwerk_2_5_connecting_rods.kn5",
+      "mass": 3.0,
+      "slots": [
+        {
+          "id": 38,
+          "name": "con_rod_OUT",
+          "position": [
+            -0.002,
+            -0.044,
+            0.313
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_88er_crankshaft",
+              "slot": 9,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0044"
+            },
+            {
+              "part": "engines/ford_six/Baiern_90er_crankshaft",
+              "slot": 9,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0053"
+            }
+          ],
+          "compatible_with": []
+        },
+        {
+          "id": 39,
+          "name": "con_rod_piston_IN",
+          "position": [
+            0.002,
+            0.175,
+            -0.115
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 85,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Kraftwerk_2_5_connecting_rods.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Devils_6SFi_HC_pistons",
+      "name": "Baiern_Devils_6SFi_HC_pistons",
+      "display_name": "Baiern Devils 6SFi 3.6 pistons",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Piston",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Piston",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Devils 6SFi 3.6 pistons",
+        "description": "A set of 6 pistons only for the 93.0 mm (3.66 inch) bored Baiern Devils 6SFi 3.6 block and Baiern Devils cylinder heads. \n This piston set gives a 10.9:1 compression ratio in stock form. \n There should be enough room in the head for the +17.1 mm (+0.67 inch) high piston crowns. Each of the pistons weigh only 450 grams (15.9 ounces), so the peak RPM of the crankshaft may reach 9000 if supported with similarly light and strong connecting rods. Not recommended for forced induction due to the very high static compression ratios with factory connecting rods.",
+        "value": 491.103203,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 76.64,
+        "prestige_calc_weight": 15.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.243,
+        "maxRPM": 10000.0,
+        "bore": 93.0,
+        "length_from_wrist_pin_center_to_crown_base": 37.56,
+        "crown_height": 19.849998,
+        "crown_volume": 70.56,
+        "length_from_lowest_safe_belt_to_crown_base": 24.140001,
+        "max_wear": 218000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_Devils_6SFi_HC_pistons.kn5",
+      "mass": 2.7,
+      "slots": [
+        {
+          "id": 16,
+          "name": "piston_OUT",
+          "position": [
+            0.0,
+            0.055,
+            -0.118
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_connecting_rods",
+              "slot": 39,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0055"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_connecting_rods",
+              "slot": 39,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0056"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 87,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Devils_6SFi_HC_pistons.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Kraftwerk_2_5_HC_pistons",
+      "name": "Baiern_Kraftwerk_2_5_HC_pistons",
+      "display_name": "Baiern Kraftwerk 2.5 pistons",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Piston",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Piston",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerk 2.5 pistons",
+        "description": "A set of 6 pistons plus rings only for the 80.0 mm (3.15 inch) bored Baiern and compatible blocks and cylinder heads with enough space in the combustion chamber to incorporate the +17.1 mm (+0.67 inch) high piston crowns. Can only be used with high domed cylinder heads and careful intake and exhaust timing settings to avoid injury of the head, the pistons and the connecting rods, or even the crankshaft and the bearing bridge. Each of these pistons weigh only 390 grams (13.8 ounces), so the peak RPM of the crankshaft may reach 9250 if supported with similarly light and strong connecting rods. Not recommended for forced induction due to the very high static compression ratios with factory connecting rods.",
+        "value": 298.932384,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 44.71,
+        "prestige_calc_weight": 15.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.2106,
+        "maxRPM": 11000.0,
+        "bore": 80.0,
+        "length_from_wrist_pin_center_to_crown_base": 32.309998,
+        "crown_height": 17.07,
+        "crown_volume": 44.91,
+        "length_from_lowest_safe_belt_to_crown_base": 20.77,
+        "max_wear": 205000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_Kraftwerk_2_5_HC_pistons.kn5",
+      "mass": 2.34,
+      "slots": [
+        {
+          "id": 16,
+          "name": "piston_OUT",
+          "position": [
+            0.0,
+            0.055,
+            -0.118
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_connecting_rods",
+              "slot": 39,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0055"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_connecting_rods",
+              "slot": 39,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0056"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 84,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Kraftwerk_2_5_HC_pistons.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_GT_III_fuel_rail",
+      "name": "Baiern_GT_III_fuel_rail",
+      "display_name": "Baiern CoupeSport GT III fuel-rail",
+      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
+      "class_chain": [
+        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
+        "java.game.parts.enginepart.AirFuelDeliverySystem",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern CoupeSport GT III fuel-rail",
+        "description": "This is the stock serial fuel injector railing for the 6-tunnel intake manifold. \n It has 6 injectors totalling a max delivery capacity of 450 lbs/hr, enough for about 900 HP.",
+        "value": 594.30605,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 63.87,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "mixture_ratio": 14.0,
+        "optimal_mixture_ratio": 14.0,
+        "max_fuel_consumption": 0.04,
+        "max_air_consumption": 1E-05,
+        "fuel_type": 2,
+        "mixture_H": 1.0,
+        "time_burn": 0.1,
+        "nitro_H": 1.0,
+        "nitro_cooling": 1.0,
+        "nitro_consumption": 1.0,
+        "nitro_minRPM": 0.0,
+        "nitro_maxRPM": -1.0,
+        "nitro_minThrottle": 0.0,
+        "optimal_burn_time_base": 0.003,
+        "optimal_burn_time_offset": 0.001,
+        "minComp": 0.0,
+        "maxComp": 0.0,
+        "default_mixture_ratio": 14.0,
+        "default_fuel_type": 2,
+        "max_wear": 380000000.0
+      },
+      "derived": {
+        "mixture_H": 1705387.5,
+        "time_burn": 0.000605,
+        "optimal_burn_time_base": 0.00242,
+        "optimal_burn_time_offset": 0.00065,
+        "minComp": 6.82155,
+        "maxComp": 17.053875
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_GT_III_fuel_rail.kn5",
+      "mass": 3.2,
+      "slots": [
+        {
+          "id": 28,
+          "name": "fuel_rail_OUT",
+          "position": [
+            0.025,
+            -0.025,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_intake_manifold",
+              "slot": 10,
+              "source": "parts\\engines\\fordi6_data.rpk#0x004A"
+            },
+            {
+              "part": "engines/ford_six/Baiern_GT_III_intake_manifold",
+              "slot": 10,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0097"
+            },
+            {
+              "part": null,
+              "slot": 10,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0090"
+            },
+            {
+              "part": null,
+              "slot": 10,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0092"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 226,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_GT_III_fuel_rail.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Kraftwerk_2_5_fuel_rail",
+      "name": "Baiern_Kraftwerk_2_5_fuel_rail",
+      "display_name": "Baiern Kraftwerk 2.5 fuel-rail",
+      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
+      "class_chain": [
+        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
+        "java.game.parts.enginepart.AirFuelDeliverySystem",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerk 2.5 fuel-rail",
+        "description": "This is the stock serial fuel injector railing for the 6-tunnel intake manifold. \n It has 6 injectors totalling a max delivery capacity of 200 lbs/hr, enough for about 400 HP.",
+        "value": 202.846975,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 63.87,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "mixture_ratio": 13.0,
+        "optimal_mixture_ratio": 13.5,
+        "max_fuel_consumption": 0.025,
+        "max_air_consumption": 1E-05,
+        "fuel_type": 1,
+        "mixture_H": 1.0,
+        "time_burn": 0.1,
+        "nitro_H": 1.0,
+        "nitro_cooling": 1.0,
+        "nitro_consumption": 1.0,
+        "nitro_minRPM": 0.0,
+        "nitro_maxRPM": -1.0,
+        "nitro_minThrottle": 0.0,
+        "optimal_burn_time_base": 0.003,
+        "optimal_burn_time_offset": 0.001,
+        "minComp": 0.0,
+        "maxComp": 0.0,
+        "default_mixture_ratio": 13.0,
+        "default_fuel_type": 1,
+        "max_wear": 380000000.0
+      },
+      "derived": {
+        "mixture_H": 1672289.651311,
+        "time_burn": 0.000635,
+        "optimal_burn_time_base": 0.00247,
+        "optimal_burn_time_offset": 0.00075,
+        "minComp": 6.689159,
+        "maxComp": 16.722897
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_GT_III_fuel_rail.kn5",
+      "mass": 3.2,
+      "slots": [
+        {
+          "id": 28,
+          "name": "fuel_rail_OUT",
+          "position": [
+            0.025,
+            -0.025,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_intake_manifold",
+              "slot": 10,
+              "source": "parts\\engines\\fordi6_data.rpk#0x004A"
+            },
+            {
+              "part": "engines/ford_six/Baiern_GT_III_intake_manifold",
+              "slot": 10,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0097"
+            },
+            {
+              "part": null,
+              "slot": 10,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0090"
+            },
+            {
+              "part": null,
+              "slot": 10,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0092"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 75,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Kraftwerk_2_5_fuel_rail.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_GT_III_intake_manifold",
+      "name": "Baiern_GT_III_intake_manifold",
+      "display_name": "Baiern CoupeSport GT III intake manifold",
+      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.IntakeManifold",
+      "class_chain": [
+        "java.game.parts.enginepart.airfueldeliverysystem.IntakeManifold",
+        "java.game.parts.enginepart.AirFuelDeliverySystem",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern CoupeSport GT III intake manifold",
+        "description": "This is an improved version of the stock Kraftwerk 2.5 intake. Designed for the GT III racecar, this is a masterpiece of air flow dynamics. This unit has a very low air restriction coefficient thanks to the finely welded and glued parts. It's relatively fragile.",
+        "value": 907.47331,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 153.28,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "mixture_ratio": 1.0,
+        "optimal_mixture_ratio": 1.0,
+        "max_fuel_consumption": 1E-06,
+        "max_air_consumption": 1E-05,
+        "fuel_type": 0,
+        "mixture_H": 1.0,
+        "time_burn": 0.1,
+        "nitro_H": 1.0,
+        "nitro_cooling": 1.0,
+        "nitro_consumption": 1.0,
+        "nitro_minRPM": 0.0,
+        "nitro_maxRPM": -1.0,
+        "nitro_minThrottle": 0.0,
+        "optimal_burn_time_base": 0.003,
+        "optimal_burn_time_offset": 0.001,
+        "minComp": 0.0,
+        "maxComp": 0.0,
+        "efficiency": 0.91,
+        "max_wear": 400000000.0
+      },
+      "derived": {
+        "max_fuel_consumption": 0.0,
+        "max_air_consumption": 0.3
+      },
+      "slot_roles": {
+        "fuel_rail": 10
+      },
+      "stock_parts": [
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_fuel_rail",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x004B"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 10,
+          "message": "It's missing the fuel system."
+        }
+      ],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_GT_III_intake_manifold.kn5",
+      "mass": 12.8,
+      "slots": [
+        {
+          "id": 26,
+          "name": "intake_manifold_OUT",
+          "position": [
+            0.275,
+            0.2,
+            0.046
+          ],
+          "rotation": [
+            3.2,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 11,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 11,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": null,
+              "slot": 11,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0081"
+            },
+            {
+              "part": null,
+              "slot": 11,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0082"
+            }
+          ],
+          "compatible_with": []
+        },
+        {
+          "id": 10,
+          "name": "intake_manifold_fuel_IN",
+          "position": [
+            0.124,
+            0.137,
+            0.052
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 30,
+          "name": "intake_manifold_NOS_IN",
+          "position": [
+            0.088,
+            0.134,
+            0.052
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 12,
+          "name": "intake_manifold_air_IN",
+          "position": [
+            -0.046,
+            -0.096,
+            -0.402
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 151,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_GT_III_intake_manifold.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Kraftwerk_2_5_intake_manifold",
+      "name": "Baiern_Kraftwerk_2_5_intake_manifold",
+      "display_name": "Baiern Kraftwerk 2.5 intake manifold",
+      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.IntakeManifold",
+      "class_chain": [
+        "java.game.parts.enginepart.airfueldeliverysystem.IntakeManifold",
+        "java.game.parts.enginepart.AirFuelDeliverySystem",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerk 2.5 intake manifold",
+        "description": "This intake features 6 even length tunnels and a massive 19.6 litre (1200 cui) airbox to support uncut airflow for the stock Baiern Krafwerk engines.",
+        "value": 259.786477,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 51.09,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "mixture_ratio": 1.0,
+        "optimal_mixture_ratio": 1.0,
+        "max_fuel_consumption": 1E-06,
+        "max_air_consumption": 1E-05,
+        "fuel_type": 0,
+        "mixture_H": 1.0,
+        "time_burn": 0.1,
+        "nitro_H": 1.0,
+        "nitro_cooling": 1.0,
+        "nitro_consumption": 1.0,
+        "nitro_minRPM": 0.0,
+        "nitro_maxRPM": -1.0,
+        "nitro_minThrottle": 0.0,
+        "optimal_burn_time_base": 0.003,
+        "optimal_burn_time_offset": 0.001,
+        "minComp": 0.0,
+        "maxComp": 0.0,
+        "efficiency": 0.75,
+        "max_wear": 630000000.0
+      },
+      "derived": {
+        "max_fuel_consumption": 0.0,
+        "max_air_consumption": 0.3
+      },
+      "slot_roles": {
+        "fuel_rail": 10
+      },
+      "stock_parts": [
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_2_5_fuel_rail",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x004B"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 10,
+          "message": "It's missing the fuel system."
+        }
+      ],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_GT_III_intake_manifold.kn5",
+      "mass": 12.8,
+      "slots": [
+        {
+          "id": 26,
+          "name": "intake_manifold_OUT",
+          "position": [
+            0.275,
+            0.2,
+            0.046
+          ],
+          "rotation": [
+            3.2,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 11,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 11,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": null,
+              "slot": 11,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0081"
+            },
+            {
+              "part": null,
+              "slot": 11,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0082"
+            }
+          ],
+          "compatible_with": []
+        },
+        {
+          "id": 10,
+          "name": "intake_manifold_fuel_IN",
+          "position": [
+            0.124,
+            0.137,
+            0.052
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 30,
+          "name": "intake_manifold_NOS_IN",
+          "position": [
+            0.088,
+            0.134,
+            0.052
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        },
+        {
+          "id": 12,
+          "name": "intake_manifold_air_IN",
+          "position": [
+            -0.046,
+            -0.096,
+            -0.402
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 74,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Kraftwerk_2_5_intake_manifold.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_alternator",
+      "name": "Baiern_alternator",
+      "display_name": "Baiern alternator",
+      "base_class": "java.game.parts.EnginePart",
+      "class_chain": [
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern alternator",
+        "description": "This part generates the electrical power needed for igniting the air fuel mixture in the engine. It is driven by a belt that connects to the crankshaft. \n In short race conditions you may dismount this part to produce some more horsepower because the battery holds enough charge for ignition, but only for some minutes.",
+        "value": 67.615658,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 38.32,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 300000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [
+        {
+          "part": null,
+          "name": "Baiern_alternator_drive_belt",
+          "conditional": true,
+          "source": "parts\\engines\\Baiern_Emer.rpk#0x0048"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 42,
+          "message": "the alternator is missing the drive belt."
+        }
+      ],
+      "categories": [
+        "alternators",
+        "Accessories",
+        "engine"
+      ],
+      "model": "Baiern_alternator.kn5",
+      "mass": 4.4,
+      "slots": [
+        {
+          "id": 15,
+          "name": "alternator_OUT",
+          "position": [
+            0.001,
+            0.0,
+            -0.095
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_block",
+              "slot": 32,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0041"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_3_6_block",
+              "slot": 32,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0052"
+            },
+            {
+              "part": null,
+              "slot": 32,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007E"
+            },
+            {
+              "part": null,
+              "slot": 32,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007F"
+            }
+          ],
+          "compatible_with": []
+        },
+        {
+          "id": 42,
+          "name": "alternator_belt_IN",
+          "position": [
+            0.001,
+            0.0,
+            -0.095
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 77,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_alternator.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_alternator_drive_belt",
+      "name": "Baiern_alternator_drive_belt",
+      "display_name": "Baiern alternator drive belt",
+      "base_class": "java.game.parts.Part",
+      "class_chain": [
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern alternator drive belt",
+        "description": "You need this belt for driving the alternator. It can be used with all Baiern and 100% compatible alternators.",
+        "value": 3.914591,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 25.55,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 30000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_alternator_drive_belt.kn5",
+      "mass": 0.3,
+      "slots": [
+        {
+          "id": 43,
+          "name": "alternator_belt_OUT",
+          "position": [
+            -0.08,
+            0.007,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_alternator",
+              "slot": 42,
+              "source": "parts\\engines\\fordi6_data.rpk#0x004D"
+            },
+            {
+              "part": null,
+              "slot": 42,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0086"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 72,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_alternator_drive_belt.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_camshaft_drive_belt",
+      "name": "Baiern_camshaft_drive_belt",
+      "display_name": "Baiern camshaft drive belt",
+      "base_class": "java.game.parts.Part",
+      "class_chain": [
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern camshaft drive belt",
+        "description": "A cheap but much more important part of the engine. Change it when needed to avoid the jumbling of the valves in the cylinder head. This belt costs only a few bucks and is quick and easy to change. Change it evey 14000-16000 kms (8750-10000 miles) instead of repairing the whole cilynder head for hard thousands.",
+        "value": 12.455516,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 25.55,
+        "prestige_calc_weight": 25.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "max_wear": 18000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_camshaft_drive_belt.kn5",
+      "mass": 0.45,
+      "slots": [
+        {
+          "id": 23,
+          "name": "cam_belt_OUT",
+          "position": [
+            0.001,
+            0.166,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 22,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 22,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            },
+            {
+              "part": null,
+              "slot": 22,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0081"
+            },
+            {
+              "part": null,
+              "slot": 22,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0082"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 71,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_camshaft_drive_belt.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_GT_III_exhaust_header",
+      "name": "Baiern_GT_III_exhaust_header",
+      "display_name": "Baiern GT III exhaust header",
+      "base_class": "java.game.parts.enginepart.ExhaustHeader",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustHeader",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern GT III exhaust header",
+        "description": "The relatively short-life 6-2-1 exhaust header. \n This product is not compatible with turbochargers but you can use it on a supercharged engine. \n All the six outlets are oval 60x40 mm (2.36x1.57 inch) pipes and come together in 3 cylinder groups to a 50 mm (1.97 inch) circular collector then end in a 60 mm (2.36 inch) circular main tube. Pipes cross each other in as far as possible firing order to maintain the most effective exhaust.",
+        "value": 854.092527,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 153.28,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "efficiency": 0.93,
+        "max_wear": 330000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_GT_III_exhaust_header.kn5",
+      "mass": 9.2,
+      "slots": [
+        {
+          "id": 27,
+          "name": "exhaust_head_OUT",
+          "position": [
+            -0.07,
+            0.172,
+            -0.18
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 13,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 13,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": null,
+              "slot": 13,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0081"
+            },
+            {
+              "part": null,
+              "slot": 13,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0082"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 152,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_GT_III_exhaust_header.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Kraftwerk_2_5_exhaust_header",
+      "name": "Baiern_Kraftwerk_2_5_exhaust_header",
+      "display_name": "Baiern Kraftwerk 2.5 exhaust header",
+      "base_class": "java.game.parts.enginepart.ExhaustHeader",
+      "class_chain": [
+        "java.game.parts.enginepart.ExhaustHeader",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerk 2.5 exhaust header",
+        "description": "The relatively short-life 6-2-1 exhaust header. \n This product is not compatible with turbochargers but you can use it on a supercharged engine. \n All the six outlets are oval 60x40 mm (2.36x1.57 inch) pipes and come together in 3 cylinder groups to a 50 mm (1.97 inch) circular collector then end in a 60 mm (2.36 inch) circular main tube. Pipes cross each other in as far as possible firing order to maintain the most effective exhaust.",
+        "value": 142.348754,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 38.32,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "efficiency": 0.85,
+        "max_wear": 200000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_GT_III_exhaust_header.kn5",
+      "mass": 9.2,
+      "slots": [
+        {
+          "id": 27,
+          "name": "exhaust_head_OUT",
+          "position": [
+            -0.07,
+            0.172,
+            -0.18
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_cylinder_head",
+              "slot": 13,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0042"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_cylinder_head",
+              "slot": 13,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0050"
+            },
+            {
+              "part": null,
+              "slot": 13,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0081"
+            },
+            {
+              "part": null,
+              "slot": 13,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0082"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 76,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Kraftwerk_2_5_exhaust_header.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Kraftwerk_clutch",
+      "name": "Baiern_Kraftwerk_clutch",
+      "display_name": "Baiern Kraftwerk 2.5 clutch",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Clutch",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Clutch",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerk 2.5 clutch",
+        "description": "A well designed light clutch made for the low to middle level performance Baierns. \n It's a 3.5 kg (7.72 pounds) diaphragm style clutch with a static pressure of 1250. \n Pressure plate diameter is 250 mm (9.84 inch), useful contact area is 452 sq.cm (70 sq.inch).",
+        "value": 195.729537,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 31.93,
+        "prestige_calc_weight": 10.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.315,
+        "maxRPM": 10000.0,
+        "maxF": 500.0,
+        "max_wear": 180000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "clutches",
+        "Transmission",
+        "engine"
+      ],
+      "model": "Baiern_Kraftwerk_clutch.kn5",
+      "mass": 3.5,
+      "slots": [
+        {
+          "id": 7,
+          "name": "clutch_OUT",
+          "position": [
+            0.0,
+            0.0,
+            -0.017
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_flywheel",
+              "slot": 36,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0045"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_3_6_flywheel",
+              "slot": 36,
+              "source": "parts\\engines\\fordi6_data.rpk#0x000A"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 67,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Kraftwerk_clutch.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Devils_6SFi_3_6_flywheel",
+      "name": "Baiern_Devils_6SFi_3_6_flywheel",
+      "display_name": "Baiern Devils 6SFi 3.6 flywheel",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Flywheel",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Flywheel",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Devils 6SFi 3.6 flywheel",
+        "description": "This flywheel is heavy - 10.5 kgs (23.1 pounds) - for racing, but it's surface was redesigned to get the most out of the so well designed and light factory clutches.",
+        "value": 284.697509,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 51.09,
+        "prestige_calc_weight": 10.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.945,
+        "maxRPM": 12000.0,
+        "contact_surface_inner_radius": 80.0,
+        "contact_surface_outer_radius": 125.0,
+        "surface_roughness": 1.0,
+        "outer_radius": 140.0,
+        "lug_diam": 0.0,
+        "lug_count": 0,
+        "max_wear": 760000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {
+        "clutch": 36
+      },
+      "stock_parts": [
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_clutch",
+          "conditional": true,
+          "source": "system.rpk#0x0000"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 36,
+          "message": "It's missing the clutch."
+        }
+      ],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_Devils_6SFi_3_6_flywheel.kn5",
+      "mass": 7.5,
+      "slots": [
+        {
+          "id": 8,
+          "name": "flywheel_OUT",
+          "position": [
+            0.0,
+            0.0,
+            -0.005
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_88er_crankshaft",
+              "slot": 37,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0044"
+            },
+            {
+              "part": "engines/ford_six/Baiern_90er_crankshaft",
+              "slot": 37,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0053"
+            },
+            {
+              "part": null,
+              "slot": 37,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007D"
+            },
+            {
+              "part": null,
+              "slot": 37,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0080"
+            }
+          ],
+          "compatible_with": []
+        },
+        {
+          "id": 36,
+          "name": "flywheel_clutch_IN",
+          "position": [
+            0.0,
+            0.0,
+            0.008
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 9,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 10,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Devils_6SFi_3_6_flywheel.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Kraftwerk_2_5_flywheel",
+      "name": "Baiern_Kraftwerk_2_5_flywheel",
+      "display_name": "Baiern Kraftwerk 2.5 flywheel",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Flywheel",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Flywheel",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Kraftwerk 2.5 flywheel",
+        "description": "This flywheel is heavy - 10.0 kgs (22.0 pounds) - and has almost infinite lifetime. Unfortunately this is due to its thickness and the steel based material on its relatively small contact surface (280 sq.cm = 42.5 sq.inch). \n These alltogether mean the clutch can easily slip if the engine is too powerful. This is the weak point of the Baiern engines. As Emer Japanese-German Automobiles used the Baiern Kraftwerk as the base of their Nonus Street GT engines, most parts are compatible with the Baiern drive-train.",
+        "value": 145.907473,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 38.32,
+        "prestige_calc_weight": 10.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.9,
+        "maxRPM": 9000.0,
+        "contact_surface_inner_radius": 80.0,
+        "contact_surface_outer_radius": 125.0,
+        "surface_roughness": 1.0,
+        "outer_radius": 140.0,
+        "lug_diam": 0.0,
+        "lug_count": 0,
+        "max_wear": 320000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {
+        "clutch": 36
+      },
+      "stock_parts": [
+        {
+          "part": null,
+          "name": "Baiern_Kraftwerk_clutch",
+          "conditional": true,
+          "source": "system.rpk#0x0000"
+        }
+      ],
+      "required_slots": [
+        {
+          "slot": 36,
+          "message": "It's missing the clutch."
+        }
+      ],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "Baiern_Devils_6SFi_3_6_flywheel.kn5",
+      "mass": 10.0,
+      "slots": [
+        {
+          "id": 8,
+          "name": "flywheel_OUT",
+          "position": [
+            0.0,
+            0.0,
+            -0.005
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_88er_crankshaft",
+              "slot": 37,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0044"
+            },
+            {
+              "part": "engines/ford_six/Baiern_90er_crankshaft",
+              "slot": 37,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0053"
+            },
+            {
+              "part": null,
+              "slot": 37,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007D"
+            },
+            {
+              "part": null,
+              "slot": 37,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0080"
+            }
+          ],
+          "compatible_with": []
+        },
+        {
+          "id": 36,
+          "name": "flywheel_clutch_IN",
+          "position": [
+            0.0,
+            0.0,
+            0.008
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": 9,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 69,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Kraftwerk_2_5_flywheel.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Devils_RaceMan6_transmission",
+      "name": "Baiern_Devils_RaceMan6_transmission",
+      "display_name": "Baiern Devils RaceMan6 6 speed race transmission",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Devils RaceMan6 6 speed race transmission",
+        "description": "A superlight transmission developed by Baiern Devils for the CoupeSport GT III. It has 6 gears with tight ratios, all adjustable from 1st to 6th, reverse and end ratio are fixed. \n From the outside, it is the same except for some minor modifications, but in the housing there are straight-cut gears made of billet 6033 aluminium, planted on titanium shafts to reduce reciprocating weight as much as possible, so increase durability. \n The rotating parts alltogether weigh no more than 6.5 kgs that reduces clutch slip to a very low level. \n 1st:2.7   2nd:2.2   3rd:1.8   4th:1.5   5th:1.2   6th:1.0 \n \n end ratio:2.73:1",
+        "value": 1750.88968,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 114.96,
+        "prestige_calc_weight": 30.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 0.585,
+        "maxRPM": 14000.0,
+        "gears": 6,
+        "ratio": [
+          0.0,
+          2.7,
+          2.2,
+          1.8,
+          1.5,
+          1.2,
+          1.0,
+          -3.0
+        ],
+        "end_ratio": 2.73,
+        "starter_torque": 0.0,
+        "capacity": 0.0,
+        "best_lubrication_sliction": 1.0,
+        "worst_lubrication_sliction": 0.9,
+        "adjustable_gears": 1,
+        "drive_front_min": 0.0,
+        "drive_front_max": 0.0,
+        "def_drive_front": 0.0,
+        "drive_front": 0.0,
+        "drive_type": 2,
+        "def_diff_lock": 0.1,
+        "diff_lock": 0.1,
+        "diff_lock_min": 0.1,
+        "diff_lock_max": 0.7,
+        "adjustable_diff_lock": 0,
+        "adjustable_drive": 0,
+        "rev_ratio": 0.0,
+        "max_wear": 720000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "transmissions",
+        "Transmission",
+        "engine"
+      ],
+      "model": "Baiern_Devils_RaceMan6_transmission.kn5",
+      "mass": 19.0,
+      "slots": [
+        {
+          "id": 6,
+          "name": "transmission_OUT",
+          "position": [
+            0.0,
+            0.036,
+            -0.244
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.349
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_block",
+              "slot": 35,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0041"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_3_6_block",
+              "slot": 35,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0052"
+            },
+            {
+              "part": null,
+              "slot": 35,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007E"
+            },
+            {
+              "part": null,
+              "slot": 35,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007F"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 11,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Devils_RaceMan6_transmission.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Devils_Tourist6_transmission",
+      "name": "Baiern_Devils_Tourist6_transmission",
+      "display_name": "Baiern Devils Tourist6 6 speed street transmission",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Devils Tourist6 6 speed street transmission",
+        "description": "A transmission developed by Baiern Devils for the DevilSport model group. It has 6 comfortable ratios. \n 1st:3.97   2nd:3.1   3rd:1.8   4th:1.3   5th:1.0   6th:0.88 \n \n end ratio:3.73:1",
+        "value": 654.80427,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 68.98,
+        "prestige_calc_weight": 30.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 1.035,
+        "maxRPM": 10000.0,
+        "gears": 6,
+        "ratio": [
+          0.0,
+          4.1,
+          2.6,
+          1.8,
+          1.3,
+          1.0,
+          0.88,
+          -3.33
+        ],
+        "end_ratio": 3.73,
+        "starter_torque": 0.0,
+        "capacity": 0.0,
+        "best_lubrication_sliction": 1.0,
+        "worst_lubrication_sliction": 0.82,
+        "adjustable_gears": 0,
+        "drive_front_min": 0.0,
+        "drive_front_max": 0.0,
+        "def_drive_front": 0.0,
+        "drive_front": 0.0,
+        "drive_type": 2,
+        "def_diff_lock": 0.15,
+        "diff_lock": 0.15,
+        "diff_lock_min": 0.15,
+        "diff_lock_max": 0.15,
+        "adjustable_diff_lock": 0,
+        "adjustable_drive": 0,
+        "rev_ratio": 0.0,
+        "max_wear": 642000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "transmissions",
+        "Transmission",
+        "engine"
+      ],
+      "model": "Baiern_Devils_RaceMan6_transmission.kn5",
+      "mass": 32.0,
+      "slots": [
+        {
+          "id": 6,
+          "name": "transmission_OUT",
+          "position": [
+            0.0,
+            0.036,
+            -0.244
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.349
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_block",
+              "slot": 35,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0041"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_3_6_block",
+              "slot": 35,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0052"
+            },
+            {
+              "part": null,
+              "slot": 35,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007E"
+            },
+            {
+              "part": null,
+              "slot": 35,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007F"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 188,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Devils_Tourist6_transmission.class"
+    },
+    {
+      "id": "engines/ford_six/Baiern_Tourist_transmission",
+      "name": "Baiern_Tourist_transmission",
+      "display_name": "Baiern Tourist 5 speed street transmission",
+      "base_class": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
+      "class_chain": [
+        "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission",
+        "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart",
+        "java.game.parts.enginepart.SlidingEnginePart",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Baiern Tourist 5 speed street transmission",
+        "description": "This transmission was designed for the CoupeSport model, so it's tuned for joyful long trips. It suites the bends of the hills and the crowd of the city too. Medium long gears and medium high end ratio describe this unit. \n 1st:4.21   2nd:2.49   3rd:1.66   4th:1.24   5th:1.0 \n \n end ratio:3.23:1",
+        "value": 451.957295,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 63.87,
+        "prestige_calc_weight": 30.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "sliction_loss_multiplier": 1.0,
+        "amount_of_oil_needed": 0.0,
+        "inertia": 1.242,
+        "maxRPM": 10000.0,
+        "gears": 5,
+        "ratio": [
+          0.0,
+          3.58,
+          2.49,
+          1.66,
+          1.24,
+          1.0,
+          0,
+          -4.0
+        ],
+        "end_ratio": 3.03,
+        "starter_torque": 0.0,
+        "capacity": 0.0,
+        "best_lubrication_sliction": 0.99,
+        "worst_lubrication_sliction": 0.45,
+        "adjustable_gears": 0,
+        "drive_front_min": 0.0,
+        "drive_front_max": 0.0,
+        "def_drive_front": 0.0,
+        "drive_front": 0.0,
+        "drive_type": 2,
+        "def_diff_lock": 0.15,
+        "diff_lock": 0.15,
+        "diff_lock_min": 0.15,
+        "diff_lock_max": 0.15,
+        "adjustable_diff_lock": 0,
+        "adjustable_drive": 0,
+        "rev_ratio": 0.0,
+        "max_wear": 300000000.0
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "transmissions",
+        "Transmission",
+        "engine"
+      ],
+      "model": "Baiern_Devils_RaceMan6_transmission.kn5",
+      "mass": 29.0,
+      "slots": [
+        {
+          "id": 6,
+          "name": "transmission_OUT",
+          "position": [
+            0.0,
+            0.036,
+            -0.244
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.349
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": "engines/ford_six/Baiern_Kraftwerk_2_5_block",
+              "slot": 35,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0041"
+            },
+            {
+              "part": "engines/ford_six/Baiern_Devils_6SFi_3_6_block",
+              "slot": 35,
+              "source": "parts\\engines\\fordi6_data.rpk#0x0052"
+            },
+            {
+              "part": null,
+              "slot": 35,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007E"
+            },
+            {
+              "part": null,
+              "slot": 35,
+              "source": "parts\\engines\\fordi6_data.rpk#0x007F"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 70,
+      "source_script": "parts\\engines\\fordi6_data\\scripts\\Baiern_Tourist_transmission.class"
+    }
+  ]
+}

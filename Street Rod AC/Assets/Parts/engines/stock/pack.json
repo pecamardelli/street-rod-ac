@@ -1,0 +1,2035 @@
+{
+  "id": "engines/stock",
+  "source": "parts.rpk",
+  "parts": [
+    {
+      "id": "engines/stock/stock_battery_black",
+      "name": "stock_battery_black",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "batteries",
+        "Accessories",
+        "engine"
+      ],
+      "model": "stock_battery_black.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "engines/stock/EnginePart_5300",
+              "slot": 1,
+              "source": "parts.rpk#0x5300"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "2"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 21503,
+      "source_script": "java.game.parts.accessories.stock_Battery_black"
+    },
+    {
+      "id": "engines/stock/stock_battery_blue",
+      "name": "stock_battery_blue",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "batteries",
+        "Accessories",
+        "engine"
+      ],
+      "model": "stock_battery_blue.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "engines/stock/EnginePart_5300",
+              "slot": 1,
+              "source": "parts.rpk#0x5300"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "2"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 232,
+      "source_script": "java.game.parts.accessories.stock_Battery_blue"
+    },
+    {
+      "id": "engines/stock/stock_battery_silver",
+      "name": "stock_battery_silver",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "batteries",
+        "Accessories",
+        "engine"
+      ],
+      "model": "stock_battery_silver.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "engines/stock/EnginePart_5300",
+              "slot": 1,
+              "source": "parts.rpk#0x5300"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "2"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 233,
+      "source_script": "java.game.parts.accessories.stock_Battery_silver"
+    },
+    {
+      "id": "engines/stock/N2o_Rail",
+      "name": "N2o_Rail",
+      "display_name": "'Golden Edition' 4 channel ported N2O system",
+      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.NOSInjectorSystem",
+      "class_chain": [
+        "java.game.parts.enginepart.airfueldeliverysystem.NOSInjectorSystem",
+        "java.game.parts.enginepart.AirFuelDeliverySystem",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "'Golden Edition' 4 channel ported N2O system",
+        "description": "A ported nitrous oxidizer intake system for the serial injected and direct injected engines based on the Einvagen, Duhen, Shimutshibu and Ishima inline-four blocks. This system will add 25 to 125 HP to your engine depending on tuning level and calibration. It has four 0.31 inch injectors and comes with an adjustable electronic module to ensure you achieve the best performance.",
+        "value": 569.395018,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 160.58,
+        "prestige_calc_weight": 30.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "mixture_ratio": 1.0,
+        "optimal_mixture_ratio": 1.0,
+        "max_fuel_consumption": 1E-06,
+        "max_air_consumption": 1E-05,
+        "fuel_type": 0,
+        "mixture_H": 1.0,
+        "time_burn": 0.1,
+        "nitro_H": 1.0,
+        "nitro_cooling": 1.0,
+        "nitro_consumption": 2.72,
+        "nitro_minRPM": 1250.0,
+        "nitro_maxRPM": 16000.0,
+        "nitro_minThrottle": 0.9,
+        "optimal_burn_time_base": 0.003,
+        "optimal_burn_time_offset": 0.001,
+        "minComp": 0.0,
+        "maxComp": 0.0,
+        "maxconsumption": 4.0,
+        "minconsumption": 2.72,
+        "max_wear": 1000000000.0
+      },
+      "derived": {
+        "optimal_mixture_ratio": 12.5,
+        "mixture_H": 1481417.781744,
+        "time_burn": 0.000756,
+        "optimal_burn_time_base": 0.0025,
+        "optimal_burn_time_offset": 0.0008,
+        "minComp": 5.925671,
+        "maxComp": 14.814178
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "veesix",
+        "engine"
+      ],
+      "model": "N2o_Rail.kn5",
+      "mass": 4.25,
+      "slots": [
+        {
+          "id": 22,
+          "name": "NOS_rail_OUT",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [
+            {
+              "part": null,
+              "slot": 23,
+              "source": "parts\\engines\\Einvagen_Duhen_Ishima_Focer.rpk#0x00C6"
+            },
+            {
+              "part": null,
+              "slot": 23,
+              "source": "parts\\engines\\Einvagen_Duhen_Ishima_Focer.rpk#0x00DB"
+            },
+            {
+              "part": null,
+              "slot": 23,
+              "source": "parts\\engines\\Einvagen_Duhen_Ishima_Focer.rpk#0x004D"
+            },
+            {
+              "part": null,
+              "slot": 23,
+              "source": "parts\\engines\\Einvagen_Duhen_Ishima_Focer.rpk#0x00F1"
+            },
+            {
+              "part": null,
+              "slot": 23,
+              "source": "parts\\engines\\Einvagen_Duhen_Ishima_Focer.rpk#0x0109"
+            }
+          ],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "nocollision": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 54113,
+      "source_script": "parts\\neons\\scripts\\N2o_Rail.class"
+    },
+    {
+      "id": "engines/stock/nos_canister_12pds",
+      "name": "nos_canister_12pds",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "N2O",
+        "Air",
+        "engine"
+      ],
+      "model": "nos_canister_12pds.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "engines/stock/N2O_canister",
+              "slot": 1,
+              "source": "parts.rpk#0x3100"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "2"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 449,
+      "source_script": "java.game.parts.accessories.NOS_canister_12pds"
+    },
+    {
+      "id": "engines/stock/nos_canister_24pds",
+      "name": "nos_canister_24pds",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "N2O",
+        "Air",
+        "engine"
+      ],
+      "model": "nos_canister_24pds.kn5",
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "engines/stock/N2O_canister_3200",
+              "slot": 1,
+              "source": "parts.rpk#0x3200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "category": [
+          "2"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 447,
+      "source_script": "java.game.parts.accessories.NOS_canister_24pds"
+    },
+    {
+      "id": "engines/stock/Botle",
+      "name": "Botle",
+      "display_name": "'Golden Edition' DMC-Tuners 32.0 pounds N2O canister",
+      "base_class": "java.game.parts.enginepart.canister.n2o.LargeCanister",
+      "class_chain": [
+        "java.game.parts.enginepart.canister.n2o.LargeCanister",
+        "java.game.parts.enginepart.Canister",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "'Golden Edition' DMC-Tuners 32.0 pounds N2O canister",
+        "description": "This 32.0 pounds N2O canister can hold enough juice for about 10-60 (+/- 15) seconds of beating depending on amount of injection and injector sizes. Be aware of low loads, because you can run out of extra power suddenly in sharp situations!",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 100.0,
+        "prestige_calc_weight": 10.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "capacity": 14.545455,
+        "actual": 14.545455
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "N2O",
+        "Air",
+        "engine"
+      ],
+      "model": "Botle.kn5",
+      "mass": 6.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "Botle",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "engines/stock/N2O_canister_3200",
+              "slot": 1,
+              "source": "parts.rpk#0x3200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "damage": [
+          "0.200"
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 53781,
+      "source_script": "parts\\neons\\scripts\\Botle.class"
+    },
+    {
+      "id": "engines/stock/Double_Botle",
+      "name": "Double_Botle",
+      "display_name": "'Golden Edition' DMC-Tuners 2x32.0 pounds N2O canister",
+      "base_class": "java.game.parts.enginepart.canister.n2o.LargeCanister",
+      "class_chain": [
+        "java.game.parts.enginepart.canister.n2o.LargeCanister",
+        "java.game.parts.enginepart.Canister",
+        "java.game.parts.EnginePart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "'Golden Edition' DMC-Tuners 2x32.0 pounds N2O canister",
+        "description": "This 32.0 pounds N2O canisters can hold enough juice for about 10-60 (+/- 15) seconds of beating depending on amount of injection and injector sizes. Be aware of low loads, because you can run out of extra power suddenly in sharp situations!",
+        "value": 153.024911,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 200.0,
+        "prestige_calc_weight": 10.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "capacity": 29.090909,
+        "actual": 29.090909
+      },
+      "derived": {
+        "need_update": 0
+      },
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "N2O",
+        "Air",
+        "engine"
+      ],
+      "model": "Double_Botle.kn5",
+      "mass": 6.5,
+      "slots": [
+        {
+          "id": 1,
+          "name": "Botle_2",
+          "position": [
+            0.0,
+            -0.16,
+            -0.08
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "engines/stock/Double_Botle",
+              "slot": 1,
+              "source": "parts.rpk#0xD339"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "damage": [
+          "0.200"
+        ],
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "1"
+        ]
+      },
+      "source_type_id": 54073,
+      "source_script": "parts\\neons\\scripts\\Double_Botle.class"
+    },
+    {
+      "id": "engines/stock/EnginePart",
+      "name": "EnginePart",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 24576,
+      "source_script": "java.game.parts.enginepart.Aircooler"
+    },
+    {
+      "id": "engines/stock/EnginePart_004D",
+      "name": "EnginePart_004D",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "airfueldeliverysystem",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 77,
+      "source_script": "java.game.parts.enginepart.AirFuelDeliverySystem.AirFilter"
+    },
+    {
+      "id": "engines/stock/EnginePart_0013",
+      "name": "EnginePart_0013",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "charger",
+        "airfueldeliverysystem",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 19,
+      "source_script": "java.game.parts.enginepart.AirFuelDeliverySystem.Charger.SuperCharger"
+    },
+    {
+      "id": "engines/stock/EnginePart_0021",
+      "name": "EnginePart_0021",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "charger",
+        "airfueldeliverysystem",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 33,
+      "source_script": "java.game.parts.enginepart.AirFuelDeliverySystem.Charger.TurboCharger"
+    },
+    {
+      "id": "engines/stock/EnginePart_0237",
+      "name": "EnginePart_0237",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "airfueldeliverysystem",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 567,
+      "source_script": "java.game.parts.enginepart.AirFuelDeliverySystem.Charger"
+    },
+    {
+      "id": "engines/stock/EnginePart_00A4",
+      "name": "EnginePart_00A4",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "airfueldeliverysystem",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 164,
+      "source_script": "java.game.parts.enginepart.AirFuelDeliverySystem.FuelInjectorSystem"
+    },
+    {
+      "id": "engines/stock/EnginePart_002A",
+      "name": "EnginePart_002A",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "airfueldeliverysystem",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 42,
+      "source_script": "java.game.parts.enginepart.AirFuelDeliverySystem.IntakeManifold"
+    },
+    {
+      "id": "engines/stock/EnginePart_00A5",
+      "name": "EnginePart_00A5",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "airfueldeliverysystem",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 165,
+      "source_script": "java.game.parts.enginepart.AirFuelDeliverySystem.NOSInjectorSystem"
+    },
+    {
+      "id": "engines/stock/EnginePart_022F",
+      "name": "EnginePart_022F",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 559,
+      "source_script": "java.game.parts.enginepart.AirFuelDeliverySystem"
+    },
+    {
+      "id": "engines/stock/EnginePart_5300",
+      "name": "EnginePart_5300",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 21248,
+      "source_script": "java.game.parts.enginepart.Battery"
+    },
+    {
+      "id": "engines/stock/EnginePart_00AC",
+      "name": "EnginePart_00AC",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "block_inline",
+        "block",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 172,
+      "source_script": "java.game.parts.enginepart.Block.Block_Inline.Block_Inline_OHC"
+    },
+    {
+      "id": "engines/stock/EnginePart_0238",
+      "name": "EnginePart_0238",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "block",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 568,
+      "source_script": "java.game.parts.enginepart.Block.Block_Inline"
+    },
+    {
+      "id": "engines/stock/EnginePart_00D0",
+      "name": "EnginePart_00D0",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "block_vee",
+        "block",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 208,
+      "source_script": "java.game.parts.enginepart.Block.Block_Vee.Block_Vee_OHC"
+    },
+    {
+      "id": "engines/stock/EnginePart_00CF",
+      "name": "EnginePart_00CF",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "block_vee",
+        "block",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 207,
+      "source_script": "java.game.parts.enginepart.Block.Block_Vee.Block_Vee_OHV"
+    },
+    {
+      "id": "engines/stock/EnginePart_023F",
+      "name": "EnginePart_023F",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "block",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 575,
+      "source_script": "java.game.parts.enginepart.Block.Block_Vee"
+    },
+    {
+      "id": "engines/stock/EnginePart_0233",
+      "name": "EnginePart_0233",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 563,
+      "source_script": "java.game.parts.enginepart.Block"
+    },
+    {
+      "id": "engines/stock/N2O_canister",
+      "name": "N2O_canister",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "n2o",
+        "canister",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "chassis connection",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 12544,
+      "source_script": "java.game.parts.enginepart.canister.n2o.SmallCanister"
+    },
+    {
+      "id": "engines/stock/N2O_canister_3200",
+      "name": "N2O_canister_3200",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "n2o",
+        "canister",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [
+        {
+          "id": 1,
+          "name": "chassis connection",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": []
+        }
+      ],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 12800,
+      "source_script": "java.game.parts.enginepart.canister.n2o.LargeCanister"
+    },
+    {
+      "id": "engines/stock/EnginePart_0234",
+      "name": "EnginePart_0234",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 564,
+      "source_script": "java.game.parts.enginepart.Canister"
+    },
+    {
+      "id": "engines/stock/EnginePart_004B",
+      "name": "EnginePart_004B",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 75,
+      "source_script": "java.game.parts.enginepart.Driveshaft"
+    },
+    {
+      "id": "engines/stock/EnginePart_002B",
+      "name": "EnginePart_002B",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 43,
+      "source_script": "java.game.parts.enginepart.ExhaustHeader"
+    },
+    {
+      "id": "engines/stock/EnginePart_5000",
+      "name": "EnginePart_5000",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 20480,
+      "source_script": "java.game.parts.enginepart.IgnitionModule"
+    },
+    {
+      "id": "engines/stock/EnginePart_004C",
+      "name": "EnginePart_004C",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 76,
+      "source_script": "java.game.parts.enginepart.OilPan"
+    },
+    {
+      "id": "engines/stock/EnginePart_0018",
+      "name": "EnginePart_0018",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 24,
+      "source_script": "java.game.parts.enginepart.Radiator"
+    },
+    {
+      "id": "engines/stock/EnginePart_00A8",
+      "name": "EnginePart_00A8",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "camshaft",
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 168,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Camshaft.DOHC_Camshaft"
+    },
+    {
+      "id": "engines/stock/EnginePart_00AB",
+      "name": "EnginePart_00AB",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "camshaft",
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 171,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Camshaft.OHV_Camshaft"
+    },
+    {
+      "id": "engines/stock/EnginePart_00AA",
+      "name": "EnginePart_00AA",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "camshaft",
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 170,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Camshaft.SOHC_Camshaft"
+    },
+    {
+      "id": "engines/stock/EnginePart_0241",
+      "name": "EnginePart_0241",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 577,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Camshaft"
+    },
+    {
+      "id": "engines/stock/EnginePart_0049",
+      "name": "EnginePart_0049",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 73,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Clutch"
+    },
+    {
+      "id": "engines/stock/EnginePart_00A3",
+      "name": "EnginePart_00A3",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 163,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.ConnectingRod"
+    },
+    {
+      "id": "engines/stock/EnginePart_00A2",
+      "name": "EnginePart_00A2",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 162,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Crankshaft"
+    },
+    {
+      "id": "engines/stock/EnginePart_00AE",
+      "name": "EnginePart_00AE",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "cylinderhead",
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 174,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.cylinderhead.DOHC_CylinderHead"
+    },
+    {
+      "id": "engines/stock/EnginePart_00AF",
+      "name": "EnginePart_00AF",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "cylinderhead",
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 175,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.cylinderhead.OHV_CylinderHead"
+    },
+    {
+      "id": "engines/stock/EnginePart_00AD",
+      "name": "EnginePart_00AD",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "cylinderhead",
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 173,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.cylinderhead.SOHC_CylinderHead"
+    },
+    {
+      "id": "engines/stock/EnginePart_0242",
+      "name": "EnginePart_0242",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 578,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.CylinderHead"
+    },
+    {
+      "id": "engines/stock/EnginePart_00A9",
+      "name": "EnginePart_00A9",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 169,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Flywheel"
+    },
+    {
+      "id": "engines/stock/EnginePart_001F",
+      "name": "EnginePart_001F",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 31,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Piston"
+    },
+    {
+      "id": "engines/stock/EnginePart_00B1",
+      "name": "EnginePart_00B1",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 177,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Pulley"
+    },
+    {
+      "id": "engines/stock/EnginePart_000D",
+      "name": "EnginePart_000D",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "reciprocatingenginepart",
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 13,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.reciprocatingenginepart.Transmission"
+    },
+    {
+      "id": "engines/stock/EnginePart_0240",
+      "name": "EnginePart_0240",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "slidingenginepart",
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 576,
+      "source_script": "java.game.parts.enginepart.slidingenginepart.ReciprocatingEnginePart"
+    },
+    {
+      "id": "engines/stock/EnginePart_0236",
+      "name": "EnginePart_0236",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "enginepart",
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 566,
+      "source_script": "java.game.parts.enginepart.SlidingEnginePart"
+    },
+    {
+      "id": "engines/stock/EnginePart_00FB",
+      "name": "EnginePart_00FB",
+      "display_name": null,
+      "base_class": null,
+      "class_chain": [],
+      "properties": {},
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [],
+      "categories": [
+        "root"
+      ],
+      "model": null,
+      "mass": 0.0,
+      "slots": [],
+      "config": {
+        "category": [
+          "1"
+        ],
+        "damage": [
+          "10.0"
+        ],
+        "intdamage": [
+          "10000000.0"
+        ]
+      },
+      "source_type_id": 251,
+      "source_script": "java.game.parts.EnginePart"
+    }
+  ]
+}

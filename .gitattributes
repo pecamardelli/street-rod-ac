@@ -3,6 +3,10 @@
 ###############################################################################
 * text=auto
 
+# Converted part models and the compiled part scripts they run on (Street Rod AC/Assets/Parts)
+*.kn5   binary
+*.class binary
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #

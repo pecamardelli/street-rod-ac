@@ -40,9 +40,9 @@ public static class CarPartsLayout
     private const float SpringInboard = 0.24f;
     private const float SpringSeatBelowHub = 0.06f;
 
-    private const string BrakeDisc = "stock/disc_brake";
-    private const string Spring = "stock/spring";
-    private const string ShockAbsorber = "stock/shock_absorber";
+    private const string BrakeDisc = "brakes/stock/disc_brake";
+    private const string Spring = "suspension/stock/spring";
+    private const string ShockAbsorber = "suspension/stock/shock_absorber";
 
     /// <param name="engine">The car's engine block with everything on it; null for an empty engine bay</param>
     public static List<PlacedPart> Build(PartsCatalog catalog, CarAnchors anchors, InstalledPart? engine)

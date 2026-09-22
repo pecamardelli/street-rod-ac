@@ -1,0 +1,656 @@
+{
+  "id": "rims/opala",
+  "source": "parts\\rodas_fad.rpk",
+  "parts": [
+    {
+      "id": "rims/opala/gringa_style",
+      "name": "gringa_style",
+      "display_name": "Roda Repolho Estilo Gringa Opala",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Roda Repolho Estilo Gringa Opala",
+        "description": "Rodas com offset variavel, estilo repolho gringa para a linha Opala, por FAD 22 SLRR BR.",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.035,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -35.0,
+        "default_offset": -35.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "gringa_style.kn5",
+      "mass": 7.894,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.045,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.01,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 18,
+      "source_script": "parts\\rodas_fad\\scripts\\SRC\\gringa_style.class"
+    },
+    {
+      "id": "rims/opala/pintable",
+      "name": "pintable",
+      "display_name": "Roda Repolho Pintavel Opala",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Roda Repolho Pintavel Opala",
+        "description": "Rodas com offset variavel, estilo repolho pintavel para a linha Opala, por FAD 22 SLRR BR.",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.035,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -35.0,
+        "default_offset": -35.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "pintable.kn5",
+      "mass": 7.894,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.045,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.01,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 19,
+      "source_script": "parts\\rodas_fad\\scripts\\SRC\\pintable.class"
+    },
+    {
+      "id": "rims/opala/ralinho",
+      "name": "ralinho",
+      "display_name": "Roda Ralinho Opala",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Roda Ralinho Opala",
+        "description": "Rodas com offset variavel, estilo ralinho para a linha Opala, por FAD 22 SLRR BR.",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.035,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -35.0,
+        "default_offset": -35.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "ralinho.kn5",
+      "mass": 7.894,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.02,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 20,
+      "source_script": "parts\\rodas_fad\\scripts\\SRC\\ralinho.class"
+    },
+    {
+      "id": "rims/opala/repolho",
+      "name": "repolho",
+      "display_name": "Roda Repolho Opala",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Roda Repolho Opala",
+        "description": "Rodas com offset variavel, estilo repolho para a linha Opala, por FAD 22 SLRR BR.",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.035,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -35.0,
+        "default_offset": -35.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "repolho.kn5",
+      "mass": 0.894,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.045,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.01,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 21,
+      "source_script": "parts\\rodas_fad\\scripts\\SRC\\repolho.class"
+    },
+    {
+      "id": "rims/opala/roda_diplo",
+      "name": "roda_diplo",
+      "display_name": "Roda Opala Diplomata 92",
+      "base_class": "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+      "class_chain": [
+        "java.game.parts.rgearpart.reciprocatingrgearpart.Wheel",
+        "java.game.parts.rgearpart.ReciprocatingRGearPart",
+        "java.game.parts.RGearPart",
+        "java.game.parts.Part"
+      ],
+      "properties": {
+        "name": "Roda Opala Diplomata 92",
+        "description": "Rodas com offset variavel, estilo Diplomata 92 para a linha Opala, por FAD 22 SLRR BR.",
+        "value": 74.733096,
+        "police_check_fine_value": 0.0,
+        "thoroughness_limit": 0.0,
+        "brand_new_prestige_value": 17.978648,
+        "prestige_calc_weight": 20.0,
+        "price_catalog": 1.0,
+        "price_shop": 0.9,
+        "price_used": 0.4,
+        "price_repair": 0.8,
+        "repair_min_wear": 0.3,
+        "repair_min_tear": 0.3,
+        "repair_max_wear": 0.9,
+        "repair_max_tear": 0.9,
+        "carCategory": 0,
+        "manufacturer": 0,
+        "need_update": 1,
+        "drag_occluded": 0.0,
+        "drag_own": 0.0,
+        "C_drag": 0.0,
+        "prev_prestige": 0.0,
+        "name_prefix": "SL Tuners",
+        "brand_prestige_factor": 1.0,
+        "inertia": 0.0,
+        "maxRPM": -1.0,
+        "offset": -0.035,
+        "CPatchPatch": 2.0,
+        "wheel_size": 15.0,
+        "wheel_radius": 0.1905,
+        "rim_width": 8.0,
+        "rim_type": 0,
+        "f_offset": -35.0,
+        "default_offset": -35.0,
+        "diameter": 15.0,
+        "width": 8.0,
+        "max_wear": 1000000000.0
+      },
+      "derived": {},
+      "slot_roles": {},
+      "stock_parts": [],
+      "required_slots": [
+        {
+          "slot": 2,
+          "message": "there's no tyre on some wheels."
+        }
+      ],
+      "categories": [
+        "Factory",
+        "runinggear"
+      ],
+      "model": "roda_diplo.kn5",
+      "mass": 7.894,
+      "slots": [
+        {
+          "id": 1,
+          "name": "this is which the rim connects to the chassis through",
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 1,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "this is which the rim connects to the tyre through",
+          "position": [
+            0.02,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": -65531,
+          "attaches_to": [],
+          "compatible_with": [
+            {
+              "part": "rims/stock/Wheel",
+              "slot": 2,
+              "source": "parts.rpk#0x0200"
+            }
+          ]
+        }
+      ],
+      "config": {
+        "noclick": [
+          ""
+        ],
+        "category": [
+          "3"
+        ],
+        "damage": [
+          "3.0"
+        ],
+        "intdamage": [
+          "1000000000.0"
+        ]
+      },
+      "source_type_id": 22,
+      "source_script": "parts\\rodas_fad\\scripts\\SRC\\roda_diplo.class"
+    }
+  ]
+}

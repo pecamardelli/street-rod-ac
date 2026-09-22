@@ -8,17 +8,19 @@ simulation and, new here, the export to Assetto Corsa physics data.
 Scope: mechanical parts only (engine, transmission; running gear next). Car bodies stay Assetto Corsa's.
 
 ```
-SLRR install ──SlrrPartsConverter──▶ content\parts\                        (one-off, offline)
-                                       <pack>\pack.json + *.kn5             part definitions + models
+SLRR install ──SlrrPartsConverter──▶ Assets\Parts\                         (one-off, offline)
+                                       <kind>\<pack>\pack.json + *.kn5      part definitions + models
                                        engine_builds.json                   complete engines as part lists
                                        script_constants.json                statics of the shared script classes
                                        _scripts\...\*.class                 the compiled scripts the parts need
 
-content\parts ──PartsCatalog──▶ PartTreeBuilder ──▶ PartScriptRuntime ──▶ EngineDyno ──▶ EngineReport ──▶ AcEngineData
-                 definitions      build → tree        scripts run on it     torque curve    verdict+figures   AC data files
+Assets\Parts ──PartsCatalog──▶ PartTreeBuilder ──▶ PartScriptRuntime ──▶ EngineDyno ──▶ EngineReport ──▶ AcEngineData
+                definitions     build → tree        scripts run on it     torque curve    verdict+figures   AC data files
 ```
 
-Converted assets are from a commercial game and community mods: personal use only, never in the repo.
+The converted content lives in the repo, `Street Rod AC\Assets\Parts` (187 MB), and is copied next to the exe at build;
+`AppSettings.PartsPath` reads it from there. It is made from a commercial game and community mods: the repo stays
+private.
 
 ## Why a VM instead of a port
 
@@ -31,19 +33,48 @@ Converted assets are from a commercial game and community mods: personal use onl
 
 ## Converter (`tools/SlrrPartsConverter`)
 
-`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...]`
+`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...]`
 
-The content in use is made with (both Chrysler packs are installed in the SLRR folder, see "Replacing a pack"):
+The content in use is made with `tools/convert-parts.ps1` (both Chrysler packs are installed in the SLRR folder, see
+"Replacing a pack"). It comes out as:
 
 ```
-SlrrPartsConverter "D:\JUEGOS\Street Legal Racing - Redline" "C:\GAMES\Street Rod AC\content\parts"
-    --notes "D:\JUEGOS\SLRR\SCRIPTS" --replace engines/Mopar=engines/Chrysler_V8_pak
-    --drop "engines/DEXTERV8s/Dodge_*,engines/DEXTERV8s/*_Mopar_head_cover"
+engines/chrysler, gm, ford, ford_six   the engine packs (GM has Pontiac and Cadillac too; ford_six is the Falcon's engine)
+engines/stock                          the base game's engine bits: batteries, N2O, and the engine-part roots
+rims/mopar, falcon, hudson, opala, goodyear_eagle, stock
+tyres/mopar, camaro69, goodyear_eagle, stock
+exhaust/mufflers, stock
+suspension/stock                       suspensions, springs, shocks, sway bars (named after SLRR's own cars: the only running gear there is)
+brakes/stock
 ```
 
-`--drop` leaves parts out altogether (`*` matches anything in the id): Dexter's Dodge engines are one generic block
-mesh with Dodge numbers, and the Chrysler pack does all of them properly. Engine builds around a dropped part are
-left out as well. A save that holds such a part: see `BringUpToDate` under "Replacing a pack".
+`--rename` names a pack after what it holds instead of the mod's file name: the pack id is the folder and the first
+part of every part id, so `engines/chrysler/_Engine_block_340` where the rpk is `Chrysler_V8_pak`. With a selector
+(`wheels:Tyre=tyres/sl_tuners`, `stock:bodypart=body/stock`, `stock:BodyPart*=body/stock`) only the parts it picks
+out go there: those descending from a script class of that name, filed under a category of that name, or named so
+themselves (`*` for anything). Selector rules apply in the order given, first match wins, the rest of the rpk goes
+where its plain rename says. One rpk may so become several packs (rims and tyres out of `wheels.rpk`, six packs out of
+the base game's `parts.rpk`); a replaced or replacing pack takes the whole rpk with it. Every other option names packs
+by their new names. The old ids go into `part_aliases.json` like those of a replaced pack, so saves made before keep
+working (see "Replacing a pack"). A full run removes converted packs it no longer produces (renamed, replaced or
+dropped whole); the catalog would otherwise load both.
+
+`stock` (the base game's `parts.rpk`) holds 96 scriptless entries without a model: the roots that every mod declares
+its fit against (`stock/Wheel` is what every rim and tyre mounts by, `stock/ExhaustTip` every muffler, `stock/Brake`,
+`stock/Spring_0051`... the suspensions). They are routed next to what needs them (`rims/stock`, `tyres/stock`,
+`exhaust/stock`, `brakes/stock`, `suspension/stock`, `engines/stock`) and never go on sale: the shop only lists
+scripted parts, plus what the engine builds use (batteries).
+
+`--drop` leaves parts out altogether (`*` matches anything in the id). Engine builds around a dropped part are left out
+as well. A save that holds such a part: see `BringUpToDate` under "Replacing a pack". What is dropped, for a game set
+in 1960s America and mechanical parts only: the fictional and modern engine packs whole (Baiern/Emer OHC sixes,
+Einvagen/Duhen/Ishima fours, the OHC V6 pack, the Buick LC2 turbo V6, SLRR's own MC/Prime/SuperDuty OHC V8s), Dexter's
+Dodge and Chevrolet engines (one generic block mesh with numbers on it; the Chrysler and GM packs do them properly) and
+its fictional drag block, two 2000s crate blocks (BluePrint 360, GM Performance Parts 427), SL Tuners' `wheels.rpk`
+(142 of its 151 rims are 17"-21"), and everything that is body or interior: `interior` (seats, steering wheels),
+`wings`, and the base game's neons, plates, woofers and body-part roots (routed to `body/stock`, then dropped). The
+Ford six (`ford_six`) is a reskin of the Baiern OHC six but stands on its own: its parts attach to each other, not to
+Baiern parts.
 
 Per part, from its compiled script (run with no game around, see `SlrrScriptEvaluator`):
 
@@ -79,9 +110,9 @@ pixels differ. The converter prints every mesh it touched.
 ### Replacing a pack (`--replace`, `SlrrPackTwins`)
 
 A later release of a mod takes the place of the one it grew out of: `engines/Mopar` (MagnumForce, 2010) was replaced
-by `engines/Chrysler_V8_pak` (Chrysler V8 Pack 4.5 Reboot: the same meshes, 108 more parts, 4 more blocks). Car
-scripts and build notes keep naming the old rpk, so the old pack **stays installed in the SLRR folder**; it is read
-but not converted, and its output folder is removed.
+by `engines/chrysler` (Chrysler V8 Pack 4.5 Reboot, rpk `Chrysler_V8_pak`: the same meshes, 108 more parts, 4 more
+blocks). Car scripts and build notes keep naming the old rpk, so the old pack **stays installed in the SLRR folder**;
+it is read but not converted, and its output folder is removed.
 
 Nothing carries over by id or name: the new release renames the files, renumbers the rpk and some slots (oil pan
 9 → 10, carburettor 7 → 10), rebalances the scripts and says "small/big block" where the old one said "340/440".
@@ -102,7 +133,9 @@ twin, and `part_aliases.json` (old id → new id) is written for the game:
   car; loose parts, listings and ads made of such parts leave the save.
 
 Checked with `EngineBench <new parts> renew <old parts>`: all 37 engines of the old pack come up to date and run; the
-only part that comes off is the Hemi fan some 383 builds wore, which 4.5 no longer lets bolt to a 383 pump.
+only part that comes off is the Hemi fan some 383 builds wore, which 4.5 no longer lets bolt to a 383 pump. The same
+check after the packs were renamed (2026-09-21): all 132 engines of the previous conversion come up to date, nothing
+comes off.
 
 ## Script VM (`Parts/Scripting`)
 

@@ -165,7 +165,8 @@ namespace Street_Rod_AC.Services.Parts
 
         /// <summary>
         /// What is for sale: the engine packs, and whatever else the engine builds use (batteries, mufflers).
-        /// Running gear comes once cars carry it.
+        /// The base game's scriptless entries among the engine parts (the roots other parts declare their fit
+        /// against) are nothing to buy. Running gear comes once cars carry it.
         /// </summary>
         private IReadOnlyList<PartDefinition> FindAssortment()
         {
@@ -177,7 +178,8 @@ namespace Street_Rod_AC.Services.Parts
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             return catalog.Parts.Values
-                .Where(p => p.Id.StartsWith(EnginePacks, StringComparison.OrdinalIgnoreCase) || usedByBuilds.Contains(p.Id))
+                .Where(p => usedByBuilds.Contains(p.Id) ||
+                            (p.Id.StartsWith(EnginePacks, StringComparison.OrdinalIgnoreCase) && p.IsScripted))
                 .OrderBy(p => p.DisplayName ?? p.Name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }

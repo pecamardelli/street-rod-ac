@@ -65,9 +65,9 @@ public class AppSettings
     public string GarageShowroomKn5 => Path.Combine(ShowroomsPath, GarageShowroomId, GarageShowroomId + ".kn5");
 
     /// <summary>
-    /// Path to the converted part packs (see tools/SlrrPartsConverter)
+    /// Path to the converted part packs: the game's own content, shipped next to it (see tools/convert-parts.ps1)
     /// </summary>
-    public string PartsPath => Path.Combine(AssettoCorsaPath, "content", "parts");
+    public string PartsPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Parts");
 
     /// <summary>
     /// What a part costs against the value its script gives it. The scripts think in the dollars of the early
