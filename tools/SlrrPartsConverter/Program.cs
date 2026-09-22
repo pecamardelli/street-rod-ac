@@ -26,12 +26,35 @@ public static class Program
     private const string FitOption = "--fit";
     private const string ModelOption = "--model";
     private const string ShiftOption = "--shift";
+    private const string SingleOption = "--single";
+    private const string PadsOption = "--pads";
+    private const string NameOption = "--name";
     private const string TakesPrefix = "takes:";
+
+    /// <summary>Ids of the slots a pad of several carburettors is split into (the pad keeps its id for the first)</summary>
+    private const int ExtraPadSlot = 300;
+
+    /// <summary>Id of the slot over such a pad that takes the air cleaner spanning all its carburettors</summary>
+    private const int SharedAirSlot = PartSlot.SharedAirSlot;
 
     private sealed record SourcePart(SlrrRpk Rpk, SlrrRpkEntry Entry, string ConfigFile, string? ScriptPath, string Id, string Name);
 
-    /// <summary>A part that is left out, with the part that takes its place everywhere it was named or fitted</summary>
-    private sealed record MergeRule(Regex Pattern, string KeptId);
+    /// <summary>
+    /// A part that is left out, with the part that takes its place everywhere it was named or fitted; a set of
+    /// several identical parts is replaced by that many (a dual-quad set by two carburettors)
+    /// </summary>
+    private sealed record MergeRule(Regex Pattern, string KeptId, int Count);
+
+    /// <summary>A model of several identical items in a row (a carburettor set) kept as one item; builds get that many</summary>
+    private sealed record SingleRule(Regex Pattern, int Count, float Spacing);
+
+    /// <summary>
+    /// A pad that took a set of carburettors becomes one pad per carburettor, plus a slot over them for the air
+    /// cleaner that spans the set
+    /// </summary>
+    private sealed record PadRule(Regex Pattern, int Slot, string Fitting, int Count, float Spacing, float[] AirOffset, string? AirFitting);
+
+    private sealed record NameRule(Regex Pattern, string Name);
 
     /// <summary>A standard fitting given to a slot of every part a pattern picks out</summary>
     private sealed record FitRule(Regex Pattern, int Slot, List<string> Fittings);
@@ -68,6 +91,13 @@ public static class Program
         //   geometry), keeping their own scripts: the same product, modelled better in another pack
         // --shift <part id pattern>:<slot>=<dx>/<dy>/<dz>: the slot moves in its part's space (metres), to bring
         //   one pack's slot convention onto another's where parts of different packs meet by a fitting
+        // --single <part id pattern>=<count>@<spacing>: the model draws <count> identical items in a row (a set of
+        //   carburettors); one is kept, builds naming the part get <count> of it. A merge "=<part id>*<count>"
+        //   does the same for a set that another part stands in for
+        // --pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>]: a pad that took
+        //   a set becomes <count> pads taking <fitting>, plus a slot over them (at the offset) for an air cleaner
+        //   spanning the set
+        // --name <part id pattern>=<display name>: what the part is called once it is not what its script says
         string? notes = null;
         var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var renames = new List<RenameRule>();
@@ -76,7 +106,11 @@ public static class Program
         var fits = new List<FitRule>();
         var modelRules = new List<ModelRule>();
         var shifts = new List<ShiftRule>();
+        var singleRules = new List<SingleRule>();
+        var padRules = new List<PadRule>();
+        var nameRules = new List<NameRule>();
         var positional = new List<string>();
+        var culture = System.Globalization.CultureInfo.InvariantCulture;
         for (var i = 0; i < args.Length; i++)
         {
             if (args[i] == NotesOption && i + 1 < args.Length) notes = args[++i];
@@ -88,13 +122,65 @@ public static class Program
             {
                 foreach (var pair in args[++i].Split(',').Select(p => p.Split('=')))
                 {
-                    if (pair.Length != 2)
+                    var kept = pair.Length == 2 ? pair[1].Trim().Split('*') : Array.Empty<string>();
+                    var count = 1;
+                    if (kept.Length is < 1 or > 2 || (kept.Length == 2 && !int.TryParse(kept[1], out count)))
                     {
-                        Console.WriteLine($"{MergeOption} takes <part id pattern>=<part id>, e.g. engines/gm/Holley_4brl_carburator=engines/generic/Carburetors_4BRL_street_HOLLEY");
+                        Console.WriteLine($"{MergeOption} takes <part id pattern>=<part id>[*<count>], e.g. engines/gm/stock_2x4brl_carburator=engines/gm/stock_4brl_carburator*2");
                         return 1;
                     }
 
-                    merges.Add(new MergeRule(Pattern(pair[0].Trim()), pair[1].Trim()));
+                    merges.Add(new MergeRule(Pattern(pair[0].Trim()), kept[0], count));
+                }
+            }
+            else if (args[i] == SingleOption && i + 1 < args.Length)
+            {
+                foreach (var rule in args[++i].Split(','))
+                {
+                    var pair = rule.Split('=', 2);
+                    var value = pair.Length == 2 ? pair[1].Split('@') : Array.Empty<string>();
+                    if (value.Length != 2 || !int.TryParse(value[0], out var count) || !float.TryParse(value[1], System.Globalization.NumberStyles.Float, culture, out var spacing))
+                    {
+                        Console.WriteLine($"{SingleOption} takes <part id pattern>=<count>@<spacing>, e.g. engines/generic/Carburetors_2x4BRL_King_Demon=2@0.22");
+                        return 1;
+                    }
+
+                    singleRules.Add(new SingleRule(Pattern(pair[0].Trim()), count, spacing));
+                }
+            }
+            else if (args[i] == PadsOption && i + 1 < args.Length)
+            {
+                foreach (var rule in args[++i].Split(','))
+                {
+                    var pair = rule.Split('=', 2);
+                    var colon = pair[0].LastIndexOf(':');
+                    var value = pair.Length == 2 ? pair[1].Split('@') : Array.Empty<string>();
+                    var fitting = value.Length > 0 ? value[0].Split('*') : Array.Empty<string>();
+                    var offset = value.Length > 2 ? value[2].Split('/') : Array.Empty<string>();
+                    if (colon < 0 || !int.TryParse(pair[0][(colon + 1)..], out var slot) || value.Length is < 3 or > 4 || fitting.Length != 2
+                        || !int.TryParse(fitting[1], out var count) || !float.TryParse(value[1], System.Globalization.NumberStyles.Float, culture, out var spacing)
+                        || offset.Length != 3 || !offset.All(o => float.TryParse(o, System.Globalization.NumberStyles.Float, culture, out _)))
+                    {
+                        Console.WriteLine($"{PadsOption} takes <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>], " +
+                                          "e.g. engines/chrysler/dualquad_intake:7=carb:4bbl*2@0.22@-0.043/0.108/-0.04@air:2x4");
+                        return 1;
+                    }
+
+                    padRules.Add(new PadRule(Pattern(pair[0][..colon].Trim()), slot, fitting[0], count, spacing,
+                        offset.Select(o => float.Parse(o, culture)).ToArray(), value.Length > 3 ? value[3] : null));
+                }
+            }
+            else if (args[i] == NameOption && i + 1 < args.Length)
+            {
+                foreach (var pair in args[++i].Split(',').Select(p => p.Split('=', 2)))
+                {
+                    if (pair.Length != 2)
+                    {
+                        Console.WriteLine($"{NameOption} takes <part id pattern>=<display name>");
+                        return 1;
+                    }
+
+                    nameRules.Add(new NameRule(Pattern(pair[0].Trim()), pair[1].Trim()));
                 }
             }
             else if (args[i] == ModelOption && i + 1 < args.Length)
@@ -180,7 +266,9 @@ public static class Program
             Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] " +
                               "[--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] " +
                               "[--merge <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] " +
-                              "[--model <part id pattern>=<part id>,...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...]");
+                              "[--model <part id pattern>=<part id>,...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] " +
+                              "[--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] " +
+                              "[--name <part id pattern>=<display name>,...]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""Street Rod AC\Assets\Parts"" engines/Mopar  (the full run: tools\convert-parts.ps1)");
             return 1;
         }
@@ -319,6 +407,10 @@ public static class Program
         // Merged parts leave their packs; whatever pointed at one (a twin of a replaced pack included) points at
         // the part that stands in for it. Their configs are kept: the stand-in inherits where they fitted
         var merged = new List<(SourcePart Source, string KeptId)>();
+        // How many of a part a build gets where it named one: a set of carburettors is that many single ones now
+        var multiplicity = new Dictionary<(SlrrRpk, int), int>();
+        // Sets of carburettors that became single ones, with the slot their air cleaner sat on and the pads they sat on
+        var sets = new Dictionary<(SlrrRpk, int), (int Horn, List<(SlrrRpk Rpk, int TypeId, int Slot)> Pads)>();
         foreach (var (_, _, parts) in packs)
         {
             foreach (var part in parts.ToList())
@@ -329,10 +421,13 @@ public static class Program
                 var keptId = rule.KeptId;
                 parts.Remove(part);
                 merged.Add((part, keptId));
+                if (rule.Count > 1) RememberSet(part);
                 aliases[part.Id] = keptId;
+                // Whatever resolved to the part (a twin of a replaced pack included) resolves to the stand-in
                 foreach (var key in partIds.Where(p => p.Value.Equals(part.Id, StringComparison.OrdinalIgnoreCase)).Select(p => p.Key).ToList())
                 {
                     partIds[key] = keptId;
+                    if (rule.Count > 1) multiplicity[key] = rule.Count;
                 }
             }
         }
@@ -349,8 +444,49 @@ public static class Program
 
         if (merged.Count > 0) Console.WriteLine($"  {merged.Count} parts merged into {merged.Select(m => m.KeptId).Distinct().Count()}");
 
+        // A set's air cleaner sat on the slot of the set that has no attach lines of its own (the mount slot has
+        // them); it will sit over the pads the set's mount slot attached to
+        void RememberSet(SourcePart part)
+        {
+            var config = SlrrPartConfig.Load(part.ConfigFile);
+            var mount = config.Slots.FirstOrDefault(s => s.AttachesTo.Count > 0);
+            var horn = config.Slots.FirstOrDefault(s => s.AttachesTo.Count == 0);
+            if (mount == null || horn == null) return;
+
+            var pads = new List<(SlrrRpk, int, int)>();
+            foreach (var (partId, slotId) in mount.AttachesTo)
+            {
+                var (targetRpk, target) = game.Resolve(part.Rpk, partId);
+                if (targetRpk != null && target != null) pads.Add((targetRpk, target.TypeId, slotId));
+            }
+
+            sets[(part.Rpk, part.Entry.TypeId)] = (horn.Id, pads);
+        }
+
         // Parts drawn with another part's model: the donor is any remaining part
         var sources = packs.SelectMany(p => p.Parts).ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
+
+        // Models of a row of identical items kept as one
+        var singles = new Dictionary<string, SingleRule>(StringComparer.OrdinalIgnoreCase);
+        foreach (var rule in singleRules)
+        {
+            var matching = sources.Values.Where(p => rule.Pattern.IsMatch(p.Id)).ToList();
+            if (matching.Count == 0)
+            {
+                Console.WriteLine($"{SingleOption} {rule.Pattern} matches no part");
+                return 1;
+            }
+
+            foreach (var part in matching)
+            {
+                singles[part.Id] = rule;
+                RememberSet(part);
+                foreach (var key in partIds.Where(p => p.Value.Equals(part.Id, StringComparison.OrdinalIgnoreCase)).Select(p => p.Key))
+                {
+                    multiplicity[key] = rule.Count;
+                }
+            }
+        }
         var donors = new Dictionary<string, SourcePart>(StringComparer.OrdinalIgnoreCase);
         foreach (var rule in modelRules)
         {
@@ -398,7 +534,9 @@ public static class Program
             {
                 try
                 {
-                    var definition = Convert(game, scripts, source, donors.GetValueOrDefault(source.Id), partIds, target.Folder, texturePrefix, target.Models);
+                    var donor = donors.GetValueOrDefault(source.Id);
+                    var single = singles.GetValueOrDefault(donor?.Id ?? source.Id);
+                    var definition = Convert(game, scripts, source, donor, single, partIds, target.Folder, texturePrefix, target.Models);
                     target.Pack.Parts.Add(definition);
 
                     converted++;
@@ -414,9 +552,19 @@ public static class Program
         }
 
         var definitions = written.Values.SelectMany(w => w.Pack.Parts).ToDictionary(d => d.Id, StringComparer.OrdinalIgnoreCase);
+        // Merged parts' fit first, then geometry (pads split after the shift, so the new pads are where the pad
+        // is), then what sat on sets moves over the pads, and fittings are derived from the lines as they end up
         Graft(game, merged, definitions, partIds);
-        Fit(fits, definitions);
         Shift(shifts, definitions);
+        SplitPads(padRules, definitions);
+        Repoint(game, sets, definitions, partIds, singles.Keys);
+        Fit(fits, definitions);
+        foreach (var rule in nameRules)
+        {
+            var named = definitions.Values.Where(d => rule.Pattern.IsMatch(d.Id)).ToList();
+            if (named.Count == 0) Console.WriteLine($"    {NameOption} {rule.Pattern}: no part has it");
+            foreach (var definition in named) definition.DisplayName = rule.Name;
+        }
         foreach (var (folder, pack, models) in written.Values)
         {
             File.WriteAllText(Path.Combine(folder, PartPack.FileName), JsonConvert.SerializeObject(pack, Formatting.Indented));
@@ -457,6 +605,27 @@ public static class Program
             // An engine around a part that was dropped on purpose is no engine the game should offer
             var left = builds.RemoveAll(b => b.Parts.Any(p => p.Part == null && dropped.Contains(p.Source)));
             if (left > 0) Console.WriteLine($"  {left} engine builds left out, they use dropped parts");
+
+            // A build that named a set of carburettors gets one carburettor per pad
+            if (multiplicity.Count > 0)
+            {
+                var repeated = 0;
+                foreach (var build in builds)
+                {
+                    for (var i = build.Parts.Count - 1; i >= 0; i--)
+                    {
+                        var part = build.Parts[i];
+                        if (part.Part == null || !SlrrGame.TryParseReference(part.Source, out var rpkPath, out var typeId)) continue;
+                        var rpk = game.GetRpk(rpkPath);
+                        if (rpk == null || !multiplicity.TryGetValue((rpk, typeId), out var count)) continue;
+
+                        for (var extra = 1; extra < count; extra++) build.Parts.Insert(i + 1, part);
+                        repeated++;
+                    }
+                }
+
+                if (repeated > 0) Console.WriteLine($"  {repeated} carburettor sets in builds became single carburettors, one per pad");
+            }
 
             File.WriteAllText(Path.Combine(output, EngineBuild.FileName), JsonConvert.SerializeObject(builds, Formatting.Indented));
 
@@ -508,7 +677,8 @@ public static class Program
     }
 
     /// <param name="donor">A part whose model this one is drawn with; its slots of the same ids give the geometry</param>
-    private static PartDefinition Convert(SlrrGame game, SlrrScriptEvaluator scripts, SourcePart source, SourcePart? donor,
+    /// <param name="single">When the model (the donor's when there is one) draws a row of identical items and one is kept</param>
+    private static PartDefinition Convert(SlrrGame game, SlrrScriptEvaluator scripts, SourcePart source, SourcePart? donor, SingleRule? single,
         Dictionary<(SlrrRpk, int), string> partIds, string packFolder, string texturePrefix, Dictionary<string, string?> models)
     {
         var config = SlrrPartConfig.Load(source.ConfigFile);
@@ -517,10 +687,15 @@ public static class Program
         var geometry = config.Slots.ToDictionary(s => s, s => s);
         if (donor != null)
         {
+            // A part that mounts by a single slot mounts by it whatever its number (GM carburettors hang by 10, the
+            // Carter by 12)
             var donorConfig = SlrrPartConfig.Load(donor.ConfigFile);
+            var mounting = config.Slots.Where(s => s.AttachesTo.Count > 0).ToList();
+            var donorMounting = donorConfig.Slots.Where(s => s.AttachesTo.Count > 0).ToList();
             foreach (var slot in config.Slots)
             {
-                var counterpart = donorConfig.Slots.FirstOrDefault(s => s.Id == slot.Id);
+                var counterpart = donorConfig.Slots.FirstOrDefault(s => s.Id == slot.Id)
+                                  ?? (mounting.Count == 1 && donorMounting.Count == 1 && slot == mounting[0] ? donorMounting[0] : null);
                 if (counterpart == null) Console.WriteLine($"    {source.Id} slot {slot.Id}: {donor.Id} has none, it keeps its place on the old model");
                 else geometry[slot] = counterpart;
             }
@@ -551,8 +726,8 @@ public static class Program
                 .Select(r => new PartSlotRule { Slot = r.Slot, Message = r.Message }).ToList(),
             Categories = game.Categories(source.Rpk, source.Entry),
             Model = donor == null
-                ? ConvertModel(game, source, config, packFolder, texturePrefix, models)
-                : ConvertModel(game, donor, SlrrPartConfig.Load(donor.ConfigFile), packFolder, texturePrefix, models, source.Name),
+                ? ConvertModel(game, source, config, packFolder, texturePrefix, models, single)
+                : ConvertModel(game, donor, SlrrPartConfig.Load(donor.ConfigFile), packFolder, texturePrefix, models, single, source.Name),
             Mass = config.Mass,
             Config = config.Other,
             SourceTypeId = source.Entry.TypeId,
@@ -666,6 +841,107 @@ public static class Program
     }
 
     /// <summary>
+    /// A pad that took a set of carburettors as one part becomes one pad per carburettor, in a row along the engine
+    /// axis about where the pad was (the pad keeps its id for the middle one, or the rear one of a pair: the pad the
+    /// manifold script reads), plus a slot over the row for an air cleaner that spans the set, where the set's own
+    /// air-horn slot was.
+    /// </summary>
+    private static void SplitPads(List<PadRule> rules, Dictionary<string, PartDefinition> definitions)
+    {
+        foreach (var rule in rules)
+        {
+            var split = 0;
+            foreach (var definition in definitions.Values.Where(d => rule.Pattern.IsMatch(d.Id)))
+            {
+                var pad = definition.Slots.FirstOrDefault(s => s.Id == rule.Slot);
+                if (pad == null)
+                {
+                    Console.WriteLine($"    {PadsOption} {rule.Pattern}: {definition.Id} has no slot {rule.Slot}");
+                    continue;
+                }
+
+                var origin = (float[])pad.Position.Clone();
+                var middle = (rule.Count - 1) / 2;
+                var fittings = rule.Fitting.Split('+').ToList();
+                pad.Takes.Clear();
+                pad.Takes.AddRange(fittings);
+                for (var k = 0; k < rule.Count; k++)
+                {
+                    var along = (k - (rule.Count - 1) / 2f) * rule.Spacing;
+                    var slot = k == middle ? pad : new PartSlot
+                    {
+                        Id = ExtraPadSlot + k,
+                        Name = pad.Name,
+                        Rotation = (float[])pad.Rotation.Clone(),
+                        DamageMode = pad.DamageMode,
+                        Takes = new List<string>(fittings)
+                    };
+                    slot.Position = new[] { origin[0], origin[1], origin[2] + along };
+                    if (slot != pad) definition.Slots.Add(slot);
+                }
+
+                var air = new PartSlot
+                {
+                    Id = SharedAirSlot,
+                    Name = "air cleaner over the carburettors",
+                    Position = new[] { origin[0] + rule.AirOffset[0], origin[1] + rule.AirOffset[1], origin[2] + rule.AirOffset[2] },
+                    Rotation = (float[])pad.Rotation.Clone()
+                };
+                if (rule.AirFitting != null) air.Takes.Add(rule.AirFitting);
+                definition.Slots.Add(air);
+                split++;
+            }
+
+            if (split == 0) Console.WriteLine($"    {PadsOption} {rule.Pattern}: no part has it");
+        }
+    }
+
+    /// <summary>
+    /// Air cleaners that sat on a set of carburettors named the set's air-horn slot; the set is single carburettors
+    /// now, so they go over the row instead: onto the shared air slot of every pad the set sat on.
+    /// </summary>
+    /// <param name="perItem">Parts that were a row of items themselves (a tri-power air box): each sits on its own carburettor still</param>
+    private static void Repoint(SlrrGame game, Dictionary<(SlrrRpk, int), (int Horn, List<(SlrrRpk Rpk, int TypeId, int Slot)> Pads)> sets,
+        Dictionary<string, PartDefinition> definitions, Dictionary<(SlrrRpk, int), string> partIds, IEnumerable<string> perItem)
+    {
+        if (sets.Count == 0) return;
+
+        var skip = perItem.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var repointed = 0;
+        foreach (var definition in definitions.Values.Where(d => !skip.Contains(d.Id)))
+        {
+            foreach (var slot in definition.Slots)
+            {
+                for (var i = slot.AttachesTo.Count - 1; i >= 0; i--)
+                {
+                    var reference = slot.AttachesTo[i];
+                    if (!SlrrGame.TryParseReference(reference.Source, out var rpkPath, out var typeId)) continue;
+                    var rpk = game.GetRpk(rpkPath);
+                    if (rpk == null || !sets.TryGetValue((rpk, typeId), out var set) || reference.Slot != set.Horn) continue;
+
+                    slot.AttachesTo.RemoveAt(i);
+                    foreach (var pad in set.Pads)
+                    {
+                        if (!partIds.TryGetValue((pad.Rpk, pad.TypeId), out var padPartId) || !definitions.TryGetValue(padPartId, out var padPart)) continue;
+                        if (padPart.Slots.All(s => s.Id != SharedAirSlot))
+                        {
+                            Console.WriteLine($"    {definition.Id} sat on a set of carburettors on {padPartId} slot {pad.Slot}, which has no shared air slot: it fits nowhere there now");
+                            continue;
+                        }
+
+                        if (slot.AttachesTo.Any(r => r.Slot == SharedAirSlot && padPartId.Equals(r.Part, StringComparison.OrdinalIgnoreCase))) continue;
+                        slot.AttachesTo.Add(new PartSlotReference { Part = padPartId, Slot = SharedAirSlot, Source = SlrrGame.Describe(pad.Rpk, pad.TypeId) });
+                    }
+
+                    repointed++;
+                }
+            }
+        }
+
+        Console.WriteLine($"    {repointed} air cleaner fits moved from carburettor sets onto the pads' shared air slots");
+    }
+
+    /// <summary>
     /// Gives slots their standard fittings, then finds the slots that take each: every slot a fitted slot attaches
     /// to by an attach line, written on either side. The game then mates by the fitting as well as by name, so a
     /// part fitted "carb:4bbl" goes on every pad that takes it, in any pack (a slot that stands in for such a pad
@@ -744,20 +1020,29 @@ public static class Program
     /// plus every render outside the LOD set. Renders that are not meshes (exhaust smoke, lights) drop out.
     /// Parts that draw the same meshes with the same textures share one model file.
     /// </summary>
+    /// <param name="single">When the model draws a row of identical items and one is kept</param>
     /// <param name="name">Name of the model file, the part's own unless it is drawn with another part's model</param>
     private static string? ConvertModel(SlrrGame game, SourcePart source, SlrrPartConfig config, string packFolder,
-        string texturePrefix, Dictionary<string, string?> models, string? name = null)
+        string texturePrefix, Dictionary<string, string?> models, SingleRule? single = null, string? name = null)
     {
         var selected = SelectRenders(game, source, config);
         if (selected.Count == 0) return null;
 
         var key = string.Join('|', selected.Select(r =>
             $"{r.MeshFile}:{string.Join(',', r.TextureFiles)}:{r.Render.Position}:{r.Render.YawPitchRoll}")).ToLowerInvariant();
+        if (single != null) key += $"|one of {single.Count}";
         if (models.TryGetValue(key, out var existing)) return existing;
 
         name ??= source.Name;
         var pieces = selected.Select(r => new SlrrKn5Builder.Piece(SlrrMesh.Load(r.MeshFile), r.TextureFiles, r.Render.Matrix));
         var kn5 = SlrrKn5Builder.Build(name, pieces, texturePrefix, simplified => Console.WriteLine($"    {simplified}"));
+        if (single != null)
+        {
+            var before = kn5.RootNode.Children.Sum(n => n.Indices.Length / 3);
+            var keptAt = SlrrKn5Slicer.KeepOne(kn5, single.Count, single.Spacing);
+            Console.WriteLine($"    {name}: one of {single.Count} kept ({keptAt:+0.000;-0.000} m along the row), {before} -> {kn5.RootNode.Children.Sum(n => n.Indices.Length / 3)} triangles");
+        }
+
         if (kn5.RootNode.Children.Count == 0) return models[key] = null;
 
         var model = name + ".kn5";

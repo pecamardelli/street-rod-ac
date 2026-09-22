@@ -28201,14 +28201,14 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x093B"
+              "part": "engines/chrysler/Intake_manifold_HEMI_Crossram",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x07EB"
             },
             {
-              "part": "engines/chrysler/Carburetors_2x4BRL_crossram_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x094B"
+              "part": "engines/chrysler/Intake_manifold_HEMI_Crossram_PERFORMANCE",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09EB"
             }
           ],
           "compatible_with": []
@@ -28312,14 +28312,14 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x093B"
+              "part": "engines/chrysler/Intake_manifold_HEMI_Crossram",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x07EB"
             },
             {
-              "part": "engines/chrysler/Carburetors_2x4BRL_crossram_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x094B"
+              "part": "engines/chrysler/Intake_manifold_HEMI_Crossram_PERFORMANCE",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09EB"
             }
           ],
           "compatible_with": []
@@ -28423,14 +28423,14 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x093B"
+              "part": "engines/chrysler/Intake_manifold_HEMI_Crossram",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x07EB"
             },
             {
-              "part": "engines/chrysler/Carburetors_2x4BRL_crossram_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x094B"
+              "part": "engines/chrysler/Intake_manifold_HEMI_Crossram_PERFORMANCE",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09EB"
             }
           ],
           "compatible_with": []
@@ -28534,14 +28534,14 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x093B"
+              "part": "engines/chrysler/Intake_manifold_HEMI_Crossram",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x07EB"
             },
             {
-              "part": "engines/chrysler/Carburetors_2x4BRL_crossram_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x094B"
+              "part": "engines/chrysler/Intake_manifold_HEMI_Crossram_PERFORMANCE",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09EB"
             }
           ],
           "compatible_with": []
@@ -28907,14 +28907,24 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
+              "part": "engines/chrysler/Intake_manifold_small_SIXPACK",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008A"
             },
             {
-              "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_B",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x08FB"
+            },
+            {
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_HOLLEY",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02EB"
+            },
+            {
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_O",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09FB"
             }
           ],
           "compatible_with": []
@@ -29018,14 +29028,24 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
+              "part": "engines/chrysler/Intake_manifold_small_SIXPACK",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008A"
             },
             {
-              "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_B",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x08FB"
+            },
+            {
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_HOLLEY",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02EB"
+            },
+            {
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_O",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09FB"
             }
           ],
           "compatible_with": []
@@ -29129,14 +29149,24 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
+              "part": "engines/chrysler/Intake_manifold_small_SIXPACK",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008A"
             },
             {
-              "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_B",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x08FB"
+            },
+            {
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_HOLLEY",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02EB"
+            },
+            {
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_O",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09FB"
             }
           ],
           "compatible_with": []
@@ -29240,14 +29270,24 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
+              "part": "engines/chrysler/Intake_manifold_small_SIXPACK",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008A"
             },
             {
-              "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_B",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x08FB"
+            },
+            {
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_HOLLEY",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02EB"
+            },
+            {
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_O",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09FB"
             }
           ],
           "compatible_with": []
@@ -29351,14 +29391,24 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
+              "part": "engines/chrysler/Intake_manifold_small_SIXPACK",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008A"
             },
             {
-              "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_B",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x08FB"
+            },
+            {
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_HOLLEY",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02EB"
+            },
+            {
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_O",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09FB"
             }
           ],
           "compatible_with": []
@@ -29462,14 +29512,24 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x095B"
+              "part": "engines/chrysler/Intake_manifold_small_SIXPACK",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x008A"
             },
             {
-              "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x096B"
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_B",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x08FB"
+            },
+            {
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_HOLLEY",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x02EB"
+            },
+            {
+              "part": "engines/chrysler/Intake_manifold_big_SIXPACK_O",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09FB"
             }
           ],
           "compatible_with": []
@@ -29765,7 +29825,7 @@
           "position": [
             -0.006,
             0.101,
-            0.156
+            0.046000004
           ],
           "rotation": [
             0.0,
@@ -29782,7 +29842,7 @@
             }
           ],
           "takes": [
-            "carb:2x4"
+            "carb:4bbl"
           ]
         },
         {
@@ -29801,6 +29861,46 @@
           "damage_mode": null,
           "attaches_to": [],
           "compatible_with": []
+        },
+        {
+          "id": 301,
+          "name": "carbs",
+          "position": [
+            -0.006,
+            0.101,
+            0.266
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.049000002,
+            0.209,
+            0.116000004
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
+          ]
         }
       ],
       "config": {
@@ -29820,7 +29920,7 @@
     {
       "id": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
       "name": "Carburetors_2x4BRL_crossram_HOLLEY",
-      "display_name": "HOLLEY Crossram 2x4BRL Carburetors",
+      "display_name": "HOLLEY Crossram 4BRL Carburetor",
       "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
       "class_chain": [
         "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
@@ -29924,7 +30024,10 @@
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09EB"
             }
           ],
-          "compatible_with": []
+          "compatible_with": [],
+          "fits": [
+            "carb:crossram"
+          ]
         },
         {
           "id": 11,
@@ -29961,7 +30064,7 @@
     {
       "id": "engines/chrysler/Carburetors_2x4BRL_crossram_Edelbrock",
       "name": "Carburetors_2x4BRL_crossram_Edelbrock",
-      "display_name": "Edelbrock Crossram 2x4BRL Carburetors",
+      "display_name": "Edelbrock Crossram 4BRL Carburetor",
       "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
       "class_chain": [
         "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
@@ -30065,7 +30168,10 @@
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x09EB"
             }
           ],
-          "compatible_with": []
+          "compatible_with": [],
+          "fits": [
+            "carb:crossram"
+          ]
         },
         {
           "id": 11,
@@ -30997,7 +31103,67 @@
           "attaches_to": [],
           "compatible_with": [],
           "takes": [
-            "carb:3x2"
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 300,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            -0.002,
+            0.069,
+            -0.122
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 302,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            -0.002,
+            0.069,
+            0.122
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            0.0009999999,
+            0.14199999,
+            -0.006
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:3x2"
           ]
         }
       ],
@@ -31677,7 +31843,7 @@
           "position": [
             -0.003,
             0.208,
-            0.07
+            -0.04
           ],
           "rotation": [
             0.0,
@@ -31688,7 +31854,7 @@
           "attaches_to": [],
           "compatible_with": [],
           "takes": [
-            "carb:2x4"
+            "carb:4bbl"
           ]
         },
         {
@@ -31707,6 +31873,46 @@
           "damage_mode": null,
           "attaches_to": [],
           "compatible_with": []
+        },
+        {
+          "id": 301,
+          "name": "",
+          "position": [
+            -0.003,
+            0.208,
+            0.18
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.046,
+            0.316,
+            0.030000001
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
+          ]
         }
       ],
       "config": {
@@ -32337,7 +32543,67 @@
           "attaches_to": [],
           "compatible_with": [],
           "takes": [
-            "carb:3x2"
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 300,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            -0.002,
+            0.071,
+            -0.172
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 302,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            -0.002,
+            0.071,
+            0.072
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            0.0009999999,
+            0.144,
+            -0.056
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:3x2"
           ]
         }
       ],
@@ -32487,7 +32753,67 @@
           "attaches_to": [],
           "compatible_with": [],
           "takes": [
-            "carb:3x2"
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 300,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            -0.002,
+            0.071,
+            -0.172
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 302,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            -0.002,
+            0.071,
+            0.072
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            0.0009999999,
+            0.144,
+            -0.056
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:3x2"
           ]
         }
       ],
@@ -32989,7 +33315,67 @@
           "attaches_to": [],
           "compatible_with": [],
           "takes": [
-            "carb:3x2"
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 300,
+          "name": "",
+          "position": [
+            -0.002,
+            0.071,
+            -0.172
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 302,
+          "name": "",
+          "position": [
+            -0.002,
+            0.071,
+            0.072
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            0.0009999999,
+            0.144,
+            -0.056
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:3x2"
           ]
         }
       ],
@@ -33154,7 +33540,7 @@
           "position": [
             -0.003,
             0.211,
-            0.004
+            -0.106
           ],
           "rotation": [
             0.0,
@@ -33171,7 +33557,47 @@
             }
           ],
           "takes": [
-            "carb:2x4"
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "",
+          "position": [
+            -0.003,
+            0.211,
+            0.114
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.046,
+            0.319,
+            -0.036
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
           ]
         }
       ],
@@ -33589,7 +34015,7 @@
           "position": [
             -0.003,
             0.177,
-            -0.001
+            -0.101
           ],
           "rotation": [
             0.0,
@@ -33598,7 +34024,52 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:crossram",
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "",
+          "position": [
+            -0.003,
+            0.177,
+            0.099
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:crossram",
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.046,
+            0.323,
+            -0.040999997
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:crossram"
+          ]
         }
       ],
       "config": {
@@ -33875,7 +34346,7 @@
           "position": [
             -0.003,
             0.171,
-            -0.008
+            -0.108
           ],
           "rotation": [
             0.0,
@@ -33884,7 +34355,52 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:crossram",
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "",
+          "position": [
+            -0.003,
+            0.171,
+            0.092
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:crossram",
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.046,
+            0.317,
+            -0.048
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:crossram"
+          ]
         }
       ],
       "config": {
@@ -42144,7 +42660,7 @@
           "position": [
             -0.003,
             0.151,
-            -0.004
+            -0.079
           ],
           "rotation": [
             0.0,
@@ -42153,7 +42669,52 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "carb:crossram",
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "",
+          "position": [
+            -0.003,
+            0.151,
+            0.071
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:crossram",
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.046,
+            0.297,
+            -0.044
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:crossram"
+          ]
         }
       ],
       "config": {
@@ -42173,7 +42734,7 @@
     {
       "id": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY_2",
       "name": "Carburetors_2x4BRL_crossram_HOLLEY_2",
-      "display_name": "HOLLEY Crossram 2x4BRL Carburetors",
+      "display_name": "HOLLEY Crossram 4BRL Carburetor",
       "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
       "class_chain": [
         "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
@@ -42267,7 +42828,10 @@
               "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0DEB"
             }
           ],
-          "compatible_with": []
+          "compatible_with": [],
+          "fits": [
+            "carb:crossram"
+          ]
         },
         {
           "id": 11,
@@ -42380,9 +42944,9 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY_2",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x099B"
+              "part": "engines/chrysler/Intake_manifold_big_Crossram",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0DEB"
             }
           ],
           "compatible_with": []
@@ -46558,7 +47122,7 @@
           "position": [
             -0.01,
             0.07400001,
-            0.03
+            -0.08
           ],
           "rotation": [
             0.0,
@@ -46575,7 +47139,47 @@
             }
           ],
           "takes": [
-            "carb:2x4"
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "",
+          "position": [
+            -0.01,
+            0.07400001,
+            0.14
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.053000003,
+            0.18200001,
+            -0.01
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
           ]
         }
       ],
@@ -46655,19 +47259,29 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x090B"
+              "part": "engines/chrysler/Intake_manifold_big_2x4brl_TrickFlow",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x03EB"
             },
             {
-              "part": "engines/generic/Carburetors_2x4BRL_Edelbrock",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x091B"
+              "part": "engines/chrysler/Intake_manifold_small_2x4brl_TrickFlow",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x03FB"
             },
             {
-              "part": "engines/generic/Carburetors_2x4BRL_King_Demon",
-              "slot": 11,
-              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x092B"
+              "part": "engines/chrysler/Supercharger_Edelbrock_2",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x00B8"
+            },
+            {
+              "part": "engines/generic/Supercharger_Weiand",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x0BB8"
+            },
+            {
+              "part": "engines/chrysler/dualquad_intake",
+              "slot": 311,
+              "source": "parts\\engines\\Chrysler_V8_pak.rpk#0xE008"
             }
           ],
           "compatible_with": []

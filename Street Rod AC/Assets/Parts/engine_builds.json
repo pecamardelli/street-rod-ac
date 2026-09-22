@@ -778,6 +778,18 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
       },
       {
+        "part": "engines/generic/Holley_2x4brl_carburator",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+      },
+      {
+        "part": "engines/generic/Holley_2x4brl_filter",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
+      },
+      {
         "part": "engines/generic/Holley_2x4brl_filter",
         "name": null,
         "conditional": false,
@@ -1972,6 +1984,18 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
       },
       {
+        "part": "engines/generic/Holley_2x4brl_carburator",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+      },
+      {
+        "part": "engines/generic/Holley_2x4brl_filter",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
+      },
+      {
         "part": "engines/generic/Holley_2x4brl_filter",
         "name": null,
         "conditional": false,
@@ -2378,6 +2402,18 @@
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+      },
+      {
+        "part": "engines/generic/Holley_2x4brl_carburator",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+      },
+      {
+        "part": "engines/generic/Holley_2x4brl_filter",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
       },
       {
         "part": "engines/generic/Holley_2x4brl_filter",
@@ -2878,6 +2914,12 @@
         "source": "parts\\engines\\Mopar.rpk#0x4B60"
       },
       {
+        "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x4B60"
+      },
+      {
         "part": "engines/chrysler/Air_cleaner_HEMI_crossram_3",
         "name": null,
         "conditional": false,
@@ -3073,7 +3115,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -3266,6 +3320,12 @@
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x33BE"
+      },
+      {
+        "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x428B"
       },
       {
         "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
@@ -3469,7 +3529,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -3662,6 +3734,12 @@
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x4B56"
+      },
+      {
+        "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x4B60"
       },
       {
         "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
@@ -3865,6 +3943,12 @@
         "source": "parts\\engines\\Mopar.rpk#0x428B"
       },
       {
+        "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x428B"
+      },
+      {
         "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
         "name": null,
         "conditional": false,
@@ -4060,7 +4144,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -5105,6 +5201,18 @@
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
+      },
+      {
+        "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x01A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x01A3"
       },
       {
         "part": "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack",
@@ -7252,6 +7360,18 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
       },
       {
+        "part": "engines/generic/Holley_2x4brl_carburator",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+      },
+      {
+        "part": "engines/generic/Holley_2x4brl_filter",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
+      },
+      {
         "part": "engines/generic/Holley_2x4brl_filter",
         "name": null,
         "conditional": false,
@@ -8054,6 +8174,18 @@
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+      },
+      {
+        "part": "engines/generic/Holley_2x4brl_carburator",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+      },
+      {
+        "part": "engines/generic/Holley_2x4brl_filter",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
       },
       {
         "part": "engines/generic/Holley_2x4brl_filter",
@@ -9334,7 +9466,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -9535,7 +9679,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x00A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -9736,7 +9892,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -9937,7 +10105,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x00A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -10138,7 +10318,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -10339,7 +10531,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -10532,6 +10736,12 @@
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x4B56"
+      },
+      {
+        "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x4B60"
       },
       {
         "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
@@ -10735,6 +10945,12 @@
         "source": "parts\\engines\\Mopar.rpk#0x4B60"
       },
       {
+        "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x4B60"
+      },
+      {
         "part": "engines/chrysler/Air_cleaner_HEMI_crossram_3",
         "name": null,
         "conditional": false,
@@ -10922,6 +11138,12 @@
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x4B56"
+      },
+      {
+        "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x4B60"
       },
       {
         "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
@@ -11125,7 +11347,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -11968,7 +12202,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x00A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -12169,7 +12415,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x00A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -12370,6 +12628,12 @@
         "source": "parts\\engines\\Mopar.rpk#0x428B"
       },
       {
+        "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x428B"
+      },
+      {
         "part": "engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL",
         "name": null,
         "conditional": false,
@@ -12557,6 +12821,12 @@
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x4B56"
+      },
+      {
+        "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x4B60"
       },
       {
         "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
@@ -14509,7 +14779,19 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x10A1"
       },
       {
-        "part": "engines/generic/Holley_3x2brl_carbs",
+        "part": "engines/generic/Holley_2brl_carb",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
+      },
+      {
+        "part": "engines/generic/Holley_2brl_carb",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
+      },
+      {
+        "part": "engines/generic/Holley_2brl_carb",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
@@ -14716,7 +14998,19 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x10A1"
       },
       {
-        "part": "engines/generic/Holley_3x2brl_carbs",
+        "part": "engines/generic/Holley_2brl_carb",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
+      },
+      {
+        "part": "engines/generic/Holley_2brl_carb",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
+      },
+      {
+        "part": "engines/generic/Holley_2brl_carb",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
@@ -15226,7 +15520,19 @@
         "source": "parts\\engines\\Mopar.rpk#0x50A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x00A3"
@@ -15419,6 +15725,12 @@
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x4B56"
+      },
+      {
+        "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x4B60"
       },
       {
         "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
@@ -15622,6 +15934,12 @@
         "source": "parts\\engines\\Mopar.rpk#0x4B60"
       },
       {
+        "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x4B60"
+      },
+      {
         "part": "engines/chrysler/Air_cleaner_HEMI_crossram_3",
         "name": null,
         "conditional": false,
@@ -15809,6 +16127,12 @@
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x33BE"
+      },
+      {
+        "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x428B"
       },
       {
         "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
@@ -17731,7 +18055,19 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x10A1"
       },
       {
-        "part": "engines/generic/Holley_3x2brl_carbs",
+        "part": "engines/generic/Holley_2brl_carb",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
+      },
+      {
+        "part": "engines/generic/Holley_2brl_carb",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
+      },
+      {
+        "part": "engines/generic/Holley_2brl_carb",
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
@@ -18523,6 +18859,18 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
       },
       {
+        "part": "engines/generic/Holley_2x4brl_carburator",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+      },
+      {
+        "part": "engines/generic/Holley_2x4brl_filter",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
+      },
+      {
         "part": "engines/generic/Holley_2x4brl_filter",
         "name": null,
         "conditional": false,
@@ -19130,6 +19478,18 @@
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+      },
+      {
+        "part": "engines/generic/Holley_2x4brl_carburator",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+      },
+      {
+        "part": "engines/generic/Holley_2x4brl_filter",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
       },
       {
         "part": "engines/generic/Holley_2x4brl_filter",
@@ -19801,6 +20161,12 @@
         "source": "parts\\engines\\Mopar.rpk#0x4B60"
       },
       {
+        "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x4B60"
+      },
+      {
         "part": "engines/chrysler/Air_cleaner_HEMI_crossram_3",
         "name": null,
         "conditional": false,
@@ -19988,6 +20354,12 @@
         "name": null,
         "conditional": false,
         "source": "parts\\engines\\Mopar.rpk#0x4B56"
+      },
+      {
+        "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
+        "name": null,
+        "conditional": false,
+        "source": "parts\\engines\\Mopar.rpk#0x4B60"
       },
       {
         "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
@@ -22666,6 +23038,12 @@
         "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x093B"
       },
       {
+        "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
+        "name": "Carburetors_2x4BRL_Crassram_HOLLEY",
+        "conditional": false,
+        "source": "parts\\engines\\Chrysler_V8_pak.rpk#0x093B"
+      },
+      {
         "part": "engines/chrysler/Air_cleaner_HEMI_crossram",
         "name": "Air_cleaner_HEMI_crassram",
         "conditional": false,
@@ -25270,7 +25648,19 @@
         "source": "parts\\engines\\GM_V8_pak.rpk#0x10A1"
       },
       {
-        "part": "engines/generic/Holley_3x2brl_carbs",
+        "part": "engines/generic/Holley_2brl_carb",
+        "name": "Holley 3x2brl carbs",
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
+      },
+      {
+        "part": "engines/generic/Holley_2brl_carb",
+        "name": "Holley 3x2brl carbs",
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
+      },
+      {
+        "part": "engines/generic/Holley_2brl_carb",
         "name": "Holley 3x2brl carbs",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
@@ -25688,6 +26078,18 @@
         "name": "Holley 2x4brl carbs",
         "conditional": false,
         "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+      },
+      {
+        "part": "engines/generic/Holley_2x4brl_carburator",
+        "name": "Holley 2x4brl carbs",
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+      },
+      {
+        "part": "engines/generic/Holley_2x4brl_filter",
+        "name": "Holley Dual 2x4 air filter",
+        "conditional": false,
+        "source": "parts\\engines\\GM_V8_pak.rpk#0x21A5"
       },
       {
         "part": "engines/generic/Holley_2x4brl_filter",
@@ -26389,7 +26791,19 @@
         "source": "parts\\engines\\MOPAR.rpk#0x00A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": "MOPAR_six_pack_340_carbs",
+        "conditional": false,
+        "source": "parts\\engines\\MOPAR.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": "MOPAR_six_pack_340_carbs",
+        "conditional": false,
+        "source": "parts\\engines\\MOPAR.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": "MOPAR_six_pack_340_carbs",
         "conditional": false,
         "source": "parts\\engines\\MOPAR.rpk#0x00A3"
@@ -26582,6 +26996,12 @@
         "name": "MOPAR_383_2x4brl_mainfold",
         "conditional": false,
         "source": "parts\\engines\\MOPAR.rpk#0x33BE"
+      },
+      {
+        "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
+        "name": "Holley 2x4 barrel carburetors",
+        "conditional": false,
+        "source": "parts\\engines\\MOPAR.rpk#0x428B"
       },
       {
         "part": "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY",
@@ -26785,6 +27205,12 @@
         "source": "parts\\engines\\MOPAR.rpk#0x4B60"
       },
       {
+        "part": "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY",
+        "name": "MOPAR Holley 2x4brl Crassram Carbs",
+        "conditional": false,
+        "source": "parts\\engines\\MOPAR.rpk#0x4B60"
+      },
+      {
         "part": "engines/chrysler/Air_cleaner_HEMI_crossram_3",
         "name": "MOPAR Crassram Filter",
         "conditional": false,
@@ -26980,7 +27406,19 @@
         "source": "parts\\engines\\MOPAR.rpk#0x50A1"
       },
       {
-        "part": "engines/generic/Carburetors_3x2BRL_HOLLE_six_pack",
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": "MOPAR six_pack_340_carbs",
+        "conditional": false,
+        "source": "parts\\engines\\MOPAR.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
+        "name": "MOPAR six_pack_340_carbs",
+        "conditional": false,
+        "source": "parts\\engines\\MOPAR.rpk#0x00A3"
+      },
+      {
+        "part": "engines/generic/Carburetors_2BRL_HOLLEY",
         "name": "MOPAR six_pack_340_carbs",
         "conditional": false,
         "source": "parts\\engines\\MOPAR.rpk#0x00A3"

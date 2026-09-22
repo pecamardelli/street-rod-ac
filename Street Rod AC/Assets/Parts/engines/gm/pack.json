@@ -29930,7 +29930,7 @@
           "position": [
             0.0,
             0.0,
-            0.0
+            0.18
           ],
           "rotation": [
             0.0,
@@ -30576,153 +30576,6 @@
       "source_script": "parts\\engines\\GM_V8_pak\\scripts\\Holley_2x4_FI_system.class"
     },
     {
-      "id": "engines/gm/stock_2x4brl_carburator",
-      "name": "stock_2x4brl_carburator",
-      "display_name": "Stock 2x4brl carburetors (fits all manifolds)",
-      "base_class": "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-      "class_chain": [
-        "java.game.parts.enginepart.airfueldeliverysystem.FuelInjectorSystem",
-        "java.game.parts.enginepart.AirFuelDeliverySystem",
-        "java.game.parts.EnginePart",
-        "java.game.parts.Part"
-      ],
-      "properties": {
-        "name": "Stock 2x4brl carburetors (fits all manifolds)",
-        "description": "",
-        "value": 114.046263,
-        "police_check_fine_value": 0.0,
-        "thoroughness_limit": 0.0,
-        "brand_new_prestige_value": 23.53,
-        "prestige_calc_weight": 25.0,
-        "price_catalog": 1.0,
-        "price_shop": 0.9,
-        "price_used": 0.4,
-        "price_repair": 0.8,
-        "repair_min_wear": 0.3,
-        "repair_min_tear": 0.3,
-        "repair_max_wear": 0.9,
-        "repair_max_tear": 0.9,
-        "carCategory": 0,
-        "manufacturer": 0,
-        "need_update": 1,
-        "drag_occluded": 0.0,
-        "drag_own": 0.0,
-        "C_drag": 0.0,
-        "prev_prestige": 0.0,
-        "mixture_ratio": 12.5,
-        "optimal_mixture_ratio": 12.5,
-        "max_fuel_consumption": 0.03,
-        "max_air_consumption": 1E-05,
-        "fuel_type": 0,
-        "mixture_H": 1.0,
-        "time_burn": 0.1,
-        "nitro_H": 1.0,
-        "nitro_cooling": 1.0,
-        "nitro_consumption": 1.0,
-        "nitro_minRPM": 0.0,
-        "nitro_maxRPM": -1.0,
-        "nitro_minThrottle": 0.0,
-        "optimal_burn_time_base": 0.003,
-        "optimal_burn_time_offset": 0.001,
-        "minComp": 0.0,
-        "maxComp": 0.0,
-        "default_mixture_ratio": 1.0,
-        "default_fuel_type": 0,
-        "max_wear": 31000000.0
-      },
-      "derived": {
-        "max_air_consumption": 0.5,
-        "mixture_H": 1704225.0,
-        "time_burn": 0.000625,
-        "optimal_burn_time_base": 0.0025,
-        "optimal_burn_time_offset": 0.0008,
-        "minComp": 6.8169,
-        "maxComp": 17.04225
-      },
-      "slot_roles": {},
-      "stock_parts": [],
-      "required_slots": [
-        {
-          "slot": 11,
-          "message": "you need air filter to prevent engine damage."
-        }
-      ],
-      "categories": [
-        "carburetors",
-        "fuel",
-        "Air",
-        "engine"
-      ],
-      "model": "stock_2x4brl_carburator.kn5",
-      "mass": 6.4,
-      "slots": [
-        {
-          "id": 10,
-          "name": "",
-          "position": [
-            0.0,
-            -0.017,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [
-            {
-              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
-            },
-            {
-              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold_2",
-              "slot": 7,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xB04B"
-            }
-          ],
-          "compatible_with": [],
-          "fits": [
-            "carb:2x4"
-          ]
-        },
-        {
-          "id": 11,
-          "name": "Air Filter",
-          "position": [
-            0.01,
-            0.065,
-            0.05
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "damage_mode": null,
-          "attaches_to": [],
-          "compatible_with": [],
-          "takes": [
-            "air:inline"
-          ]
-        }
-      ],
-      "config": {
-        "noclick": [
-          ""
-        ],
-        "nocollision": [
-          ""
-        ],
-        "category": [
-          "1"
-        ]
-      },
-      "source_type_id": 41379,
-      "source_script": "parts\\engines\\GM_V8_pak\\scripts\\stock_2x4brl_carburator.class"
-    },
-    {
       "id": "engines/gm/stock_4brl_carburator",
       "name": "stock_4brl_carburator",
       "display_name": "Stock 4brl carburetor (fits all manifolds)",
@@ -30807,9 +30660,9 @@
           "id": 10,
           "name": "",
           "position": [
-            0.0,
-            -0.017,
-            0.18
+            -0.003,
+            -0.066,
+            -0.001
           ],
           "rotation": [
             0.0,
@@ -30842,6 +30695,16 @@
               "part": "engines/gm/GM_427_4brl_intake",
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x30A1"
+            },
+            {
+              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold",
+              "slot": 7,
+              "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
+            },
+            {
+              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold_2",
+              "slot": 7,
+              "source": "parts\\engines\\GM_V8_pak.rpk#0xB04B"
             }
           ],
           "compatible_with": [],
@@ -30853,9 +30716,9 @@
           "id": 11,
           "name": "Air Filter",
           "position": [
-            -0.01,
-            0.1,
-            0.13
+            -0.046,
+            0.02,
+            -0.041
           ],
           "rotation": [
             0.0,
@@ -30969,9 +30832,9 @@
           "id": 10,
           "name": "",
           "position": [
-            0.0,
-            -0.017,
-            0.18
+            -0.001,
+            -0.051,
+            0.041
           ],
           "rotation": [
             0.0,
@@ -31000,9 +30863,9 @@
           "id": 11,
           "name": "Air Filter",
           "position": [
-            -0.01,
-            0.07,
-            0.12
+            -0.046,
+            0.042,
+            -0.041
           ],
           "rotation": [
             0.0,
@@ -32053,7 +31916,7 @@
           "position": [
             0.015,
             0.075,
-            -0.122
+            0.058000006
           ],
           "rotation": [
             0.0,
@@ -32407,7 +32270,7 @@
           "position": [
             -0.01,
             0.065,
-            0.02
+            0.2
           ],
           "rotation": [
             0.0,
@@ -32568,7 +32431,7 @@
           "position": [
             0.018,
             0.18,
-            -0.051
+            -0.161
           ],
           "rotation": [
             0.0,
@@ -32583,6 +32446,49 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.018,
+            0.18,
+            0.059
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.025000002,
+            0.28800002,
+            -0.091
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
           ]
         }
       ],
@@ -32739,7 +32645,7 @@
           "position": [
             0.012,
             0.189,
-            -0.03
+            -0.14
           ],
           "rotation": [
             0.0,
@@ -32754,6 +32660,49 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.012,
+            0.189,
+            0.08
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.031000001,
+            0.297,
+            -0.07
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
           ]
         }
       ],
@@ -32935,7 +32884,68 @@
           "attaches_to": [],
           "compatible_with": [],
           "takes": [
-            "carb:3x2"
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 300,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.0,
+            0.131,
+            -0.126
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 302,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.0,
+            0.131,
+            0.118
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            0.003,
+            0.204,
+            -0.01
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:3x2",
+            "air:2x4"
           ]
         }
       ],
@@ -33102,7 +33112,7 @@
           "position": [
             0.0,
             0.042,
-            0.1
+            -0.009999998
           ],
           "rotation": [
             0.0,
@@ -33113,7 +33123,48 @@
           "attaches_to": [],
           "compatible_with": [],
           "takes": [
-            "carb:2x4"
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.0,
+            0.042,
+            0.21000001
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.043,
+            0.15,
+            0.060000002
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4",
+            "air:3x2"
           ]
         }
       ],
@@ -33286,7 +33337,7 @@
           "position": [
             0.0,
             0.097,
-            0.1
+            -0.009999998
           ],
           "rotation": [
             0.0,
@@ -33297,7 +33348,48 @@
           "attaches_to": [],
           "compatible_with": [],
           "takes": [
-            "carb:2x4"
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.0,
+            0.097,
+            0.21000001
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.043,
+            0.20500001,
+            0.060000002
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4",
+            "air:3x2"
           ]
         }
       ],
@@ -33795,7 +33887,7 @@
           "position": [
             0.018,
             0.032,
-            -0.13
+            0.050000012
           ],
           "rotation": [
             0.0,
@@ -33966,7 +34058,7 @@
           "position": [
             0.013,
             0.162,
-            -0.021
+            -0.131
           ],
           "rotation": [
             0.0,
@@ -33981,6 +34073,49 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.013,
+            0.162,
+            0.089
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.030000001,
+            0.27,
+            -0.060999997
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
           ]
         }
       ],
@@ -44015,6 +44150,69 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x00BE"
             }
+          ],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 300,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.015,
+            0.199,
+            -0.241
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 302,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.015,
+            0.199,
+            0.0029999986
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            0.018,
+            0.272,
+            -0.125
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:3x2"
           ]
         }
       ],
@@ -44261,9 +44459,9 @@
           "id": 12,
           "name": "",
           "position": [
-            0.0,
-            0.03,
-            0.13
+            -0.053,
+            0.056,
+            0.03999999
           ],
           "rotation": [
             0.0,
@@ -44273,19 +44471,19 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/generic/Holley_3x2brl_carbs",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
+              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold",
+              "slot": 311,
+              "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
             },
             {
-              "part": "engines/gm/stock_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xA1A3"
+              "part": "engines/gm/Edelbrock_Dual_Quad_intake_manifold_2",
+              "slot": 311,
+              "source": "parts\\engines\\GM_V8_pak.rpk#0xB04B"
             },
             {
-              "part": "engines/generic/Holley_2x4brl_carburator",
-              "slot": 11,
-              "source": "parts\\engines\\GM_V8_pak.rpk#0xC1A3"
+              "part": "engines/gm/Edelbrock_3x2brl_V8_intake",
+              "slot": 311,
+              "source": "parts\\engines\\GM_V8_pak.rpk#0x00BE"
             }
           ],
           "compatible_with": []
@@ -44587,7 +44785,7 @@
           "position": [
             0.013,
             0.367,
-            -0.005
+            -0.115
           ],
           "rotation": [
             0.0,
@@ -44602,6 +44800,9 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA04B"
             }
+          ],
+          "takes": [
+            "carb:4bbl"
           ]
         },
         {
@@ -44620,6 +44821,46 @@
           "damage_mode": null,
           "attaches_to": [],
           "compatible_with": []
+        },
+        {
+          "id": 301,
+          "name": "roots_type_supercharger_mixture_IN",
+          "position": [
+            0.013,
+            0.367,
+            0.105
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.030000001,
+            0.47500002,
+            -0.044999998
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
+          ]
         }
       ],
       "config": {
@@ -46610,6 +46851,69 @@
               "slot": 7,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x00BE"
             }
+          ],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 300,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.001,
+            0.161,
+            -0.122
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 302,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.001,
+            0.161,
+            0.122
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:2bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            0.004,
+            0.234,
+            -0.006
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:3x2"
           ]
         }
       ],
@@ -46630,7 +46934,7 @@
     {
       "id": "engines/gm/GTO65_Airbox",
       "name": "GTO65_Airbox",
-      "display_name": "Pontiac GTO 389 Tri-Power air filters",
+      "display_name": "Pontiac GTO 389 Tri-Power air filter",
       "base_class": "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
       "class_chain": [
         "java.game.parts.enginepart.airfueldeliverysystem.AirFilter",
@@ -46706,12 +47010,12 @@
           "damage_mode": null,
           "attaches_to": [
             {
-              "part": "engines/generic/Holley_3x2brl_carbs",
+              "part": "engines/generic/Holley_2brl_carb",
               "slot": 11,
               "source": "parts\\engines\\GM_V8_pak.rpk#0x108B"
             },
             {
-              "part": "engines/gm/stock_2x4brl_carburator",
+              "part": "engines/gm/stock_4brl_carburator",
               "slot": 11,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA1A3"
             },

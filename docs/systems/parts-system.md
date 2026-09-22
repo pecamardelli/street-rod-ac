@@ -33,7 +33,7 @@ private.
 
 ## Converter (`tools/SlrrPartsConverter`)
 
-`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>,...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...]`
+`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>[*<count>],...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] [--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] [--name <part id pattern>=<display name>,...]`
 
 The content in use is made with `tools/convert-parts.ps1` (both Chrysler packs are installed in the SLRR folder, see
 "Replacing a pack"). It comes out as:
@@ -138,14 +138,55 @@ their own pack's drive belt (belts are positioned in the blower's frame, and rea
 enough).
 
 The universal-fit parts are routed into `engines/generic` (the shop and the catalog never read pack ids, only the
-folder and the ids change). The GM and Ford packs' Holleys are crude blocks next to the Chrysler pack's; `--model`
-draws a part with **another part's model**, its own script untouched: the model is converted again under the
-borrower's name (into the borrower's pack folder) and the borrower's slots take the donor's positions, since slot
-positions are in the model's space (GM's air-horn slot sits 4 cm higher than the Chrysler model's horn). Eight carbs
-borrow: GM's Holley 2-bbl, 1050 Dominator, "hardcore" 1050, dual quads and tri-power, Dexter's Holley 650 and both
-dual-quad sets. Checked: `EngineBench rated` unchanged to the horsepower, `renew` brings all 114 engines of the
-previous content up to date (transmission swaps move a horsepower or two through inertia), `bench` round trips on 12
-builds, harness close-ups of the borrowed models with their air cleaners.
+folder and the ids change). The GM and Ford packs' carburettors are crude blocks next to the Chrysler pack's;
+`--model` draws a part with **another part's model**, its own script untouched: the model is converted again under
+the borrower's name (into the borrower's pack folder) and the borrower's slots take the donor's positions, since slot
+positions are in the model's space (a part that mounts by a single slot takes the donor's mounting slot whatever its
+number: GM carburettors hang by 10, the Carter by 12). Ten carbs borrow: GM's Holley 2-bbl, 1050 Dominator,
+"hardcore" 1050, 750 Dominator and blower 2-bbl, Dexter's Holley 650 and both dual-quad sets, and GM's factory
+carburettors, which get the Carter AVS (a factory carburettor's looks rather than another Holley's). GM's injection
+(the Weiand methanol stacks, the '63 fuelie rail, the Holley rails) is decent and GM-only and keeps its own models.
+
+### Every carburettor part is one carburettor (`--single`, `--pads`, the shared air slot)
+
+SLRR sells a dual-quad or a Six Pack as one part with one model of two or three carburettors, on one manifold pad.
+The user wants one carburettor per part. So:
+
+- **Pads.** `--pads` turns a pad that took a set into one pad per carburettor, in a row along the engine axis about
+  where the pad was (the pad keeps its id for the middle one, or the rear one of a pair - the pad the manifold script
+  reads; the others are 300, 301, ...), plus slot **311** (`PartSlot.SharedAirSlot`) over the row for an air cleaner
+  that spans the set, placed where the set's own air-horn slot was (offset per rule; Chrysler four-barrel sets
+  (-0.043, 0.108, -0.040), Six Packs (0.003, 0.073, -0.006), crossrams (-0.043, 0.146, -0.040); every pack's pads use
+  the Chrysler offsets and GM's ovals are shifted to match). Pads that stood in for a set pad (the GM 427 tunnel ram,
+  the GTO and Corvette Tri-Power intakes, GM blowers) need rules of their own: stand-ins are followed at run time,
+  not by the converter.
+- **Sets.** A set whose single carburettor exists with the same script values is `--merge`d into it `*count` (the
+  Edelbrock and HOLLE Six Pack sets, GM's stock dual quad and tri-power); one with values of its own is kept and its
+  model **sliced** (`--single`, `SlrrKn5Slicer`): every triangle goes with the item whose nominal centre is nearest
+  (items evenly spaced about the model's centre), one item stays and is moved onto the origin; the slots stay as
+  they are, since the Chrysler pack's slot offsets are the same for a set and a single. Sliced: the Dominator and King
+  Demon pairs, the Road Demon Six Pack, the three Hemi crossram sets (which keep their fuel figures and fit only
+  crossram manifolds, by the `carb:crossram` fitting), GM's 750 Dominator pair (14:1 where its 1050 runs 9:1) and
+  blower 2x2, Dexter's dual sets, and two air-filter rows (GM's dual round filter, the GTO Tri-Power box). `--name`
+  gives them names that no longer say 2x4. Either way a build that named the set gets **count** of the single, one
+  per pad (`multiplicity`, keyed by every source id that resolved to the set, twins of the replaced Mopar pack
+  included), and the fit of a merged set is grafted onto its single.
+- **Air cleaners over a row** (ovals, Six Pack cleaners, the Shaker, scoops for pairs) named the set's air-horn slot;
+  the converter moves those lines onto slot 311 of every pad the set sat on (`Repoint`), and the aftermarket ones get
+  `air:2x4`/`air:3x2` fittings that the 311 slots take. Single cleaners still sit on a carburettor's own horn
+  (`air:single`). GM's carburettor scripts *require* a cleaner on their own horn, so `PartScriptRuntime` answers
+  `partOnSlot(horn)` of a carburettor whose horn is empty with the part on its parent's slot 311: a carburettor in a
+  row breathes through the cleaner over the row. `SavedParts.BringUpToDate` tries a joint one part up when it no
+  longer holds on the same part, so a saved oval on a set moves over the manifold's row; the set itself becomes one
+  carburettor in a save (the other pads wait for the shop).
+
+Checked: every build's power unchanged except the GTO 389 family (348 → 341 hp: GM's tri-power ran 12.5:1, its 2-bbl
+runs 12.0), one GM 427 build whose dual-quad set never found the tunnel ram's stand-in pad now runs (161 → 542 hp);
+`renew` of all engines of the previous content: nothing comes off; `bench` round trips on 10 builds; harness
+close-ups of the Six Pack under its factory cleaner, two Dominators with a round filter each on the 427 tunnel ram,
+the Tri-Power's three filters on three 2-bbls, two King Demons under the Edelbrock oval on a 340, two Dominators and
+a K&N on the Weiand blower, two GM Dominators under a Summit oval on a 283 (runs: the shared cleaner counts for
+both), GM's factory carburettor in Carter clothes on a 327.
 
 Per part, from its compiled script (run with no game around, see `SlrrScriptEvaluator`):
 

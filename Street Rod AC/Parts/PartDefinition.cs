@@ -126,6 +126,12 @@ public class PartDefinition
 
 public class PartSlot
 {
+    /// <summary>
+    /// Id of the slot a manifold (or blower) with a row of carburettor pads has over the row, for an air cleaner
+    /// that spans them all. A carburettor in the row whose own air horn is empty counts that cleaner as its own.
+    /// </summary>
+    public const int SharedAirSlot = 311;
+
     [JsonProperty("id")]
     public int Id { get; set; }
 

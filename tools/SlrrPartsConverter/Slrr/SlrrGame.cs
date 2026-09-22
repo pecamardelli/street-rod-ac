@@ -63,6 +63,18 @@ public sealed class SlrrGame
         return $"{path}#0x{id & 0xFFFF:X4}";
     }
 
+    /// <summary><see cref="Describe"/> read back: the rpk path and type id of an "rpk path#0xID" reference</summary>
+    public static bool TryParseReference(string reference, out string rpkPath, out int typeId)
+    {
+        rpkPath = string.Empty;
+        typeId = 0;
+        var hash = reference.LastIndexOf("#0x", StringComparison.Ordinal);
+        if (hash < 0 || !int.TryParse(reference[(hash + 3)..], System.Globalization.NumberStyles.HexNumber, null, out typeId)) return false;
+
+        rpkPath = reference[..hash];
+        return true;
+    }
+
     /// <summary>Full path of the file behind a mesh/texture/sound id, null if the id or the file is missing</summary>
     public string? SourceFile(SlrrRpk rpk, int id)
     {

@@ -7235,7 +7235,7 @@
           "position": [
             0.0,
             0.039000005,
-            -0.004
+            -0.114
           ],
           "rotation": [
             0.0,
@@ -7246,7 +7246,47 @@
           "attaches_to": [],
           "compatible_with": [],
           "takes": [
-            "carb:2x4"
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 301,
+          "name": "intake_manifold_mixture_IN",
+          "position": [
+            0.0,
+            0.039000005,
+            0.106
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "carb:4bbl"
+          ]
+        },
+        {
+          "id": 311,
+          "name": "air cleaner over the carburettors",
+          "position": [
+            -0.043,
+            0.14700001,
+            -0.044
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "damage_mode": null,
+          "attaches_to": [],
+          "compatible_with": [],
+          "takes": [
+            "air:2x4"
           ]
         }
       ],
