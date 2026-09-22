@@ -10,8 +10,6 @@ public sealed class CornerParts
     public PartInstance? Brake { get; set; }
     public PartInstance? Spring { get; set; }
     public PartInstance? Shock { get; set; }
-
-    public IEnumerable<PartInstance> All => new[] { Rim, Tyre, Brake, Spring, Shock }.Where(p => p != null)!;
 }
 
 /// <summary>
@@ -33,6 +31,12 @@ public static class RunningGear
     public static int SpringSlot(int corner) => 311 + corner;
 
     public static bool IsFront(int corner) => corner < 2;
+
+    /// <summary>Whether a car slot is one the rims go on</summary>
+    public static bool IsWheelSlot(int carSlot) => carSlot >= 101 && carSlot < 101 + Corners;
+
+    /// <summary>The rims on the car's wheel slots</summary>
+    public static IEnumerable<PartInstance> Rims(List<PartInstance> carParts) => carParts.Where(p => IsWheelSlot(p.ParentSlot));
 
     /// <summary>The corner a car slot belongs to, -1 for slots that are not running gear</summary>
     public static int CornerOf(int carSlot) => carSlot switch
@@ -82,7 +86,7 @@ public static class RunningGear
             if (corner < 0) continue;
 
             var slot = part.ParentSlot;
-            if (slot == WheelSlot(corner))
+            if (IsWheelSlot(slot))
             {
                 corners[corner].Rim = part;
                 corners[corner].Tyre = part.Children.FirstOrDefault(c => c.ParentSlot == TyreSlotOnRim);
@@ -94,8 +98,6 @@ public static class RunningGear
 
         return corners;
     }
-
-    public static bool HasAny(List<PartInstance> carParts) => carParts.Any(p => CornerOf(p.ParentSlot) >= 0);
 
     // ----- what the parts come to, in the scripts' formulas -----
 

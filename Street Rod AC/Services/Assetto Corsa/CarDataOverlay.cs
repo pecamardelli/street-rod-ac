@@ -24,6 +24,10 @@ namespace Street_Rod_AC.Services
         private readonly string _keepPath;
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("CarData");
 
+        // Cars changed since the last restore: a manifest on disk without an entry here is what an earlier
+        // race left behind, not this one's
+        private readonly HashSet<string> _appliedNow = new(StringComparer.OrdinalIgnoreCase);
+
         public CarDataOverlay() : this(AppSettings.Instance.CarsPath,
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StreetRodAC", "AcRestore"))
         {
@@ -67,15 +71,22 @@ namespace Street_Rod_AC.Services
 
         /// <summary>
         /// Writes the files into the car's data, keeping the originals. False when the car's data is already
-        /// changed (a race with two cars of the same model: the first set stays).
+        /// changed for this race (two cars of the same model: the first set stays).
         /// </summary>
         public bool Apply(string carId, IReadOnlyDictionary<string, string> files)
         {
             if (files.Count == 0) return true;
-            if (IsApplied(carId))
+            if (_appliedNow.Contains(carId))
             {
                 _logger.Warning("{Car} already has changed data: leaving it as it is", carId);
                 return false;
+            }
+
+            // What an earlier race could not put back goes back before anything else goes in
+            if (IsApplied(carId))
+            {
+                _logger.Warning("{Car} still had changed data from an earlier race: putting it back first", carId);
+                Restore(carId);
             }
 
             var carDirectory = Path.Combine(_carsPath, carId);
@@ -115,6 +126,7 @@ namespace Street_Rod_AC.Services
                 File.WriteAllText(Path.Combine(keep, ManifestFile), JsonConvert.SerializeObject(manifest, Formatting.Indented));
             }
 
+            _appliedNow.Add(carId);
             foreach (var (name, content) in files) File.WriteAllText(Path.Combine(dataDirectory, name), content, Encoding.Latin1);
 
             _logger.Information("{Car}: {Count} data file(s) changed for the race: {Files}", carId, files.Count, string.Join(", ", files.Keys));
@@ -149,10 +161,14 @@ namespace Street_Rod_AC.Services
             }
 
             Directory.Delete(keep, true);
+            _appliedNow.Remove(carId);
             return true;
         }
 
-        /// <summary>Puts every car back; at start-up this undoes what a crash left behind</summary>
+        /// <summary>
+        /// Puts every car back; at start-up this undoes what a crash left behind. A car that cannot be put back
+        /// keeps its manifest, and the next Apply to it tries again first.
+        /// </summary>
         public int RestoreAll()
         {
             var restored = 0;
@@ -168,6 +184,7 @@ namespace Street_Rod_AC.Services
                 }
             }
 
+            _appliedNow.Clear();
             return restored;
         }
     }

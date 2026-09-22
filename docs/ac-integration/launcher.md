@@ -68,8 +68,10 @@ opponent's parts into data files (see `docs/systems/parts-system.md`, "Assetto C
 `LaunchIntent.CarData`, and `CarDataOverlay` puts them into `content\cars\<car>\data` after the race config and
 before `acs.exe`: originals kept under `%APPDATA%\StreetRodAC\AcRestore` with a manifest first, then the change.
 A packed car (`data.acd` only) is unpacked for the race and the folder removed after. `RestoreAll` runs in the
-launcher's `finally` and again at start-up (a crash leaves a manifest behind). Two cars of one model share a folder:
-the first applied stays. A player's car with a problem (no engine that runs, a missing wheel) is stopped in the diner.
+launcher's `finally` and again at start-up (a crash leaves a manifest behind); a manifest that could not be restored is
+put back before that car's data is changed again. Two cars of one model share a folder: the diner prepares only the
+player's and the opponent drives it. A player's car with a problem (no engine that runs, a missing wheel) is stopped in
+the diner.
 
 ## Key Services
 

@@ -28,8 +28,6 @@ public sealed class IniText
     /// <summary>Section names in order, repeated where they occur more than once</summary>
     public IEnumerable<string> Sections => _lines.Select(l => Header.Match(l)).Where(m => m.Success).Select(m => m.Groups["name"].Value);
 
-    public int Occurrences(string section) => Sections.Count(s => s == section);
-
     public string? Get(string section, string key, int occurrence = 0)
     {
         var (start, end) = Find(section, occurrence);
@@ -94,10 +92,12 @@ public sealed class IniText
     public void RemoveKey(string section, string key)
     {
         var (start, end) = Find(section);
-        Changed = true;
         for (var i = end - 1; i > start && start >= 0; i--)
         {
-            if (KeyOf(_lines[i]) == key) _lines.RemoveAt(i);
+            if (KeyOf(_lines[i]) != key) continue;
+
+            _lines.RemoveAt(i);
+            Changed = true;
         }
     }
 

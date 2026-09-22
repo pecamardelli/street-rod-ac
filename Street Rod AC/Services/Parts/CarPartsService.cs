@@ -97,12 +97,11 @@ namespace Street_Rod_AC.Services.Parts
 
         public EngineReport? Evaluate(Car car) => IsAvailable && car.Engine is { } engine ? EngineFactory.Evaluate(Catalog, engine) : null;
 
+        // The index weighed every build when it put them on the dyno
         public double? FactoryEngineMass(Car car)
         {
             var definition = _catalogRepo.GetCar(car.DefinitionId);
-            var build = definition == null ? null : GetStockBuild(definition);
-            var tree = build == null ? null : PartTreeBuilder.BuildEngine(Catalog, build.Build);
-            return tree == null ? null : EngineEvaluator.Evaluate(Catalog, tree).Mass;
+            return definition == null ? null : GetStockBuild(definition)?.MassKg;
         }
 
         public AcCarSpecs? Specs(string carDefinitionId) => _specs.GetOrAdd(carDefinitionId, id =>

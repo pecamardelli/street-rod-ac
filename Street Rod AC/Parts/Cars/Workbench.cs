@@ -35,7 +35,7 @@ public static class Workbench
         // corner. A tyre goes on a mounted rim it fits (same diameter, a rim width the tyre takes).
         if (looseGroup == PartKinds.Tyres)
         {
-            foreach (var rim in carParts.Where(p => RunningGear.CornerOf(p.ParentSlot) >= 0 && p.ParentSlot == RunningGear.WheelSlot(RunningGear.CornerOf(p.ParentSlot))))
+            foreach (var rim in RunningGear.Rims(carParts))
             {
                 if (rim.Children.Any(c => c.ParentSlot == RunningGear.TyreSlotOnRim)) continue;
                 if (catalog.Get(rim.DefinitionId) is { } rimDefinition && RunningGear.TyreFitsRim(looseDefinition, rimDefinition))

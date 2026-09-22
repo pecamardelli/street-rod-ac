@@ -34,7 +34,7 @@ namespace Street_Rod_AC.Screens.Diner
         public RelayCommand GarageCommand { get; }
         public RelayCommand<OpponentDisplayViewModel> SelectOpponentCommand { get; }
         public RelayCommand<TrackCardViewModel> SelectTrackCommand { get; }
-        public RelayCommand ChallengeCommand { get; }
+        public AsyncRelayCommand ChallengeCommand { get; }
 
         private ObservableCollection<OpponentDisplayViewModel> _opponents;
         public ObservableCollection<OpponentDisplayViewModel> Opponents
@@ -261,7 +261,8 @@ namespace Street_Rod_AC.Screens.Diner
             GarageCommand = new RelayCommand(OnGarage);
             SelectOpponentCommand = new RelayCommand<OpponentDisplayViewModel>(OnSelectOpponent);
             SelectTrackCommand = new RelayCommand<TrackCardViewModel>(OnSelectTrack);
-            ChallengeCommand = new RelayCommand(OnChallenge, CanChallenge);
+            // Async: preparing the cars' data takes a moment, and a second click meanwhile must not start a second race
+            ChallengeCommand = new AsyncRelayCommand(OnChallenge, CanChallenge);
 
             _opponents = new ObservableCollection<OpponentDisplayViewModel>();
 
@@ -650,7 +651,7 @@ namespace Street_Rod_AC.Screens.Diner
                    _gameState.Player.SelectedCarInstanceId != null;
         }
 
-        private async void OnChallenge()
+        private async Task OnChallenge()
         {
             if (SelectedOpponent == null)
             {
@@ -744,12 +745,22 @@ namespace Street_Rod_AC.Screens.Diner
 
             var opponentCarDef = SelectedOpponent.CarDefinition;
 
-            // The opponent's car races on its own parts too; one that does not run is left as its author made it
-            var opponentData = await PrepareCarData(app, opponentCar);
-            if (opponentData is { CanDrive: false })
+            // The opponent's car races on its own parts too; one that does not run is left as its author made it.
+            // Two cars of one model share one data folder, so the opponent drives the player's data (see the
+            // parts system doc, "Not done yet") and its own pass would be for nothing.
+            Street_Rod_AC.Services.Race.RaceCarData? opponentData = null;
+            if (opponentCar.DefinitionId == playerCar.DefinitionId)
             {
-                _logger.Warning("{Opponent}'s car would not run ({Problem}): it races as its author made it", setup.Opponent.Name, opponentData.Problem);
-                opponentData = null;
+                _logger.Warning("{Opponent} drives the same model as the player: it races on the player's data", setup.Opponent.Name);
+            }
+            else
+            {
+                opponentData = await PrepareCarData(app, opponentCar);
+                if (opponentData is { CanDrive: false })
+                {
+                    _logger.Warning("{Opponent}'s car would not run ({Problem}): it races as its author made it", setup.Opponent.Name, opponentData.Problem);
+                    opponentData = null;
+                }
             }
 
             // Launch the race immediately

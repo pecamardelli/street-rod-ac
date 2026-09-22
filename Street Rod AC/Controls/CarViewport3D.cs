@@ -64,6 +64,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private System.Windows.Point _lastMouse;
     private bool _isDragging;
     private bool _isLoadingParts;
+    private bool _applyPartsQueued;
     private string? _partsCarDirectory;
     private InstalledPart? _partsEngine;
     private IReadOnlyList<CarPart>? _partsGear;
@@ -210,7 +211,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     public static readonly DependencyProperty PartsVisibleProperty = DependencyProperty.Register(
         nameof(PartsVisible), typeof(bool), typeof(CarViewport3D),
-        new PropertyMetadata(false, (d, _) => ((CarViewport3D)d).ApplyParts()));
+        new PropertyMetadata(false, (d, _) => ((CarViewport3D)d).QueueApplyParts()));
 
     /// <summary>X-ray view: the car fades to a shell and its parts show in their places</summary>
     public bool PartsVisible
@@ -221,7 +222,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     public static readonly DependencyProperty PartsCatalogProperty = DependencyProperty.Register(
         nameof(PartsCatalog), typeof(PartsCatalog), typeof(CarViewport3D),
-        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).ApplyParts()));
+        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).QueueApplyParts()));
 
     /// <summary>Where the part models come from; without it the parts view stays off</summary>
     public PartsCatalog? PartsCatalog
@@ -232,7 +233,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     public static readonly DependencyProperty EngineProperty = DependencyProperty.Register(
         nameof(Engine), typeof(InstalledPart), typeof(CarViewport3D),
-        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).ApplyParts()));
+        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).QueueApplyParts()));
 
     /// <summary>
     /// The car's engine block with everything that is on it; null for an empty engine bay.
@@ -246,7 +247,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     public static readonly DependencyProperty GearProperty = DependencyProperty.Register(
         nameof(Gear), typeof(IReadOnlyList<CarPart>), typeof(CarViewport3D),
-        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).ApplyParts()));
+        new PropertyMetadata(null, (d, _) => ((CarViewport3D)d).QueueApplyParts()));
 
     /// <summary>What sits on the car's wheel slots, each with what is on it; null or empty for bare hubs</summary>
     public IReadOnlyList<CarPart>? Gear
@@ -466,6 +467,22 @@ public class CarViewport3D : System.Windows.Controls.Grid
         {
             _renderer.AutoAdjustTarget = true;
         }
+    }
+
+    /// <summary>
+    /// The bindings land one at a time (the catalog, then the engine, then the gear, each a change of its own),
+    /// so the layout waits for the lot and is built once
+    /// </summary>
+    private void QueueApplyParts()
+    {
+        if (_applyPartsQueued) return;
+
+        _applyPartsQueued = true;
+        Dispatcher.InvokeAsync(() =>
+        {
+            _applyPartsQueued = false;
+            ApplyParts();
+        });
     }
 
     private async void ApplyParts()

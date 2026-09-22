@@ -90,8 +90,7 @@ namespace Street_Rod_AC.Services.Parts
             }
 
             // The running gear goes on the car itself; a tyre on a rim it fits
-            var rims = car.Parts.Where(p => RunningGear.CornerOf(p.ParentSlot) >= 0 && p.ParentSlot == RunningGear.WheelSlot(RunningGear.CornerOf(p.ParentSlot)))
-                .Select(p => catalog.Get(p.DefinitionId)).Where(r => r != null).ToList();
+            var rims = RunningGear.Rims(car.Parts).Select(p => catalog.Get(p.DefinitionId)).Where(r => r != null).ToList();
             foreach (var part in Assortment)
             {
                 var group = PartKinds.GroupOf(part);

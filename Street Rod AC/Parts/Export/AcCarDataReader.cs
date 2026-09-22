@@ -13,34 +13,27 @@ public sealed class AcCarData
 
     private readonly Dictionary<string, byte[]>? _packed;
 
-    private AcCarData(string carDirectory, string? dataDirectory, Dictionary<string, byte[]>? packed)
+    private AcCarData(string? dataDirectory, Dictionary<string, byte[]>? packed)
     {
-        CarDirectory = carDirectory;
         DataDirectory = dataDirectory;
         _packed = packed;
     }
 
-    public string CarDirectory { get; }
-
     /// <summary>The unpacked data folder the car runs on; null when it runs on data.acd</summary>
     public string? DataDirectory { get; }
-
-    public bool IsPacked => DataDirectory == null;
 
     public static AcCarData Open(string carDirectory)
     {
         var folder = Path.Combine(carDirectory, DataFolder);
-        if (Directory.Exists(folder)) return new AcCarData(carDirectory, folder, null);
+        if (Directory.Exists(folder)) return new AcCarData(folder, null);
 
         var acd = Path.Combine(carDirectory, AcdFile.FileName);
         if (!File.Exists(acd)) throw new FileNotFoundException($"{carDirectory} has neither a data folder nor {AcdFile.FileName}", acd);
 
         var packed = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
         foreach (var (name, content) in AcdFile.Read(acd)) packed[name] = content;
-        return new AcCarData(carDirectory, null, packed);
+        return new AcCarData(null, packed);
     }
-
-    public bool Contains(string name) => _packed?.ContainsKey(name) ?? File.Exists(Path.Combine(DataDirectory!, name));
 
     /// <returns>Text of a data file, null when the car has no such file</returns>
     public string? ReadText(string name) => ReadBytes(name) is { } bytes ? Encoding.Latin1.GetString(bytes) : null;
@@ -52,9 +45,6 @@ public sealed class AcCarData
         var path = Path.Combine(DataDirectory!, name);
         return File.Exists(path) ? File.ReadAllBytes(path) : null;
     }
-
-    /// <summary>Every file of the data, packed or not</summary>
-    public IEnumerable<string> Names => _packed?.Keys ?? Directory.EnumerateFiles(DataDirectory!).Select(Path.GetFileName)!;
 }
 
 /// <summary>Reads the physics data of an Assetto Corsa car, whether it ships as a data folder or packed as data.acd</summary>

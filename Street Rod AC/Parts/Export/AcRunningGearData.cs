@@ -42,7 +42,12 @@ public static class AcRunningGearData
         if (readFile(TyresFile) is { } tyres) Keep(TyresFile, Tyres(new IniText(tyres), front, rear));
         if (readFile(BrakesFile) is { } brakes) Keep(BrakesFile, Brakes(new IniText(brakes), front, rear));
         if (readFile(SuspensionsFile) is { } suspensions) Keep(SuspensionsFile, Suspensions(new IniText(suspensions), front, rear));
-        if (readFile(CarFile) is { } car && Math.Abs(front.MassDelta + rear.MassDelta) > 0.05) Keep(CarFile, Mass(new IniText(car), front.MassDelta + rear.MassDelta));
+        if (readFile(CarFile) is { } car)
+        {
+            var ini = new IniText(car);
+            AcCarIni.AddMass(ini, front.MassDelta + rear.MassDelta);
+            Keep(CarFile, ini);
+        }
 
         return files;
     }
@@ -166,7 +171,8 @@ public static class AcRunningGearData
     {
         foreach (var (section, change) in new[] { ("FRONT", front), ("REAR", rear) })
         {
-            if (!ini.Scale(section, "SPRING_RATE", change.SpringRate, "0")) ini.Scale(section + "_COILOVER_0", "RATE", change.SpringRate, "0");
+            var (rateSection, rateKey) = AcCarIni.SpringRateKey(ini, section);
+            ini.Scale(rateSection, rateKey, change.SpringRate, "0");
             ini.Scale(section, "DAMP_BUMP", change.Bump, "0");
             ini.Scale(section, "DAMP_FAST_BUMP", change.Bump, "0");
             ini.Scale(section, "DAMP_REBOUND", change.Rebound, "0");
@@ -175,12 +181,6 @@ public static class AcRunningGearData
             if (ini.GetNumber(section, "HUB_MASS") is { } hub && Math.Abs(change.HubMassDelta) > 0.05) ini.Set(section, "HUB_MASS", Math.Max(hub * 0.5, hub + change.HubMassDelta), "0.0");
         }
 
-        return ini;
-    }
-
-    private static IniText Mass(IniText ini, double delta)
-    {
-        if (ini.GetNumber("BASIC", "TOTALMASS") is { } mass) ini.Set("BASIC", "TOTALMASS", Math.Max(mass * 0.5, mass + delta), "0");
         return ini;
     }
 }

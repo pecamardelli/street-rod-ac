@@ -53,15 +53,14 @@ public sealed record AcCarSpecs
 
         AcAxleSpecs Axle(string section, bool front)
         {
-            // A coil-over suspension keeps its rate on the coil-over, the classic kinds on the axle section
-            var rate = suspensions.GetNumber(section, "SPRING_RATE") ?? suspensions.GetNumber(section + "_COILOVER_0", "RATE") ?? 0;
+            var (rateSection, rateKey) = AcCarIni.SpringRateKey(suspensions, section);
             return new AcAxleSpecs
             {
                 TyreWidth = tyres.GetNumber(section, "WIDTH") ?? 0,
                 TyreRadius = tyres.GetNumber(section, "RADIUS") ?? 0,
                 RimRadius = tyres.GetNumber(section, "RIM_RADIUS") ?? 0,
                 BrakeTorque = brakeTorque * (front ? brakeShare : 1 - brakeShare),
-                SpringRate = rate,
+                SpringRate = suspensions.GetNumber(rateSection, rateKey) ?? 0,
                 DampBump = suspensions.GetNumber(section, "DAMP_BUMP") ?? 0,
                 DampRebound = suspensions.GetNumber(section, "DAMP_REBOUND") ?? 0,
                 CornerLoad = mass * (front ? frontShare : 1 - frontShare) / 2

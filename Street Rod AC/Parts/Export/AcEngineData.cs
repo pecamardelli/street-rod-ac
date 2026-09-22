@@ -90,9 +90,15 @@ public static class AcEngineData
         files[DrivetrainFile] = drivetrain.ToString();
 
         if (readFile(AiFile) is { } ai) files[AiFile] = Ai(new IniText(ai), up, down);
-        if (options.ReplaceGearbox && report.GearRatios.Count > 0 && readFile(SetupFile) is { } setup) files[SetupFile] = Setup(new IniText(setup));
-        if (options.FactoryEngineMass is { } factoryMass && report.Mass > 0 && Math.Abs(report.Mass - factoryMass) >= 0.5 && readFile(CarFile) is { } car)
-            files[CarFile] = Mass(new IniText(car), report.Mass - factoryMass);
+        if (options.ReplaceGearbox && report.GearRatios.Count > 0 && readFile(SetupFile) is { } setup && Setup(new IniText(setup)) is { Changed: true } trimmed)
+            files[SetupFile] = trimmed.ToString();
+        // The car weighs what it did plus what the engine weighs more than the one it came with
+        if (options.FactoryEngineMass is { } factoryMass && report.Mass > 0 && readFile(CarFile) is { } car)
+        {
+            var ini = new IniText(car);
+            AcCarIni.AddMass(ini, report.Mass - factoryMass);
+            if (ini.Changed) files[CarFile] = ini.ToString();
+        }
 
         return files;
     }
@@ -227,19 +233,12 @@ public static class AcEngineData
         return ini.ToString();
     }
 
-    /// <summary>Ratio choices of the car's setup screen would override the transmission's gears</summary>
-    private static string Setup(IniText ini)
+    /// <summary>Ratio choices of the car's setup screen would override the transmission's gears; a setup without any is left alone</summary>
+    private static IniText Setup(IniText ini)
     {
         foreach (var section in ini.Sections.Where(s => s.StartsWith("GEAR_", StringComparison.Ordinal) || s == "FINAL_GEAR_RATIO").Distinct().ToList())
             ini.RemoveSection(section);
-        return ini.ToString();
-    }
-
-    /// <summary>The car weighs what it did plus what the engine weighs more than the one it came with</summary>
-    private static string Mass(IniText ini, double delta)
-    {
-        if (Math.Abs(delta) >= 0.5 && ini.GetNumber("BASIC", "TOTALMASS") is { } mass) ini.Set("BASIC", "TOTALMASS", Math.Max(mass * 0.5, mass + delta), "0");
-        return ini.ToString();
+        return ini;
     }
 
     /// <summary>
