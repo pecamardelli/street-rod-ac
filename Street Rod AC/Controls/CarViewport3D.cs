@@ -629,19 +629,13 @@ public class CarViewport3D : System.Windows.Controls.Grid
         var worldDelta = System.Numerics.Vector3.TransformNormal(new System.Numerics.Vector3(right, up, -forward), engineAxes);
 
         // The part hangs so that its own slot lands on the pad: moving its slot moves the part the other way
-        var (definition, slotId, frame, sign) = _placementTarget == PlacementTarget.Part
-            ? (part.Definition, part.OwnSlot, partWorld, -1f)
-            : (parent.Definition, part.ParentSlot, parentWorld, 1f);
-        var slot = definition.Slots.FirstOrDefault(s => s.Id == slotId);
-        if (slot == null) return;
-
+        var (definition, slotId) = PlacedSlot(part, parent);
+        var (frame, sign) = _placementTarget == PlacementTarget.Part ? (partWorld, -1f) : (parentWorld, 1f);
         frame.Translation = System.Numerics.Vector3.Zero;
         if (!System.Numerics.Matrix4x4.Invert(frame, out var toLocal)) return;
         var local = System.Numerics.Vector3.TransformNormal(worldDelta, toLocal) * sign;
 
-        catalog.ShiftSlot(definition, slot, new[] { local.X, local.Y, local.Z });
-        Relayout();
-        ReportPlacement();
+        Shift(catalog, definition, slotId, new[] { local.X, local.Y, local.Z });
     }
 
     /// <summary>Takes the slot being placed back to where the packs put it</summary>
@@ -650,12 +644,20 @@ public class CarViewport3D : System.Windows.Controls.Grid
         var catalog = PartsCatalog;
         if (_placing is not { Parent: { } parent } part || catalog == null) return;
 
-        var (definition, slotId) = _placementTarget == PlacementTarget.Part ? (part.Definition, part.OwnSlot) : (parent.Definition, part.ParentSlot);
-        var slot = definition.Slots.FirstOrDefault(s => s.Id == slotId);
-        if (slot == null) return;
-
+        var (definition, slotId) = PlacedSlot(part, parent);
         var offset = catalog.Shifts.Of(definition.Id, slotId);
-        catalog.ShiftSlot(definition, slot, new[] { -offset[0], -offset[1], -offset[2] });
+        Shift(catalog, definition, slotId, new[] { -offset[0], -offset[1], -offset[2] });
+    }
+
+    /// <summary>The slot a nudge moves: the part's own mounting slot, or the pad of its parent it sits on</summary>
+    private (PartDefinition Definition, int SlotId) PlacedSlot(InstalledPart part, InstalledPart parent) =>
+        _placementTarget == PlacementTarget.Part ? (part.Definition, part.OwnSlot) : (parent.Definition, part.ParentSlot);
+
+    private void Shift(PartsCatalog catalog, PartDefinition definition, int slotId, float[] delta)
+    {
+        if (!catalog.ShiftSlot(definition, slotId, delta))
+            _logger.Warning("Slot {Slot} of {Part} moved in the garage, but the move could not be written to {File}", slotId, definition.Id, catalog.Shifts.Path);
+
         Relayout();
         ReportPlacement();
     }
@@ -669,7 +671,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
             return;
         }
 
-        var (definition, slotId) = _placementTarget == PlacementTarget.Part ? (part.Definition, part.OwnSlot) : (parent.Definition, part.ParentSlot);
+        var (definition, slotId) = PlacedSlot(part, parent);
         var offset = catalog.Shifts.Of(definition.Id, slotId);
         var what = _placementTarget == PlacementTarget.Part ? "the part's own slot" : "the pad it sits on";
         PlacementChanged?.Invoke(
@@ -688,23 +690,27 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
         var placed = CarPartsLayout.Build(catalog, anchors, Engine);
         var worlds = placed.Where(p => p.Source != null).ToDictionary(p => p.Source!, p => p.World);
+        var moves = new List<(int Node, SlimDX.Matrix World)>();
         for (var i = 0; i < _partNodes.Count; i++)
         {
-            if (_partNodes[i].Source is { } source && worlds.TryGetValue(source, out var world))
+            if (_partNodes[i].Source is { } source && worlds.TryGetValue(source, out var m))
             {
-                var m = world;
-                renderer.PlacePart(i, new SlimDX.Matrix
+                moves.Add((i, new SlimDX.Matrix
                 {
                     M11 = m.M11, M12 = m.M12, M13 = m.M13, M14 = m.M14,
                     M21 = m.M21, M22 = m.M22, M23 = m.M23, M24 = m.M24,
                     M31 = m.M31, M32 = m.M32, M33 = m.M33, M34 = m.M34,
                     M41 = m.M41, M42 = m.M42, M43 = m.M43, M44 = m.M44
-                });
+                }));
             }
         }
 
+        renderer.PlaceParts(moves);
         _partWorlds = worlds;
         _animateUntil = DateTime.Now + AnimationWindow;
+
+        // The places a loose part could go were worked out from where its parent was
+        if (_shownCandidates is { Count: > 0 }) ApplyCandidates();
     }
 
     #endregion

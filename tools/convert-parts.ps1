@@ -191,9 +191,10 @@ $pads = @(
     "engines/generic/Supercharger_Weiand:9=carb:4bbl*2@0.22@-0.043/0.108/-0.040@air:2x4"
     "engines/chrysler/Intake_manifold_small_SIXPACK:7=carb:2bbl*3@0.122@0.003/0.073/-0.006@air:3x2"
     "engines/chrysler/Intake_manifold_big_SIXPACK_*:7=carb:2bbl*3@0.122@0.003/0.073/-0.006@air:3x2"
-    # Hemi crossrams take their own carburettors (whose fuel figures are the set's) and any four-barrel
-    "engines/chrysler/Intake_manifold_HEMI_Crossram*:7=carb:crossram+carb:4bbl*2@0.20@-0.043/0.146/-0.040@air:crossram"
-    "engines/chrysler/Intake_manifold_big_Crossram:7=carb:crossram+carb:4bbl*2@0.15@-0.043/0.146/-0.040@air:crossram"
+    # Hemi crossrams take their own carburettors (whose fuel figures are the set's) and any four-barrel; their pads
+    # come down to the flange with the rest (see $shift), so the air slot is 6.2 cm further up from the pad
+    "engines/chrysler/Intake_manifold_HEMI_Crossram*:7=carb:crossram+carb:4bbl*2@0.20@-0.043/0.208/-0.040@air:crossram"
+    "engines/chrysler/Intake_manifold_big_Crossram:7=carb:crossram+carb:4bbl*2@0.15@-0.043/0.208/-0.040@air:crossram"
     "engines/gm/Edelbrock_Dual_Quad_intake_manifold*:7=carb:4bbl*2@0.22@-0.043/0.108/-0.040@air:2x4"
     "engines/generic/Weiand_8_71_supercharger:9=carb:4bbl*2@0.22@-0.043/0.108/-0.040@air:2x4"
     "engines/generic/Holley_2x4_charger:9=carb:4bbl*2@0.22@-0.043/0.108/-0.040@air:2x4"
@@ -257,6 +258,15 @@ $fit = @(
     "engines/generic/Universal_blower_scoop:12=air:2x4"
     # The Chrysler 2-bbl's air horn only knows Chrysler's factory cleaners: it takes any single cleaner all the same
     "engines/generic/Carburetors_2BRL_HOLLEY:11=takes:air:single"
+    # The carburettors sliced out of sets are one carburettor each: their horns, which only the set's cleaner named
+    # (it sits over the row now), take a single cleaner like any other carburettor's; the game also reads the
+    # cleaner over the row through a horn that takes air (PartScriptRuntime). Same for GM's lone 1050 cfm Dominator
+    "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY:11=takes:air:single"
+    "engines/generic/Carburetors_2x4BRL_King_Demon:11=takes:air:single"
+    "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack:11=takes:air:single"
+    "engines/generic/Universal_dual_4_barrel_carburetors*:11=takes:air:single"
+    "engines/generic/hardcore_1050cfm_carb:11=takes:air:single"
+    "engines/chrysler/Carburetors_2x4BRL_crossram_*:11=takes:air:single"
     # Roots blowers on any blower manifold (the drive belt stays the blower's own)
     "engines/generic/Supercharger_Weiand:7=blower:roots"
     "engines/generic/Weiand_8_71_supercharger:8=blower:roots"
@@ -272,8 +282,11 @@ $shift = @(
     # pads) put the carburettor slot 6.5 cm above the carburettor's base and the pad 6 cm above the flange; GM puts
     # both at the flange. Both sides of the Chrysler/Ford joint come down to the flange (nothing moves within the
     # pack). The borrowed Chrysler models carry Chrysler slot geometry, so they come down too; the crossram
-    # carburettors and their Hemi manifolds fit only each other and stay
+    # carburettors and their manifolds come down with them, since the crossram pads take any four-barrel ($pads)
     "engines/generic/Carburetors_*:10=0/-0.062/0"
+    "engines/chrysler/Carburetors_2x4BRL_crossram_*:10=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_HEMI_Crossram*:7=0/-0.062/0"
+    "engines/chrysler/Intake_manifold_big_Crossram:7=0/-0.062/0"
     "engines/generic/Holley_2brl_carb:10=0/-0.062/0"
     "engines/generic/Holley_4brl_carburator:10=0/-0.062/0"
     "engines/generic/hardcore_1050cfm_carb:10=0/-0.062/0"
@@ -331,5 +344,7 @@ $shift = @(
 # Slots nudged into place in the garage (F5 in the workbench) are kept in tools\slot_shifts.json for good. The game
 # writes them next to the content it runs on, which is a build folder: those files are folded in and taken away
 $absorb = @(Get-ChildItem (Join-Path $PSScriptRoot "..\Street Rod AC\bin") -Recurse -Filter slot_shifts.json -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }) -join ','
+# An empty argument is dropped on the way to the converter, which would then read --absorb as the pack filter
+$absorbArgs = if ($absorb) { @("--absorb", $absorb) } else { @() }
 
-& $Converter $Slrr $Output --notes $Notes --replace engines/Mopar=engines/chrysler --rename $rename --drop $drop --merge $merge --model $model --single $single --name $name --pads $pads --fit $fit --shift $shift --shifts (Join-Path $PSScriptRoot "slot_shifts.json") --absorb $absorb
+& $Converter $Slrr $Output --notes $Notes --replace engines/Mopar=engines/chrysler --rename $rename --drop $drop --merge $merge --model $model --single $single --name $name --pads $pads --fit $fit --shift $shift --shifts (Join-Path $PSScriptRoot "slot_shifts.json") @absorbArgs

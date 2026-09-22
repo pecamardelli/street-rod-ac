@@ -26,7 +26,8 @@ public static class SlrrKn5Slicer
             max = Math.Max(max, vertex.Position.Z);
         }
 
-        // The item kept is the middle one, or the rearmost of a pair: the one a build's first carburettor pad takes
+        // The item kept is the middle one, or the front one of a pair (the lower Z: parts look down +Z at the
+        // firewall), the same one whose pad keeps the split pad's id
         var centre = (min + max) / 2;
         var kept = (count - 1) / 2;
         var keptZ = centre + (kept - (count - 1) / 2f) * spacing;

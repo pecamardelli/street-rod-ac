@@ -268,6 +268,14 @@ public static class Program
                     renames.Add(new RenameRule(source[0].Trim(), selector, pair[1].Trim()));
                 }
             }
+            else if (args[i].StartsWith("--", StringComparison.Ordinal))
+            {
+                // An option nobody knows, or one whose value is missing (a shell drops an empty argument): taken as
+                // the pack filter it would convert nothing and say so only in the totals
+                Console.WriteLine($"Unknown option or missing value: {args[i]}");
+                positional.Clear();
+                break;
+            }
             else positional.Add(args[i]);
         }
 
@@ -278,7 +286,7 @@ public static class Program
                               "[--merge <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] " +
                               "[--model <part id pattern>=<part id>,...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] " +
                               "[--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] " +
-                              "[--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>]");
+                              "[--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>,...]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""Street Rod AC\Assets\Parts"" engines/Mopar  (the full run: tools\convert-parts.ps1)");
             return 1;
         }
@@ -287,6 +295,10 @@ public static class Program
         var scripts = new SlrrScriptEvaluator(game);
         var output = positional[1];
         var filter = positional.Count > 2 ? positional[2] : null;
+        // Stand-ins, fittings and repointed air cleaners are found among the parts converted in the run: with one pack
+        // converted, its pads take only what its own parts fit, and the other packs on disk are not brought in step
+        if (filter != null && (merges.Count > 0 || fits.Count > 0 || padRules.Count > 0 || modelRules.Count > 0))
+            Console.WriteLine($"Converting {filter} alone: what other packs fit on it (and it on them) is left out; run without a filter before the content ships");
 
         var partsRoot = Path.Combine(game.Root, PartsFolder);
         if (!Directory.Exists(partsRoot))
@@ -580,21 +592,32 @@ public static class Program
                 return 1;
             }
 
-            var kept = SlotShifts.Load(Path.GetDirectoryName(Path.GetFullPath(shiftsFile))!);
+            var keptFolder = Path.GetDirectoryName(Path.GetFullPath(shiftsFile))!;
+            var kept = SlotShifts.Load(keptFolder);
             var folded = 0;
-            foreach (var folder in absorb.Select(f => Path.GetDirectoryName(Path.GetFullPath(f))!).Prepend(output).Distinct(StringComparer.OrdinalIgnoreCase))
+            var absorbed = new List<string>();
+            // The kept file itself is not one of the game's: folding it into itself would double it and take it away
+            foreach (var folder in absorb.Select(f => Path.GetDirectoryName(Path.GetFullPath(f))!).Prepend(Path.TrimEndingDirectorySeparator(Path.GetFullPath(output)))
+                         .Distinct(StringComparer.OrdinalIgnoreCase).Where(f => !f.Equals(keptFolder, StringComparison.OrdinalIgnoreCase)))
             {
                 var fresh = SlotShifts.Load(folder);
                 if (fresh.IsEmpty) continue;
 
                 foreach (var (partId, slotId, offset) in fresh.All) kept.Add(partId, slotId, offset, save: false);
                 folded += fresh.All.Count();
-                File.Delete(fresh.Path!);
+                absorbed.Add(fresh.Path!);
             }
 
             if (folded > 0)
             {
-                kept.Save();
+                // The game's files go only once what they held is safely in the kept one
+                if (!kept.Save())
+                {
+                    Console.WriteLine($"Could not write {shiftsFile}: the game's slot shifts stay where they are");
+                    return 1;
+                }
+
+                foreach (var file in absorbed) File.Delete(file);
                 Console.WriteLine($"  {folded} slot shifts from the garage folded into {shiftsFile}");
             }
 
@@ -885,9 +908,9 @@ public static class Program
 
     /// <summary>
     /// A pad that took a set of carburettors as one part becomes one pad per carburettor, in a row along the engine
-    /// axis about where the pad was (the pad keeps its id for the middle one, or the rear one of a pair: the pad the
-    /// manifold script reads), plus a slot over the row for an air cleaner that spans the set, where the set's own
-    /// air-horn slot was.
+    /// axis about where the pad was (the pad keeps its id for the middle one, or the front one of a pair, the lower
+    /// Z: the pad the manifold script reads, and the item <see cref="SlrrKn5Slicer"/> keeps), plus a slot over the
+    /// row for an air cleaner that spans the set, where the set's own air-horn slot was.
     /// </summary>
     private static void SplitPads(List<PadRule> rules, Dictionary<string, PartDefinition> definitions)
     {
@@ -999,20 +1022,24 @@ public static class Program
             var fitted = 0;
             foreach (var definition in definitions.Values.Where(d => rule.Pattern.IsMatch(d.Id)))
             {
-                var slot = definition.Slots.FirstOrDefault(s => s.Id == rule.Slot);
-                if (slot == null)
+                // A cfg may declare a slot id twice; every one of them is the slot
+                var matching = definition.Slots.Where(s => s.Id == rule.Slot).ToList();
+                if (matching.Count == 0)
                 {
                     Console.WriteLine($"    {FitOption} {rule.Pattern}: {definition.Id} has no slot {rule.Slot}");
                     continue;
                 }
 
                 // "takes:fitting" marks a slot that takes the fitting: for pads no fitted part of their own pack names
-                foreach (var fitting in rule.Fittings)
+                foreach (var slot in matching)
                 {
-                    var takes = fitting.StartsWith(TakesPrefix, StringComparison.OrdinalIgnoreCase);
-                    var list = takes ? slot.Takes : slot.Fits;
-                    var name = takes ? fitting[TakesPrefix.Length..] : fitting;
-                    if (!list.Contains(name, StringComparer.OrdinalIgnoreCase)) list.Add(name);
+                    foreach (var fitting in rule.Fittings)
+                    {
+                        var takes = fitting.StartsWith(TakesPrefix, StringComparison.OrdinalIgnoreCase);
+                        var list = takes ? slot.Takes : slot.Fits;
+                        var name = takes ? fitting[TakesPrefix.Length..] : fitting;
+                        if (!list.Contains(name, StringComparer.OrdinalIgnoreCase)) list.Add(name);
+                    }
                 }
 
                 fitted++;
@@ -1021,7 +1048,6 @@ public static class Program
             if (fitted == 0) Console.WriteLine($"    {FitOption} {rule.Pattern}: no part has it");
         }
 
-        // A cfg may declare a slot id twice; every one of them is the slot
         var slots = definitions.Values
             .SelectMany(d => d.Slots.Select(s => (Part: d, Slot: s)))
             .ToLookup(e => (e.Part.Id.ToLowerInvariant(), e.Slot.Id), e => e.Slot);
@@ -1032,7 +1058,9 @@ public static class Program
             {
                 foreach (var other in slots[(reference.Part!.ToLowerInvariant(), reference.Slot)])
                 {
-                    // The fitted slot names the pad, or the pad names the fitted slot
+                    // The fitted slot names the pad, or the pad names the fitted slot. A slot that fits several
+                    // ways (an oval cleaner for dual quads and tri-powers both) says nothing about which one the
+                    // pad is: the two still mate by name, and the pad's own rules say what else it takes
                     Take(other, slot.Fits);
                     Take(slot, other.Fits);
                 }
@@ -1049,6 +1077,7 @@ public static class Program
 
         static void Take(PartSlot slot, List<string> fittings)
         {
+            if (fittings.Count != 1) return;
             foreach (var fitting in fittings.Where(f => !slot.Takes.Contains(f, StringComparer.OrdinalIgnoreCase))) slot.Takes.Add(fitting);
         }
 

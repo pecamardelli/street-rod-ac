@@ -33,7 +33,7 @@ private.
 
 ## Converter (`tools/SlrrPartsConverter`)
 
-`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>[*<count>],...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] [--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] [--name <part id pattern>=<display name>,...]`
+`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>[*<count>],...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] [--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] [--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>,...]`
 
 The content in use is made with `tools/convert-parts.ps1` (both Chrysler packs are installed in the SLRR folder, see
 "Replacing a pack"). It comes out as:
@@ -122,8 +122,8 @@ flange; GM's stock single carburettors are modelled 18 cm ahead of their origin 
 18 cm back to match. Untreated, a GM carburettor rode 7 cm above a Chrysler pad and a Chrysler one sank 7 cm into a
 GM manifold. `--shift` moves a slot in its part's space; both sides of a pack's joint move by the same amount, so
 nothing moves within the pack: Chrysler/Ford carburettor slots and pads come down to the flange (borrowed Chrysler
-models carry Chrysler geometry and come down too; crossram carburettors and Hemi crossram manifolds fit only each
-other and stay), GM's stock single carburettors and pads go forward to the centre. Blowers needed nothing. Checked
+models carry Chrysler geometry and come down too, and so do the crossram carburettors and manifolds, since the
+crossram pads take any four-barrel), GM's stock single carburettors and pads go forward to the centre. Blowers needed nothing. Checked
 with harness close-ups: a Chrysler Holley and Edelbrock cleaner on a GM 327, GM's stock carburettor with a K&N on a
 340, the Chrysler 2-bbl on GM's 2-bbl manifold, the borrowed-model Dominator with a Summit filter on a Hemi, a
 Summit scoop on a 340, the Chrysler Weiand on a GM 8-71 manifold and the GM one on a 440, Demon dual quads and the
@@ -192,11 +192,14 @@ The user wants one carburettor per part. So:
 - **Air cleaners over a row** (ovals, Six Pack cleaners, the Shaker, scoops for pairs) named the set's air-horn slot;
   the converter moves those lines onto slot 311 of every pad the set sat on (`Repoint`), and the aftermarket ones get
   `air:2x4`/`air:3x2` fittings that the 311 slots take. Single cleaners still sit on a carburettor's own horn
-  (`air:single`). GM's carburettor scripts *require* a cleaner on their own horn, so `PartScriptRuntime` answers
-  `partOnSlot(horn)` of a carburettor whose horn is empty with the part on its parent's slot 311: a carburettor in a
-  row breathes through the cleaner over the row. `SavedParts.BringUpToDate` tries a joint one part up when it no
-  longer holds on the same part, so a saved oval on a set moves over the manifold's row; the set itself becomes one
-  carburettor in a save (the other pads wait for the shop).
+  (`air:single`; the carburettors sliced out of sets, whose horns only the set's cleaner named, get it by rule). GM's
+  carburettor scripts *require* a cleaner on their own horn, so `PartScriptRuntime` answers `partOnSlot(horn)` of a
+  carburettor whose horn is empty with the part on its parent's slot 311: a carburettor in a row breathes through the
+  cleaner over the row. Only a horn (a slot that takes an `air:` fitting, `PartSlot.TakesAir`) is answered that way; a
+  nitrous slot stays empty. `SavedParts.BringUpToDate` looks at every joint on load, not only when an id changed (a
+  sliced set keeps its id and loses its horn's fit), and tries a joint one part up when it no longer holds on the
+  same part, so a saved oval on a set moves over the manifold's row; the set itself becomes one carburettor in a
+  save (the other pads wait for the shop).
 
 Checked: every build's power unchanged except the GTO 389 family (348 → 341 hp: GM's tri-power ran 12.5:1, its 2-bbl
 runs 12.0), one GM 427 build whose dual-quad set never found the tunnel ram's stand-in pad now runs (161 → 542 hp);

@@ -132,6 +132,16 @@ public class PartSlot
     /// </summary>
     public const int SharedAirSlot = 311;
 
+    /// <summary>
+    /// Fittings of air cleaners and scoops start with it ("air:single" on one carburettor's horn, "air:2x4" over a
+    /// row): a slot that takes one is an air horn
+    /// </summary>
+    public const string AirFittingPrefix = "air:";
+
+    /// <summary>Whether the slot is an air horn: it takes an air cleaner or scoop by a standard fitting</summary>
+    [JsonIgnore]
+    public bool TakesAir => Takes.Any(t => t.StartsWith(AirFittingPrefix, StringComparison.OrdinalIgnoreCase));
+
     [JsonProperty("id")]
     public int Id { get; set; }
 

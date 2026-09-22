@@ -32944,8 +32944,7 @@
           "attaches_to": [],
           "compatible_with": [],
           "takes": [
-            "air:3x2",
-            "air:2x4"
+            "air:3x2"
           ]
         }
       ],
@@ -33163,8 +33162,7 @@
           "attaches_to": [],
           "compatible_with": [],
           "takes": [
-            "air:2x4",
-            "air:3x2"
+            "air:2x4"
           ]
         }
       ],
@@ -33388,8 +33386,7 @@
           "attaches_to": [],
           "compatible_with": [],
           "takes": [
-            "air:2x4",
-            "air:3x2"
+            "air:2x4"
           ]
         }
       ],

@@ -174,13 +174,26 @@ public class GarageRenderer : DarkKn5ObjectRenderer
         IsDirty = true;
     }
 
-    /// <summary>Puts a mounted part's node where it now belongs, at once: the placement mode nudging a part</summary>
-    public void PlacePart(int node, Matrix world)
+    /// <summary>
+    /// Puts mounted parts' nodes where they now belong, at once: the placement mode nudging a part. One pass over
+    /// the bounds and shadows for the lot, a nudge moves every part downstream of the slot.
+    /// </summary>
+    public void PlaceParts(IEnumerable<(int Node, Matrix World)> moves)
     {
-        if (_prop == null || node < 0 || node >= _propNodes.Count) return;
+        if (_prop == null) return;
 
-        _motions.RemoveAll(m => ReferenceEquals(m.Node, _propNodes[node]));
-        _propNodes[node].List.LocalMatrix = world;
+        var moved = false;
+        foreach (var (node, world) in moves)
+        {
+            if (node < 0 || node >= _propNodes.Count) continue;
+
+            _motions.RemoveAll(m => ReferenceEquals(m.Node, _propNodes[node]));
+            _propNodes[node].List.LocalMatrix = world;
+            moved = true;
+        }
+
+        if (!moved) return;
+
         _prop.UpdateBoundingBox();
         SetShadowsDirty();
         IsDirty = true;

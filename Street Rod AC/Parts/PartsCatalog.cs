@@ -83,13 +83,19 @@ public sealed class PartsCatalog
     public SlotShifts Shifts { get; private set; } = new();
 
     /// <summary>
-    /// Moves a slot in its part's space, for good: the part is changed in place and the move is written next to
-    /// the packs, to be folded into the packs by the next conversion.
+    /// Moves a slot in its part's space, for good: the part is changed in place (every slot of that id, as a
+    /// loaded shift does: a cfg may declare an id twice) and the move is written next to the packs, to be folded
+    /// into the packs by the next conversion.
     /// </summary>
-    public void ShiftSlot(PartDefinition part, PartSlot slot, float[] delta)
+    /// <returns>False when the part moved but the move could not be written</returns>
+    public bool ShiftSlot(PartDefinition part, int slotId, float[] delta)
     {
-        for (var axis = 0; axis < 3; axis++) slot.Position[axis] += delta[axis];
-        Shifts.Add(part.Id, slot.Id, delta);
+        foreach (var slot in part.Slots.Where(s => s.Id == slotId))
+        {
+            for (var axis = 0; axis < 3; axis++) slot.Position[axis] += delta[axis];
+        }
+
+        return Shifts.Add(part.Id, slotId, delta);
     }
 
     /// <summary>A part by its id, or by the id it had in a pack that has since been replaced</summary>

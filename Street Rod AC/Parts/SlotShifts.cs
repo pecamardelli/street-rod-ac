@@ -46,7 +46,8 @@ public sealed class SlotShifts
         _shifts.TryGetValue(partId, out var slots) && slots.TryGetValue(slotId, out var offset) ? (float[])offset.Clone() : new float[3];
 
     /// <summary>Adds to a slot's offset and writes the file</summary>
-    public void Add(string partId, int slotId, float[] delta, bool save = true)
+    /// <returns>False when the file could not be written (the offset is kept all the same)</returns>
+    public bool Add(string partId, int slotId, float[] delta, bool save = true)
     {
         if (!_shifts.TryGetValue(partId, out var slots)) _shifts[partId] = slots = new SortedDictionary<int, float[]>();
         var offset = slots.TryGetValue(slotId, out var existing) ? existing : new float[3];
@@ -59,14 +60,7 @@ public sealed class SlotShifts
         }
         else slots[slotId] = offset;
 
-        if (save) Save();
-    }
-
-    /// <summary>Takes a slot back to where the packs put it, and writes the file</summary>
-    public void Clear(string partId, int slotId)
-    {
-        var offset = Of(partId, slotId);
-        Add(partId, slotId, new[] { -offset[0], -offset[1], -offset[2] });
+        return !save || Save();
     }
 
     /// <summary>Moves the slots of the parts given by the offsets; a slot or part that is not there is skipped</summary>
@@ -86,16 +80,25 @@ public sealed class SlotShifts
         return applied;
     }
 
-    public void Save()
+    /// <returns>False when the file could not be written (a read-only content folder, the file open elsewhere)</returns>
+    public bool Save()
     {
-        if (Path == null) return;
+        if (Path == null) return true;
 
-        if (_shifts.Count == 0)
+        try
         {
-            if (File.Exists(Path)) File.Delete(Path);
-            return;
-        }
+            if (_shifts.Count == 0)
+            {
+                if (File.Exists(Path)) File.Delete(Path);
+                return true;
+            }
 
-        File.WriteAllText(Path, JsonConvert.SerializeObject(_shifts, Formatting.Indented));
+            File.WriteAllText(Path, JsonConvert.SerializeObject(_shifts, Formatting.Indented));
+            return true;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 }

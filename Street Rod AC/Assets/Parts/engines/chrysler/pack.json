@@ -30003,7 +30003,7 @@
           "name": "",
           "position": [
             -0.003,
-            -0.004,
+            -0.066,
             -0.001
           ],
           "rotation": [
@@ -30044,7 +30044,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
         }
       ],
       "config": {
@@ -30147,7 +30150,7 @@
           "name": "",
           "position": [
             -0.003,
-            -0.004,
+            -0.066,
             -0.001
           ],
           "rotation": [
@@ -30188,7 +30191,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
         }
       ],
       "config": {
@@ -34014,7 +34020,7 @@
           "name": "",
           "position": [
             -0.003,
-            0.177,
+            0.115,
             -0.101
           ],
           "rotation": [
@@ -34035,7 +34041,7 @@
           "name": "",
           "position": [
             -0.003,
-            0.177,
+            0.115,
             0.099
           ],
           "rotation": [
@@ -34345,7 +34351,7 @@
           "name": "",
           "position": [
             -0.003,
-            0.171,
+            0.109000005,
             -0.108
           ],
           "rotation": [
@@ -34366,7 +34372,7 @@
           "name": "",
           "position": [
             -0.003,
-            0.171,
+            0.109000005,
             0.092
           ],
           "rotation": [
@@ -42659,7 +42665,7 @@
           "name": "",
           "position": [
             -0.003,
-            0.151,
+            0.088999994,
             -0.079
           ],
           "rotation": [
@@ -42680,7 +42686,7 @@
           "name": "",
           "position": [
             -0.003,
-            0.151,
+            0.088999994,
             0.071
           ],
           "rotation": [
@@ -42812,7 +42818,7 @@
           "name": "",
           "position": [
             -0.003,
-            0.0,
+            -0.062,
             0.0
           ],
           "rotation": [
@@ -42848,7 +42854,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
         }
       ],
       "config": {

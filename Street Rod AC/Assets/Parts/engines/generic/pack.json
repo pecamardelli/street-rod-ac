@@ -2495,7 +2495,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
         }
       ],
       "config": {
@@ -2649,7 +2652,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
         }
       ],
       "config": {
@@ -2798,7 +2804,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
         }
       ],
       "config": {
@@ -3847,7 +3856,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
         }
       ],
       "config": {
@@ -4163,7 +4175,10 @@
           ],
           "damage_mode": null,
           "attaches_to": [],
-          "compatible_with": []
+          "compatible_with": [],
+          "takes": [
+            "air:single"
+          ]
         }
       ],
       "config": {
@@ -6365,6 +6380,9 @@
               "slot": 11,
               "source": "parts\\engines\\GM_V8_pak.rpk#0xA0A3"
             }
+          ],
+          "takes": [
+            "air:single"
           ]
         }
       ],
