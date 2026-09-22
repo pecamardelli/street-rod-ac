@@ -70,8 +70,12 @@ public static class CarPartsLayout
             var side = SideFrame(forward, inboard);
             var slot = part.CarSlot;
 
-            if (slot == RunningGear.WheelSlot(corner)) result.AddRange(PartAssembler.Assemble(part.Root, BySlot(part.Root.Definition, side, hub)));
-            else if (slot == RunningGear.BrakeSlot(corner)) result.AddRange(PartAssembler.Assemble(part.Root, BySlot(part.Root.Definition, side, hub + inboard * BrakeInboard)));
+            // Rims and tyres are not drawn: the Assetto Corsa model brings its own wheels, and the part ones
+            // land on the very same WHEEL_* dummies, so both show at once. They are still parts - mounted,
+            // bought, sold and exported to the car's physics as before - they just have no model here.
+            if (slot == RunningGear.WheelSlot(corner)) continue;
+
+            if (slot == RunningGear.BrakeSlot(corner)) result.AddRange(PartAssembler.Assemble(part.Root, BySlot(part.Root.Definition, side, hub + inboard * BrakeInboard)));
             else
             {
                 var springSeat = hub + inboard * SpringInboard - Vector3.UnitY * SpringSeatBelowHub;
