@@ -179,7 +179,7 @@ namespace Street_Rod_AC.Services.Parts
 
             return catalog.Parts.Values
                 .Where(p => usedByBuilds.Contains(p.Id) ||
-                            (p.Id.StartsWith(EnginePacks, StringComparison.OrdinalIgnoreCase) && p.BaseClass != null))
+                            (p.Id.StartsWith(EnginePacks, StringComparison.OrdinalIgnoreCase) && p.IsScripted))
                 .OrderBy(p => p.DisplayName ?? p.Name, StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }

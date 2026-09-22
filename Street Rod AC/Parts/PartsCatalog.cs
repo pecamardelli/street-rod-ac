@@ -11,6 +11,7 @@ namespace Street_Rod_AC.Parts;
 public sealed class PartsCatalog
 {
     private const int MaxEquivalents = 16;
+    private const int MaxAliasHops = 8;
 
     private readonly string _root;
     private readonly Dictionary<string, PartDefinition> _parts = new(StringComparer.OrdinalIgnoreCase);
@@ -80,8 +81,20 @@ public sealed class PartsCatalog
     /// <summary>True when parts have changed ids: saves made before may hold the old ones</summary>
     public bool HasAliases => _aliases.Count > 0;
 
-    /// <summary>The id a part goes by now: its own, unless the pack it came from was replaced by a later release</summary>
-    public string CurrentId(string id) => !_parts.ContainsKey(id) && _aliases.TryGetValue(id, out var current) ? current : id;
+    /// <summary>
+    /// The id a part goes by now: its own, unless the pack it came from was renamed or replaced by a later release
+    /// since. Aliases chain when both happened (a pack renamed, then replaced under its new name), so they are
+    /// followed until an id that is a part, or as far as they go.
+    /// </summary>
+    public string CurrentId(string id)
+    {
+        for (var hops = 0; !_parts.ContainsKey(id) && hops < MaxAliasHops && _aliases.TryGetValue(id, out var current); hops++)
+        {
+            id = current;
+        }
+
+        return id;
+    }
 
     /// <summary>
     /// Whether two slots go together. A slot names the slots it attaches to, on either side of the joint (a header

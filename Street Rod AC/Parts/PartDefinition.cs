@@ -56,6 +56,14 @@ public class PartDefinition
     public List<string> ClassChain { get; set; } = new();
 
     /// <summary>
+    /// Whether the part has a script of its own that was run: the base game's root entries (what mods declare their
+    /// fit against) have none, so no properties and no classes. A script whose parent class is missing still counts:
+    /// it has no chain, but it was constructed.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsScripted => ClassChain.Count > 0 || Properties.Count > 0;
+
+    /// <summary>
     /// The part's script fields once constructed (bore, stroke, ratio, value, max_wear...), in the script's
     /// own names and units. Values are numbers, strings, "rpk path#0xID" resources or lists of those.
     /// </summary>

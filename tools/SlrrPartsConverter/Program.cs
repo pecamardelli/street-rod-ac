@@ -29,7 +29,11 @@ public static class Program
     /// Where the parts of an rpk go: all of them (no selector), or those a selector picks out, by the name of a
     /// script class they descend from, a category they are filed under, or their own name (* for anything)
     /// </summary>
-    private sealed record RenameRule(string Rpk, string? Selector, Regex NamePattern, string PackId);
+    private sealed record RenameRule(string Rpk, string? Selector, string PackId)
+    {
+        /// <summary>The selector as a pattern, null for the rule that takes the rest of the rpk</summary>
+        public Regex? Pattern { get; } = Selector == null ? null : Program.Pattern(Selector);
+    }
 
     public static int Main(string[] args)
     {
@@ -76,7 +80,7 @@ public static class Program
                     }
 
                     var selector = source.Length == 2 ? source[1].Trim() : null;
-                    renames.Add(new RenameRule(source[0], selector, Pattern(selector ?? "*"), pair[1].Trim()));
+                    renames.Add(new RenameRule(source[0].Trim(), selector, pair[1].Trim()));
                 }
             }
             else positional.Add(args[i]);
@@ -88,12 +92,6 @@ public static class Program
                               "[--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""Street Rod AC\Assets\Parts"" engines/Mopar  (the full run: tools\convert-parts.ps1)");
             return 1;
-        }
-
-        // Packs are named after the rpk they come from unless renamed; every option names them by what they are called here
-        foreach (var (old, replacement) in replacements.ToList())
-        {
-            replacements[old] = renames.FirstOrDefault(r => r.Selector == null && r.Rpk.Equals(replacement, StringComparison.OrdinalIgnoreCase))?.PackId ?? replacement;
         }
 
         var game = new SlrrGame(positional[0]);
@@ -124,6 +122,7 @@ public static class Program
         var files = Directory.EnumerateFiles(partsRoot, "*.rpk", SearchOption.AllDirectories).OrderBy(f => f).ToList();
         if (File.Exists(baseRpk)) files.Insert(0, baseRpk);
 
+        var rpkIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var file in files)
         {
             var relativePath = Path.GetRelativePath(game.Root, file);
@@ -133,8 +132,13 @@ public static class Program
             var rpkId = file == baseRpk
                 ? BasePackId
                 : Path.ChangeExtension(Path.GetRelativePath(partsRoot, file), null).Replace('\\', '/');
+            rpkIds.Add(rpkId);
+
+            // Packs are named after the rpk they come from unless renamed
             var rules = renames.Where(r => r.Rpk.Equals(rpkId, StringComparison.OrdinalIgnoreCase)).ToList();
-            var parts = CollectParts(game, rpk, (entry, name, scriptPath) => PackOf(rpkId, rules, rpk, entry, name, scriptPath));
+            var selectors = rules.Where(r => r.Selector != null).ToList();
+            var rest = rules.FirstOrDefault(r => r.Selector == null)?.PackId ?? rpkId;
+            var parts = CollectParts(game, rpk, (entry, name, scriptPath) => PackOf(selectors, rest, rpk, entry, name, scriptPath));
             foreach (var part in parts.Where(part => drops.Any(d => d.IsMatch(part.Id))).ToList())
             {
                 parts.Remove(part);
@@ -152,24 +156,34 @@ public static class Program
             }
         }
 
-        // A pack is named by what it holds: the parts a selector picks out go first, the rest where the rpk goes
-        string PackOf(string rpkId, List<RenameRule> rules, SlrrRpk rpk, SlrrRpkEntry entry, string name, string? scriptPath)
+        // A pack is named by what it holds: the parts a selector picks out go first, the rest where the rpk goes.
+        // A selector matches a part's name, one of its categories, or a class it descends from by the class's
+        // simple or full name
+        string PackOf(List<RenameRule> selectors, string rest, SlrrRpk rpk, SlrrRpkEntry entry, string name, string? scriptPath)
         {
             List<string>? categories = null;
             List<string>? classes = null;
-            foreach (var rule in rules.Where(r => r.Selector != null))
+            foreach (var rule in selectors)
             {
-                if (rule.NamePattern.IsMatch(name)) return rule.PackId;
+                var pattern = rule.Pattern!;
+                if (pattern.IsMatch(name)) return rule.PackId;
 
                 categories ??= game.Categories(rpk, entry);
-                if (categories.Contains(rule.Selector!, StringComparer.OrdinalIgnoreCase)) return rule.PackId;
+                if (categories.Any(pattern.IsMatch)) return rule.PackId;
 
                 classes ??= scriptPath == null ? new List<string>() : routing.Classes(Path.Combine(game.Root, scriptPath)).ToList();
-                if (classes.Any(c => c.Equals(rule.Selector, StringComparison.OrdinalIgnoreCase) ||
-                                     c.EndsWith("." + rule.Selector, StringComparison.OrdinalIgnoreCase))) return rule.PackId;
+                if (classes.Any(c => pattern.IsMatch(c) || pattern.IsMatch(c[(c.LastIndexOf('.') + 1)..]))) return rule.PackId;
             }
 
-            return rules.FirstOrDefault(r => r.Selector == null)?.PackId ?? rpkId;
+            return rest;
+        }
+
+        // A rule naming an rpk that is not there is a typo, and its parts would quietly end up elsewhere
+        var unmatched = renames.Where(r => !rpkIds.Contains(r.Rpk)).ToList();
+        if (unmatched.Count > 0)
+        {
+            Console.WriteLine($"{RenameOption} names packs that are not there: {string.Join(", ", unmatched.Select(r => r.Rpk).Distinct())}");
+            return 1;
         }
 
         Console.WriteLine($"Found {partIds.Count} parts in {packs.Count} packs" + (dropped.Count > 0 ? $", {dropped.Count} dropped" : ""));
@@ -248,6 +262,9 @@ public static class Program
         // A filtered run has not seen them all.
         if (filter == null)
         {
+            // A run that converted nothing has not made the folder yet
+            Directory.CreateDirectory(output);
+
             // Packs converted before under a name no longer produced (renamed, replaced, dropped whole) would be
             // loaded next to the current ones
             var current = packs.Select(p => Path.GetFullPath(Path.Combine(output, p.Id.Replace('/', Path.DirectorySeparatorChar))))
