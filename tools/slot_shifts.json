@@ -1,0 +1,23 @@
+{
+  "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY": {
+    "10": [
+      0.0,
+      0.0,
+      -0.01
+    ]
+  },
+  "engines/generic/Air_cleaner_Six_pack_HOLLEY": {
+    "11": [
+      0.015,
+      0.02,
+      -0.10000001
+    ]
+  },
+  "engines/generic/Holley_2x2brl_carbs": {
+    "10": [
+      0.01,
+      0.0,
+      -0.17499997
+    ]
+  }
+}

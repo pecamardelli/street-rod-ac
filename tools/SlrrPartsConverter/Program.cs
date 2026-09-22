@@ -31,6 +31,10 @@ public static class Program
     private const string NameOption = "--name";
     private const string ShiftsOption = "--shifts";
     private const string AbsorbOption = "--absorb";
+    private const string PreviousOption = "--previous";
+    private const string TwinOption = "--twin";
+    private const string NoTwin = "-";
+    private const string MeasureOption = "--measure";
     private const string TakesPrefix = "takes:";
 
     /// <summary>Ids of the slots a pad of several carburettors is split into (the pad keeps its id for the first)</summary>
@@ -104,8 +108,20 @@ public static class Program
         //   wrote next to the packs since the last run is folded into this file first, then all of it is applied
         // --absorb <slot_shifts.json>,...: more of the game's files to fold in (the game writes next to the content
         //   it runs on, in a build folder) and take away
+        // --previous <folder>: an earlier conversion (the content in use): a part it had that goes by another name
+        //   now, because a release of the mod renamed its files, is aliased to what its rpk resource is now, and
+        //   its older aliases are kept while their targets exist. Saves made with it keep working
+        // --twin <old part id>=<new part id>: a pair of a replaced pack written by hand, where the matcher pairs
+        //   wrongly (a DOHC camshaft has no look-alike among pushrod parts); "-" for a part the new release does without
+        // --measure <part id pattern>,...: convert nothing, print the slots of the parts and the bounds of their meshes
+        //   (metres, the model's own space), to see by what convention a pack places a joint before parts of two
+        //   packs are made to meet by a fitting: a carburettor slot 6 cm above the base sinks that far into a pad
+        //   placed at the flange
         string? notes = null;
         string? shiftsFile = null;
+        string? previous = null;
+        var twinRules = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        var measure = new List<Regex>();
         var absorb = new List<string>();
         var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var renames = new List<RenameRule>();
@@ -123,6 +139,21 @@ public static class Program
         {
             if (args[i] == NotesOption && i + 1 < args.Length) notes = args[++i];
             else if (args[i] == ShiftsOption && i + 1 < args.Length) shiftsFile = args[++i];
+            else if (args[i] == PreviousOption && i + 1 < args.Length) previous = args[++i];
+            else if (args[i] == MeasureOption && i + 1 < args.Length) measure.AddRange(args[++i].Split(',').Select(p => Pattern(p.Trim())));
+            else if (args[i] == TwinOption && i + 1 < args.Length)
+            {
+                foreach (var pair in args[++i].Split(',').Select(p => p.Split('=')))
+                {
+                    if (pair.Length != 2)
+                    {
+                        Console.WriteLine($"{TwinOption} takes <old part id>=<new part id> (or {NoTwin} for no twin), e.g. engines/fordi6_data/Ford_221_SP_cylinder_head=engines/ford_six/sprint_cylinder_head");
+                        return 1;
+                    }
+
+                    twinRules[pair[0].Trim()] = pair[1].Trim() == NoTwin ? null : pair[1].Trim();
+                }
+            }
             else if (args[i] == AbsorbOption && i + 1 < args.Length) absorb.AddRange(args[++i].Split(',').Select(f => f.Trim()).Where(f => f.Length > 0));
             else if (args[i] == DropOption && i + 1 < args.Length)
             {
@@ -286,7 +317,8 @@ public static class Program
                               "[--merge <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] " +
                               "[--model <part id pattern>=<part id>,...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] " +
                               "[--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] " +
-                              "[--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>,...]");
+                              "[--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>,...] " +
+                              "[--previous <earlier conversion>] [--twin <old part id>=<new part id or ->,...] [--measure <part id pattern>,...]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""Street Rod AC\Assets\Parts"" engines/Mopar  (the full run: tools\convert-parts.ps1)");
             return 1;
         }
@@ -308,6 +340,14 @@ public static class Program
         }
 
         var stopwatch = Stopwatch.StartNew();
+
+        // The earlier conversion is read before anything is written: it is usually the output folder itself
+        var earlier = previous == null ? null : EarlierConversion.Load(previous);
+        if (previous != null && earlier == null)
+        {
+            Console.WriteLine($"{PreviousOption} names no converted content: {previous}");
+            return 1;
+        }
 
         // First pass: give every part an id, so slots can refer to parts of any pack. Routing reads class files
         // of parts that may be dropped: an evaluator of its own keeps their classes out of the game's scripts
@@ -401,6 +441,13 @@ public static class Program
 
         Console.WriteLine($"Found {partIds.Count} parts in {packs.Count} packs" + (dropped.Count > 0 ? $", {dropped.Count} dropped" : ""));
 
+        if (measure.Count > 0)
+        {
+            Measure(game, packs.SelectMany(p => p.Parts).Where(p => measure.Any(m => m.IsMatch(p.Id))));
+            return 0;
+        }
+
+        var usedTwinRules = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var (oldId, newId) in replacements)
         {
             // A pack and whatever else was routed out of the same rpk
@@ -415,9 +462,18 @@ public static class Program
             Console.WriteLine($"Replacing {oldId} with {newId}");
             var oldParts = oldPacks.SelectMany(p => p.Parts).ToList();
             var newParts = newPacks.SelectMany(p => p.Parts).ToList();
-            foreach (var (from, to) in ReplacePack(game, oldParts, newParts, partIds)) aliases[from] = to;
+            var pairs = ReplacePack(game, oldParts, newParts, partIds, twinRules, usedTwinRules);
+            if (pairs == null) return 1;
+            foreach (var (from, to) in pairs) aliases[from] = to;
 
             packs.RemoveAll(oldPacks.Contains);
+        }
+
+        var unusedTwinRules = twinRules.Keys.Where(id => !usedTwinRules.Contains(id)).ToList();
+        if (unusedTwinRules.Count > 0)
+        {
+            Console.WriteLine($"{TwinOption} names parts of no replaced pack: {string.Join(", ", unusedTwinRules)}");
+            return 1;
         }
 
         List<(string Id, SlrrRpk Rpk, List<SourcePart> Parts)> PacksOf(string packId)
@@ -661,12 +717,31 @@ public static class Program
             }
 
             File.WriteAllText(Path.Combine(output, ConstantsFile), JsonConvert.SerializeObject(scripts.Constants, Formatting.Indented));
+
+            if (earlier != null)
+            {
+                var (renamed, kept) = earlier.Carry(game, partIds, definitions, aliases);
+                if (renamed + kept > 0) Console.WriteLine($"  {renamed} parts renamed in their rpk and {kept} older aliases kept from {previous}");
+            }
+
             File.WriteAllText(Path.Combine(output, PartPack.AliasesFileName), JsonConvert.SerializeObject(aliases, Formatting.Indented));
 
             var engineBuilds = new SlrrEngineBuilds(game, partIds);
             // Cars get an evaluator of their own: their classes are of no use to the game
             var builds = engineBuilds.FromCars(new SlrrScriptEvaluator(game));
             if (notes != null && Directory.Exists(notes)) builds.AddRange(engineBuilds.FromNotes(notes));
+
+            // The packs' own engine kits: what an author wrote as a complete engine. A kit without a block is an
+            // upgrade, no engine; one whose parts a car or notes build already lists (with a battery, say) adds nothing
+            var kits = engineBuilds.FromKits(scripts, packs.Select(p => p.Rpk).Distinct().ToList());
+            var listed = builds.Select(PartSet).ToList();
+            kits.RemoveAll(k => !k.Parts.Any(p => p.Part != null && definitions.TryGetValue(p.Part, out var d) && d.BaseClass?.Contains(".block.") == true)
+                                || listed.Any(PartSet(k).IsSubsetOf));
+            builds.AddRange(kits);
+            if (kits.Count > 0) Console.WriteLine($"  {kits.Count} engine kits of the packs are builds");
+
+            static HashSet<string> PartSet(EngineBuild build) =>
+                build.Parts.Select(p => p.Part ?? p.Source).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             // An engine around a part that was dropped on purpose is no engine the game should offer
             var left = builds.RemoveAll(b => b.Parts.Any(p => p.Part == null && dropped.Contains(p.Source)));
@@ -708,6 +783,40 @@ public static class Program
         }
 
         return 0;
+    }
+
+    /// <summary>
+    /// Prints where a part's slots are against its meshes, as the cfg has them (before any shift): the way to see a
+    /// pack's convention for a joint before a fitting lets it meet another pack's
+    /// </summary>
+    private static void Measure(SlrrGame game, IEnumerable<SourcePart> parts)
+    {
+        var culture = System.Globalization.CultureInfo.InvariantCulture;
+        foreach (var part in parts.OrderBy(p => p.Id))
+        {
+            Console.WriteLine(part.Id);
+            var config = SlrrPartConfig.Load(part.ConfigFile);
+            foreach (var (render, meshFile, _) in SelectRenders(game, part, config))
+            {
+                var min = new System.Numerics.Vector3(float.MaxValue);
+                var max = new System.Numerics.Vector3(float.MinValue);
+                foreach (var vertex in SlrrMesh.Load(meshFile).SubMeshes.SelectMany(s => s.Vertices))
+                {
+                    var position = System.Numerics.Vector3.Transform(vertex.Position, render.Matrix);
+                    min = System.Numerics.Vector3.Min(min, position);
+                    max = System.Numerics.Vector3.Max(max, position);
+                }
+
+                Console.WriteLine(string.Format(culture, "  mesh {0,-40} x {1,7:0.000}..{2,7:0.000}  y {3,7:0.000}..{4,7:0.000}  z {5,7:0.000}..{6,7:0.000}",
+                    Path.GetFileName(meshFile), min.X, max.X, min.Y, max.Y, min.Z, max.Z));
+            }
+
+            foreach (var slot in config.Slots)
+            {
+                Console.WriteLine(string.Format(culture, "  slot {0,3} {1,-38} ({2,7:0.000}, {3,7:0.000}, {4,7:0.000}){5}",
+                    slot.Id, slot.Name, slot.Position.X, slot.Position.Y, slot.Position.Z, slot.AttachesTo.Count > 0 ? "  mounts" : ""));
+            }
+        }
     }
 
     private static Regex Pattern(string glob) =>
@@ -1145,14 +1254,36 @@ public static class Program
     /// Points every part of a replaced pack at the part that takes its place, so that whatever names the old
     /// pack (car scripts, build notes, other packs) ends up with a part of the new one. Old parts without a
     /// twin stay unresolved. Returns the pairs by part id, for the game to read saves made with the old pack.
+    /// Pairs written by hand (<paramref name="twinRules"/>) override the matcher; null when one names a part
+    /// that is not there.
     /// </summary>
-    private static SortedDictionary<string, string> ReplacePack(SlrrGame game, List<SourcePart> oldParts, List<SourcePart> newParts,
-        Dictionary<(SlrrRpk, int), string> partIds)
+    private static SortedDictionary<string, string>? ReplacePack(SlrrGame game, List<SourcePart> oldParts, List<SourcePart> newParts,
+        Dictionary<(SlrrRpk, int), string> partIds, Dictionary<string, string?> twinRules, HashSet<string> usedTwinRules)
     {
         // An evaluator of its own: the classes of a pack that is left out are of no use to the game
         var scripts = new SlrrScriptEvaluator(game);
         var geometry = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var twins = SlrrPackTwins.Match(oldParts.Select(Traits).ToList(), newParts.Select(Traits).ToList());
+        var newTraits = newParts.Select(Traits).ToList();
+        var twins = SlrrPackTwins.Match(oldParts.Select(Traits).ToList(), newTraits);
+
+        var byNewId = newTraits.ToDictionary(t => t.Id, StringComparer.OrdinalIgnoreCase);
+        var ruled = 0;
+        foreach (var (oldId, newId) in twinRules)
+        {
+            var index = twins.FindIndex(t => t.Old.Id.Equals(oldId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0) continue;
+
+            SlrrPartTraits? twin = null;
+            if (newId != null && !byNewId.TryGetValue(newId, out twin))
+            {
+                Console.WriteLine($"{TwinOption} names a part that is not there to stand in: {newId}");
+                return null;
+            }
+
+            twins[index] = twins[index] with { New = twin, Doubt = null };
+            usedTwinRules.Add(oldId);
+            ruled++;
+        }
 
         var aliases = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var (source, twin) in oldParts.Zip(twins))
@@ -1161,7 +1292,7 @@ public static class Program
             else partIds[(source.Rpk, source.Entry.TypeId)] = aliases[source.Id] = twin.New.Id;
         }
 
-        Console.WriteLine($"  {twins.Count(t => t.New != null)} of {twins.Count} parts have a twin ({twins.Count(t => t.New != null && t.Doubt != null)} in doubt)");
+        Console.WriteLine($"  {twins.Count(t => t.New != null)} of {twins.Count} parts have a twin ({twins.Count(t => t.New != null && t.Doubt != null)} in doubt, {ruled} paired by rule)");
         foreach (var twin in twins.Where(t => t.New == null || t.Doubt != null))
         {
             Console.WriteLine(twin.New == null

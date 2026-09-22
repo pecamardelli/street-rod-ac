@@ -632,10 +632,16 @@ public class CarViewport3D : System.Windows.Controls.Grid
             return;
         }
 
+        // A part's own slot is the part's wherever it goes: nudging it moves every copy, the two carburettors of a
+        // dual quad along with each other. One of several on the same parent is placed by its pad, which is its own
         _placing = part;
-        _placementTarget = PlacementTarget.Part;
+        _placementTarget = IsOneOfSeveral(part) ? PlacementTarget.Pad : PlacementTarget.Part;
         ReportPlacement();
     }
+
+    /// <summary>True when the parent holds the same part on another slot too (a set of carburettors, their filters)</summary>
+    private static bool IsOneOfSeveral(InstalledPart part) =>
+        part.Parent != null && part.Parent.Children.Values.Count(c => c.Definition.Id.Equals(part.Definition.Id, StringComparison.OrdinalIgnoreCase)) > 1;
 
     public void TogglePlacementTarget()
     {
@@ -706,7 +712,9 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
         var (definition, slotId) = PlacedSlot(part, parent);
         var offset = catalog.Shifts.Of(definition.Id, slotId);
-        var what = _placementTarget == PlacementTarget.Part ? "the part's own slot" : "the pad it sits on";
+        var what = _placementTarget == PlacementTarget.Part
+            ? "the part's own slot (every copy of the part)"
+            : IsOneOfSeveral(part) ? "the pad it sits on (this one of the set)" : "the pad it sits on";
         PlacementChanged?.Invoke(
             $"PLACEMENT: moving {what}\n{definition.Id} slot {slotId}\n" +
             $"shift so far: x {offset[0] * 100:+0.0;-0.0} cm  y {offset[1] * 100:+0.0;-0.0} cm  z {offset[2] * 100:+0.0;-0.0} cm\n" +
@@ -778,6 +786,12 @@ public class CarViewport3D : System.Windows.Controls.Grid
                 var ownerOf = new Dictionary<InstalledPart, MountCandidate>();
                 foreach (var candidate in candidates)
                 {
+                    // A loose rim is a car-level candidate, and car-level candidates are placed in the engine
+                    // bay - so a rim on the shelf used to glow green in there. Rims and tyres are not drawn at
+                    // all now (see CarPartsLayout.Build), so their ghosts go too. A loose tyre drops out on its
+                    // own: its parent is the rim, which no longer has a world to hang off.
+                    if (candidate.Parent == null && Parts.Cars.RunningGear.IsWheelSlot(candidate.ParentSlot)) continue;
+
                     var world = candidate.Parent == null
                         ? CarPartsLayout.EnginePlacement(anchors, candidate.Part.Definition)
                         : worlds.TryGetValue(candidate.Parent, out var parentWorld)

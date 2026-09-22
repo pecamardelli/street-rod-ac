@@ -29,6 +29,9 @@ public sealed class SlrrPartScript
 /// <summary>A part that addStockParts() mounts; conditional when it depends on the car or on random wear</summary>
 public sealed record SlrrStockPart(string Rpk, int TypeId, string? Name, bool Conditional);
 
+/// <summary>An engine kit: what a pack's Set class puts in the inventory, in the order it does</summary>
+public sealed record SlrrKit(string? Name, List<(string Rpk, int TypeId)> Parts);
+
 /// <summary>
 /// Reads parts out of their compiled scripts by running them in the <see cref="ScriptVm"/> with no game around:
 /// construction gives the part's properties, addStockParts() its factory parts, isDynoable()/isDriveable() the
@@ -129,6 +132,23 @@ public sealed class SlrrScriptEvaluator
         };
     }
 
+    /// <summary>The parts a kit's build() puts in the inventory; null when the script is no class</summary>
+    public SlrrKit? Kit(string scriptFile)
+    {
+        var script = _loader.Load(scriptFile);
+        if (script == null) return null;
+
+        var host = new KitHost();
+        var vm = new ScriptVm(_loader, host);
+        var kit = vm.Instantiate(_loader.Chain(script), ScriptValue.Unknown);
+
+        // The inventory is an object of no class: whatever the kit calls on it comes to the host as a native call
+        vm.Call(kit, "build", new ScriptReference(new ScriptObject(Array.Empty<ScriptClass>())));
+        foreach (var file in _loader.LoadedFiles) UsedClassFiles.Add(file);
+
+        return new SlrrKit(kit.Fields.TryGetValue("name", out var name) ? name.AsText : null, host.Parts);
+    }
+
     /// <summary>
     /// A part as it is at one moment, to come back to: its fields and, through them, the elements of its arrays and
     /// the fields of the objects it holds. Those are shared by reference; putting back the part's fields alone
@@ -213,6 +233,18 @@ public sealed class SlrrScriptEvaluator
                 return items;
             default:
                 return null;
+        }
+    }
+
+    /// <summary>Notes what a kit puts in the inventory</summary>
+    private sealed class KitHost : ScriptHost
+    {
+        public List<(string Rpk, int TypeId)> Parts { get; } = new();
+
+        public override ScriptValue? CallNative(ScriptVm vm, ScriptObject self, string method, ScriptValue[] arguments, bool uncertain)
+        {
+            if (method == "insertItem" && arguments.Length == 1 && arguments[0] is ScriptResource resource) Parts.Add((resource.Rpk, resource.Id));
+            return null;
         }
     }
 

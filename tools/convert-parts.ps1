@@ -5,8 +5,77 @@ param(
     [string]$Slrr = "D:\JUEGOS\Street Legal Racing - Redline",
     [string]$Output = (Join-Path $PSScriptRoot "..\Street Rod AC\Assets\Parts"),
     [string]$Notes = "D:\JUEGOS\SLRR\SCRIPTS",
-    [string]$Converter = (Join-Path $PSScriptRoot "SlrrPartsConverter\bin\Release\net10.0\SlrrPartsConverter.exe")
+    [string]$Converter = (Join-Path $PSScriptRoot "SlrrPartsConverter\bin\Release\net10.0\SlrrPartsConverter.exe"),
+    # Part id patterns to measure (slots against mesh bounds) instead of converting: the joint conventions of a pack
+    [string]$Measure = ""
 )
+
+# Packs a later release took the place of: the old one stays installed (car scripts and build notes name it) and
+# every part of it resolves to its twin in the new one. Chrysler V8 Pack 4.5 for the MagnumForce Mopar pack; the
+# user's own Ford six (ford_l6, with the meshes they modelled) for its predecessor, the Ford 221 pack (fordi6_data)
+$replace = @(
+    "engines/Mopar=engines/chrysler"
+    "engines/fordi6_data=engines/ford_six"
+    # The user's Ford V8s (260 to 460, ford_v8s: the Mopar pack's meshes with Ford scripts and textures) for Dexter's
+    "engines/DEXTERV8s=engines/ford"
+) -join ','
+
+# Pairs of the Ford six replacement the matcher gets wrong: the old pack was a DOHC reskin, the new one is the pushrod
+# engine it is, so its camshafts, bearing bridge and drive belt have no look-alikes; the Sprint and racing parts have
+# theirs but the matcher settles for the stock ones
+$twin = @(
+    "engines/fordi6_data/Ford_188_221_intake_camshaft=engines/ford_six/ford_188_camshaft"
+    "engines/fordi6_data/Ford_221_SP_intake_camshaft=engines/ford_six/ford_221_SP_camshaft"
+    "engines/fordi6_data/Oreste_Berta_intake_camshaft=engines/ford_six/ford_racing_camshaft_3"
+    "engines/fordi6_data/Ford_188_221_exhaust_camshaft=-"
+    "engines/fordi6_data/Ford_221_SP_exhaust_camshaft=-"
+    "engines/fordi6_data/Oreste_Berta_exhaust_camshaft=-"
+    "engines/fordi6_data/Ford_188_221_SP_camshaft_bearing_bridge=-"
+    "engines/fordi6_data/Ford_188_221_camshaft_drive_belt=engines/ford_six/ford_stock_timing_chain"
+    "engines/fordi6_data/Ford_221_SP_cylinder_head=engines/ford_six/sprint_cylinder_head"
+    "engines/fordi6_data/Oreste_Berta_cylinder_head=engines/ford_six/ford_racing_cylinder_head"
+    "engines/fordi6_data/Ford_221_SP_intake_manifold=engines/ford_six/sprint_intake_manifold"
+    "engines/fordi6_data/Ford_188_221_dual_intake_manifold=engines/ford_six/ford_triple_intake_manifold"
+    "engines/fordi6_data/Ford_221_SP_dual_intake_manifold=engines/ford_six/ford_triple_intake_manifold"
+    "engines/fordi6_data/Ford_221_SP_exhaust_header=engines/ford_six/sprint_exhaust_header"
+    "engines/fordi6_data/Canossilen_exhaust_header=engines/ford_six/sprint_exhaust_header"
+    "engines/fordi6_data/Holley_Argelite_2300=engines/ford_six/carb_holley_2300"
+    # Dexter's Fords: one camshaft and generic dress parts for three engines, drawn on nothing the Ford V8 pack
+    # shares, so the matcher pairs them by little; the 302/351 heads are stock heads, not the racing ones
+    "engines/DEXTERV8s/Ford_302_351_L_head=engines/ford/Ford_302_left_cylinder_head"
+    "engines/DEXTERV8s/Ford_302_351_R_head=engines/ford/Ford_302_right_cylinder_head"
+    "engines/DEXTERV8s/L_Ford_head_cover=engines/ford/Ford_351_390_left_cylinder_head_cover"
+    "engines/DEXTERV8s/R_Ford_head_cover=engines/ford/Ford_351_390_right_cylinder_head_cover"
+    "engines/DEXTERV8s/Ford_302_351_429_camshaft=engines/ford/Ford_302_camshaft"
+    # (the three racing camshafts of a family share one cfg: RPM boost, high torque _20B4/_29B4, medium _50B4/_39B4)
+    "engines/DEXTERV8s/Comp_11_336_4_Camshaft=engines/ford/Ford_racing_camshaft_small_block_1"
+    "engines/DEXTERV8s/Comp_11_754_14_Camshaft=engines/ford/Ford_racing_camshaft_small_block_1"
+    "engines/DEXTERV8s/Comp_12_214_4_Camshaft=engines/ford/Ford_racing_camshaft_small_block_1_20B4"
+    "engines/DEXTERV8s/Comp_12_262_4_Camshaft=engines/ford/Ford_racing_camshaft_small_block_1_50B4"
+    "engines/DEXTERV8s/Comp_20_223_3_Camshaft=engines/ford/Ford_racing_camshaft_small_block_1_20B4"
+    "engines/DEXTERV8s/Comp_21_242_4_Camshaft=engines/ford/Ford_racing_camshaft_small_block_1_50B4"
+    "engines/DEXTERV8s/Comp_21_243_4_Camshaft=engines/ford/Ford_racing_camshaft_small_block_1_50B4"
+    "engines/DEXTERV8s/Performer_camshaft=engines/ford/Ford_racing_camshaft_small_block_1_20B4"
+    "engines/DEXTERV8s/Racing_camshaft=engines/ford/Ford_racing_camshaft_small_block_1"
+    "engines/DEXTERV8s/Probsty_Hemi_Camshaft=-"
+    "engines/DEXTERV8s/Universal_alternator=engines/ford/Ford_stock_alternator"
+    "engines/DEXTERV8s/Universal_alternator_drive_belt=engines/ford/Ford_stock_alt_drive_belt"
+    "engines/DEXTERV8s/Universal_timing_chain_cover=engines/ford/Ford_stock_timing_cover"
+    "engines/DEXTERV8s/Universal_oilfilter=engines/ford/Motorcraft_oil_filter"
+    "engines/DEXTERV8s/Universal_crankshaft_bearing_bridge=-"
+    "engines/DEXTERV8s/Universal_wires=-"
+    "engines/DEXTERV8s/Universal_N2O_system=-"
+    "engines/DEXTERV8s/Universal_blower=engines/generic/Edelbrock_supercharger_small_block"
+    "engines/DEXTERV8s/Universal_blower_belt=engines/generic/Edelbrock_supercharger_drive_belt_small_block"
+    "engines/DEXTERV8s/Universal_blower_pulley=-"
+    "engines/DEXTERV8s/Universal_dual_4_barrel_carburetors=engines/generic/Holley_2x4brl_carburetors"
+    "engines/DEXTERV8s/Universal_round_air_filter=engines/ford/Holley_4brl_air_filter"
+    "engines/DEXTERV8s/Universal_oval_air_filter=engines/ford/Edelbrock_2x4brl_air_filter"
+    "engines/DEXTERV8s/Ford_4_barrel_intake_manifold=engines/ford/Ford_302_4brl_intake_manifold"
+    "engines/DEXTERV8s/Ford_dual_4_barrel_intake_manifold=engines/ford/Trickflow_2x4brl_intake_manifold_big_block"
+    "engines/DEXTERV8s/Ford_blower_intake_manifold=engines/ford/Ford_supercharger_manifold_big_block"
+    "engines/DEXTERV8s/Ford_intake_manifold_converter=-"
+) -join ','
 
 $rename = @(
     # Universal-fit induction parts (aftermarket carburettors, air cleaners, scoops, roots blowers) out of the
@@ -46,15 +115,18 @@ $rename = @(
     "engines/GM_V8_pak:Weiand_pro_Street_supercharger=engines/generic"
     "engines/GM_V8_pak:Holley_Street_supercharger=engines/generic"
     "engines/GM_V8_pak:Holley_2x4_charger=engines/generic"
-    "engines/DEXTERV8s:Universal_blower=engines/generic"
-    "engines/DEXTERV8s:Universal_blower_scoop=engines/generic"
-    "engines/DEXTERV8s:Universal_4_barrel_carburetor=engines/generic"
-    "engines/DEXTERV8s:Universal_dual_4_barrel_carburetors*=engines/generic"
+    # The Ford V8 pack's aftermarket carburettors and its Edelbrock blower; its air filters stay Ford (decals)
+    "engines/ford_v8s:Holley_street_carburetor=engines/generic"
+    "engines/ford_v8s:Holley_street_4brl_carburetor=engines/generic"
+    "engines/ford_v8s:Edelbrock_4brl_carburetor*=engines/generic"
+    "engines/ford_v8s:Holley_2x4brl_carburetors=engines/generic"
+    "engines/ford_v8s:Edelbrock_2x4brl_carburetors*=engines/generic"
+    "engines/ford_v8s:Edelbrock_supercharger_*=engines/generic"
     # Engine packs by brand
     "engines/Chrysler_V8_pak=engines/chrysler"
     "engines/GM_V8_pak=engines/gm"
-    "engines/DEXTERV8s=engines/ford"
-    "engines/fordi6_data=engines/ford_six"
+    "engines/ford_v8s=engines/ford"
+    "engines/ford_l6=engines/ford_six"
     # Rims and tyres by brand; Goodyear's rpk holds both
     "mopar_wheels=rims/mopar"
     "mopar_tires=tyres/mopar"
@@ -95,14 +167,23 @@ $drop = @(
     "engines/Buick_LC2/*"
     "engines/MC_Prime/*"
     "engines/MC_Prime_SuperDuty/*"
-    "engines/ford/Dodge_*"
-    "engines/ford/*_Mopar_head_cover"
-    "engines/ford/*Chevrolet_*"
-    "engines/ford/Drag_*"
     "engines/chrysler/_Engine_block_360BP"
     "engines/gm/GMP_427_block"
-    # Dexter's 2-bar "Super Blower" on the BDS mesh
-    "engines/ford/Universal_blower_2"
+    # Dexter's Dodge, Chevrolet and drag engines and his 2-bar blower: the pack is replaced, but its parts are paired
+    # with the Ford V8s, and these must not be (a Duster with a Ford 292 is no Duster)
+    "engines/DEXTERV8s/Dodge_*"
+    "engines/DEXTERV8s/*_Mopar_head_cover"
+    "engines/DEXTERV8s/*Chevrolet_*"
+    "engines/DEXTERV8s/Drag_*"
+    "engines/DEXTERV8s/Universal_blower_2"
+    # The Ford V8 pack's scriptless dress-up and nitrous bits (they would pair with anything)
+    "engines/ford/dress_1_st_pump"
+    "engines/ford/nos_*"
+    "engines/ford/Edelbrock_dual_timing_gears"
+    # The Ford six pack still carries the Baiern and Emer parts it was grown from, and a nitrous rail without a script
+    "engines/ford_six/Baiern_*"
+    "engines/ford_six/Emer_*"
+    "engines/ford_six/SL_Tuners_*"
     # Modern tuner wheels, and everything that is body or interior
     "wheels/*"
     "interior/*"
@@ -115,8 +196,6 @@ $merge = @(
     # even when they are the same product: every pack tunes its carburettors' mixture and fuel flow its own way,
     # and the engines were rated with them (they borrow the better model instead, see $model)
     "engines/chrysler/Carburetors_4BRL_Holley=engines/generic/Carburetors_4BRL_street_HOLLEY"
-    "engines/ford/Universal_round_air_filter=engines/generic/Air_cleaner_Edelbrock"
-    "engines/ford/Universal_oval_air_filter=engines/generic/Air_cleaner_Edelbrock_Oval_2x4BRL"
     # Every carburettor part is one carburettor: a set whose single exists with the same script values becomes that
     # many of the single (builds get one per pad); sets with values of their own are sliced instead, see $single
     "engines/generic/Carburetors_2x4BRL_Edelbrock=engines/generic/Carburetors_4BRL_Edelbrock*2"
@@ -132,8 +211,11 @@ $merge = @(
     "engines/gm/RG_4spd_plus_tranny_*=engines/gm/RG_4spd_plus_tranny"
     "engines/gm/V8_4spd_tranny_GM=engines/gm/V8_3spd_tranny"
     "engines/gm/GM_500_4spd_gearbox=engines/gm/GM_500_3spd_gearbox"
-    "engines/ford/Universal_adjustable_6_speed_AWD_transmission=engines/ford/VR4E_SUPER_LOCK_UP_Racing_Transmission"
-    "engines/ford_six/Baiern_Devils_*_transmission=engines/ford_six/Baiern_Tourist_transmission"
+    "engines/ford/Tranny_tremec_*=engines/ford/Tranny_borg_warner_super_t10_4spd"
+    # The Ford pack's Edelbrock blower twice, once per block family, with the same values: one fits every blower
+    # manifold by its fitting
+    "engines/generic/Edelbrock_supercharger_big_block=engines/generic/Edelbrock_supercharger_small_block"
+    "engines/generic/Edelbrock_supercharger_drive_belt_big_block=engines/generic/Edelbrock_supercharger_drive_belt_small_block"
 ) -join ','
 
 $model = @(
@@ -142,13 +224,16 @@ $model = @(
     # GM's factory carburettors get the Carter AVS, a factory carburettor's looks rather than another Holley's
     "engines/generic/Holley_4brl_carburator=engines/generic/Carburetors_4BRL_street_HOLLEY"
     "engines/generic/hardcore_1050cfm_carb=engines/generic/Carburetors_4BRL_street_HOLLEY"
-    "engines/generic/Universal_4_barrel_carburetor=engines/generic/Carburetors_4BRL_street_HOLLEY"
     "engines/generic/Holley_2brl_carb=engines/generic/Carburetors_2BRL_HOLLEY"
     "engines/generic/Holley_2x2brl_carbs=engines/generic/Carburetors_2BRL_HOLLEY"
     "engines/generic/Holley_2x4brl_carburator=engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY"
-    "engines/generic/Universal_dual_4_barrel_carburetors*=engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY"
     "engines/gm/stock_4brl_carburator=engines/chrysler/carter_4barrel_carb"
     "engines/gm/stock_2brl_carburator=engines/generic/Carburetors_2BRL_HOLLEY"
+    # The Ford V8 pack's carburettors are the 2010 Mopar pack's models (one of them the crude early block)
+    "engines/generic/Holley_street_carburetor=engines/generic/Carburetors_4BRL_street_HOLLEY"
+    "engines/generic/Holley_street_4brl_carburetor=engines/generic/Carburetors_4BRL_street_HOLLEY"
+    "engines/generic/Edelbrock_4brl_carburetor*=engines/generic/Carburetors_4BRL_Edelbrock"
+    "engines/generic/Holley_2x4brl_carburetors=engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY"
 ) -join ','
 
 $single = @(
@@ -159,10 +244,11 @@ $single = @(
     "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack=3@0.122"
     "engines/chrysler/Carburetors_2x4BRL_crossram_*=2@0.20"
     "engines/generic/Holley_2x4brl_carburator=2@0.22"
-    "engines/generic/Universal_dual_4_barrel_carburetors*=2@0.22"
     "engines/generic/Holley_2x2brl_carbs=2@0.18"
     "engines/generic/Holley_2x4brl_filter=2@0.22"
     "engines/gm/GTO65_Airbox=3@0.122"
+    "engines/generic/Holley_2x4brl_carburetors=2@0.22"
+    "engines/generic/Edelbrock_2x4brl_carburetors*=2@0.22"
 ) -join ','
 
 $name = @(
@@ -172,11 +258,14 @@ $name = @(
     "engines/chrysler/Carburetors_2x4BRL_crossram_Edelbrock=Edelbrock Crossram 4BRL Carburetor"
     "engines/chrysler/Carburetors_2x4BRL_crossram_HOLLEY*=HOLLEY Crossram 4BRL Carburetor"
     "engines/generic/Holley_2x4brl_carburator=Holley 750 CFM Dominator carburetor"
-    "engines/generic/Universal_dual_4_barrel_carburetors=Holley 1150 Four Barrel Race Carburetor"
-    "engines/generic/Universal_dual_4_barrel_carburetors_2=Drag Race Methanol Carburetor"
     "engines/generic/Holley_2x2brl_carbs=Holley Classic series 2-barrel carb (350 cfm)"
     "engines/generic/Holley_2x4brl_filter=Holley round air filter"
     "engines/gm/GTO65_Airbox=Pontiac GTO 389 Tri-Power air filter"
+    "engines/generic/Holley_2x4brl_carburetors=Holley street four-barrel carburetor (dual-quad jetting)"
+    "engines/generic/Edelbrock_2x4brl_carburetors=Edelbrock Performer 500 CFM four-barrel carburetor (dual-quad jetting)"
+    "engines/generic/Edelbrock_2x4brl_carburetors_2=Edelbrock Marine 600 CFM four-barrel carburetor (dual-quad jetting)"
+    "engines/generic/Edelbrock_supercharger_small_block=Edelbrock 7.0 psi roots type supercharger"
+    "engines/generic/Edelbrock_supercharger_drive_belt_small_block=Edelbrock roots type supercharger drive belt"
 ) -join ','
 
 # A pad that took a set of carburettors becomes one pad per carburettor, with a slot over the row for the air
@@ -206,8 +295,7 @@ $pads = @(
     "engines/gm/GTO65_intake:7=carb:2bbl*3@0.122@0.003/0.073/-0.006@air:3x2"
     "engines/gm/Vette_C3_intake:7=carb:2bbl*3@0.122@0.003/0.073/-0.006@air:3x2"
     "engines/generic/Holley_Street_supercharger:9=carb:2bbl*2@0.18@0/0.1/0"
-    "engines/ford/Ford_dual_4_barrel_intake_manifold:7=carb:4bbl*2@0.22@-0.043/0.108/-0.040@air:2x4"
-    "engines/generic/Universal_blower:9=carb:4bbl*2@0.22@-0.043/0.108/-0.040@air:2x4"
+    "engines/ford/Trickflow_2x4brl_intake_manifold_*:7=carb:4bbl*2@0.22@-0.043/0.108/-0.040@air:2x4"
 ) -join ','
 
 $fit = @(
@@ -218,17 +306,21 @@ $fit = @(
     "engines/generic/Carburetors_4BRL_*:10=carb:4bbl"
     "engines/generic/Holley_4brl_carburator:10=carb:4bbl"
     "engines/generic/hardcore_1050cfm_carb:10=carb:4bbl"
-    "engines/generic/Universal_4_barrel_carburetor:10=carb:4bbl"
     "engines/chrysler/carter_4barrel_carb:12=carb:4bbl"
     "engines/chrysler/Fireful0_engine_works_carb:12=carb:4bbl"
     "engines/gm/stock_4brl_carburator:10=carb:4bbl"
     # The single carburettors sliced out of sets (the ids still say 2x4/3x2)
     "engines/generic/Carburetors_2x4BRL_*:10=carb:4bbl"
     "engines/generic/Holley_2x4brl_carburator:10=carb:4bbl"
-    "engines/generic/Universal_dual_4_barrel_carburetors*:10=carb:4bbl"
     "engines/generic/Carburetors_3x2BRL_*:10=carb:2bbl"
     "engines/generic/Holley_2x2brl_carbs:10=carb:2bbl"
     "engines/chrysler/Carburetors_2x4BRL_crossram_*:10=carb:crossram"
+    # The Ford V8 pack's (2010 Mopar numbering: carburettors mount by 7)
+    "engines/generic/Holley_street_carburetor:7=carb:4bbl"
+    "engines/generic/Holley_street_4brl_carburetor:7=carb:4bbl"
+    "engines/generic/Edelbrock_4brl_carburetor*:7=carb:4bbl"
+    "engines/generic/Holley_2x4brl_carburetors:7=carb:4bbl"
+    "engines/generic/Edelbrock_2x4brl_carburetors*:7=carb:4bbl"
     # Air cleaners and scoops by what they sit on: one carburettor's horn, or the slot over a row of them
     "engines/generic/Air_cleaner_Edelbrock:11=air:single"
     "engines/generic/Air_cleaner_Edelbrock_Signature_Series:11=air:single"
@@ -255,7 +347,15 @@ $fit = @(
     "engines/generic/Summit_scoop_3:12=air:2x4"
     "engines/generic/Summit_scoop_4:12=air:2x4"
     "engines/generic/Summit_scoop_5:12=air:2x4"
-    "engines/generic/Universal_blower_scoop:12=air:2x4"
+    # The Ford pack's air filters keep their Ford decals and stay Ford parts, but sit on any carburettor
+    "engines/ford/Ford_*_4brl_air_filter*:11=air:single"
+    "engines/ford/Edelbrock_4brl_air_filter:11=air:single"
+    "engines/ford/Holley_4brl_air_filter:11=air:single"
+    "engines/ford/Edelbrock_racing_air_cleaner:11=air:single"
+    "engines/ford/Motorcraft_4brl_blower:11=air:single"
+    "engines/ford/Edelbrock_2x4brl_air_filter:11=air:2x4"
+    "engines/ford/KN_2x4brl_air_filter:11=air:2x4"
+    "engines/ford/Motorcraft_2x4brl_blower:11=air:2x4"
     # The Chrysler 2-bbl's air horn only knows Chrysler's factory cleaners: it takes any single cleaner all the same
     "engines/generic/Carburetors_2BRL_HOLLEY:11=takes:air:single"
     # The carburettors sliced out of sets are one carburettor each: their horns, which only the set's cleaner named
@@ -264,16 +364,17 @@ $fit = @(
     "engines/generic/Carburetors_2x4BRL_Dominator_HOLLEY:11=takes:air:single"
     "engines/generic/Carburetors_2x4BRL_King_Demon:11=takes:air:single"
     "engines/generic/Carburetors_3x2BRL_Road_Demon_six_pack:11=takes:air:single"
-    "engines/generic/Universal_dual_4_barrel_carburetors*:11=takes:air:single"
     "engines/generic/hardcore_1050cfm_carb:11=takes:air:single"
     "engines/chrysler/Carburetors_2x4BRL_crossram_*:11=takes:air:single"
+    "engines/generic/Holley_2x4brl_carburetors:11=takes:air:single"
+    "engines/generic/Edelbrock_2x4brl_carburetors*:11=takes:air:single"
     # Roots blowers on any blower manifold (the drive belt stays the blower's own)
     "engines/generic/Supercharger_Weiand:7=blower:roots"
     "engines/generic/Weiand_8_71_supercharger:8=blower:roots"
     "engines/generic/Weiand_pro_Street_supercharger:8=blower:roots"
     "engines/generic/Holley_Street_supercharger:8=blower:roots"
     "engines/generic/Holley_2x4_charger:8=blower:roots"
-    "engines/generic/Universal_blower:8=blower:roots"
+    "engines/generic/Edelbrock_supercharger_small_block:7=blower:roots"
 ) -join ','
 
 $shift = @(
@@ -291,8 +392,6 @@ $shift = @(
     "engines/generic/Holley_4brl_carburator:10=0/-0.062/0"
     "engines/generic/hardcore_1050cfm_carb:10=0/-0.062/0"
     "engines/generic/Holley_2x4brl_carburator:10=0/-0.062/0"
-    "engines/generic/Universal_4_barrel_carburetor:10=0/-0.062/0"
-    "engines/generic/Universal_dual_4_barrel_carburetors*:10=0/-0.062/0"
     "engines/generic/Holley_2x2brl_carbs:10=0/-0.062/0"
     "engines/gm/stock_4brl_carburator:10=0/-0.062/0"
     "engines/gm/stock_2brl_carburator:10=0/-0.062/0"
@@ -314,8 +413,27 @@ $shift = @(
     "engines/chrysler/Supercharger_Edelbrock*:9=0/-0.062/0"
     "engines/chrysler/Supercharger_Paxton_Kit:9=0/-0.062/0"
     "engines/generic/Supercharger_Weiand:9=0/-0.062/0"
-    "engines/ford/Ford_4_barrel_intake_manifold:7=0/-0.062/0"
-    "engines/ford/Ford_dual_4_barrel_intake_manifold:7=0/-0.062/0"
+    # The Ford V8 pack is a 2010 Mopar clone by cfg too (measured with -Measure: its carburettors' slot 7 sits at the
+    # carburettor's centre, its pads 2 cm over the manifold top, its Edelbrock blower's pad 9 like Chrysler's): the
+    # same way down to the flange
+    "engines/generic/Holley_street_carburetor:7=0/-0.062/0"
+    "engines/generic/Holley_street_4brl_carburetor:7=0/-0.062/0"
+    "engines/generic/Edelbrock_4brl_carburetor*:7=0/-0.062/0"
+    "engines/generic/Holley_2x4brl_carburetors:7=0/-0.062/0"
+    # (the Edelbrock sets keep their own model, whose base is 7.2 cm below the slot)
+    "engines/generic/Edelbrock_2x4brl_carburetors*:7=0/-0.072/0"
+    "engines/ford/Ford_*_4brl_intake_manifold:7=0/-0.062/0"
+    "engines/ford/Ford_racing_4brl_intake_manifold_*:7=0/-0.062/0"
+    "engines/ford/Ford_351_boss_4brl_intake_manifold:7=0/-0.062/0"
+    "engines/ford/Cobra_Jet_429_4brl_intake_manifold:7=0/-0.062/0"
+    "engines/ford/Holley_4brl_intake_manifold_small_block:7=0/-0.062/0"
+    "engines/ford/Trickflow_2x4brl_intake_manifold_*:7=0/-0.062/0"
+    "engines/generic/Edelbrock_supercharger_small_block:9=0/-0.062/0"
+    # Its air filters mostly carry the Chrysler offsets on the shared meshes already (within 1.5 cm); three sit at
+    # their mesh centre where the Chrysler part on the same mesh does not
+    "engines/ford/KN_2x4brl_air_filter:11=-0.052/0.015/-0.045"
+    "engines/ford/Edelbrock_2x4brl_air_filter:11=-0.050/-0.004/-0.082"
+    "engines/ford/Motorcraft_2x4brl_blower:11=-0.050/0.010/-0.045"
     # GM's stock single carburettors were modelled 18 cm ahead of their origin and its single-carburettor pads sit
     # 18 cm back to match; the carburettors draw centred Chrysler models now, so the pads move forward to where
     # GM's own carburettors sat
@@ -346,5 +464,10 @@ $shift = @(
 $absorb = @(Get-ChildItem (Join-Path $PSScriptRoot "..\Street Rod AC\bin") -Recurse -Filter slot_shifts.json -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }) -join ','
 # An empty argument is dropped on the way to the converter, which would then read --absorb as the pack filter
 $absorbArgs = if ($absorb) { @("--absorb", $absorb) } else { @() }
+$measureArgs = if ($Measure) { @("--measure", $Measure) } else { @() }
 
-& $Converter $Slrr $Output --notes $Notes --replace engines/Mopar=engines/chrysler --rename $rename --drop $drop --merge $merge --model $model --single $single --name $name --pads $pads --fit $fit --shift $shift --shifts (Join-Path $PSScriptRoot "slot_shifts.json") @absorbArgs
+# The content in the repo is what saves were made with: ids it had that this run does not produce any more stay
+# answered (a mod release that renamed its files, aliases of earlier runs), whatever folder this run writes to
+$previous = Join-Path $PSScriptRoot "..\Street Rod AC\Assets\Parts"
+
+& $Converter $Slrr $Output --notes $Notes --replace $replace --twin $twin --rename $rename --drop $drop --merge $merge --model $model --single $single --name $name --pads $pads --fit $fit --shift $shift --shifts (Join-Path $PSScriptRoot "slot_shifts.json") --previous $previous @absorbArgs @measureArgs
