@@ -72,7 +72,24 @@ public sealed class PartsCatalog
         if (File.Exists(buildsFile))
             catalog.EngineBuilds = JsonConvert.DeserializeObject<List<EngineBuild>>(File.ReadAllText(buildsFile)) ?? new List<EngineBuild>();
 
+        // Slots nudged into place in the garage since the last conversion
+        catalog.Shifts = SlotShifts.Load(root);
+        catalog.Shifts.ApplyTo(catalog._parts);
+
         return catalog;
+    }
+
+    /// <summary>Slots moved after conversion (the garage's placement mode); already applied to the parts</summary>
+    public SlotShifts Shifts { get; private set; } = new();
+
+    /// <summary>
+    /// Moves a slot in its part's space, for good: the part is changed in place and the move is written next to
+    /// the packs, to be folded into the packs by the next conversion.
+    /// </summary>
+    public void ShiftSlot(PartDefinition part, PartSlot slot, float[] delta)
+    {
+        for (var axis = 0; axis < 3; axis++) slot.Position[axis] += delta[axis];
+        Shifts.Add(part.Id, slot.Id, delta);
     }
 
     /// <summary>A part by its id, or by the id it had in a pack that has since been replaced</summary>

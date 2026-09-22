@@ -147,6 +147,24 @@ number: GM carburettors hang by 10, the Carter by 12). Ten carbs borrow: GM's Ho
 carburettors, which get the Carter AVS (a factory carburettor's looks rather than another Holley's). GM's injection
 (the Weiand methanol stacks, the '63 fuelie rail, the Holley rails) is decent and GM-only and keeps its own models.
 
+### Placement mode in the garage (F5, `SlotShifts`)
+
+A tool for fitting the converted parts by eye, not gameplay. With a part picked in the workbench, **F5** turns
+placement mode on: the arrows move the part across and fore-aft, PgUp/PgDn up and down, in the *engine's* axes
+(right, up, towards the radiator), whatever the camera does; a step is 5 mm, Ctrl 1 mm, Shift 2 cm. **Tab** moves the
+pad the part sits on instead of the part (a carburettor wrong on one manifold is the pad's fault, one wrong everywhere
+is its own), **R** takes the slot back to where the packs put it, F5 or Esc ends the mode; a readout in the part card
+says what is being moved and by how much so far. `CarViewport3D` turns the step into a move of a slot in that slot's
+part's space (the part's own mounting slot moves the other way, since the part hangs so that its slot lands on the
+pad), `PartsCatalog.ShiftSlot` changes the part in place, and the parts are laid out again without rebuilding the
+model (`GarageRenderer.PlacePart`).
+
+Every step is written to `slot_shifts.json` next to the content the game runs on (part id → slot id → offset, metres,
+the part's axes, the sum of every nudge). The catalog applies the file when it loads, so the fit sticks between runs;
+`convert-parts.ps1` folds such files (from the output folder and the build folders, `--absorb`) into
+**`tools/slot_shifts.json`**, kept for good and applied last on every conversion, and takes the game's files away,
+so the packs stay the truth and nothing is applied twice. The kept file is plain enough to edit by hand.
+
 ### Every carburettor part is one carburettor (`--single`, `--pads`, the shared air slot)
 
 SLRR sells a dual-quad or a Six Pack as one part with one model of two or three carburettors, on one manifold pad.

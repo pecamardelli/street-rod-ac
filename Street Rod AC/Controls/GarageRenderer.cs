@@ -174,6 +174,18 @@ public class GarageRenderer : DarkKn5ObjectRenderer
         IsDirty = true;
     }
 
+    /// <summary>Puts a mounted part's node where it now belongs, at once: the placement mode nudging a part</summary>
+    public void PlacePart(int node, Matrix world)
+    {
+        if (_prop == null || node < 0 || node >= _propNodes.Count) return;
+
+        _motions.RemoveAll(m => ReferenceEquals(m.Node, _propNodes[node]));
+        _propNodes[node].List.LocalMatrix = world;
+        _prop.UpdateBoundingBox();
+        SetShadowsDirty();
+        IsDirty = true;
+    }
+
     private void TickPartMotions(float dt)
     {
         if (_motions.Count == 0) return;

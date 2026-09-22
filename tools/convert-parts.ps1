@@ -328,4 +328,8 @@ $shift = @(
     "engines/generic/Holley_Street_supercharger:9=0/0.212/0.163"
 ) -join ','
 
-& $Converter $Slrr $Output --notes $Notes --replace engines/Mopar=engines/chrysler --rename $rename --drop $drop --merge $merge --model $model --single $single --name $name --pads $pads --fit $fit --shift $shift
+# Slots nudged into place in the garage (F5 in the workbench) are kept in tools\slot_shifts.json for good. The game
+# writes them next to the content it runs on, which is a build folder: those files are folded in and taken away
+$absorb = @(Get-ChildItem (Join-Path $PSScriptRoot "..\Street Rod AC\bin") -Recurse -Filter slot_shifts.json -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }) -join ','
+
+& $Converter $Slrr $Output --notes $Notes --replace engines/Mopar=engines/chrysler --rename $rename --drop $drop --merge $merge --model $model --single $single --name $name --pads $pads --fit $fit --shift $shift --shifts (Join-Path $PSScriptRoot "slot_shifts.json") --absorb $absorb

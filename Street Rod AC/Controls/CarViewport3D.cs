@@ -536,6 +536,13 @@ public class CarViewport3D : System.Windows.Controls.Grid
                 _partWorlds = placed.Where(p => p.Source != null).ToDictionary(p => p.Source!, p => p.World);
                 _animateUntil = DateTime.Now + AnimationWindow;
 
+                // The part being placed is gone, or the tree was made anew: the mode is over
+                if (_placing != null && !_partWorlds.ContainsKey(_placing))
+                {
+                    _placing = null;
+                    PlacementChanged?.Invoke(null);
+                }
+
                 _logger.Information("Parts of {Car} laid out in {Ms} ms ({Count} parts, engine {Engine})", Path.GetFileName(carDirectory),
                     (int)(DateTime.Now - started).TotalMilliseconds, placed.Count, engine?.Definition.Id ?? "none");
 
@@ -565,6 +572,142 @@ public class CarViewport3D : System.Windows.Controls.Grid
         Enumerable.Range(0, nodes.Count)
             .Where(i => nodes[i].Source is { } source && source.InstanceId != Guid.Empty && test(source.InstanceId))
             .ToList();
+
+    #region Placement mode
+
+    /// <summary>What a nudge in placement mode moves: the part's own mounting slot, or the slot it sits on</summary>
+    public enum PlacementTarget { Part, Pad }
+
+    /// <summary>Told what the placement mode is doing, for the screen to show; null when the mode is off</summary>
+    public event Action<string?>? PlacementChanged;
+
+    private InstalledPart? _placing;
+    private PlacementTarget _placementTarget;
+
+    public bool IsPlacing => _placing != null;
+
+    /// <summary>
+    /// Enters placement mode on the selected part: nudges move it (or the pad it sits on) and are written to the
+    /// catalog's slot shifts. Leaves the mode when there is no selected part or it is already on.
+    /// </summary>
+    public void TogglePlacement()
+    {
+        if (_placing != null || SelectedPart is not { Parent: not null } part || PartsCatalog == null)
+        {
+            _placing = null;
+            PlacementChanged?.Invoke(null);
+            return;
+        }
+
+        _placing = part;
+        _placementTarget = PlacementTarget.Part;
+        ReportPlacement();
+    }
+
+    public void TogglePlacementTarget()
+    {
+        if (_placing == null) return;
+
+        _placementTarget = _placementTarget == PlacementTarget.Part ? PlacementTarget.Pad : PlacementTarget.Part;
+        ReportPlacement();
+    }
+
+    /// <summary>
+    /// Moves the placed part by a step in the engine's axes: right, up, and forward (towards the radiator). The
+    /// step becomes a move of a slot in that slot's own part's space, so it is what the packs store.
+    /// </summary>
+    public void NudgePlacement(float right, float up, float forward)
+    {
+        var catalog = PartsCatalog;
+        if (_placing is not { Parent: { } parent } part || catalog == null || Engine == null) return;
+        if (!_partWorlds.TryGetValue(Engine, out var engineWorld) || !_partWorlds.TryGetValue(part, out var partWorld)
+            || !_partWorlds.TryGetValue(parent, out var parentWorld)) return;
+
+        // SLRR parts look down their +Z at the firewall: forward is -Z of the engine
+        var engineAxes = engineWorld;
+        engineAxes.Translation = System.Numerics.Vector3.Zero;
+        var worldDelta = System.Numerics.Vector3.TransformNormal(new System.Numerics.Vector3(right, up, -forward), engineAxes);
+
+        // The part hangs so that its own slot lands on the pad: moving its slot moves the part the other way
+        var (definition, slotId, frame, sign) = _placementTarget == PlacementTarget.Part
+            ? (part.Definition, part.OwnSlot, partWorld, -1f)
+            : (parent.Definition, part.ParentSlot, parentWorld, 1f);
+        var slot = definition.Slots.FirstOrDefault(s => s.Id == slotId);
+        if (slot == null) return;
+
+        frame.Translation = System.Numerics.Vector3.Zero;
+        if (!System.Numerics.Matrix4x4.Invert(frame, out var toLocal)) return;
+        var local = System.Numerics.Vector3.TransformNormal(worldDelta, toLocal) * sign;
+
+        catalog.ShiftSlot(definition, slot, new[] { local.X, local.Y, local.Z });
+        Relayout();
+        ReportPlacement();
+    }
+
+    /// <summary>Takes the slot being placed back to where the packs put it</summary>
+    public void ResetPlacement()
+    {
+        var catalog = PartsCatalog;
+        if (_placing is not { Parent: { } parent } part || catalog == null) return;
+
+        var (definition, slotId) = _placementTarget == PlacementTarget.Part ? (part.Definition, part.OwnSlot) : (parent.Definition, part.ParentSlot);
+        var slot = definition.Slots.FirstOrDefault(s => s.Id == slotId);
+        if (slot == null) return;
+
+        var offset = catalog.Shifts.Of(definition.Id, slotId);
+        catalog.ShiftSlot(definition, slot, new[] { -offset[0], -offset[1], -offset[2] });
+        Relayout();
+        ReportPlacement();
+    }
+
+    private void ReportPlacement()
+    {
+        var catalog = PartsCatalog;
+        if (_placing is not { Parent: { } parent } part || catalog == null)
+        {
+            PlacementChanged?.Invoke(null);
+            return;
+        }
+
+        var (definition, slotId) = _placementTarget == PlacementTarget.Part ? (part.Definition, part.OwnSlot) : (parent.Definition, part.ParentSlot);
+        var offset = catalog.Shifts.Of(definition.Id, slotId);
+        var what = _placementTarget == PlacementTarget.Part ? "the part's own slot" : "the pad it sits on";
+        PlacementChanged?.Invoke(
+            $"PLACEMENT: moving {what}\n{definition.Id} slot {slotId}\n" +
+            $"shift so far: x {offset[0] * 100:+0.0;-0.0} cm  y {offset[1] * 100:+0.0;-0.0} cm  z {offset[2] * 100:+0.0;-0.0} cm\n" +
+            "arrows: across / fore-aft   PgUp PgDn: height   Ctrl 1 mm  Shift 2 cm\nTab: part / pad   R: reset   F5 or Esc: done");
+    }
+
+    /// <summary>Puts every mounted part where the slots say now, without rebuilding the model</summary>
+    private void Relayout()
+    {
+        var renderer = _renderer;
+        var catalog = PartsCatalog;
+        var anchors = _anchors;
+        if (renderer == null || catalog == null || anchors == null || !renderer.HasProp) return;
+
+        var placed = CarPartsLayout.Build(catalog, anchors, Engine);
+        var worlds = placed.Where(p => p.Source != null).ToDictionary(p => p.Source!, p => p.World);
+        for (var i = 0; i < _partNodes.Count; i++)
+        {
+            if (_partNodes[i].Source is { } source && worlds.TryGetValue(source, out var world))
+            {
+                var m = world;
+                renderer.PlacePart(i, new SlimDX.Matrix
+                {
+                    M11 = m.M11, M12 = m.M12, M13 = m.M13, M14 = m.M14,
+                    M21 = m.M21, M22 = m.M22, M23 = m.M23, M24 = m.M24,
+                    M31 = m.M31, M32 = m.M32, M33 = m.M33, M34 = m.M34,
+                    M41 = m.M41, M42 = m.M42, M43 = m.M43, M44 = m.M44
+                });
+            }
+        }
+
+        _partWorlds = worlds;
+        _animateUntil = DateTime.Now + AnimationWindow;
+    }
+
+    #endregion
 
     /// <summary>Shows the loose part of <see cref="Candidates"/> in the places it could go</summary>
     private async void ApplyCandidates()

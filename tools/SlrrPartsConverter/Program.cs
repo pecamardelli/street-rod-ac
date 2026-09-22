@@ -29,6 +29,8 @@ public static class Program
     private const string SingleOption = "--single";
     private const string PadsOption = "--pads";
     private const string NameOption = "--name";
+    private const string ShiftsOption = "--shifts";
+    private const string AbsorbOption = "--absorb";
     private const string TakesPrefix = "takes:";
 
     /// <summary>Ids of the slots a pad of several carburettors is split into (the pad keeps its id for the first)</summary>
@@ -98,7 +100,13 @@ public static class Program
         //   a set becomes <count> pads taking <fitting>, plus a slot over them (at the offset) for an air cleaner
         //   spanning the set
         // --name <part id pattern>=<display name>: what the part is called once it is not what its script says
+        // --shifts <file>: slots nudged into place in the garage (slot_shifts.json), kept for good: what the game
+        //   wrote next to the packs since the last run is folded into this file first, then all of it is applied
+        // --absorb <slot_shifts.json>,...: more of the game's files to fold in (the game writes next to the content
+        //   it runs on, in a build folder) and take away
         string? notes = null;
+        string? shiftsFile = null;
+        var absorb = new List<string>();
         var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var renames = new List<RenameRule>();
         var drops = new List<Regex>();
@@ -114,6 +122,8 @@ public static class Program
         for (var i = 0; i < args.Length; i++)
         {
             if (args[i] == NotesOption && i + 1 < args.Length) notes = args[++i];
+            else if (args[i] == ShiftsOption && i + 1 < args.Length) shiftsFile = args[++i];
+            else if (args[i] == AbsorbOption && i + 1 < args.Length) absorb.AddRange(args[++i].Split(',').Select(f => f.Trim()).Where(f => f.Length > 0));
             else if (args[i] == DropOption && i + 1 < args.Length)
             {
                 drops.AddRange(args[++i].Split(',').Select(p => Pattern(p.Trim())));
@@ -268,7 +278,7 @@ public static class Program
                               "[--merge <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] " +
                               "[--model <part id pattern>=<part id>,...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] " +
                               "[--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] " +
-                              "[--name <part id pattern>=<display name>,...]");
+                              "[--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""Street Rod AC\Assets\Parts"" engines/Mopar  (the full run: tools\convert-parts.ps1)");
             return 1;
         }
@@ -559,6 +569,39 @@ public static class Program
         SplitPads(padRules, definitions);
         Repoint(game, sets, definitions, partIds, singles.Keys);
         Fit(fits, definitions);
+
+        // Slots nudged into place in the garage, last: they were made against the geometry as it ends up here.
+        // What the game wrote since the last run joins the kept file and leaves the output folder
+        if (shiftsFile != null)
+        {
+            if (Path.GetFileName(shiftsFile) != SlotShifts.FileName || absorb.Any(f => Path.GetFileName(f) != SlotShifts.FileName))
+            {
+                Console.WriteLine($"{ShiftsOption} and {AbsorbOption} take files named {SlotShifts.FileName}");
+                return 1;
+            }
+
+            var kept = SlotShifts.Load(Path.GetDirectoryName(Path.GetFullPath(shiftsFile))!);
+            var folded = 0;
+            foreach (var folder in absorb.Select(f => Path.GetDirectoryName(Path.GetFullPath(f))!).Prepend(output).Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                var fresh = SlotShifts.Load(folder);
+                if (fresh.IsEmpty) continue;
+
+                foreach (var (partId, slotId, offset) in fresh.All) kept.Add(partId, slotId, offset, save: false);
+                folded += fresh.All.Count();
+                File.Delete(fresh.Path!);
+            }
+
+            if (folded > 0)
+            {
+                kept.Save();
+                Console.WriteLine($"  {folded} slot shifts from the garage folded into {shiftsFile}");
+            }
+
+            var applied = kept.ApplyTo(definitions);
+            if (!kept.IsEmpty) Console.WriteLine($"  {applied} slots moved by {shiftsFile}");
+        }
+
         foreach (var rule in nameRules)
         {
             var named = definitions.Values.Where(d => rule.Pattern.IsMatch(d.Id)).ToList();

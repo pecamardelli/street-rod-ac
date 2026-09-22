@@ -17,6 +17,7 @@
     <Compile Include="..\..\Street Rod AC\Parts\PartDefinition.cs" Link="Parts\PartDefinition.cs" />
     <Compile Include="..\..\Street Rod AC\Parts\EngineBuild.cs" Link="Parts\EngineBuild.cs" />
     <Compile Include="..\..\Street Rod AC\Parts\PartsCatalog.cs" Link="Parts\PartsCatalog.cs" />
+    <Compile Include="..\..\Street Rod AC\Parts\SlotShifts.cs" Link="Parts\SlotShifts.cs" />
     <Compile Include="..\..\Street Rod AC\Parts\PartKinds.cs" Link="Parts\PartKinds.cs" />
     <Compile Include="..\..\Street Rod AC\Parts\Cars\*.cs" Link="Parts\Cars\%(Filename)%(Extension)" />
     <Compile Include="..\..\Street Rod AC\Models\GameState\PartInstance.cs" Link="Models\PartInstance.cs" />

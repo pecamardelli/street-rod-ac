@@ -105,6 +105,15 @@ namespace Street_Rod_AC.Screens.Garage
             private set => Set(ref _candidates, value);
         }
 
+        private string _placementDisplay = string.Empty;
+
+        /// <summary>What the viewport's placement mode is doing, shown over the part card; empty when it is off</summary>
+        public string PlacementDisplay
+        {
+            get => _placementDisplay;
+            set => Set(ref _placementDisplay, value);
+        }
+
         private InstalledPart? _selectedPart;
 
         public InstalledPart? SelectedPart

@@ -239,6 +239,12 @@
                                TextWrapping="Wrap"
                                Visibility="{Binding SelectedAttachedDisplay, Converter={StaticResource StringToVisibilityConverter}}"/>
 
+                    <!-- Placement mode (F5): a tool for fitting the converted parts -->
+                    <Border Background="#33FFD700" BorderBrush="#FFD700" BorderThickness="1" Padding="6" Margin="0,6,0,0"
+                            Visibility="{Binding PlacementDisplay, Converter={StaticResource StringToVisibilityConverter}}">
+                        <TextBlock Text="{Binding PlacementDisplay}" FontSize="11" FontFamily="Consolas" Foreground="#FFE8A0" TextWrapping="Wrap"/>
+                    </Border>
+
                     <Button Content="Take it off"
                             Command="{Binding RemoveSelectedCommand}"
                             Style="{StaticResource DialogPrimaryButtonStyle}"
