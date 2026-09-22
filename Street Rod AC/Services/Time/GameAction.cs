@@ -39,7 +39,10 @@ namespace Street_Rod_AC.Services.Time
         SellCar,
 
         /// <summary>Switch to a different car in the garage (15 min)</summary>
-        SwitchCar
+        SwitchCar,
+
+        /// <summary>Take a car out for a drive on your own (1 hour)</summary>
+        FreeRun
     }
 
     /// <summary>
@@ -66,6 +69,7 @@ namespace Street_Rod_AC.Services.Time
                 GameAction.GarageWorkMajor => 120,
                 GameAction.SellCar => 60,
                 GameAction.SwitchCar => 15,
+                GameAction.FreeRun => 60,
                 _ => 30 // Default fallback
             };
         }

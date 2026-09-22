@@ -397,6 +397,8 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
                         <!-- Condition -->
@@ -435,6 +437,28 @@
                                 Padding="15,5"
                                 FontSize="14"
                                 VerticalAlignment="Center"/>
+
+                        <!-- Free run: the car alone on a track of the player's choosing -->
+                        <ComboBox Grid.Column="5"
+                                  ItemsSource="{Binding FreeRunTracks}"
+                                  SelectedItem="{Binding FreeRunTrack}"
+                                  DisplayMemberPath="Name"
+                                  Width="230"
+                                  Height="30"
+                                  FontSize="13"
+                                  Margin="20,0,8,0"
+                                  VerticalAlignment="Center"
+                                  VerticalContentAlignment="Center"
+                                  ToolTip="Where to take the car"
+                                  Visibility="{Binding HasFreeRunTracks, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <Button Grid.Column="6"
+                                Content="Free Run"
+                                Command="{Binding FreeRunCommand}"
+                                Style="{StaticResource DialogPrimaryButtonStyle}"
+                                Padding="15,5"
+                                FontSize="14"
+                                VerticalAlignment="Center"
+                                ToolTip="Take the car out on your own, on what its parts make of it. An hour goes by."/>
                     </Grid>
                 </Border>
             </StackPanel>

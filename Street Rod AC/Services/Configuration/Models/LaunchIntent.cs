@@ -91,6 +91,34 @@ namespace Street_Rod_AC.Services.Configuration.Models
     }
 
     /// <summary>
+    /// Intent to take a car out alone: a practice session on a track, ended by the player
+    /// </summary>
+    public class FreeRunLaunchIntent : LaunchIntent
+    {
+        public string CarId { get; set; } = string.Empty;
+        public string SkinId { get; set; } = string.Empty;
+        public string PlayerName { get; set; } = string.Empty;
+        public string TrackId { get; set; } = string.Empty;
+        public string? TrackConfig { get; set; }
+
+        public override string Executable => "acs.exe";
+
+        public override string Description => $"Free run: {CarId} on {TrackId}";
+
+        public override IEnumerable<ModificationIntent> GetConfigurationIntents()
+        {
+            yield return new FreeRunIntent
+            {
+                CarId = CarId,
+                Skin = SkinId,
+                PlayerName = PlayerName,
+                TrackId = TrackId,
+                TrackConfig = TrackConfig
+            };
+        }
+    }
+
+    /// <summary>
     /// Intent to launch a drag race (1v1 quarter mile)
     /// </summary>
     public class DragRaceLaunchIntent : LaunchIntent
