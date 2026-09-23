@@ -29,8 +29,8 @@
       "priceBandHigh": 1.0,
       "conditionCenter": 0.85,
       "travelHours": 1.0,
-      "stockLow": 8,
-      "stockHigh": 12
+      "stockLow": 12,
+      "stockHigh": 18
     },
     {
       "id": "sunset_motors",
@@ -44,8 +44,8 @@
       "priceBandHigh": 0.92,
       "conditionCenter": 0.8,
       "travelHours": 1.5,
-      "stockLow": 8,
-      "stockHigh": 12
+      "stockLow": 12,
+      "stockHigh": 18
     },
     {
       "id": "colorado_motors",
@@ -59,7 +59,7 @@
       "priceBandHigh": 0.85,
       "conditionCenter": 0.82,
       "travelHours": 2.0,
-      "stockLow": 12,
+      "stockLow": 14,
       "stockHigh": 20
     },
     {
@@ -74,7 +74,7 @@
       "priceBandHigh": 0.7,
       "conditionCenter": 0.7,
       "travelHours": 2.0,
-      "stockLow": 12,
+      "stockLow": 14,
       "stockHigh": 20
     },
     {
@@ -89,8 +89,8 @@
       "priceBandHigh": 0.68,
       "conditionCenter": 0.62,
       "travelHours": 1.5,
-      "stockLow": 10,
-      "stockHigh": 16
+      "stockLow": 14,
+      "stockHigh": 20
     },
     {
       "id": "riverside_cars",
@@ -104,7 +104,7 @@
       "priceBandHigh": 0.55,
       "conditionCenter": 0.55,
       "travelHours": 1.5,
-      "stockLow": 12,
+      "stockLow": 14,
       "stockHigh": 20
     },
     {
@@ -119,7 +119,7 @@
       "priceBandHigh": 0.48,
       "conditionCenter": 0.5,
       "travelHours": 1.0,
-      "stockLow": 12,
+      "stockLow": 14,
       "stockHigh": 20
     },
     {
@@ -134,8 +134,8 @@
       "priceBandHigh": 0.4,
       "conditionCenter": 0.48,
       "travelHours": 1.0,
-      "stockLow": 8,
-      "stockHigh": 12
+      "stockLow": 12,
+      "stockHigh": 18
     },
     {
       "id": "harbor_auto",
@@ -149,7 +149,7 @@
       "priceBandHigh": 0.35,
       "conditionCenter": 0.45,
       "travelHours": 2.5,
-      "stockLow": 12,
+      "stockLow": 14,
       "stockHigh": 20
     },
     {
@@ -164,8 +164,8 @@
       "priceBandHigh": 0.3,
       "conditionCenter": 0.4,
       "travelHours": 1.5,
-      "stockLow": 8,
-      "stockHigh": 12
+      "stockLow": 12,
+      "stockHigh": 18
     }
   ]
 }

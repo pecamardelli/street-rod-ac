@@ -55,11 +55,15 @@ for.
 
 | Showroom | Floor | Walls | Holds |
 |---|---|---|---|
-| `Hangar` | 28.9 x 28.9 m | 14.4 m | 12 |
-| `showroom` | 28.0 x 28.0 m | 15.0 m | 12 |
-| `industrial` | 78 x 80 m | 38 m | 20 |
-| `beach` | 60 x 60 m | 30 m | 16 |
-| `studio_white` | 78 x 78 m | 38 m | 20 |
+| `Hangar` | 28.9 x 28.9 m | 14.4 m | 18 |
+| `showroom` | 28.0 x 28.0 m | 14.0 m | 18 |
+| `industrial` | 80.2 x 82.6 m | 39.0 m | 20 |
+| `studio_white` | 79.4 x 78.2 m | 38.9 m | 20 |
+| `beach` | 52.8 x 52.8 m | 26.4 m | 20 |
+
+In the two 28 m rooms that is more cars than fit in one shot; the lot is swung round
+the way it would be walked. Twenty is the ceiling everywhere, for load time rather
+than room.
 
 `LotLayout.Build` works the bays out from the room and the number of cars: rows facing each other across an
 aisle, kept square enough for one camera position to take in, and never wider than the walls.
@@ -69,8 +73,16 @@ because a distance that frames an 80 m yard puts the camera through the wall of 
 A dealer's `stockHigh` is kept at or under its showroom's `capacity`, so everything a lot sells is standing
 on it and nothing can only be read about.
 
-**Measuring a new showroom:** read the .kn5's mesh vertices and take the extent of geometry near y = 0.
-Do not guess — a lot that overruns the walls puts cars outside the room.
+**Measuring a new showroom:** run `Modding/Tools/ac_track_tools/kn5bounds.py` (in the AC modding repo) over
+the model and paste what `--json` prints:
+
+```
+python kn5bounds.py --json --id Hangar "C:/GAMES/Street Rod AC/content/showroom/Hangar/hangar.kn5"
+```
+
+Do not guess — a lot that overruns the walls puts cars outside the room, and a preview picture will not tell
+you a 28 m shed from an 80 m yard. That tool's bay-spacing constants mirror `LotLayout.cs`; change one and
+change the other.
 
 ### Stock matches the lot
 
