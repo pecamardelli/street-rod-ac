@@ -78,6 +78,15 @@ public class GarageRenderer : DarkKn5ObjectRenderer
 
     public GarageRenderer(CarDescription? car, string? showroomKn5) : base(car, showroomKn5) { }
 
+    /// <summary>
+    /// Marks the shadow map as needing redrawing.
+    ///
+    /// The renderer works this out for itself when the car in its main slot changes, but it only listens to
+    /// that one slot. On a lot every other car is in a slot it is not listening to, so the last car to
+    /// arrive stands there without a shadow until something else happens to ask for one.
+    /// </summary>
+    public void RefreshShadows() => SetShadowsDirty();
+
     public bool HasProp => _prop != null;
 
     /// <summary>

@@ -55,15 +55,16 @@ for.
 
 | Showroom | Floor | Walls | Holds |
 |---|---|---|---|
-| `Hangar` | 28.9 x 28.9 m | 14.4 m | 18 |
-| `showroom` | 28.0 x 28.0 m | 14.0 m | 18 |
+| `Hangar` | 28.9 x 28.9 m | 14.4 m | 10 |
+| `showroom` | 28.0 x 28.0 m | 14.0 m | 10 |
 | `industrial` | 80.2 x 82.6 m | 39.0 m | 20 |
 | `studio_white` | 79.4 x 78.2 m | 38.9 m | 20 |
-| `beach` | 52.8 x 52.8 m | 26.4 m | 20 |
 
-In the two 28 m rooms that is more cars than fit in one shot; the lot is swung round
-the way it would be walked. Twenty is the ceiling everywhere, for load time rather
-than room.
+Bays are spaced for a 5.8 m saloon with its doors opening: 4.6 m along a row, 10 m between rows. That is
+what a 28 m room costs — ten cars, not the eighteen it holds if they are packed. Neither size fits in one
+shot; the lot is swung round the way it would be walked.
+
+`beach` was measured and dropped: a sand flat with a Victorian pier does not read as a Los Angeles car lot.
 
 `LotLayout.Build` works the bays out from the room and the number of cars: rows facing each other across an
 aisle, kept square enough for one camera position to take in, and never wider than the walls.
@@ -113,7 +114,16 @@ The daily refresh tops each lot back up to its own target, for the same reason.
 - **A car's own node never reports a mesh hit** (`RenderableList.CheckIntersection` returns null). Picking
   goes through the slot's bounding box, which is also cheaper and easier to aim at.
 - **Shadows and reflections are worked out from `MainSlot` only.** The car nearest the middle of the lot goes
-  there, so the quality falls off evenly.
+  there, so the quality falls off evenly. The renderer also only *listens* to that slot, so nothing marks the
+  shadows dirty when a car lands in any other one — `GarageRenderer.RefreshShadows()` is called once the lot
+  is stocked, or the last car to arrive stands there without a shadow.
+- **Only sell cars that are installed.** The catalog outlives the install: a car deleted from `content/cars`
+  stays on its books. `BuildPool` checks the folder exists. Without that check the dearest lots came out
+  empty, because the cars that had been cleared out were the expensive ones.
+- The lot is covered until every car is standing in it (`IsLotReady`), then the cover fades and the viewport
+  fades up whole. Watching an empty room fill one car at a time is not worth showing.
+- An empty `Cars` list with no showroom is how a lot ends when you leave the screen — bindings clear one at a
+  time. That is not a failure and must not be reported as one.
 - Selling a car reuses the standing scene and swaps only the cars that moved; the showroom, which can be a
   few hundred MB, is not read again.
 - `ModelHeadingOffset` in the viewport is the knob if every car on every lot faces the same wrong way.

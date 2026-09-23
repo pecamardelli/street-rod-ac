@@ -11,14 +11,20 @@ namespace Street_Rod_AC.Services.Dealers
     /// </summary>
     public static class LotLayout
     {
-        /// <summary>Along a row, middle to middle. A car is about 2 m wide and stands at an angle</summary>
-        private const float CarPitch = 3.4f;
+        /// <summary>
+        /// Along a row, middle to middle. A 1970s American saloon is a little over 2 m wide, so this leaves
+        /// room to open a door without standing in the next car.
+        /// </summary>
+        private const float CarPitch = 4.6f;
 
-        /// <summary>Between rows: a car's length plus enough aisle to drive one out</summary>
-        private const float RowPitch = 7.0f;
+        /// <summary>
+        /// Between rows. The longest thing likely to be on a lot is near 5.8 m, so this is its length plus
+        /// enough aisle to walk down and to drive one out.
+        /// </summary>
+        private const float RowPitch = 10.0f;
 
         /// <summary>Kept clear of the walls so no car is standing in one</summary>
-        private const float WallMargin = 3.0f;
+        private const float WallMargin = 2.0f;
 
         /// <summary>Rows face each other across the aisle, a little off square</summary>
         private const float NearRowHeading = 200f;

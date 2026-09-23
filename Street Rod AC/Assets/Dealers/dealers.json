@@ -29,8 +29,8 @@
       "priceBandHigh": 1.0,
       "conditionCenter": 0.85,
       "travelHours": 1.0,
-      "stockLow": 12,
-      "stockHigh": 18
+      "stockLow": 7,
+      "stockHigh": 10
     },
     {
       "id": "sunset_motors",
@@ -44,8 +44,8 @@
       "priceBandHigh": 0.92,
       "conditionCenter": 0.8,
       "travelHours": 1.5,
-      "stockLow": 12,
-      "stockHigh": 18
+      "stockLow": 7,
+      "stockHigh": 10
     },
     {
       "id": "colorado_motors",
@@ -84,7 +84,7 @@
       "blurb": "Salt in the air and sand in the carpets, but they run.",
       "mapX": 0.44,
       "mapY": 0.53,
-      "showroomId": "beach",
+      "showroomId": "industrial",
       "priceBandLow": 0.28,
       "priceBandHigh": 0.68,
       "conditionCenter": 0.62,
@@ -134,8 +134,8 @@
       "priceBandHigh": 0.4,
       "conditionCenter": 0.48,
       "travelHours": 1.0,
-      "stockLow": 12,
-      "stockHigh": 18
+      "stockLow": 7,
+      "stockHigh": 10
     },
     {
       "id": "harbor_auto",
@@ -164,8 +164,8 @@
       "priceBandHigh": 0.3,
       "conditionCenter": 0.4,
       "travelHours": 1.5,
-      "stockLow": 12,
-      "stockHigh": 18
+      "stockLow": 7,
+      "stockHigh": 10
     }
   ]
 }

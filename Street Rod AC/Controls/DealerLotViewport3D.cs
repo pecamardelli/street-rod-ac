@@ -249,17 +249,46 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         private set => SetValue(HasFailedPropertyKey, value);
     }
 
-    public static readonly DependencyProperty LoadedCountProperty = DependencyProperty.Register(
-        nameof(LoadedCount), typeof(int), typeof(DealerLotViewport3D), new PropertyMetadata(0));
+    private static readonly DependencyPropertyKey IsLotReadyPropertyKey = DependencyProperty.RegisterReadOnly(
+        nameof(IsLotReady), typeof(bool), typeof(DealerLotViewport3D), new PropertyMetadata(false));
+
+    public static readonly DependencyProperty IsLotReadyProperty = IsLotReadyPropertyKey.DependencyProperty;
 
     /// <summary>
-    /// How many cars have made it onto the lot so far. Written by the viewport and meant to be read with a
-    /// OneWayToSource binding: only the viewport knows how many cars the budget let it stand up.
+    /// Every car has been dealt with, one way or another, and the lot is worth looking at. Not the same as
+    /// <see cref="IsReady"/>, which is only the first frame: at that point the room is still empty.
+    /// </summary>
+    public bool IsLotReady
+    {
+        get => (bool)GetValue(IsLotReadyProperty);
+        private set => SetValue(IsLotReadyPropertyKey, value);
+    }
+
+    private static readonly DependencyPropertyKey ExpectedCountPropertyKey = DependencyProperty.RegisterReadOnly(
+        nameof(ExpectedCount), typeof(int), typeof(DealerLotViewport3D), new PropertyMetadata(0));
+
+    public static readonly DependencyProperty ExpectedCountProperty = ExpectedCountPropertyKey.DependencyProperty;
+
+    /// <summary>How many cars the lot is waiting on, so the wait can say how far along it is</summary>
+    public int ExpectedCount
+    {
+        get => (int)GetValue(ExpectedCountProperty);
+        private set => SetValue(ExpectedCountPropertyKey, value);
+    }
+
+    private static readonly DependencyPropertyKey LoadedCountPropertyKey = DependencyProperty.RegisterReadOnly(
+        nameof(LoadedCount), typeof(int), typeof(DealerLotViewport3D), new PropertyMetadata(0));
+
+    public static readonly DependencyProperty LoadedCountProperty = LoadedCountPropertyKey.DependencyProperty;
+
+    /// <summary>
+    /// How many cars are standing on the lot so far. Only the viewport knows: the budget may not have
+    /// stretched to all of them.
     /// </summary>
     public int LoadedCount
     {
         get => (int)GetValue(LoadedCountProperty);
-        set => SetValue(LoadedCountProperty, value);
+        private set => SetValue(LoadedCountPropertyKey, value);
     }
 
     #endregion
@@ -320,7 +349,13 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         }
 
         if (showroom == null && cars.Count == 0)
-            throw new InvalidOperationException("Nothing to render: no showroom and no cars");
+        {
+            // Leaving the screen clears the bindings one at a time, so this is the ordinary way a lot ends.
+            // It is not a failure and must not be reported as one: doing so marked the viewport failed and
+            // tore the bridge down on the way out of every single dealer.
+            DisposeRenderer();
+            return;
+        }
 
         // Selling a car changes the stock but not the place it is sold in. Rebuilding the scene would mean
         // reading a showroom of a few hundred MB again for nothing, so only the cars are swapped.
@@ -390,6 +425,8 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         _loaded = cars;
         _slots.Clear();
         LoadedCount = 0;
+        ExpectedCount = cars.Count;
+        IsLotReady = false;
 
         ApplyLotCamera(immediate: true);
         if (SelectedIndex >= 0) OnSelectionChanged();
@@ -412,6 +449,11 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
         var previous = _loaded;
         _loaded = cars;
+        ExpectedCount = cars.Count;
+
+        // Restocking after a sale moves several cars at once. Cover the lot for that too, rather than let
+        // the player watch cars blink out and back in around the one they just bought.
+        IsLotReady = false;
 
         var budget = CarByteBudget;
 
@@ -480,7 +522,9 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         }
 
         LoadedCount = _standing.Count(c => c != null);
+        renderer.RefreshShadows();
         renderer.IsDirty = true;
+        IsLotReady = true;
         _animateUntil = DateTime.Now + SettleWindow;
 
         _logger.Information("Lot restocked: {Loaded} of {Total} cars out front", LoadedCount, cars.Count);
@@ -573,6 +617,16 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
             {
                 _logger.Error(ex, "Could not put {Car} on the lot", Path.GetFileName(car.CarDirectory));
             }
+        }
+
+        // The renderer only watches its main slot, so nothing has asked for the shadows of the cars in any
+        // of the others. Without this the last car to arrive stands there without one.
+        if (_renderer is { } loaded)
+        {
+            loaded.RefreshShadows();
+            loaded.IsDirty = true;
+            IsLotReady = true;
+            _animateUntil = DateTime.Now + SettleWindow;
         }
 
         _logger.Information("Lot loaded: {Loaded} of {Total} cars", LoadedCount, cars.Count);
@@ -967,8 +1021,14 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
             if (!IsReady)
             {
                 IsReady = true;
-                _image.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, FadeInDuration));
                 Ready?.Invoke(this, EventArgs.Empty);
+            }
+
+            // An empty room filling up one car at a time is not worth watching. The picture is held back
+            // until the lot is stocked, then faded up whole.
+            if (IsLotReady && _image.Opacity == 0)
+            {
+                _image.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, FadeInDuration));
             }
         }
         catch (Exception ex)
@@ -1011,6 +1071,8 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         _standing.Clear();
         _loaded = [];
         LoadedCount = 0;
+        ExpectedCount = 0;
+        IsLotReady = false;
         IsReady = false;
         _hovered = -1;
         _label.Visibility = Visibility.Collapsed;

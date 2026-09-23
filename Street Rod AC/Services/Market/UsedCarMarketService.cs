@@ -1,3 +1,5 @@
+using System.IO;
+using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
@@ -90,11 +92,29 @@ namespace Street_Rod_AC.Services.Market
         private List<PoolEntry> BuildPool(List<CarDefinition> activeCars)
         {
             var priced = new List<(CarDefinition Car, CarProfile Profile)>();
+            var uninstalled = 0;
+
             foreach (var car in activeCars)
             {
                 var profile = _profileRepo.GetProfile(car.Id);
                 if (profile == null || profile.BasePrice <= 0) continue;
+
+                // The catalog outlives the install: a car deleted from content/cars stays on its books, and
+                // one that is not there cannot be sold. It would take a place on a lot, show a card, and
+                // stand as an invisible gap - which is what emptied the dearest lots, since the cars that
+                // were cleared out were the expensive ones.
+                if (!Directory.Exists(Path.Combine(AppSettings.Instance.CarsPath, car.Id)))
+                {
+                    uninstalled++;
+                    continue;
+                }
+
                 priced.Add((car, profile));
+            }
+
+            if (uninstalled > 0)
+            {
+                _logger.Warning("{Count} cars in the catalog are not installed and cannot be sold", uninstalled);
             }
 
             if (priced.Count == 0) return [];

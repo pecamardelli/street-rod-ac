@@ -202,33 +202,14 @@ namespace Street_Rod_AC.Screens.DealerLot
                 DealerName, Stock.Count, placements.Count);
         }
 
-        private int _parkedCount;
-
-        /// <summary>
-        /// How many cars the viewport actually stood up, which it reports back. Not the same as the number of
-        /// bays: a lot of very heavy models runs out of room before it runs out of bays.
-        /// </summary>
-        public int ParkedCount
-        {
-            get => _parkedCount;
-            set
-            {
-                if (_parkedCount == value) return;
-                _parkedCount = value;
-                OnPropertyChanged(nameof(ParkedCount));
-                OnPropertyChanged(nameof(StockSummary));
-            }
-        }
-
         /// <summary>What is on the lot, and what is not out front</summary>
         public string StockSummary
         {
             get
             {
                 if (Stock.Count == 0) return "Nothing on the lot today";
-                if (ParkedCount <= 0) return $"{Stock.Count} in stock";
-                return Stock.Count > ParkedCount
-                    ? $"{ParkedCount} out front, {Stock.Count - ParkedCount} more round the back"
+                return LotCars.Count < Stock.Count
+                    ? $"{LotCars.Count} out front, {Stock.Count - LotCars.Count} more round the back"
                     : $"{Stock.Count} on the lot";
             }
         }

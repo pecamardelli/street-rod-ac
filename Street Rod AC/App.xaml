@@ -39,6 +39,7 @@
             <converters:GaragePanelToVisibilityConverter x:Key="GaragePanelToVisibilityConverter"/>
             <converters:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
             <converters:EqualityConverter x:Key="EqualityConverter"/>
+            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
 
             <!-- Effects -->
             <DropShadowEffect x:Key="DropShadowEffect"
