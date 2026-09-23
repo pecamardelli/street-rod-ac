@@ -23,21 +23,21 @@ Dynamic used car market with dealer locations, pricing based on condition, and d
 - `IsSold` - Purchase status
 
 ## Spawning Logic
-Based on `DealerPrecedence`:
-- Roll random for each car definition
-- If `random < precedence`: spawn 1-3 instances
-- Higher precedence = more instances
+Dealer by dealer, each filled to its own `stockLow`..`stockHigh`:
+- Build the pool of cars that have a profile and a price, each with its rank (the share of installed cars
+  it is dearer than)
+- For each dealer, take the cars whose rank falls in its price band
+- Draw from those weighted by `DealerPrecedence`, at most twice per model, until the lot is full
 
-| Precedence | Type | Instances |
-|------------|------|-----------|
-| 0.7-1.0 | Common | 1-3 |
-| 0.4-0.6 | Performance | 0-2 |
-| 0.1-0.3 | Exotic | 0-1 |
+A dealer whose band matches nothing installed takes the nearest cars instead of standing empty.
+
+Do **not** go back to spawning a whole market and cutting it to size — `.Take(n)` over a list built in
+catalog order starves whole dealers.
 
 ## Daily Refresh
 1. Remove sold listings older than 7 days
 2. Remove unsold listings older than 14 days
-3. Spawn new listings to target size (30-50)
+3. Top each dealer back up to its own target
 
 ## Pricing
 - Start with `CarProfile.BasePrice`
@@ -46,7 +46,7 @@ Based on `DealerPrecedence`:
 - Round to nearest $100
 
 ## Dealer Locations
-Five dealers, defined in `Assets/Dealers/dealers.json` and read by `DealerCatalog`:
+Ten dealers, defined in `Assets/Dealers/dealers.json` and read by `DealerCatalog`:
 - Downtown Motors, Eastside Garage, Suburban Autos, Riverside Cars, Industrial Motors
 
 The save holds only `DealerLocation` (Id, Name, Region). Map position, showroom, parking bays and stock

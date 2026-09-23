@@ -40,20 +40,54 @@ three-quarter until the player drags, at which point the camera is theirs and th
 ### Data
 
 `Assets/Dealers/dealers.json`, read by `Services/Dealers/DealerCatalog`. It holds the map position, the
-showroom, the parking bays, and the kind of stock the dealer keeps.
+showroom, how much stock the lot carries, and the kind of car it deals in. **There are no parking bays to
+author** — see below.
 
 The save keeps only a dealer's `Id`, `Name` and `Region` (`DealerLocation`). Everything else lives in the
 file and is merged over the save on load, so a new field reaches saves that predate it, and a dealer dropped
 from the file goes away. **Do not add map or scene fields to `DealerLocation`** — that is what this split is
 for.
 
+### Lots are laid out to fit the room
+
+`Assets/Dealers/showrooms.json` carries each showroom's floor extent and wall radius, **measured off the
+.kn5 rather than guessed**:
+
+| Showroom | Floor | Walls | Holds |
+|---|---|---|---|
+| `Hangar` | 28.9 x 28.9 m | 14.4 m | 12 |
+| `showroom` | 28.0 x 28.0 m | 15.0 m | 12 |
+| `industrial` | 78 x 80 m | 38 m | 20 |
+| `beach` | 60 x 60 m | 30 m | 16 |
+| `studio_white` | 78 x 78 m | 38 m | 20 |
+
+`LotLayout.Build` works the bays out from the room and the number of cars: rows facing each other across an
+aisle, kept square enough for one camera position to take in, and never wider than the walls.
+`LotLayout.CameraRadiusFor` then places the camera far enough back to see the lot and **inside the walls**,
+because a distance that frames an 80 m yard puts the camera through the wall of a 28 m shed.
+
+A dealer's `stockHigh` is kept at or under its showroom's `capacity`, so everything a lot sells is standing
+on it and nothing can only be read about.
+
+**Measuring a new showroom:** read the .kn5's mesh vertices and take the extent of geometry near y = 0.
+Do not guess — a lot that overruns the walls puts cars outside the room.
+
 ### Stock matches the lot
 
-`UsedCarMarketService` used to hand each listing to `dealers[random]`. It now places a car by where its
-price sits in the market: a dealer claims a slice (`priceBandLow`/`priceBandHigh`) and a standard of car
-(`conditionCenter`, two parts the dealer to one part the roll, so a gem on the dirt lot is still possible).
+Each dealer is **filled to its own target**. It used to spawn a market from every installed car and then cut
+it to size with `.Take(n)` — which kept whichever cars came first in the catalog and starved every dealer
+whose kind of car came later. That is what left two lots empty and put a hundred cars on a third.
 
-Without this the map is decoration — every lot would hold the same spread of cars.
+A dealer claims a slice of the market (`priceBandLow`/`priceBandHigh`) measured as the **share of installed
+cars it is dearer than**, not as dollars — one half-million-dollar car in the install would otherwise push
+everything else into the bottom tenth and leave the smart showroom bare. The bands overlap on purpose and
+must together cover 0 to 1.
+
+`conditionCenter` then shifts the condition roll toward that dealer's standard, except for one car in twelve
+which ignores it — the trade-in nobody looked at properly. Without that every lot holds the same spread and
+there is no reason to drive anywhere.
+
+The daily refresh tops each lot back up to its own target, for the same reason.
 
 ## Things worth knowing before changing this
 
@@ -70,8 +104,13 @@ Without this the map is decoration — every lot would hold the same spread of c
   there, so the quality falls off evenly.
 - Selling a car reuses the standing scene and swaps only the cars that moved; the showroom, which can be a
   few hundred MB, is not read again.
-- `ModelHeadingOffset` in the viewport is the knob if every car on every lot faces the same wrong way. Bay
-  headings in the JSON are for when one car is wrong.
+- `ModelHeadingOffset` in the viewport is the knob if every car on every lot faces the same wrong way.
+- The camera eases with a per-second settle rate rather than a per-frame lerp, so it moves the same way at
+  any frame rate. `CarViewport3D` does the same, and the first car of a session is still placed at once —
+  only later moves are eased.
+- The map is held at the shape of its crop by `Helpers/AspectPanel`, which hands the picture and the pin
+  layer the same rectangle. Stretching the map to fill the window would crop it by an unknown amount and
+  take every pin off its place.
 
 ## Files
 
@@ -80,6 +119,9 @@ Without this the map is decoration — every lot would hold the same spread of c
 - `Controls/DealerLotViewport3D.cs` — the 3D lot
 - `Controls/SharedTextureBridge.cs` — DX11-to-WPF presentation, shared with `CarViewport3D`
 - `Helpers/FractionPanel.cs` — fractional layout for the pins
+- `Helpers/AspectPanel.cs` — holds the map and its pins to one shape
+- `Services/Dealers/LotLayout.cs` — works the bays out from the room
+- `Assets/Dealers/showrooms.json` — measured showroom floors
 - `Services/Dealers/` — dealer definitions
 - `Services/Market/CarPurchaseService.cs` — buying, shared with the listings screen
 - `Assets/Dealers/dealers.json` — the data

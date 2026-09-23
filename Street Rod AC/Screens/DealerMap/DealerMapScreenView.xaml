@@ -9,130 +9,135 @@
 
     <Grid Background="{StaticResource BgDarkBrush}">
 
-        <!-- The basin, cropped out of the full map. MapViewbox is the window onto it -->
-        <Rectangle>
-            <Rectangle.Fill>
-                <ImageBrush ImageSource="pack://application:,,,/Assets/Images/Backgrounds/los_angeles_map.jpg"
-                            Viewbox="{Binding MapViewbox}"
-                            ViewboxUnits="RelativeToBoundingBox"
-                            Stretch="UniformToFill"/>
-            </Rectangle.Fill>
-        </Rectangle>
+        <!-- The map and its pins share one rectangle of a fixed shape, so a pin stays on its bit of the
+             city whatever the window does. Whatever is left over is board around it. -->
+        <helpers:AspectPanel Aspect="{Binding MapAspect}" Margin="0,86,0,0">
 
-        <!-- A modern street map read as old paper: warmed, quietened, and darkened at the edges so the print
-             stops competing with the pins -->
-        <Rectangle Opacity="0.30">
-            <Rectangle.Fill>
-                <SolidColorBrush Color="#6B4A1E"/>
-            </Rectangle.Fill>
-        </Rectangle>
-        <Rectangle>
-            <Rectangle.Fill>
-                <RadialGradientBrush GradientOrigin="0.5,0.45" Center="0.5,0.45" RadiusX="0.75" RadiusY="0.8">
-                    <GradientStop Color="#00000000" Offset="0.45"/>
-                    <GradientStop Color="#99000000" Offset="1.0"/>
-                </RadialGradientBrush>
-            </Rectangle.Fill>
-        </Rectangle>
+            <!-- The basin, cropped out of the full map. MapViewbox is the window onto it -->
+            <Rectangle>
+                <Rectangle.Fill>
+                    <ImageBrush ImageSource="pack://application:,,,/Assets/Images/Backgrounds/los_angeles_map.jpg"
+                                Viewbox="{Binding MapViewbox}"
+                                ViewboxUnits="RelativeToBoundingBox"
+                                Stretch="Fill"/>
+                </Rectangle.Fill>
+            </Rectangle>
 
-        <!-- Pins, each held at its own spot on the map however the window is sized -->
-        <ItemsControl ItemsSource="{Binding Pins}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <helpers:FractionPanel/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemContainerStyle>
-                <Style TargetType="ContentPresenter">
-                    <Setter Property="helpers:FractionPanel.X" Value="{Binding X}"/>
-                    <Setter Property="helpers:FractionPanel.Y" Value="{Binding Y}"/>
-                </Style>
-            </ItemsControl.ItemContainerStyle>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <!-- The pin is the button; the card is its tooltip -->
-                    <Button Command="{Binding DataContext.VisitDealerCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                            CommandParameter="{Binding}"
-                            Cursor="Hand"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Padding="0">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <StackPanel x:Name="Root" Orientation="Vertical" HorizontalAlignment="Center">
-                                    <Border x:Name="Dot"
-                                            Width="18" Height="18"
-                                            CornerRadius="9"
-                                            Background="{StaticResource AccentPrimaryBrush}"
-                                            BorderBrush="#F5E6C8"
-                                            BorderThickness="2"
-                                            HorizontalAlignment="Center">
-                                        <Border.Effect>
-                                            <DropShadowEffect BlurRadius="10" ShadowDepth="0" Color="Black" Opacity="0.85"/>
-                                        </Border.Effect>
-                                    </Border>
-                                    <Border x:Name="Plate"
-                                            Margin="0,5,0,0"
-                                            Background="#D0121212"
-                                            BorderBrush="#70F5E6C8"
-                                            BorderThickness="1"
-                                            CornerRadius="3"
-                                            Padding="8,3,8,3">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Name}"
-                                                       FontSize="13"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                                       HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding StockDisplay}"
-                                                       FontSize="11"
-                                                       Foreground="{StaticResource TextSecondaryBrush}"
-                                                       HorizontalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Border>
-                                </StackPanel>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="Dot" Property="Background" Value="{StaticResource AccentHoverBrush}"/>
-                                        <Setter TargetName="Dot" Property="Width" Value="22"/>
-                                        <Setter TargetName="Dot" Property="Height" Value="22"/>
-                                        <Setter TargetName="Dot" Property="CornerRadius" Value="11"/>
-                                        <Setter TargetName="Plate" Property="BorderBrush" Value="{StaticResource AccentHoverBrush}"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                        <Button.ToolTip>
-                            <ToolTip Background="#F21A1A1A" BorderBrush="#60F5E6C8" BorderThickness="1" Padding="12">
-                                <StackPanel MaxWidth="260">
-                                    <TextBlock Text="{Binding Name}"
-                                               FontSize="16"
-                                               FontWeight="Bold"
-                                               Foreground="{StaticResource TextPrimaryBrush}"/>
-                                    <TextBlock Text="{Binding Region}"
-                                               FontSize="12"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                               Margin="0,0,0,6"/>
-                                    <TextBlock Text="{Binding Blurb}"
-                                               FontSize="12"
-                                               TextWrapping="Wrap"
-                                               FontStyle="Italic"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                               Margin="0,0,0,8"/>
-                                    <TextBlock Text="{Binding PriceDisplay}"
-                                               FontSize="13"
-                                               Foreground="{StaticResource AccentSuccessBrush}"/>
-                                    <TextBlock Text="{Binding TravelDisplay}"
-                                               FontSize="11"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                               Margin="0,4,0,0"/>
-                                </StackPanel>
-                            </ToolTip>
-                        </Button.ToolTip>
-                    </Button>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+            <!-- A modern street map read as old paper: warmed and quietened so the print stops competing
+                 with the pins -->
+            <Rectangle Opacity="0.30">
+                <Rectangle.Fill>
+                    <SolidColorBrush Color="#6B4A1E"/>
+                </Rectangle.Fill>
+            </Rectangle>
+            <Rectangle>
+                <Rectangle.Fill>
+                    <RadialGradientBrush GradientOrigin="0.5,0.45" Center="0.5,0.45" RadiusX="0.75" RadiusY="0.8">
+                        <GradientStop Color="#00000000" Offset="0.5"/>
+                        <GradientStop Color="#88000000" Offset="1.0"/>
+                    </RadialGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+
+            <!-- Pins, each held at its own spot on the map -->
+            <ItemsControl ItemsSource="{Binding Pins}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <helpers:FractionPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="helpers:FractionPanel.X" Value="{Binding X}"/>
+                        <Setter Property="helpers:FractionPanel.Y" Value="{Binding Y}"/>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <!-- The pin is the button; the card is its tooltip -->
+                        <Button Command="{Binding DataContext.VisitDealerCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}"
+                                Cursor="Hand"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="0">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <StackPanel x:Name="Root" Orientation="Vertical" HorizontalAlignment="Center">
+                                        <Border x:Name="Dot"
+                                                Width="18" Height="18"
+                                                CornerRadius="9"
+                                                Background="{StaticResource AccentPrimaryBrush}"
+                                                BorderBrush="#F5E6C8"
+                                                BorderThickness="2"
+                                                HorizontalAlignment="Center">
+                                            <Border.Effect>
+                                                <DropShadowEffect BlurRadius="10" ShadowDepth="0" Color="Black" Opacity="0.85"/>
+                                            </Border.Effect>
+                                        </Border>
+                                        <Border x:Name="Plate"
+                                                Margin="0,5,0,0"
+                                                Background="#D0121212"
+                                                BorderBrush="#70F5E6C8"
+                                                BorderThickness="1"
+                                                CornerRadius="3"
+                                                Padding="8,3,8,3">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontSize="13"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding StockDisplay}"
+                                                           FontSize="11"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Dot" Property="Background" Value="{StaticResource AccentHoverBrush}"/>
+                                            <Setter TargetName="Dot" Property="Width" Value="22"/>
+                                            <Setter TargetName="Dot" Property="Height" Value="22"/>
+                                            <Setter TargetName="Dot" Property="CornerRadius" Value="11"/>
+                                            <Setter TargetName="Plate" Property="BorderBrush" Value="{StaticResource AccentHoverBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <Button.ToolTip>
+                                <ToolTip Background="#F21A1A1A" BorderBrush="#60F5E6C8" BorderThickness="1" Padding="12">
+                                    <StackPanel MaxWidth="260">
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontSize="16"
+                                                   FontWeight="Bold"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding Region}"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,0,0,6"/>
+                                        <TextBlock Text="{Binding Blurb}"
+                                                   FontSize="12"
+                                                   TextWrapping="Wrap"
+                                                   FontStyle="Italic"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,0,0,8"/>
+                                        <TextBlock Text="{Binding PriceDisplay}"
+                                                   FontSize="13"
+                                                   Foreground="{StaticResource AccentSuccessBrush}"/>
+                                        <TextBlock Text="{Binding TravelDisplay}"
+                                                   FontSize="11"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </ToolTip>
+                            </Button.ToolTip>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </helpers:AspectPanel>
 
         <!-- Header -->
         <StackPanel HorizontalAlignment="Center"

@@ -56,6 +56,9 @@ namespace Street_Rod_AC.Screens.DealerLot
         /// <summary>The lot's 3D scene, or null when the showroom is not installed</summary>
         public string? ShowroomKn5 { get; private set; }
 
+        /// <summary>How far back the camera stands to take the lot in, worked out from the room it is in</summary>
+        public float LotRadius { get; private set; } = 19f;
+
         public DealerLotScreenViewModel(
             NavigationService navigationService,
             DialogService dialogService,
@@ -143,7 +146,6 @@ namespace Street_Rod_AC.Screens.DealerLot
             Stock.Clear();
 
             var listings = _marketService.GetListingsByDealer(_gameState.UsedCarMarket ?? [], _dealer?.Id ?? string.Empty);
-            var bays = _dealer?.Bays ?? [];
 
             // The nearest cars go in the bays, in price order so the lot reads from cheap to dear
             foreach (var listing in listings.OrderBy(l => l.Price))
@@ -172,6 +174,11 @@ namespace Street_Rod_AC.Screens.DealerLot
                 });
             }
 
+            // Bays are worked out from the room and the number of cars, so a lot always fits where it stands
+            var showroom = _dealerCatalog.GetShowroom(_dealer?.ShowroomId ?? string.Empty);
+            var bays = LotLayout.Build(Stock.Count, showroom);
+            LotRadius = LotLayout.CameraRadiusFor(bays, showroom);
+
             var placements = new List<LotCarPlacement>();
             for (var i = 0; i < Stock.Count && i < bays.Count; i++)
             {
@@ -186,6 +193,7 @@ namespace Street_Rod_AC.Screens.DealerLot
             }
 
             LotCars = placements;
+            OnPropertyChanged(nameof(LotRadius));
             OnPropertyChanged(nameof(LotCars));
             OnPropertyChanged(nameof(Stock));
             OnPropertyChanged(nameof(StockSummary));

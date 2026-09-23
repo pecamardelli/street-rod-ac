@@ -17,6 +17,7 @@ namespace Street_Rod_AC.Services.Dealers
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("DealerCatalog");
         private readonly List<DealerDefinition> _dealers = [];
         private readonly Dictionary<string, DealerDefinition> _byId = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, ShowroomSpec> _showrooms = new(StringComparer.OrdinalIgnoreCase);
 
         private static readonly JsonSerializerOptions Options = new()
         {
@@ -25,6 +26,8 @@ namespace Street_Rod_AC.Services.Dealers
 
         public DealerCatalog()
         {
+            LoadShowrooms(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Dealers", "showrooms.json"));
+
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Dealers", "dealers.json");
 
             try
@@ -66,6 +69,42 @@ namespace Street_Rod_AC.Services.Dealers
             {
                 _logger.Error(ex, "Could not read dealer definitions from {Path}", path);
             }
+        }
+
+        private void LoadShowrooms(string path)
+        {
+            try
+            {
+                if (!File.Exists(path))
+                {
+                    _logger.Warning("Showroom measurements not found: {Path}", path);
+                    return;
+                }
+
+                var document = JsonDocument.Parse(File.ReadAllText(path));
+                if (!document.RootElement.TryGetProperty("showrooms", out var array)) return;
+
+                foreach (var element in array.EnumerateArray())
+                {
+                    var spec = element.Deserialize<ShowroomSpec>(Options);
+                    if (spec == null || string.IsNullOrWhiteSpace(spec.Id)) continue;
+                    _showrooms[spec.Id] = spec;
+                }
+
+                _logger.Information("Loaded {Count} showroom measurements", _showrooms.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not read showroom measurements from {Path}", path);
+            }
+        }
+
+        public ShowroomSpec GetShowroom(string id)
+        {
+            if (id != null && _showrooms.TryGetValue(id, out var spec)) return spec;
+
+            _logger.Warning("Showroom {Showroom} has not been measured; assuming a small room", id);
+            return ShowroomSpec.Unknown(id ?? string.Empty);
         }
 
         public IReadOnlyList<DealerDefinition> All => _dealers;

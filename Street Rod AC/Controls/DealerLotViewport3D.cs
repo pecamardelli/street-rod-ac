@@ -31,17 +31,26 @@ public readonly record struct LotCarPlacement(
 public class DealerLotViewport3D : System.Windows.Controls.Grid
 {
     // Taking in the whole lot, and standing on one car
-    private const float LotRadius = 19f;
+    private const float DefaultLotRadius = 19f;
     private const float LotBeta = 0.30f;
     private const float LotEyeHeight = 1.0f;
     private const float CarRadius = 6.2f;
     private const float CarBeta = 0.14f;
 
-    // What the wheel is allowed to do, in each of the two views
-    private const float MinLotRadius = 12f;
-    private const float MaxLotRadius = 30f;
+    // What the wheel is allowed to do, either side of where the view sits
+    private const float LotZoomIn = 0.45f;
+    private const float LotZoomOut = 1.35f;
     private const float MinCarRadius = 3.4f;
     private const float MaxCarRadius = 11f;
+
+    /// <summary>
+    /// How quickly the camera settles, as the share of the remaining distance it covers per second. Low
+    /// enough to read as a move rather than a cut; an ease either end stops it starting or stopping abruptly.
+    /// </summary>
+    private const float CameraSettleRate = 2.6f;
+
+    /// <summary>Near enough to the mark to stop working at it</summary>
+    private const float CameraSettled = 0.004f;
 
     private const float MinBeta = 0.02f;
     private const float MaxBeta = 1.1f;
@@ -102,7 +111,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
     // Where the camera is going. Alpha is only steered until the player takes hold of it
     private Sx.Vector3 _targetGoal = new(0f, LotEyeHeight, 0f);
-    private float _radiusGoal = LotRadius;
+    private float _radiusGoal = DefaultLotRadius;
     private float _betaGoal = LotBeta;
     private float? _alphaGoal;
 
@@ -189,6 +198,20 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
     {
         get => (IReadOnlyList<LotCarPlacement>?)GetValue(CarsProperty);
         set => SetValue(CarsProperty, value);
+    }
+
+    public static readonly DependencyProperty LotRadiusProperty = DependencyProperty.Register(
+        nameof(LotRadius), typeof(double), typeof(DealerLotViewport3D),
+        new PropertyMetadata((double)DefaultLotRadius, (d, _) => ((DealerLotViewport3D)d).OnLotRadiusChanged()));
+
+    /// <summary>
+    /// How far back to stand to take the whole lot in. Worked out from the room the lot is in, because a
+    /// distance that frames a yard puts the camera through the wall of a shed.
+    /// </summary>
+    public double LotRadius
+    {
+        get => (double)GetValue(LotRadiusProperty);
+        set => SetValue(LotRadiusProperty, value);
     }
 
     public static readonly DependencyProperty SelectedIndexProperty = DependencyProperty.Register(
@@ -613,6 +636,12 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
     #region Camera
 
+    private void OnLotRadiusChanged()
+    {
+        if (_renderer == null || IsCarView) return;
+        ApplyLotCamera(immediate: false);
+    }
+
     private void OnSelectionChanged()
     {
         if (_renderer == null) return;
@@ -646,7 +675,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
     private void ApplyLotCamera(bool immediate)
     {
         _targetGoal = new Sx.Vector3(0f, LotEyeHeight, 0f);
-        _radiusGoal = LotRadius;
+        _radiusGoal = (float)LotRadius;
         _betaGoal = LotBeta;
         _alphaGoal = null;
 
@@ -674,24 +703,30 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         var orbit = _renderer?.CameraOrbit;
         if (orbit == null) return false;
 
-        var k = Math.Min(1f, dt * 6f);
+        // A share of what is left, every second: the move starts quickly and settles rather than stopping
+        // dead. Worked out per second so it comes out the same whatever the frame rate.
+        var k = 1f - (float)Math.Exp(-CameraSettleRate * dt);
         var moving = false;
 
         var target = orbit.Target;
         var toTarget = _targetGoal - target;
-        if (toTarget.LengthSquared() > 1e-5f)
+        if (toTarget.LengthSquared() > CameraSettled * CameraSettled)
         {
             orbit.Target = target + toTarget * k;
             moving = true;
         }
+        else
+        {
+            orbit.Target = _targetGoal;
+        }
 
-        if (Math.Abs(_radiusGoal - orbit.Radius) > 1e-3f)
+        if (Math.Abs(_radiusGoal - orbit.Radius) > CameraSettled)
         {
             orbit.Radius += (_radiusGoal - orbit.Radius) * k;
             moving = true;
         }
 
-        if (Math.Abs(_betaGoal - orbit.Beta) > 1e-4f)
+        if (Math.Abs(_betaGoal - orbit.Beta) > CameraSettled)
         {
             orbit.Beta += (_betaGoal - orbit.Beta) * k;
             moving = true;
@@ -701,7 +736,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         {
             // Round the short way
             var delta = (float)Math.IEEERemainder(alphaGoal - orbit.Alpha, Math.PI * 2);
-            if (Math.Abs(delta) > 1e-3f)
+            if (Math.Abs(delta) > CameraSettled)
             {
                 orbit.Alpha += delta * k;
                 moving = true;
@@ -888,10 +923,11 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         var orbit = _renderer?.CameraOrbit;
         if (orbit == null) return;
 
-        var min = IsCarView ? MinCarRadius : MinLotRadius;
-        var max = IsCarView ? MaxCarRadius : MaxLotRadius;
+        var min = IsCarView ? MinCarRadius : (float)LotRadius * LotZoomIn;
+        var max = IsCarView ? MaxCarRadius : (float)LotRadius * LotZoomOut;
 
-        _radiusGoal = Math.Clamp(_radiusGoal - e.Delta * 0.004f, min, max);
+        // Move by a share of where the camera is, so the wheel feels the same close up and far out
+        _radiusGoal = Math.Clamp(_radiusGoal * (1f - e.Delta * 0.0006f), min, max);
         _animateUntil = DateTime.Now + SettleWindow;
         _renderer!.IsDirty = true;
     }

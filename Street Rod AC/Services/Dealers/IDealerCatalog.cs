@@ -14,6 +14,12 @@ namespace Street_Rod_AC.Services.Dealers
         DealerDefinition? Get(string id);
 
         /// <summary>
+        /// The room a showroom gives a lot to work with. A showroom nobody has measured comes back as a
+        /// cautious small one rather than null, so a lot is never laid out on guesswork.
+        /// </summary>
+        ShowroomSpec GetShowroom(string id);
+
+        /// <summary>
         /// The dealers a saved game should carry. Call on load: a save made before a dealer existed gets it,
         /// and a dealer dropped from the file goes away.
         /// </summary>

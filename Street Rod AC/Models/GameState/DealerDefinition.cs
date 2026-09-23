@@ -55,8 +55,12 @@ namespace Street_Rod_AC.Models.GameState
         /// <summary>Hours of game time it takes to get here from the garage and back</summary>
         public float TravelHours { get; set; } = 1f;
 
-        /// <summary>Where the cars stand on the lot. The first bay is the one the scene is built around</summary>
-        public List<LotBay> Bays { get; set; } = [];
+        /// <summary>
+        /// How many cars the lot carries. Keep it at or under the capacity of its showroom, or the overflow
+        /// can only be read about and never looked at.
+        /// </summary>
+        public int StockLow { get; set; } = 8;
+        public int StockHigh { get; set; } = 12;
 
         /// <summary>The save only ever needs the name and the region</summary>
         public DealerLocation ToLocation() => new()

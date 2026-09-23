@@ -19,10 +19,14 @@ namespace Street_Rod_AC.Screens.DealerMap
         /// valley down to the harbour. Dealer positions are stored against the whole image, so this can be
         /// moved without touching the data.
         /// </summary>
-        private const double CropX = 0.28;
-        private const double CropY = 0.12;
-        private const double CropWidth = 0.72;
-        private const double CropHeight = 0.60;
+        private const double CropX = 0.32;
+        private const double CropY = 0.16;
+        private const double CropWidth = 0.66;
+        private const double CropHeight = 0.78;
+
+        /// <summary>The map image as shipped, in pixels, so the crop can keep its shape on screen</summary>
+        private const double MapPixelWidth = 1500;
+        private const double MapPixelHeight = 1900;
 
         private readonly NavigationService _navigationService;
         private readonly DialogService _dialogService;
@@ -38,6 +42,13 @@ namespace Street_Rod_AC.Screens.DealerMap
 
         /// <summary>The window onto the map image, for the view to crop with</summary>
         public System.Windows.Rect MapViewbox { get; } = new(CropX, CropY, CropWidth, CropHeight);
+
+        /// <summary>
+        /// The shape of that window, width over height. The map is shown at this shape whatever the window
+        /// does: stretching it to fill would crop it by an unknown amount and take the pins off their places.
+        /// </summary>
+        public double MapAspect { get; } =
+            (CropWidth * MapPixelWidth) / (CropHeight * MapPixelHeight);
 
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
 
@@ -91,7 +102,7 @@ namespace Street_Rod_AC.Screens.DealerMap
                 _gameState.DealerLocations = _marketService.GetDefaultDealers();
             }
 
-            if (_gameState.UsedCarMarket == null || _gameState.UsedCarMarket.Count == 0)
+            if (_gameState.UsedCarMarket == null || _gameState.UsedCarMarket.Count == 0 || IsMarketStale())
             {
                 IsLoading = true;
                 try
@@ -111,6 +122,38 @@ namespace Street_Rod_AC.Screens.DealerMap
             }
 
             BuildPins();
+        }
+
+        /// <summary>
+        /// Whether the market on the save belongs to a different set of dealers than the one in front of us.
+        /// A save made before a dealer existed has nothing on its lot, and one made when lots were stocked
+        /// differently can be carrying far more cars than a lot has room to stand. Either way the cars for
+        /// sale are worth nothing to anybody, so they are thrown out and drawn again.
+        /// </summary>
+        private bool IsMarketStale()
+        {
+            var listings = _gameState.UsedCarMarket;
+            if (listings == null || listings.Count == 0) return false;
+
+            foreach (var dealer in _dealerCatalog.All)
+            {
+                var onTheLot = listings.Count(l => !l.IsSold && l.DealerLocation == dealer.Id);
+
+                if (onTheLot == 0)
+                {
+                    _logger.Information("{Dealer} has nothing for sale; restocking the whole market", dealer.Name);
+                    return true;
+                }
+
+                if (onTheLot > dealer.StockHigh * 2)
+                {
+                    _logger.Information("{Dealer} is carrying {Count} cars against a lot that holds {Room}; " +
+                        "restocking the whole market", dealer.Name, onTheLot, dealer.StockHigh);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void BuildPins()

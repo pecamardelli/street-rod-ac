@@ -1,0 +1,55 @@
+{
+  "_comment": [
+    "What each AC showroom gives a lot to work with. Measured off the .kn5 itself: the floor extent, and",
+    "how far out the walls stand. A lot is laid out to fit inside this, and the camera is kept inside the",
+    "walls, so a room the size of a garage does not get a lot the size of a car park.",
+    "",
+    "capacity is how many cars will fit and still be worth looking at from inside the room. The two 28 m",
+    "rooms hold about a dozen; the outdoor scenes are 80 m across and take as many as the budget allows.",
+    "",
+    "To add a showroom, run the bounds check over its .kn5 rather than guessing: a lot that overruns the",
+    "walls puts cars outside the room, and a camera outside the walls looks at the back of them."
+  ],
+  "showrooms": [
+    {
+      "id": "Hangar",
+      "floorWidth": 28.9,
+      "floorDepth": 28.9,
+      "wallRadius": 14.4,
+      "capacity": 12,
+      "indoor": true
+    },
+    {
+      "id": "showroom",
+      "floorWidth": 28.0,
+      "floorDepth": 28.0,
+      "wallRadius": 15.0,
+      "capacity": 12,
+      "indoor": true
+    },
+    {
+      "id": "industrial",
+      "floorWidth": 78.0,
+      "floorDepth": 80.0,
+      "wallRadius": 38.0,
+      "capacity": 20,
+      "indoor": false
+    },
+    {
+      "id": "studio_white",
+      "floorWidth": 78.0,
+      "floorDepth": 78.0,
+      "wallRadius": 38.0,
+      "capacity": 20,
+      "indoor": false
+    },
+    {
+      "id": "beach",
+      "floorWidth": 60.0,
+      "floorDepth": 60.0,
+      "wallRadius": 30.0,
+      "capacity": 16,
+      "indoor": false
+    }
+  ]
+}

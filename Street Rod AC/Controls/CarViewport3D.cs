@@ -32,6 +32,14 @@ public class CarViewport3D : System.Windows.Controls.Grid
     // With the parts on show there is something worth a closer look
     private const float PartsMinRadius = 1.6f;
 
+    /// <summary>
+    /// How quickly the camera settles on a new framing, as the share of the remaining distance it covers per
+    /// second. The first car of a session is put in place at once; after that the camera moves rather than
+    /// cuts, so changing car or opening the workbench reads as the camera going somewhere.
+    /// </summary>
+    private const float CameraSettleRate = 2.6f;
+    private const float CameraSettled = 0.004f;
+
     // Keep drawing for a while after a toggle so door/light animations play out
     private static readonly TimeSpan AnimationWindow = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan FadeInDuration = TimeSpan.FromMilliseconds(600);
@@ -45,6 +53,12 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private readonly SharedTextureBridge _bridge = new();
 
     private GarageRenderer? _renderer;
+
+    // Where the camera is headed, eased toward each frame
+    private float _radiusGoal = DefaultRadius;
+    private float _alphaGoal = DefaultAlpha;
+    private float _betaGoal = DefaultBeta;
+    private SlimDX.Vector3? _targetGoal;
 
     private string? _loadedCarDirectory;
     private bool _isLoading;
@@ -421,7 +435,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
             _bridge.EnsureDevice();
 
             _renderer = renderer;
-            ResetCamera();
+            ResetCamera(immediate: true);
             CompositionTarget.Rendering += OnRendering;
         }
         else
@@ -442,27 +456,88 @@ public class CarViewport3D : System.Windows.Controls.Grid
             (int)(DateTime.Now - started).TotalMilliseconds);
     }
 
-    private void ResetCamera()
+    /// <summary>
+    /// Frames the car. <paramref name="immediate"/> puts the camera there at once, which is right for the
+    /// first car of a session; otherwise it moves there over the next moment.
+    /// </summary>
+    private void ResetCamera(bool immediate = false)
     {
         var orbit = _renderer?.CameraOrbit;
         if (orbit == null) return;
 
-        orbit.Radius = DefaultRadius;
-        orbit.Alpha = DefaultAlpha;
-        orbit.Beta = DefaultBeta;
+        _radiusGoal = DefaultRadius;
+        _alphaGoal = DefaultAlpha;
+        _betaGoal = DefaultBeta;
+        _targetGoal = null;
 
         if (_renderer!.CarNode == null)
         {
             // Empty garage: nothing to frame, so look across the room at eye level instead of at the floor
             _renderer.AutoAdjustTarget = false;
-            orbit.Target = new SlimDX.Vector3(0f, EmptyGarageEyeHeight, 0f);
-            orbit.Radius = MaxRadius;
-            orbit.Beta = MinBeta;
+            _targetGoal = new SlimDX.Vector3(0f, EmptyGarageEyeHeight, 0f);
+            _radiusGoal = MaxRadius;
+            _betaGoal = MinBeta;
         }
         else
         {
             _renderer.AutoAdjustTarget = true;
         }
+
+        if (immediate)
+        {
+            orbit.Radius = _radiusGoal;
+            orbit.Alpha = _alphaGoal;
+            orbit.Beta = _betaGoal;
+            if (_targetGoal is { } target) orbit.Target = target;
+        }
+
+        _animateUntil = DateTime.Now + AnimationWindow;
+        _renderer.IsDirty = true;
+    }
+
+    /// <summary>
+    /// Eases the camera toward its framing. Returns true while it is still moving, so the render loop knows
+    /// to keep drawing. A share of what is left every second, so it comes out the same at any frame rate.
+    /// </summary>
+    private bool StepCamera(float dt)
+    {
+        var orbit = _renderer?.CameraOrbit;
+        if (orbit == null) return false;
+
+        var k = 1f - (float)Math.Exp(-CameraSettleRate * dt);
+        var moving = false;
+
+        if (Math.Abs(_radiusGoal - orbit.Radius) > CameraSettled)
+        {
+            orbit.Radius += (_radiusGoal - orbit.Radius) * k;
+            moving = true;
+        }
+
+        if (Math.Abs(_betaGoal - orbit.Beta) > CameraSettled)
+        {
+            orbit.Beta += (_betaGoal - orbit.Beta) * k;
+            moving = true;
+        }
+
+        // Round the short way
+        var delta = (float)Math.IEEERemainder(_alphaGoal - orbit.Alpha, Math.PI * 2);
+        if (Math.Abs(delta) > CameraSettled)
+        {
+            orbit.Alpha += delta * k;
+            moving = true;
+        }
+
+        if (_targetGoal is { } target)
+        {
+            var toTarget = target - orbit.Target;
+            if (toTarget.LengthSquared() > CameraSettled * CameraSettled)
+            {
+                orbit.Target += toTarget * k;
+                moving = true;
+            }
+        }
+
+        return moving;
     }
 
     /// <summary>
@@ -910,10 +985,15 @@ public class CarViewport3D : System.Windows.Controls.Grid
         // CompositionTarget.Rendering can fire more than once per frame
         var args = (RenderingEventArgs)e;
         if (args.RenderingTime == _lastRenderingTime) return;
+
+        var dt = (float)(args.RenderingTime - _lastRenderingTime).TotalSeconds;
         _lastRenderingTime = args.RenderingTime;
+        if (dt <= 0f || dt > 0.25f) dt = 1f / 60f;
 
         var renderer = _renderer;
         if (renderer == null || !IsVisible || !_bridge.IsFrontBufferAvailable) return;
+
+        var cameraMoving = StepCamera(dt);
 
         var now = DateTime.Now;
         if (renderer.IsDirty && _animateUntil < now + SettleWindow)
@@ -921,7 +1001,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
             _animateUntil = now + SettleWindow;
         }
 
-        var animating = renderer.AutoRotate || now < _animateUntil;
+        var animating = cameraMoving || renderer.AutoRotate || now < _animateUntil;
         if (!animating && _bridge.BoundTarget != IntPtr.Zero) return;
 
         try
@@ -1037,6 +1117,8 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
         orbit.Alpha += (float)(position.X - _lastMouse.X) * 0.01f;
         orbit.Beta = Math.Clamp(orbit.Beta + (float)(position.Y - _lastMouse.Y) * 0.01f, MinBeta, MaxBeta);
+        _alphaGoal = orbit.Alpha;
+        _betaGoal = orbit.Beta;
         _lastMouse = position;
 
         if ((position - _pressedAt).Length > ClickSlack) ShowPartLabel(null, default);
@@ -1113,6 +1195,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
         var minRadius = _renderer!.HasProp ? PartsMinRadius : MinRadius;
         orbit.Radius = Math.Clamp(orbit.Radius - e.Delta * 0.002f, minRadius, MaxRadius);
+        _radiusGoal = orbit.Radius;
         _renderer!.IsDirty = true;
         e.Handled = true;
     }

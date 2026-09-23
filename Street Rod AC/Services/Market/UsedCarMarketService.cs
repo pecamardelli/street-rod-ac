@@ -21,8 +21,11 @@ namespace Street_Rod_AC.Services.Market
         private readonly Random _random = new();
 
         // Market configuration
-        private const int MinMarketSize = 30;
-        private const int MaxMarketSize = 50;
+        private const int DefaultStockLow = 8;
+        private const int DefaultStockHigh = 14;
+
+        /// <summary>The same model twice on one lot is a coincidence; three times is a car park</summary>
+        private const int MaxSameModelPerDealer = 2;
         private const float MinCondition = 0.6f;
         private const float MaxCondition = 0.95f;
         private const int MinMileage = 5000;
@@ -41,41 +44,132 @@ namespace Street_Rod_AC.Services.Market
             return listings;
         }
 
-        /// <summary>The cars for sale, still without their engines</summary>
+        /// <summary>
+        /// The cars for sale, still without their engines.
+        ///
+        /// Each dealer is filled to its own target rather than the market being spawned whole and then cut
+        /// down. Cutting a list built in catalog order kept whichever cars happened to come first and starved
+        /// every dealer whose kind of car came later - a lot with nothing on it, while another held a hundred.
+        /// </summary>
         private List<UsedCarListing> CreateListings(List<DealerLocation> dealers, DateTime currentDate)
         {
             _logger.Information("Spawning used car market listings for date {Date}", currentDate);
 
-            var listings = new List<UsedCarListing>();
             var activeCars = _catalogRepo.GetCarsByStatus(ContentStatus.Active);
-
             _logger.Information("Found {CarCount} active cars to spawn from", activeCars.Count);
 
-            // Where each car sits in the market's price range decides which lot it lands on
-            var priceLadder = GetPriceLadder(activeCars);
+            var pool = BuildPool(activeCars);
+            if (pool.Count == 0)
+            {
+                _logger.Warning("No car has a profile to price it; the market stays empty");
+                return [];
+            }
 
-            // Spawn listings based on precedence
+            var listings = new List<UsedCarListing>();
+            foreach (var dealer in dealers)
+            {
+                var wanted = StockWantedBy(dealer);
+                listings.AddRange(FillDealer(dealer, wanted, pool, currentDate));
+            }
+
+            _logger.Information("Spawned {ListingCount} listings across {DealerCount} dealers",
+                listings.Count, dealers.Count);
+
+            return listings;
+        }
+
+        /// <summary>A car that may turn up for sale, and where it sits in the market</summary>
+        private readonly record struct PoolEntry(CarDefinition Car, CarProfile Profile, float Rank);
+
+        /// <summary>
+        /// Every sellable car with its place in the market worked out once: the share of cars it is dearer
+        /// than. A share rather than a position between the cheapest and the dearest, because one
+        /// half-million-dollar car in the install would otherwise push everything else into the bottom tenth
+        /// and leave the smart showroom with an empty floor.
+        /// </summary>
+        private List<PoolEntry> BuildPool(List<CarDefinition> activeCars)
+        {
+            var priced = new List<(CarDefinition Car, CarProfile Profile)>();
             foreach (var car in activeCars)
             {
                 var profile = _profileRepo.GetProfile(car.Id);
-                if (profile == null)
-                {
-                    _logger.Warning("No profile found for car {CarId}, skipping", car.Id);
-                    continue;
-                }
-
-                // Determine how many instances to spawn based on precedence
-                var instanceCount = DetermineInstanceCount(profile.DealerPrecedence);
-
-                for (int i = 0; i < instanceCount; i++)
-                {
-                    var listing = CreateListing(car, profile, dealers, currentDate, priceLadder);
-                    listings.Add(listing);
-                }
+                if (profile == null || profile.BasePrice <= 0) continue;
+                priced.Add((car, profile));
             }
 
-            _logger.Information("Spawned {ListingCount} total listings across {DealerCount} dealers",
-                listings.Count, dealers.Count);
+            if (priced.Count == 0) return [];
+
+            var ladder = priced.Select(p => p.Profile.BasePrice).OrderBy(p => p).ToList();
+            var pool = new List<PoolEntry>(priced.Count);
+
+            foreach (var (car, profile) in priced)
+            {
+                var below = ladder.Count(p => p < profile.BasePrice);
+                var rank = ladder.Count == 1 ? 0.5f : (float)below / (ladder.Count - 1);
+                pool.Add(new PoolEntry(car, profile, Math.Clamp(rank, 0f, 1f)));
+            }
+
+            return pool;
+        }
+
+        /// <summary>How many cars this dealer means to have out, from its own definition</summary>
+        private int StockWantedBy(DealerLocation dealer)
+        {
+            var definition = _dealerCatalog?.Get(dealer.Id);
+            if (definition == null) return _random.Next(DefaultStockLow, DefaultStockHigh + 1);
+
+            var low = Math.Max(1, definition.StockLow);
+            var high = Math.Max(low, definition.StockHigh);
+            return _random.Next(low, high + 1);
+        }
+
+        /// <summary>
+        /// Stocks one lot. Cars are drawn from the slice of the market the dealer deals in, weighted by how
+        /// common they are, and no model turns up more than twice on the same lot.
+        /// </summary>
+        private List<UsedCarListing> FillDealer(DealerLocation dealer, int wanted, List<PoolEntry> pool, DateTime currentDate)
+        {
+            var definition = _dealerCatalog?.Get(dealer.Id);
+            var candidates = definition == null
+                ? pool
+                : pool.Where(e => e.Rank >= definition.PriceBandLow && e.Rank <= definition.PriceBandHigh).ToList();
+
+            if (candidates.Count == 0 && definition != null)
+            {
+                // Nothing installed sits in this dealer's slice: let it take whatever comes nearest instead of
+                // standing empty
+                var middle = (definition.PriceBandLow + definition.PriceBandHigh) / 2f;
+                candidates = pool.OrderBy(e => Math.Abs(e.Rank - middle)).Take(Math.Max(4, wanted)).ToList();
+                _logger.Warning("{Dealer} deals in {Low:0.00}-{High:0.00} of the market and nothing installed fits; " +
+                    "taking the nearest {Count}", dealer.Name, definition.PriceBandLow, definition.PriceBandHigh, candidates.Count);
+            }
+
+            if (candidates.Count == 0) return [];
+
+            var listings = new List<UsedCarListing>(wanted);
+            var used = new Dictionary<string, int>();
+
+            // A car's precedence is how likely it is to turn up at all, so it is the weight to draw by
+            var weights = candidates.Select(e => Math.Max(0.02f, e.Profile.DealerPrecedence)).ToList();
+            var total = weights.Sum();
+
+            for (var attempt = 0; attempt < wanted * 8 && listings.Count < wanted; attempt++)
+            {
+                var roll = (float)(_random.NextDouble() * total);
+                var index = 0;
+                while (index < weights.Count - 1 && roll > weights[index])
+                {
+                    roll -= weights[index];
+                    index++;
+                }
+
+                var entry = candidates[index];
+                used.TryGetValue(entry.Car.Id, out var already);
+                if (already >= MaxSameModelPerDealer) continue;
+                used[entry.Car.Id] = already + 1;
+
+                listings.Add(CreateListing(entry.Car, entry.Profile, dealer, currentDate));
+            }
 
             return listings;
         }
@@ -106,21 +200,30 @@ namespace Street_Rod_AC.Services.Market
                 _logger.Information("Despawned {Count} old unsold listings", removedUnsold);
             }
 
-            // Calculate how many new listings to spawn
-            var availableCount = kept.Count(l => !l.IsSold);
-            var targetSize = _random.Next(MinMarketSize, MaxMarketSize + 1);
-            var toSpawn = Math.Max(0, targetSize - availableCount);
-
-            _logger.Information("Current available: {Available}, Target: {Target}, Will spawn: {ToSpawn}",
-                availableCount, targetSize, toSpawn);
-
-            // Spawn new listings (simplified - spawn from all cars).
+            // Every lot is topped back up to its own target. Spawning a whole market and cutting it down to
+            // size used to keep whichever cars came first in the catalog, which left some lots bare.
             // Engines only for the ones that make it into the market: putting one together is the costly part.
-            if (toSpawn > 0)
+            var pool = BuildPool(_catalogRepo.GetCarsByStatus(ContentStatus.Active));
+            if (pool.Count > 0)
             {
-                var newListings = CreateListings(dealers, currentDate).Take(toSpawn).ToList();
-                await AddEnginesAsync(newListings);
-                kept.AddRange(newListings);
+                var fresh = new List<UsedCarListing>();
+
+                foreach (var dealer in dealers)
+                {
+                    var onTheLot = kept.Count(l => !l.IsSold && l.DealerLocation == dealer.Id);
+                    var shortBy = StockWantedBy(dealer) - onTheLot;
+                    if (shortBy <= 0) continue;
+
+                    fresh.AddRange(FillDealer(dealer, shortBy, pool, currentDate));
+                }
+
+                if (fresh.Count > 0)
+                {
+                    await AddEnginesAsync(fresh);
+                    kept.AddRange(fresh);
+                }
+
+                _logger.Information("Topped {Count} cars up across {Dealers} lots", fresh.Count, dealers.Count);
             }
 
             _logger.Information("Market refresh complete. Total listings: {Total}, Available: {Available}",
@@ -178,11 +281,9 @@ namespace Street_Rod_AC.Services.Market
             }
         }
 
-        private UsedCarListing CreateListing(CarDefinition carDef, CarProfile profile, List<DealerLocation> dealers, DateTime currentDate,
-            List<decimal> priceLadder)
+        private UsedCarListing CreateListing(CarDefinition carDef, CarProfile profile, DealerLocation dealer, DateTime currentDate)
         {
-            // The lot comes first: a cheap lot's cars are rougher, and that is what the price is worked out from
-            var dealer = PickDealer(profile.BasePrice, dealers, priceLadder);
+            // A cheap lot's cars are rougher, and that is what the price is worked out from
             var definition = _dealerCatalog?.Get(dealer.Id);
 
             var condition = GenerateCondition(definition);
@@ -256,59 +357,7 @@ namespace Street_Rod_AC.Services.Market
             }
         }
 
-        /// <summary>
-        /// Every base price in the market, sorted. A car is placed by how many cars it is dearer than rather
-        /// than by where it falls between the cheapest and the dearest: one half-million-dollar car in the
-        /// install would otherwise push everything else down into the bottom tenth of the range and leave the
-        /// smart showroom with an empty floor.
-        /// </summary>
-        private List<decimal> GetPriceLadder(List<CarDefinition> activeCars)
-        {
-            var prices = activeCars
-                .Select(car => _profileRepo.GetProfile(car.Id))
-                .Where(profile => profile != null && profile.BasePrice > 0)
-                .Select(profile => profile!.BasePrice)
-                .ToList();
 
-            prices.Sort();
-            return prices;
-        }
-
-        /// <summary>
-        /// Which lot a car ends up on. Dealers claim a slice of the price range, so the smart showroom gets the
-        /// expensive metal and the dirt lot gets the cheap. Where slices overlap, the roll decides.
-        ///
-        /// Without dealer definitions there is nothing to go on and it falls back to the old free-for-all.
-        /// </summary>
-        private DealerLocation PickDealer(decimal basePrice, List<DealerLocation> dealers, List<decimal> priceLadder)
-        {
-            if (dealers.Count == 0) throw new InvalidOperationException("No dealers to put a car with");
-
-            if (_dealerCatalog == null || _dealerCatalog.All.Count == 0 || priceLadder.Count == 0)
-            {
-                return dealers[_random.Next(dealers.Count)];
-            }
-
-            // Where this car sits in the market, 0 cheapest to 1 dearest: the share of cars it is dearer than
-            var below = priceLadder.Count(p => p < basePrice);
-            var rank = priceLadder.Count == 1 ? 0.5f : (float)below / (priceLadder.Count - 1);
-            rank = Math.Clamp(rank, 0f, 1f);
-
-            var fits = dealers
-                .Where(d => _dealerCatalog.Get(d.Id) is { } def && rank >= def.PriceBandLow && rank <= def.PriceBandHigh)
-                .ToList();
-
-            if (fits.Count > 0) return fits[_random.Next(fits.Count)];
-
-            // Outside everybody's band: give it to whoever reaches closest
-            var nearest = dealers
-                .Select(d => new { Dealer = d, Definition = _dealerCatalog.Get(d.Id) })
-                .Where(x => x.Definition != null)
-                .OrderBy(x => Math.Min(Math.Abs(rank - x.Definition!.PriceBandLow), Math.Abs(rank - x.Definition!.PriceBandHigh)))
-                .FirstOrDefault();
-
-            return nearest?.Dealer ?? dealers[_random.Next(dealers.Count)];
-        }
 
         /// <summary>
         /// How straight the car is. A dealer pulls the roll toward the sort of stock it keeps, but the roll
