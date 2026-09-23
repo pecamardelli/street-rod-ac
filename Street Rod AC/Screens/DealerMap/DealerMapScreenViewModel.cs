@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Street_Rod_AC.Dialogs;
+using Street_Rod_AC.Dialogs.Confirmation;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
@@ -51,6 +52,10 @@ namespace Street_Rod_AC.Screens.DealerMap
             (CropWidth * MapPixelWidth) / (CropHeight * MapPixelHeight);
 
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
+
+        /// <summary>The day, so a drive that costs half of it reads as a cost</summary>
+        public string DateDisplay => _gameState.Date.ToString("dddd, MMMM d, yyyy");
+        public string TimeDisplay => _gameState.Date.ToString("h:mm tt");
 
         private bool _isLoading;
 
@@ -160,6 +165,9 @@ namespace Street_Rod_AC.Screens.DealerMap
         {
             Pins.Clear();
 
+            var remainingToday = ((App)System.Windows.Application.Current)
+                .GameTimeService.GetRemainingMinutesToday(_gameState);
+
             foreach (var dealer in _dealerCatalog.All)
             {
                 var stock = _marketService.GetListingsByDealer(_gameState.UsedCarMarket ?? [], dealer.Id);
@@ -178,7 +186,8 @@ namespace Street_Rod_AC.Screens.DealerMap
                     StockCount = stock.Count,
                     CheapestPrice = stock.Count > 0 ? stock.Min(l => l.Price) : 0m,
                     DearestPrice = stock.Count > 0 ? stock.Max(l => l.Price) : 0m,
-                    TravelHours = dealer.TravelHours
+                    TravelHours = dealer.TravelHours,
+                    MinutesLeftToday = remainingToday
                 });
             }
 
@@ -190,7 +199,44 @@ namespace Street_Rod_AC.Screens.DealerMap
         {
             if (pin == null) return;
 
-            _logger.Information("Driving out to {Dealer}", pin.Name);
+            // A drive that does not fit in what is left of the day costs the rest of it: the player gets
+            // there, looks round, and comes back tomorrow morning. That is a fair trade for a long trip to
+            // a lot with something good on it, but it is not one to make by accident.
+            if (!pin.FitsToday)
+            {
+                var message = $"{pin.Name} is {pin.TravelDisplay.ToLowerInvariant()}, and it is " +
+                              $"{_gameState.Date:h:mm tt}." + Environment.NewLine + Environment.NewLine +
+                              "You would not be back before the day is out. Drive over anyway?";
+
+                _dialogService.ShowDialog(new ConfirmationDialogViewModel(
+                    _dialogService,
+                    message,
+                    "A long way for a look",
+                    confirmed =>
+                    {
+                        if (confirmed) DriveTo(pin);
+                    }));
+                return;
+            }
+
+            DriveTo(pin);
+        }
+
+        private async void DriveTo(DealerPinViewModel pin)
+        {
+            _logger.Information("Driving out to {Dealer}: {Minutes} minutes there and back",
+                pin.Name, pin.TravelMinutes);
+
+            try
+            {
+                // The hours go before the lot is shown, so the clock on the way in is the time you arrived
+                await ((App)System.Windows.Application.Current).SpendTimeAsync(pin.TravelMinutes);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not spend the time for the drive to {Dealer}", pin.Name);
+            }
+
             _navigationService.NavigateToDealerLot(_gameState, pin.Id);
         }
 
@@ -222,6 +268,20 @@ namespace Street_Rod_AC.Screens.DealerMap
         public decimal CheapestPrice { get; set; }
         public decimal DearestPrice { get; set; }
         public float TravelHours { get; set; }
+
+        /// <summary>What is left of the working day when the map was drawn</summary>
+        public int MinutesLeftToday { get; set; }
+
+        /// <summary>The drive out and back, in minutes of game time</summary>
+        public int TravelMinutes => Math.Max(15, (int)Math.Round(TravelHours * 60f));
+
+        /// <summary>Whether there is enough of the day left to go and come back</summary>
+        public bool FitsToday => TravelMinutes <= MinutesLeftToday;
+
+        /// <summary>What the trip does to the day, for the card</summary>
+        public string DayCostDisplay => FitsToday
+            ? "You would be back before the day is out"
+            : "You would not be back today";
 
         public string StockDisplay => StockCount == 1 ? "1 car" : $"{StockCount} cars";
 

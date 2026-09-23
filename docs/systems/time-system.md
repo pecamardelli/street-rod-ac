@@ -66,3 +66,10 @@ await Scheduler.OnTimeAdvancedAsync(gameState, oldDate, newDate);
 - `Services/Scheduler/IScheduledTask.cs`
 - `Services/Scheduler/Tasks/MarketRefreshTask.cs`
 - `Models/GameState/ScheduledTaskState.cs`
+
+## Travel
+
+Visiting a dealer costs that dealer's `travelHours` (`Assets/Dealers/dealers.json`), spent through
+`App.SpendTimeAsync(int minutes)` rather than a `GameAction`, because the cost is per dealer and not a
+fixed tariff. The map checks `GetRemainingMinutesToday` first and asks before a trip that would run past
+the end of the day. See `docs/screens/dealer-lot.md`.

@@ -52,6 +52,10 @@ namespace Street_Rod_AC.Screens.DealerLot
         public string DealerBlurb => _dealer?.Blurb ?? string.Empty;
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
 
+        /// <summary>The clock, so the hours the drive cost are in front of the player when they arrive</summary>
+        public string DateDisplay => _gameState.Date.ToString("dddd, MMMM d, yyyy");
+        public string TimeDisplay => _gameState.Date.ToString("h:mm tt");
+
         /// <summary>The lot's 3D scene, or null when the showroom is not installed</summary>
         public string? ShowroomKn5 { get; private set; }
 

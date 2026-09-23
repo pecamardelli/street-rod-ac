@@ -21,6 +21,24 @@ converts. Moving the crop therefore does not mean re-measuring every dealer.
 `Helpers/FractionPanel` places the pins: children are laid out at a fraction of the panel's size, so a pin
 stays on its bit of the map at any window size.
 
+### Driving there costs the day
+
+A dealer's `travelHours` is the round trip from the garage, and it is spent when you leave the map for that
+lot — before the lot is shown, so the clock you arrive with is the time you got there. Nothing is charged
+for coming back: the trip is priced there-and-back already.
+
+The working day is 8 am to 10 pm. Running past the end of it rolls to the next morning, which turns the
+scheduler over (the market restocks), so a long drive late on costs the rest of the day. That is what makes
+the map a decision rather than a prettier dropdown, so:
+
+- the map carries the clock next to the bankroll, because a cost you cannot see is not a cost;
+- a pin you could not get back from today is greyed and its card says so;
+- clicking one asks first, rather than quietly eating the evening.
+
+Seeing all ten dealers is 15.5 hours against a 14 hour day, before the two hours that buying a car costs.
+So a full tour does not fit in a day, and a tour with a purchase in it fits about half. Those numbers are
+`travelHours` in `dealers.json` and are meant to be tuned by feel.
+
 ## DealerLot
 
 `Controls/DealerLotViewport3D` renders the dealer's showroom with its cars standing in it. There are two

@@ -171,7 +171,7 @@
                 VerticalAlignment="Top"
                 Margin="20,20,0,0"/>
 
-        <!-- Bankroll -->
+        <!-- What a trip spends: money and daylight -->
         <Border HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 Margin="0,20,20,0"
@@ -179,11 +179,23 @@
                 BorderBrush="#50F5E6C8"
                 BorderThickness="1"
                 CornerRadius="3"
-                Padding="14,8,14,8">
-            <TextBlock Text="{Binding BankrollDisplay}"
-                       FontSize="18"
-                       FontWeight="Bold"
-                       Foreground="{StaticResource AccentSuccessBrush}"/>
+                Padding="14,8,14,10">
+            <StackPanel>
+                <TextBlock Text="{Binding BankrollDisplay}"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Right"
+                           Foreground="{StaticResource AccentSuccessBrush}"/>
+                <TextBlock Text="{Binding TimeDisplay}"
+                           FontSize="14"
+                           HorizontalAlignment="Right"
+                           Margin="0,4,0,0"
+                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                <TextBlock Text="{Binding DateDisplay}"
+                           FontSize="11"
+                           HorizontalAlignment="Right"
+                           Foreground="{StaticResource TextSecondaryBrush}"/>
+            </StackPanel>
         </Border>
 
         <!-- Nothing to show: the definitions file did not load. Drawn under the loading overlay, so the
