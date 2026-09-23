@@ -615,8 +615,8 @@ The diner prepares the data before a race (`RaceCarDataService.Prepare(car)`: th
 against the factory's, for the player's car and the opponent's, each on its own parts). A player's car with problems
 does not race ("Your car is not going anywhere: no brake front right"); an opponent's car with problems races as its
 author made it. The files ride on the `LaunchIntent` (`CarData`) and the launcher applies them after the race config
-and before `acs.exe`. Two cars of one model share one folder: the diner skips the opponent's pass and it drives the
-player's data (the launcher refuses a second `Apply` to a car changed for the same race, in case). A manifest an earlier
+and before `acs.exe`. An opponent in the player's model races in a copy of the folder (see "Two cars of one model");
+the launcher still refuses a second `Apply` to a car changed for the same race, in case. A manifest an earlier
 race could not restore is put back before the car's data is changed again. A car without parts (no catalog, an older
 save) races on the data its author gave it.
 
