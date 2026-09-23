@@ -16,18 +16,20 @@ namespace Street_Rod_AC.Screens.DealerMap
     public class DealerMapScreenViewModel : BaseScreenViewModel
     {
         /// <summary>
-        /// The part of los_angeles_map.jpg that is shown, as fractions of the whole image.
+        /// The part of los_angeles_map.jpg that must be on screen, as fractions of the whole image.
         ///
         /// The map is the Auto Club's "Los Angeles and Vicinity", which reaches out to Victorville and
         /// Joshua Tree - most of it desert with nothing to sell a car in. This is the inhabited corner: the
-        /// valley and the coast across to Riverside. It stops just above the map's own title cartouche,
-        /// because a sliver of it in the corner reads as a mistake rather than a flourish. Dealer positions
-        /// are stored against the whole image, so this can be moved without touching the data.
+        /// valley and the coast across to Riverside.
+        ///
+        /// An anchor rather than a fixed crop: the map fills the window, so what is actually shown grows out
+        /// of this to whatever shape the window is, and a wider screen simply sees more country. MapPanel
+        /// does that and places the pins against the result.
         /// </summary>
-        private const double CropX = 0.05;
-        private const double CropY = 0.28;
-        private const double CropWidth = 0.62;
-        private const double CropHeight = 0.55;
+        private const double AnchorX = 0.05;
+        private const double AnchorY = 0.28;
+        private const double AnchorWidth = 0.62;
+        private const double AnchorHeight = 0.55;
 
         /// <summary>The map image as shipped, in pixels, so the crop can keep its shape on screen</summary>
         private const double MapPixelWidth = 2444;
@@ -45,15 +47,12 @@ namespace Street_Rod_AC.Screens.DealerMap
 
         public ObservableCollection<DealerPinViewModel> Pins { get; } = [];
 
-        /// <summary>The window onto the map image, for the view to crop with</summary>
-        public System.Windows.Rect MapViewbox { get; } = new(CropX, CropY, CropWidth, CropHeight);
+        /// <summary>The part of the map worth seeing; the screen grows out from it to fill the window</summary>
+        public System.Windows.Rect MapAnchor { get; } = new(AnchorX, AnchorY, AnchorWidth, AnchorHeight);
 
-        /// <summary>
-        /// The shape of that window, width over height. The map is shown at this shape whatever the window
-        /// does: stretching it to fill would crop it by an unknown amount and take the pins off their places.
-        /// </summary>
-        public double MapAspect { get; } =
-            (CropWidth * MapPixelWidth) / (CropHeight * MapPixelHeight);
+        /// <summary>The map's own size, so a crop measured in fractions can be given a shape</summary>
+        public double MapImageWidth => MapPixelWidth;
+        public double MapImageHeight => MapPixelHeight;
 
         public string BankrollDisplay => $"${_gameState.Player.Money:N0}";
 
@@ -183,9 +182,8 @@ namespace Street_Rod_AC.Screens.DealerMap
                     Region = dealer.Region,
                     Blurb = dealer.Blurb,
 
-                    // From a place on the whole image to a place on the part of it being shown
-                    X = (dealer.MapX - CropX) / CropWidth,
-                    Y = (dealer.MapY - CropY) / CropHeight,
+                    MapX = dealer.MapX,
+                    MapY = dealer.MapY,
 
                     StockCount = stock.Count,
                     CheapestPrice = stock.Count > 0 ? stock.Min(l => l.Price) : 0m,
@@ -264,9 +262,9 @@ namespace Street_Rod_AC.Screens.DealerMap
         public string Region { get; set; } = string.Empty;
         public string Blurb { get; set; } = string.Empty;
 
-        /// <summary>Where the pin sits on what the screen shows, 0..1</summary>
-        public double X { get; set; }
-        public double Y { get; set; }
+        /// <summary>Where the dealer is on the whole map image, 0..1. MapPanel puts it on screen</summary>
+        public double MapX { get; set; }
+        public double MapY { get; set; }
 
         public int StockCount { get; set; }
         public decimal CheapestPrice { get; set; }

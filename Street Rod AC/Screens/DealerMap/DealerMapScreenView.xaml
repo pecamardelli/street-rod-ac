@@ -9,15 +9,19 @@
 
     <Grid Background="{StaticResource BgDarkBrush}">
 
-        <!-- The map and its pins share one rectangle of a fixed shape, so a pin stays on its bit of the
-             city whatever the window does. Whatever is left over is board around it. -->
-        <helpers:AspectPanel Aspect="{Binding MapAspect}" Margin="0,86,0,0">
+        <!-- The map fills the window and the pins are placed against exactly the piece of it on screen, so
+             neither is compromised for the other. The panel grows the crop to the window's shape rather than
+             stretching the picture into it; see MapPanel. -->
+        <helpers:MapPanel x:Name="Map"
+                          Anchor="{Binding MapAnchor}"
+                          ImagePixelWidth="{Binding MapImageWidth}"
+                          ImagePixelHeight="{Binding MapImageHeight}">
 
-            <!-- The basin, cropped out of the full map. MapViewbox is the window onto it -->
+            <!-- Stretch=Fill is right here: the viewbox is already the shape of the panel -->
             <Rectangle>
                 <Rectangle.Fill>
                     <ImageBrush ImageSource="pack://application:,,,/Assets/Images/Backgrounds/los_angeles_map.jpg"
-                                Viewbox="{Binding MapViewbox}"
+                                Viewbox="{Binding EffectiveCrop, ElementName=Map}"
                                 ViewboxUnits="RelativeToBoundingBox"
                                 Stretch="Fill"/>
                 </Rectangle.Fill>
@@ -44,13 +48,15 @@
             <ItemsControl ItemsSource="{Binding Pins}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <helpers:FractionPanel/>
+                        <helpers:MapPanel Anchor="{Binding Anchor, ElementName=Map}"
+                                          ImagePixelWidth="{Binding ImagePixelWidth, ElementName=Map}"
+                                          ImagePixelHeight="{Binding ImagePixelHeight, ElementName=Map}"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemContainerStyle>
                     <Style TargetType="ContentPresenter">
-                        <Setter Property="helpers:FractionPanel.X" Value="{Binding X}"/>
-                        <Setter Property="helpers:FractionPanel.Y" Value="{Binding Y}"/>
+                        <Setter Property="helpers:MapPanel.MapX" Value="{Binding MapX}"/>
+                        <Setter Property="helpers:MapPanel.MapY" Value="{Binding MapY}"/>
                     </Style>
                 </ItemsControl.ItemContainerStyle>
                 <ItemsControl.ItemTemplate>
@@ -138,7 +144,18 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-        </helpers:AspectPanel>
+        </helpers:MapPanel>
+
+        <!-- The map is a pale sheet and the chrome sits straight on it, so the top is shaded to give the
+             title and the back button something to read against -->
+        <Rectangle VerticalAlignment="Top" Height="150" IsHitTestVisible="False">
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#B0000000" Offset="0.0"/>
+                    <GradientStop Color="#00000000" Offset="1.0"/>
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
 
         <!-- Header -->
         <StackPanel HorizontalAlignment="Center"

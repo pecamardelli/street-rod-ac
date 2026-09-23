@@ -15,14 +15,25 @@ A crop of `Assets/Images/Backgrounds/los_angeles_map.jpg` — the Automobile Clu
 "Los Angeles and Vicinity", 2444 x 1560 — with a pin per dealer. Hovering a pin shows what the lot has, what
 the drive costs and whether you would be back today; clicking drives out to it.
 
-The sheet reaches to Victorville and Joshua Tree, most of it desert. The crop is the inhabited corner: the
-valley and the coast across to Riverside, stopping just above the map's own title cartouche. It comes out
-at 1.766, near enough 16:9 that the map fills the window.
+The map is **full-bleed** — no bars, nothing letterboxed — and the pins still sit exactly on their towns.
+Those two normally pull against each other: filling the window crops the picture by however much the window
+does not match its shape, and a pin placed as a fraction of the window then drifts.
 
-Pin positions are stored in `dealers.json` as fractions of the **whole** map image. The screen shows only
-part of it, and `DealerMapScreenViewModel` holds the crop rectangle (`CropX/Y/Width/Height`) and converts,
-so moving the crop does not mean re-measuring every dealer. **Replacing the map image does**, and so does
-changing its size — `MapPixelWidth`/`Height` set the shape the crop is held at.
+`Helpers/MapPanel` resolves it by not stretching or fitting the picture at all. **The crop is what gets
+fitted.** `MapAnchor` is the region worth seeing — the inhabited corner, valley to Riverside — and the panel
+grows it about its middle until it is exactly the shape of the window, then publishes that as
+`EffectiveCrop` for the brush's viewbox with `Stretch="Fill"`. The sheet reaches to Victorville and Joshua
+Tree, so there is map in every direction and a wider screen simply sees more country. Because the panel
+knows precisely which part of the picture is on screen, it places every pin correctly on any window shape
+(checked from 4:3 to 32:9).
+
+A child of `MapPanel` carrying `MapX`/`MapY` is a pin, placed by its middle; one carrying neither is a layer
+and gets the whole panel. It asks `DependencyPropertyHelper` where the value came from rather than looking
+for a local value, because a pin in an `ItemsControl` gets its coordinates from the container style.
+
+Pin positions are stored in `dealers.json` as fractions of the **whole** map image, so the anchor can move
+without re-measuring any dealer. **Replacing the map image does mean re-measuring all of them**, and so does
+changing its size — `MapImageWidth`/`Height` tell the panel what shape a crop in fractions actually is.
 
 Each dealer sits on its real town, and `travelHours` matches: the lots round downtown are an hour, the
 valley and the harbour two, Riverside three and a half.
