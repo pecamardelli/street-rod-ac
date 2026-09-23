@@ -566,12 +566,68 @@ for the race, since the game reads the folder when there is one, and the folder 
 put everything back and delete the kept copies; the launcher calls `RestoreAll` in its `finally`, and `App.OnStartup`
 calls it too, for what a crash or a power cut left behind.
 
+**Sound** (`Parts/Export/AcCarSound`, the overlay's sfx section). Assetto Corsa hangs a sound on a car folder: it opens
+`sfx\<car>.bank` by file name and finds `event:/cars/<car>/engine_ext` and the rest by GUID through the car's
+`sfx\GUIDs.txt` (a Kunos car has no file of its own and is in the install's `content\sfx\GUIDs.txt`). The GUIDs inside
+a bank are its author's and never change when the bank is reused, so a sound is a bank plus its GUID lines, and it
+plays under any car once the lines are written for that car's id. `CarSound(BankPath, GuidsText, DonorId)` is one;
+`AcCarSound.FromCar(carDirectory, masterGuids)` reads a car's own, and `GuidsFor(carId)` writes the lines for another
+car: buses, VCAs and snapshots as they are, the `common` bank and the donor's, the donor's events and the ones outside
+any car (collisions, surfaces), everything else dropped, since mod authors ship the whole master file with a hundred
+other cars in it more often than not. `CarBuildResult.Sound` carries the choice; `CarDataOverlay.Apply(carId, files,
+sound)` moves the car's own bank and GUIDs into `sfx\_streetrod_keep` (a rename, whatever their size), hard-links the
+new bank in under the car's name (a copy only when the two are not on one volume), writes the GUIDs, and the manifest
+says so (`Sfx`: whether the folder, the bank and the GUIDs existed). `Restore` deletes the link and moves the originals
+back; every step checks what is there, so a restore cut short finishes the next time. A donor that races on another
+sound itself has its own bank in its keep folder, and `AcCarSound.OwnBank` finds the bytes wherever they are, so a
+car can take the sound of a car whose sound is swapped in the same race (two cars on each other's banks included). A
+file already in the keep folder is the car's own, from a race whose manifest was lost: it is never overwritten, the
+file in its place goes. A sound is never worth a race: a bank that is gone leaves the car on its own sound, and a
+choice that throws leaves the car on its parts with its own. Every installed car has
+`engine_ext` and `engine_int`; four lack `limiter` (`AcCarSound.MissingEngineEvents`).
+
+**Two cars of one model** (`CarDataOverlay.CreateClone`, `Parts/Export/AcCarFolder`). An opponent in the player's
+model races in a copy of the car folder under its own id (`<car>__sr_opponent`), so each car has its own data and
+sound. The copy is made first, from the untouched originals, before the player's changes go into the car itself
+(what an earlier race could not put back goes back first): models, textures, skins and ui are hard links (a
+read-only file is copied, since its flag is shared with the link, and so is a read-only bank wherever one is linked);
+the data is a real copy (the car's folder, or what its `data.acd` holds; the copy has no `data.acd`, whose key comes
+from the folder name) with the opponent's files over it; the sfx folder gets the opponent's sound, or the car's own,
+under the copy's name. A marker file (`streetrod_clone.json`) goes in first and comes out last; only a folder with
+it is ever deleted, every reader of the install's cars (content service, catalog import, sound harvest, EngineBench)
+goes through `AcCarFolder.InstalledCars`, which leaves it out, and `RestoreAll` (after every race
+and at start-up) takes every copy away. The diner sets the opponent's `MODEL` in race.ini to the copy's id; results
+are matched by car instance, not model, so nothing else changes. An opponent whose car cannot run races in a copy
+as its author made it. Checked with a dry-run console on full car folders (the Camaro, the packed GT500): the car's
+own folder hashes the same after the copy, after the player's changes next to it, after `RestoreAll`, after a crash.
+
+**Sound library and matcher** (`Parts/Sounds`, `CarPartsService.Sounds`/`ChooseSound`). Two sources, one list
+(`SoundLibrary`): a folder under `Assets\Sounds` is a sound (a bank, a `GUIDs.txt`, an optional `sound.json` with
+name, donor id, cylinders, family, rev ceiling, tags; drop one in and the game has it, see the README there), and
+every installed car's own bank is a sound too, harvested in the parts warm-up (`Harvest`): banks that are the same bytes
+(size plus the first 64 KB) are one sound with those cars as carriers, its rev ceiling the highest `LIMITER` among
+them, its cylinders and family those of the stock engine the parts would give the carriers, when they all agree
+(a bank under a Chevrolet, a Ford and a Plymouth says nothing). The install's 165 cars come to 59 sounds in about a
+second. `sounds.json` at the library root pins a block to a sound and corrects or excludes a car's bank. A sound
+whose GUIDs give its donor no engine (neither `engine_ext` nor `engine_int`) is left out rather than racing silent;
+a curated sound without `donor_id` whose bank name is not the donor takes the one car its GUIDs give an engine to. A
+folder, a car or a sounds.json that does not read is one line in `SoundLibrary.Problems` (logged) and the rest
+stands. A sound keeps only the GUID lines its bank answers; the master file is read once for every Kunos car. The
+matcher (`SoundMatcher`) scores every sound for a `SoundRequest` (block id, cylinders, family, limiter, from the
+block part and the dyno): cylinders decide (a six never gets a V8 bank), family counts, and the ceiling must reach
+the limiter: below it by more than 500 rpm (Content Manager's margin) the bank runs out of samples and the penalty
+grows with the shortfall; a little short costs a little; above, the tighter the better, since a bank made for
+8,500 rpm idles too low at 700; a curated sound beats a harvested one on equal terms; among equals a hash of the
+block id and the sound id decides, so a car sounds the same every race until its engine changes and different
+blocks spread over equal sounds. `ForCar` returns null when the choice is the bank the car already ships, so
+nothing is swapped. `RaceCarDataService.Prepare` sets `CarBuildResult.Sound` for a car that can drive.
+
 The diner prepares the data before a race (`RaceCarDataService.Prepare(car)`: the engine on the dyno, the running gear
 against the factory's, for the player's car and the opponent's, each on its own parts). A player's car with problems
 does not race ("Your car is not going anywhere: no brake front right"); an opponent's car with problems races as its
 author made it. The files ride on the `LaunchIntent` (`CarData`) and the launcher applies them after the race config
-and before `acs.exe`. Two cars of one model share one folder: the diner skips the opponent's pass and it drives the
-player's data (the launcher refuses a second `Apply` to a car changed for the same race, in case). A manifest an earlier
+and before `acs.exe`. An opponent in the player's model races in a copy of the folder (see "Two cars of one model");
+the launcher still refuses a second `Apply` to a car changed for the same race, in case. A manifest an earlier
 race could not restore is put back before the car's data is changed again. A car without parts (no catalog, an older
 save) races on the data its author gave it.
 
@@ -589,12 +645,27 @@ EngineBench <parts folder> bench <build id>            every part comes off and 
 EngineBench <parts folder> renew <older parts folder>  engines as a save made with an older conversion holds them, brought up to date
 EngineBench <parts folder> gear <AC cars folder>       factory running gear chosen for every car, against its own data
 EngineBench <parts folder> car <AC car folder> <build id> [output folder]   every data file the car's parts change
+EngineBench <parts folder> sound <AC car folder> <car id> [output folder]   the car's sound written for another car id, with the engine events it lacks
+EngineBench <parts folder> sounds <AC cars folder> [sounds folder]        the sound library (curated, then harvested with carriers), and the sound every build gets, with the reason
 ```
+
+`car` also prints the sound the car would race with, and whether it is the car's own bank.
+
+The overlay's sfx section was checked with a dry-run console (a mirror of a car's `data` and `sfx`, the folder hashed
+before and after): sound plus data, sound only with a crash and `RestoreAll` from a fresh instance, a restore cut
+short, a car without `GUIDs.txt`, the packed GT500, and a mirror on another volume for the copy fallback. After the
+PR review, a scratch console on made-up cars checked: a car taking the sound of a car already swapped in the race and
+two cars on each other's banks, a copy made while an earlier race's changes were still in, a kept bank whose
+manifest was lost, a donor bank that is gone, read-only donors, and the library's left-out sounds, bad json and
+`"pins": null`. The harvest of the install came out the same line for line.
 
 ## Not done yet
 
-- Two cars of one model in a race share one data folder: the opponent drives the player's data. A clone of the car
-  folder for the race (with the sound bank's GUIDs renamed, as Content Manager does) would give each its own.
+- Engine sounds: `Assets\Sounds` holds no curated sound yet, so every choice is a harvested bank; the first ones
+  to curate are the Kunos V8s of the full install (GT40 289, Cobra 427, Corvette C7, Mustang 2015, C4 with Borla)
+  and the best mod banks, one per engine class. The harvest tags a bank with the stock engine the parts would give
+  its car, so a slant-six Valiant carrying a V8 bank is tagged 8 cylinders; `sounds.json` corrects that per car.
+  Mufflers and headers do not change the sound yet; a garage preview through fmodstudio64.dll is not started.
 - Working on an engine outside a car (an engine stand): on the shelf an assembly can be taken apart, but parts only
   go together on a car.
 - Wear from mileage; tuning UI (the scripts' `buildTuningMenu` is not used, fields are set directly).

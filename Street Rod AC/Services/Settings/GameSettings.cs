@@ -9,7 +9,7 @@ namespace Street_Rod_AC.Services.Settings
         // Economy Settings
         public double CarPriceMultiplier { get; set; } = 1.0;
         public double PartPriceMultiplier { get; set; } = 1.0;
-        public decimal StartingMoney { get; set; } = 10000m;
+        public decimal StartingMoney { get; set; } = Models.GameState.Player.StartingMoney;
         public double RacePrizeMultiplier { get; set; } = 1.0;
 
         // Difficulty Settings

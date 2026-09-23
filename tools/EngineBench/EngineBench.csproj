@@ -24,6 +24,7 @@
     <Compile Include="..\..\Street Rod AC\Parts\Scripting\*.cs" Link="Parts\Scripting\%(Filename)%(Extension)" />
     <Compile Include="..\..\Street Rod AC\Parts\Logic\*.cs" Link="Parts\Logic\%(Filename)%(Extension)" />
     <Compile Include="..\..\Street Rod AC\Parts\Export\*.cs" Link="Parts\Export\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Street Rod AC\Parts\Sounds\*.cs" Link="Parts\Sounds\%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

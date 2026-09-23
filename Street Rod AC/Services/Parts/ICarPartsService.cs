@@ -1,4 +1,5 @@
 using Street_Rod_AC.Models.Catalog;
+using Street_Rod_AC.Parts.Sounds;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Cars;
@@ -8,8 +9,8 @@ using Street_Rod_AC.Parts.Logic;
 namespace Street_Rod_AC.Services.Parts
 {
     /// <summary>
-    /// Ties the cars of the game to the parts catalog. The catalog and the dyno figures of its engine builds
-    /// are loaded when first asked for; <see cref="WarmUpAsync"/> does that ahead of time, off the UI thread.
+    /// Ties the cars of the game to the parts catalog. The catalog, the dyno figures of its engine builds and the
+    /// sound library are loaded when first asked for; <see cref="WarmUpAsync"/> does that ahead of time, off the UI thread.
     /// </summary>
     public interface ICarPartsService
     {
@@ -57,6 +58,15 @@ namespace Street_Rod_AC.Services.Parts
 
         /// <summary>The car's engine on the dyno; null for a car without one or without parts</summary>
         EngineReport? Evaluate(Car car);
+
+        /// <summary>Every engine sound there is: the library's and the installed cars' own, read once</summary>
+        SoundLibrary Sounds { get; }
+
+        /// <summary>
+        /// The sound the car's engine races with; null when it keeps its own (no engine, no sounds, or the
+        /// choice is the bank the car already has)
+        /// </summary>
+        CarSound? ChooseSound(Car car, EngineReport? report);
 
         /// <summary>Kilograms of the engine the car's Assetto Corsa data was made with: its factory build</summary>
         double? FactoryEngineMass(Car car);

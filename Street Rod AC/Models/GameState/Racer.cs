@@ -21,16 +21,18 @@ namespace Street_Rod_AC.Models.GameState
     {
         public Guid? SelectedCarInstanceId { get; set; }
 
+        /// <summary>What a new player starts with; enough for several cars while the game is being built</summary>
+        public const decimal StartingMoney = 1_000_000m;
+
         public Player(string name) : base(RacerType.Player, name)
         {
-            // Player starts with money
-            Money = 10000m;
+            Money = StartingMoney;
         }
 
         // Parameterless constructor for LiteDB
         public Player() : base(RacerType.Player, "Player")
         {
-            Money = 10000m;
+            Money = StartingMoney;
         }
     }
 }

@@ -4,6 +4,7 @@ using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Parts.Export;
+using Street_Rod_AC.Parts.Logic;
 using Street_Rod_AC.Services.Parts;
 
 namespace Street_Rod_AC.Services.Race
@@ -19,6 +20,15 @@ namespace Street_Rod_AC.Services.Race
 
         /// <summary>The car's folder under content\cars</summary>
         public string CarId { get; }
+
+        /// <summary>
+        /// The id the car races under when another car of its model is in the race: it gets a copy of the folder
+        /// with its own data and sound (<see cref="Parts.Export.AcCarFolder"/>); null races in the car's own folder
+        /// </summary>
+        public string? CloneId { get; init; }
+
+        /// <summary>A car that races as its author made it, in a copy of its folder</summary>
+        public static RaceCarData AsAuthored(string carId, string cloneId) => new(carId, new CarBuildResult()) { CloneId = cloneId };
 
         public CarBuildResult Build { get; }
 
@@ -70,9 +80,25 @@ namespace Street_Rod_AC.Services.Race
             };
 
             var result = AcCarBuild.Generate(catalog, build, readFile);
-            _logger.Information("{Car}: {Power:0} hp, {Files} file(s) to change{Problems}", car.DefinitionId, build.Engine?.Dyno?.MaxPowerHp ?? 0,
-                result.Files.Count, result.Problems.Count == 0 ? "" : ", cannot drive: " + string.Join("; ", result.Problems));
+            if (result.CanDrive) result.Sound = ChooseSound(car, build.Engine);
+            _logger.Information("{Car}: {Power:0} hp, {Files} file(s) to change{Sound}{Problems}", car.DefinitionId, build.Engine?.Dyno?.MaxPowerHp ?? 0,
+                result.Files.Count, result.Sound == null ? "" : ", the sound of " + result.Sound.DonorId,
+                result.Problems.Count == 0 ? "" : ", cannot drive: " + string.Join("; ", result.Problems));
             return new RaceCarData(car.DefinitionId, result);
+        }
+
+        // The sound is the least of a build: whatever goes wrong choosing it, the car races on its parts with its own
+        private CarSound? ChooseSound(Car car, EngineReport? engine)
+        {
+            try
+            {
+                return _parts.ChooseSound(car, engine);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("{Car}: no sound could be chosen, it keeps its own: {Error}", car.DefinitionId, ex.Message);
+                return null;
+            }
         }
     }
 }

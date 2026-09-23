@@ -69,6 +69,12 @@ public class AppSettings
     /// </summary>
     public string PartsPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Parts");
 
+    /// <summary>The engine sound library: a folder per sound, next to the parts</summary>
+    public string SoundsPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Sounds");
+
+    /// <summary>The install's master GUIDs, where Kunos cars name their sound events</summary>
+    public string SfxGuidsPath => Path.Combine(AssettoCorsaPath, "content", "sfx", "GUIDs.txt");
+
     /// <summary>
     /// What a part costs against the value its script gives it. The scripts think in the dollars of the early
     /// 2000s, the game's cars are priced in those of 1970: about a fifth.

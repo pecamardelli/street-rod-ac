@@ -746,25 +746,27 @@ namespace Street_Rod_AC.Screens.Diner
             var opponentCarDef = SelectedOpponent.CarDefinition;
 
             // The opponent's car races on its own parts too; one that does not run is left as its author made it.
-            // Two cars of one model share one data folder, so the opponent drives the player's data (see the
-            // parts system doc, "Not done yet") and its own pass would be for nothing.
-            Street_Rod_AC.Services.Race.RaceCarData? opponentData = null;
+            // An opponent in the player's model races in a copy of the car folder under its own id, so each car
+            // has its own data and its own sound.
+            var opponentData = await PrepareCarData(app, opponentCar);
+            if (opponentData is { CanDrive: false })
+            {
+                _logger.Warning("{Opponent}'s car would not run ({Problem}): it races as its author made it", setup.Opponent.Name, opponentData.Problem);
+                opponentData = null;
+            }
+
+            var opponentRacesAs = opponentCarDef.Id;
             if (opponentCar.DefinitionId == playerCar.DefinitionId)
             {
-                _logger.Warning("{Opponent} drives the same model as the player: it races on the player's data", setup.Opponent.Name);
-            }
-            else
-            {
-                opponentData = await PrepareCarData(app, opponentCar);
-                if (opponentData is { CanDrive: false })
-                {
-                    _logger.Warning("{Opponent}'s car would not run ({Problem}): it races as its author made it", setup.Opponent.Name, opponentData.Problem);
-                    opponentData = null;
-                }
+                opponentRacesAs = Street_Rod_AC.Parts.Export.AcCarFolder.CloneIdFor(opponentCarDef.Id);
+                opponentData = opponentData == null
+                    ? Street_Rod_AC.Services.Race.RaceCarData.AsAuthored(opponentCarDef.Id, opponentRacesAs)
+                    : new Street_Rod_AC.Services.Race.RaceCarData(opponentData.CarId, opponentData.Build) { CloneId = opponentRacesAs };
+                _logger.Information("{Opponent} drives the same model as the player: it races in a copy, {Clone}", setup.Opponent.Name, opponentRacesAs);
             }
 
             // Launch the race immediately
-            await LaunchRace(setup, playerCarDef, opponentCarDef, new[] { playerData, opponentData }.Where(d => d != null).ToList()!);
+            await LaunchRace(setup, playerCarDef, opponentCarDef, opponentRacesAs, new[] { playerData, opponentData }.Where(d => d != null).ToList()!);
         }
 
         /// <summary>The car's data as its parts make it, put together off the UI thread; null when it races as it is</summary>
@@ -782,7 +784,9 @@ namespace Street_Rod_AC.Screens.Diner
             }
         }
 
-        private Task LaunchRace(ChallengeSetup setup, CarDefinition playerCarDef, CarDefinition opponentCarDef, List<Street_Rod_AC.Services.Race.RaceCarData> carData)
+        /// <param name="opponentRacesAs">The folder the opponent's car races in: its own, or a copy of it</param>
+        private Task LaunchRace(ChallengeSetup setup, CarDefinition playerCarDef, CarDefinition opponentCarDef, string opponentRacesAs,
+            List<Street_Rod_AC.Services.Race.RaceCarData> carData)
         {
             _logger.Information("LaunchRace called - Player: {PlayerCar}, Opponent: {OpponentName} in {OpponentCar}, RaceType: {RaceType}",
                 playerCarDef.Id, setup.Opponent.Name, opponentCarDef.Id, setup.RaceType);
@@ -795,7 +799,7 @@ namespace Street_Rod_AC.Screens.Diner
                 PlayerCarId = playerCarDef.Id,
                 PlayerSkin = setup.PlayerCar.SkinId,
                 PlayerName = _gameState.Player.Name,
-                OpponentCarId = opponentCarDef.Id,
+                OpponentCarId = opponentRacesAs,
                 OpponentSkin = setup.OpponentCar.SkinId,
                 OpponentName = setup.Opponent.Name,
                 TrackId = setup.TrackId,
