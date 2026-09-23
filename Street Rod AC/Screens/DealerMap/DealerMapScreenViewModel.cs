@@ -16,18 +16,22 @@ namespace Street_Rod_AC.Screens.DealerMap
     public class DealerMapScreenViewModel : BaseScreenViewModel
     {
         /// <summary>
-        /// The part of los_angeles_map.jpg that is shown, as fractions of the whole image: the basin from the
-        /// valley down to the harbour. Dealer positions are stored against the whole image, so this can be
-        /// moved without touching the data.
+        /// The part of los_angeles_map.jpg that is shown, as fractions of the whole image.
+        ///
+        /// The map is the Auto Club's "Los Angeles and Vicinity", which reaches out to Victorville and
+        /// Joshua Tree - most of it desert with nothing to sell a car in. This is the inhabited corner: the
+        /// valley and the coast across to Riverside. It stops just above the map's own title cartouche,
+        /// because a sliver of it in the corner reads as a mistake rather than a flourish. Dealer positions
+        /// are stored against the whole image, so this can be moved without touching the data.
         /// </summary>
-        private const double CropX = 0.32;
-        private const double CropY = 0.16;
-        private const double CropWidth = 0.66;
-        private const double CropHeight = 0.78;
+        private const double CropX = 0.05;
+        private const double CropY = 0.28;
+        private const double CropWidth = 0.62;
+        private const double CropHeight = 0.55;
 
         /// <summary>The map image as shipped, in pixels, so the crop can keep its shape on screen</summary>
-        private const double MapPixelWidth = 1500;
-        private const double MapPixelHeight = 1900;
+        private const double MapPixelWidth = 2444;
+        private const double MapPixelHeight = 1560;
 
         private readonly NavigationService _navigationService;
         private readonly DialogService _dialogService;

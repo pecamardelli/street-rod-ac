@@ -11,12 +11,21 @@ The garage stays the hub. The map is somewhere you go from it, not a new top lev
 
 ## DealerMap
 
-A crop of `Assets/Images/Backgrounds/los_angeles_map.jpg` with a pin per dealer. Hovering a pin shows what
-the lot has and how far away it is; clicking drives out to it.
+A crop of `Assets/Images/Backgrounds/los_angeles_map.jpg` — the Automobile Club of Southern California's
+"Los Angeles and Vicinity", 2444 x 1560 — with a pin per dealer. Hovering a pin shows what the lot has, what
+the drive costs and whether you would be back today; clicking drives out to it.
+
+The sheet reaches to Victorville and Joshua Tree, most of it desert. The crop is the inhabited corner: the
+valley and the coast across to Riverside, stopping just above the map's own title cartouche. It comes out
+at 1.766, near enough 16:9 that the map fills the window.
 
 Pin positions are stored in `dealers.json` as fractions of the **whole** map image. The screen shows only
-part of that image, and `DealerMapScreenViewModel` holds the crop rectangle (`CropX/Y/Width/Height`) and
-converts. Moving the crop therefore does not mean re-measuring every dealer.
+part of it, and `DealerMapScreenViewModel` holds the crop rectangle (`CropX/Y/Width/Height`) and converts,
+so moving the crop does not mean re-measuring every dealer. **Replacing the map image does**, and so does
+changing its size — `MapPixelWidth`/`Height` set the shape the crop is held at.
+
+Each dealer sits on its real town, and `travelHours` matches: the lots round downtown are an hour, the
+valley and the harbour two, Riverside three and a half.
 
 `Helpers/FractionPanel` places the pins: children are laid out at a fraction of the panel's size, so a pin
 stays on its bit of the map at any window size.
