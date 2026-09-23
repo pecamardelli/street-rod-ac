@@ -1,0 +1,55 @@
+{
+  "_comment": [
+    "What each AC showroom gives a lot to work with. Measured off the .kn5 itself, not guessed - run",
+    "Modding/Tools/ac_track_tools/kn5bounds.py over the model and paste what --json prints:",
+    "",
+    "  python kn5bounds.py --json --id Hangar \"C:/GAMES/Street Rod AC/content/showroom/Hangar/hangar.kn5\"",
+    "",
+    "floorWidth/Depth is the extent of geometry lying near y = 0: what a car can stand on. wallRadius is",
+    "the nearest floor edge to the middle, and the camera is kept inside it - a camera outside the room",
+    "renders the back of the wall.",
+    "",
+    "capacity is how many cars stand inside the walls with room to walk round them - bays are spaced for a",
+    "5.8 m saloon with the doors opening. That is fewer cars than a room looks like it holds: a 28 m shed",
+    "takes ten, an 80 m yard takes twenty. In both cases it is more than can be held in one shot, which is",
+    "fine - the lot is swung round the way it would be walked. Twenty is the ceiling everywhere, for load",
+    "time rather than room: twenty models is already a few hundred MB to read in.",
+    "",
+    "A dealer's stockHigh in dealers.json must stay at or under its showroom's capacity, or the overflow",
+    "can only be read about and never looked at."
+  ],
+  "showrooms": [
+    {
+      "id": "Hangar",
+      "floorWidth": 28.9,
+      "floorDepth": 28.9,
+      "wallRadius": 14.4,
+      "capacity": 10,
+      "indoor": true
+    },
+    {
+      "id": "showroom",
+      "floorWidth": 28.0,
+      "floorDepth": 28.0,
+      "wallRadius": 14.0,
+      "capacity": 10,
+      "indoor": true
+    },
+    {
+      "id": "industrial",
+      "floorWidth": 80.2,
+      "floorDepth": 82.6,
+      "wallRadius": 39.0,
+      "capacity": 20,
+      "indoor": false
+    },
+    {
+      "id": "studio_white",
+      "floorWidth": 79.4,
+      "floorDepth": 78.2,
+      "wallRadius": 38.9,
+      "capacity": 20,
+      "indoor": false
+    }
+  ]
+}

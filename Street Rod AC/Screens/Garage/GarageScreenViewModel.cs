@@ -56,6 +56,7 @@ namespace Street_Rod_AC.Screens.Garage
         public RelayCommand SelectCarCommand { get; }
         public RelayCommand ShowCalendarCommand { get; }
         public RelayCommand NewspaperCommand { get; }
+        public RelayCommand CarDealersCommand { get; }
         public RelayCommand HitTheStreetsCommand { get; }
         public RelayCommand CareerCommand { get; }
 
@@ -209,6 +210,7 @@ namespace Street_Rod_AC.Screens.Garage
             SelectCarCommand = new RelayCommand(OnSelectCar);
             ShowCalendarCommand = new RelayCommand(OnShowCalendar);
             NewspaperCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToNewspaper(_gameState)));
+            CarDealersCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToDealerMap(_gameState)));
             HitTheStreetsCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToDiner(_gameState)));
             CareerCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToCareer(_gameState)));
 

@@ -25,6 +25,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
         private readonly IContentCatalogRepository _catalogRepo;
         private readonly ICarProfileRepository _profileRepo;
         private readonly IGameStateRepository _gameStateRepo;
+        private readonly ICarPurchaseService _purchaseService;
         private readonly IAppLogger _logger;
 
         public RelayCommand BackCommand { get; }
@@ -76,7 +77,8 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             IUsedCarMarketService marketService,
             IContentCatalogRepository catalogRepo,
             ICarProfileRepository profileRepo,
-            IGameStateRepository gameStateRepo)
+            IGameStateRepository gameStateRepo,
+            ICarPurchaseService purchaseService)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
@@ -85,6 +87,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             _catalogRepo = catalogRepo;
             _profileRepo = profileRepo;
             _gameStateRepo = gameStateRepo;
+            _purchaseService = purchaseService;
             _logger = AppLoggerFactory.CreateLogger("UsedCarMarket");
 
             BackCommand = new RelayCommand(OnBack);
@@ -267,108 +270,33 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
 
         private async void CompletePurchase(UsedCarListing listing, CarDefinition carDef, string dealerName)
         {
-            // Validate funds
-            if (_gameState.Player.Money < listing.Price)
+            var result = await _purchaseService.PurchaseAsync(_gameState, listing, carDef);
+
+            if (!result.Succeeded)
             {
-                _logger.Warning("Purchase failed: insufficient funds");
                 var errorDialog = new InformationDialogViewModel(
                     _dialogService,
-                    "You don't have enough money to purchase this car.",
-                    "Insufficient Funds");
+                    result.Message,
+                    result.Outcome == PurchaseOutcome.NotEnoughMoney ? "Insufficient Funds" : "Car Unavailable");
                 _dialogService.ShowDialog(errorDialog);
+
+                if (result.Outcome == PurchaseOutcome.NoLongerAvailable) LoadListings();
                 return;
             }
 
-            // Validate listing still available
-            var currentListing = _gameState.UsedCarMarket.FirstOrDefault(l => l.Id == listing.Id);
-            if (currentListing == null || currentListing.IsSold)
+            if (result.SaveFailed)
             {
-                _logger.Warning("Purchase failed: listing no longer available");
-                var errorDialog = new InformationDialogViewModel(
-                    _dialogService,
-                    "This car is no longer available.",
-                    "Car Unavailable");
-                _dialogService.ShowDialog(errorDialog);
-                LoadListings(); // Refresh display
-                return;
-            }
-
-            // Create car instance from listing
-            var carInstance = new Car
-            {
-                InstanceId = Guid.NewGuid(),
-                DefinitionId = listing.CarDefinitionId,
-                SkinId = listing.SkinId,
-                PurchasePrice = listing.Price,
-                PurchaseDate = _gameState.Date,
-                OdometerKM = listing.Mileage,
-                // Map single condition to health metrics
-                EngineHealth = listing.Condition,
-                TransmissionHealth = listing.Condition,
-                BodyCondition = listing.Condition,
-                TireCondition = listing.Condition,
-                // What was for sale is what gets bought; older listings carry no parts and get the factory engine
-                Parts = listing.Parts,
-                HasPartsAssigned = listing.Parts.Count > 0
-            };
-            await ((App)System.Windows.Application.Current).CarPartsService.EnsurePartsAsync(carInstance);
-
-            // Add to player's garage
-            if (_gameState.Player.Cars == null)
-            {
-                _gameState.Player.Cars = [];
-            }
-            _gameState.Player.Cars.Add(carInstance);
-
-            // Deduct money
-            _gameState.Player.Money -= listing.Price;
-
-            // Mark listing as sold
-            currentListing.IsSold = true;
-            currentListing.SoldDate = _gameState.Date;
-
-            // The parts went with the car; the sold listing stays around for a week and need not keep a copy
-            currentListing.Parts = [];
-
-            _logger.Information("Purchase completed: {CarName} for ${Price}, new bankroll: ${Bankroll}",
-                carDef.Name, listing.Price, _gameState.Player.Money);
-
-            // Spend time for buying a car (2 hours). Waited for before saving: late in the day that is the
-            // next morning, with the market and the ads turned over, and all of it belongs in the save.
-            try
-            {
-                await ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.BuyCar);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Could not spend the time for buying the car");
-            }
-
-            // Save game state
-            try
-            {
-                _gameStateRepo.Save(_gameState, _gameState.SaveName);
-                _logger.Information("Game state saved after purchase");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Failed to save game state after purchase");
-                var errorDialog = new InformationDialogViewModel(
+                var saveDialog = new InformationDialogViewModel(
                     _dialogService,
                     "The purchase was successful but failed to save the game. Please save manually.",
                     "Save Warning");
-                _dialogService.ShowDialog(errorDialog);
+                _dialogService.ShowDialog(saveDialog);
             }
 
-            // Refresh display
             LoadListings();
             OnPropertyChanged(nameof(BankrollDisplay));
 
-            // Show success message
-            var successDialog = new InformationDialogViewModel(
-                _dialogService,
-                $"Congratulations! You've purchased a {carDef.Brand} {carDef.Name} for ${listing.Price:N0}.\n\nYou can now find it in your garage.",
-                "Purchase Successful");
+            var successDialog = new InformationDialogViewModel(_dialogService, result.Message, "Purchase Successful");
             _dialogService.ShowDialog(successDialog);
         }
 

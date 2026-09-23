@@ -4,6 +4,7 @@ using Street_Rod_AC.Dialogs;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Dealers;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Settings;
@@ -31,6 +32,8 @@ namespace Street_Rod_AC.Navigation
         private readonly GameSettingsService _gameSettingsService;
         private readonly ICarProfileService _profileService;
         private readonly ITalkService _talkService;
+        private readonly IDealerCatalog _dealerCatalog;
+        private readonly ICarPurchaseService _purchaseService;
 
         public IScreen CurrentScreen
         {
@@ -58,7 +61,9 @@ namespace Street_Rod_AC.Navigation
             IUsedCarMarketService marketService,
             GameSettingsService gameSettingsService,
             ICarProfileService profileService,
-            ITalkService talkService)
+            ITalkService talkService,
+            IDealerCatalog dealerCatalog,
+            ICarPurchaseService purchaseService)
         {
             _dialogService = dialogService;
             _catalogRepository = catalogRepository;
@@ -71,6 +76,8 @@ namespace Street_Rod_AC.Navigation
             _gameSettingsService = gameSettingsService;
             _profileService = profileService;
             _talkService = talkService;
+            _dealerCatalog = dealerCatalog;
+            _purchaseService = purchaseService;
         }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -186,7 +193,8 @@ namespace Street_Rod_AC.Navigation
                 _marketService,
                 _catalogRepository,
                 _profileRepository,
-                _gameStateRepository);
+                _gameStateRepository,
+                _purchaseService);
             NavigateTo(screen);
         }
 
@@ -223,6 +231,33 @@ namespace Street_Rod_AC.Navigation
                 gameState,
                 _launcher,
                 launchIntent);
+            NavigateTo(screen);
+        }
+
+        public void NavigateToDealerMap(GameState gameState)
+        {
+            var screen = new Screens.DealerMap.DealerMapScreenViewModel(
+                this,
+                _dialogService,
+                gameState,
+                _dealerCatalog,
+                _marketService);
+            NavigateTo(screen);
+        }
+
+        public void NavigateToDealerLot(GameState gameState, string dealerId)
+        {
+            var screen = new Screens.DealerLot.DealerLotScreenViewModel(
+                this,
+                _dialogService,
+                gameState,
+                dealerId,
+                _dealerCatalog,
+                _marketService,
+                _catalogRepository,
+                _profileRepository,
+                _gameStateRepository,
+                _purchaseService);
             NavigateTo(screen);
         }
 

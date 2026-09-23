@@ -14,7 +14,9 @@
 | CarSelection | `Screens/CarSelection/` | Select car for activity |
 | Diner | `Screens/Diner/` | Meet opponents, accept challenges |
 | Newspaper | `Screens/Newspaper/` | Used car ads, news |
-| UsedCarMarket | `Screens/UsedCarMarket/` | Browse/buy used cars |
+| DealerMap | `Screens/DealerMap/` | The city, with a pin per dealer |
+| DealerLot | `Screens/DealerLot/` | One dealer's cars parked in 3D; click one to look at it |
+| UsedCarMarket | `Screens/UsedCarMarket/` | Browse/buy used cars as a flat list |
 | UsedParts | `Screens/UsedParts/` | Browse/buy used parts |
 
 ## Navigation Flow
@@ -29,6 +31,7 @@ Garage (hub) ←→ CarSelection
   │
   ├──→ Diner (challenges)      [Hit the streets]
   ├──→ Career                   [Career stats]
+  ├──→ DealerMap → DealerLot    [Car dealers]
   └──→ Newspaper → UsedCarMarket
                  → UsedParts
 
@@ -55,6 +58,8 @@ Each screen folder contains:
 | NavigateToCarSelection(gameState) | CarSelection |
 | NavigateToDiner(gameState) | Diner |
 | NavigateToNewspaper(gameState) | Newspaper |
+| NavigateToDealerMap(gameState) | DealerMap |
+| NavigateToDealerLot(gameState, dealerId) | DealerLot |
 | NavigateToUsedCarMarket(gameState) | UsedCarMarket |
 | NavigateToUsedParts(gameState) | UsedParts |
 

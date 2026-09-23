@@ -23,21 +23,21 @@ Dynamic used car market with dealer locations, pricing based on condition, and d
 - `IsSold` - Purchase status
 
 ## Spawning Logic
-Based on `DealerPrecedence`:
-- Roll random for each car definition
-- If `random < precedence`: spawn 1-3 instances
-- Higher precedence = more instances
+Dealer by dealer, each filled to its own `stockLow`..`stockHigh`:
+- Build the pool of cars that have a profile and a price, each with its rank (the share of installed cars
+  it is dearer than)
+- For each dealer, take the cars whose rank falls in its price band
+- Draw from those weighted by `DealerPrecedence`, at most twice per model, until the lot is full
 
-| Precedence | Type | Instances |
-|------------|------|-----------|
-| 0.7-1.0 | Common | 1-3 |
-| 0.4-0.6 | Performance | 0-2 |
-| 0.1-0.3 | Exotic | 0-1 |
+A dealer whose band matches nothing installed takes the nearest cars instead of standing empty.
+
+Do **not** go back to spawning a whole market and cutting it to size — `.Take(n)` over a list built in
+catalog order starves whole dealers.
 
 ## Daily Refresh
 1. Remove sold listings older than 7 days
 2. Remove unsold listings older than 14 days
-3. Spawn new listings to target size (30-50)
+3. Top each dealer back up to its own target
 
 ## Pricing
 - Start with `CarProfile.BasePrice`
@@ -46,10 +46,25 @@ Based on `DealerPrecedence`:
 - Round to nearest $100
 
 ## Dealer Locations
-Five default dealers with regions:
-- Downtown Motors, Eastside Garage, Suburban Autos, Riverside Cars, Industrial Motors
+Ten dealers, defined in `Assets/Dealers/dealers.json` and read by `DealerCatalog`: Downtown Motors,
+Sunset Motors, Colorado Motors, Suburban Autos, Ocean Park Autos, Riverside Cars, Vermont Auto Sales,
+Industrial Motors, Harbor Auto and Eastside Garage. `GetDefaultDealers()` still hands out the original five
+when the file cannot be read.
+
+The save holds only `DealerLocation` (Id, Name, Region). Map position, showroom, parking bays and stock
+character live in the JSON and are merged over the save on load, so new fields reach old saves. See
+`docs/screens/dealer-lot.md`.
+
+## Which Dealer Gets a Car
+Not random. Each dealer claims a slice of the market's price range (`priceBandLow`/`priceBandHigh`); a car
+goes to one of the dealers whose slice covers where its base price sits, or to the nearest slice if none
+does. `conditionCenter` then shifts the condition roll by how far that dealer's standard sits from the middle
+of the range (the roll still leads, and one car in twelve is not shifted at all), so a cheap lot has rough
+cars without making a good find impossible.
 
 ## Purchase Flow
+`CarPurchaseService` owns this, shared by the listings screen and the dealer lot.
+
 1. Validate funds and availability
 2. Create `CarInstance` from listing
 3. Add to `GameState.Player.Cars`
@@ -66,6 +81,9 @@ Five default dealers with regions:
 
 ## Files
 - `Services/Market/UsedCarMarketService.cs`
+- `Services/Market/CarPurchaseService.cs`
+- `Services/Dealers/DealerCatalog.cs`
+- `Assets/Dealers/dealers.json`
 - `Services/Market/IUsedCarMarketService.cs`
 - `Models/GameState/UsedCarListing.cs`
 - `Models/GameState/DealerLocation.cs`
