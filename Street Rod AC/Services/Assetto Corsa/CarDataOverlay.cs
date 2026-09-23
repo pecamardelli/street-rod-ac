@@ -255,8 +255,8 @@ namespace Street_Rod_AC.Services
         }
 
         /// <summary>
-        /// Puts every car back; at start-up this undoes what a crash left behind. A car that cannot be put back
-        /// keeps its manifest, and the next Apply to it tries again first.
+        /// Puts every car back and takes away every copy made for a race; at start-up this undoes what a crash left
+        /// behind. A car that cannot be put back keeps its manifest, and the next Apply to it tries again first.
         /// </summary>
         public int RestoreAll()
         {
@@ -274,8 +274,133 @@ namespace Street_Rod_AC.Services
             }
 
             _appliedNow.Clear();
-            return restored;
+            return restored + RemoveClones();
         }
+
+        /// <summary>
+        /// A copy of a car folder under <paramref name="cloneId"/>, for a second car of that model in the race: it races
+        /// on <paramref name="files"/> over the car's own data and on <paramref name="sound"/> (the car's own when null),
+        /// and the original is not touched. Models, textures and skins are hard links (nothing is copied but the data,
+        /// which is written to); the marker goes in first, so a copy cut short is still known to be ours.
+        /// </summary>
+        public void CreateClone(string carId, string cloneId, IReadOnlyDictionary<string, string> files, CarSound? sound, string? masterGuidsPath = null)
+        {
+            var source = Path.Combine(_carsPath, carId);
+            var target = Path.Combine(_carsPath, cloneId);
+            if (!Directory.Exists(source)) throw new DirectoryNotFoundException($"{carId} is not installed");
+            if (Directory.Exists(target))
+            {
+                if (!AcCarFolder.IsClone(target)) throw new IOException($"{cloneId} is a car of the install, not a copy: it is left alone");
+                RemoveClone(cloneId);
+            }
+
+            Directory.CreateDirectory(target);
+            File.WriteAllText(Path.Combine(target, AcCarFolder.CloneMarker),
+                JsonConvert.SerializeObject(new { Source = carId, Created = DateTime.Now }, Formatting.Indented));
+
+            var dataFolder = Path.Combine(source, AcCarData.DataFolder);
+            var sfxFolder = Path.Combine(source, AcCarSound.SfxFolder);
+            var linked = 0;
+            var copied = 0;
+            foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
+            {
+                // The data and the sound are made below; data.acd would not open under another name
+                if (IsUnder(file, dataFolder) || IsUnder(file, sfxFolder)) continue;
+                var relative = Path.GetRelativePath(source, file);
+                if (relative.Equals(AcdFile.FileName, StringComparison.OrdinalIgnoreCase)) continue;
+
+                var destination = Path.Combine(target, relative);
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+
+                // A read-only file is copied: clearing the flag on a link would clear it on the car's own file
+                if (!File.GetAttributes(file).HasFlag(FileAttributes.ReadOnly) && TryHardLink(file, destination))
+                {
+                    linked++;
+                    continue;
+                }
+
+                File.Copy(file, destination, true);
+                File.SetAttributes(destination, File.GetAttributes(destination) & ~FileAttributes.ReadOnly);
+                copied++;
+            }
+
+            // The data is written to, so it is a copy: the car's own folder, or what its data.acd holds
+            var targetData = Path.Combine(target, AcCarData.DataFolder);
+            Directory.CreateDirectory(targetData);
+            if (Directory.Exists(dataFolder))
+            {
+                foreach (var file in Directory.GetFiles(dataFolder)) File.Copy(file, Path.Combine(targetData, Path.GetFileName(file)), true);
+            }
+            else
+            {
+                var acd = Path.Combine(source, AcdFile.FileName);
+                if (!File.Exists(acd)) throw new FileNotFoundException($"{carId} has neither a data folder nor {AcdFile.FileName}", acd);
+                foreach (var (name, content) in AcdFile.Read(acd)) File.WriteAllBytes(Path.Combine(targetData, name), content);
+            }
+
+            foreach (var file in Directory.GetFiles(targetData)) File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.ReadOnly);
+            foreach (var (name, content) in files) File.WriteAllText(Path.Combine(targetData, name), content, Encoding.Latin1);
+
+            // The bank goes in under the copy's name, with the GUID lines written for it
+            sound ??= AcCarSound.FromCar(source, masterGuidsPath ?? AppSettings.Instance.SfxGuidsPath);
+            if (sound != null)
+            {
+                var targetSfx = Path.Combine(target, AcCarSound.SfxFolder);
+                Directory.CreateDirectory(targetSfx);
+                var bank = Path.Combine(targetSfx, AcCarSound.BankFileName(cloneId));
+                if (!TryHardLink(sound.BankPath, bank)) File.Copy(sound.BankPath, bank, true);
+                File.WriteAllText(Path.Combine(targetSfx, AcCarSound.GuidsFileName), sound.GuidsFor(cloneId), Encoding.ASCII);
+            }
+            else
+            {
+                _logger.Warning("{Car} has no sound of its own to give its copy: {Clone} races without one", carId, cloneId);
+            }
+
+            _logger.Information("{Clone}: a copy of {Car} for the race ({Linked} file(s) linked, {Copied} copied, {Files} data file(s) changed, sound of {Sound})",
+                cloneId, carId, linked, copied, files.Count, sound?.DonorId ?? "none");
+        }
+
+        /// <summary>Deletes a copy made for a race; a folder without the marker is never touched</summary>
+        public bool RemoveClone(string cloneId)
+        {
+            var folder = Path.Combine(_carsPath, cloneId);
+            if (!Directory.Exists(folder) || !AcCarFolder.IsClone(folder)) return false;
+
+            // Deleting a link leaves the car's own file where it is; the marker goes last, so a delete cut short is retried
+            foreach (var file in Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories))
+            {
+                if (Path.GetFileName(file).Equals(AcCarFolder.CloneMarker, StringComparison.OrdinalIgnoreCase)) continue;
+                File.Delete(file);
+            }
+
+            Directory.Delete(folder, true);
+            _logger.Information("{Clone}: the copy is gone", cloneId);
+            return true;
+        }
+
+        /// <summary>Every copy in the install, whichever race made it</summary>
+        public int RemoveClones()
+        {
+            if (!Directory.Exists(_carsPath)) return 0;
+
+            var removed = 0;
+            foreach (var folder in Directory.GetDirectories(_carsPath).Where(AcCarFolder.IsClone))
+            {
+                try
+                {
+                    if (RemoveClone(Path.GetFileName(folder))) removed++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Could not delete the copy {Folder}; the next start tries again", folder);
+                }
+            }
+
+            return removed;
+        }
+
+        private static bool IsUnder(string file, string folder) =>
+            file.StartsWith(folder + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
 
         /// <summary>A hard link when the two paths are on one volume; false when the file system will not have it</summary>
         private static bool TryHardLink(string source, string destination)

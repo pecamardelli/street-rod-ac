@@ -581,6 +581,19 @@ says so (`Sfx`: whether the folder, the bank and the GUIDs existed). `Restore` d
 back; every step checks what is there, so a restore cut short finishes the next time. Every installed car has
 `engine_ext` and `engine_int`; four lack `limiter` (`AcCarSound.MissingEngineEvents`).
 
+**Two cars of one model** (`CarDataOverlay.CreateClone`, `Parts/Export/AcCarFolder`). An opponent in the player's
+model races in a copy of the car folder under its own id (`<car>__sr_opponent`), so each car has its own data and
+sound. The copy is made first, from the untouched originals, before the player's changes go into the car itself:
+models, textures, skins and ui are hard links (a read-only file is copied, since its flag is shared with the link);
+the data is a real copy (the car's folder, or what its `data.acd` holds; the copy has no `data.acd`, whose key comes
+from the folder name) with the opponent's files over it; the sfx folder gets the opponent's sound, or the car's own,
+under the copy's name. A marker file (`streetrod_clone.json`) goes in first; only a folder with it is ever deleted,
+the car scanners (content service, catalog import, sound harvest) leave it out, and `RestoreAll` (after every race
+and at start-up) takes every copy away. The diner sets the opponent's `MODEL` in race.ini to the copy's id; results
+are matched by car instance, not model, so nothing else changes. An opponent whose car cannot run races in a copy
+as its author made it. Checked with a dry-run console on full car folders (the Camaro, the packed GT500): the car's
+own folder hashes the same after the copy, after the player's changes next to it, after `RestoreAll`, after a crash.
+
 **Sound library and matcher** (`Parts/Sounds`, `CarPartsService.Sounds`/`ChooseSound`). Two sources, one list
 (`SoundLibrary`): a folder under `Assets\Sounds` is a sound (a bank, a `GUIDs.txt`, an optional `sound.json` with
 name, donor id, cylinders, family, rev ceiling, tags; drop one in and the game has it, see the README there), and
@@ -633,9 +646,6 @@ short, a car without `GUIDs.txt`, the packed GT500, and a mirror on another volu
 
 ## Not done yet
 
-- Two cars of one model in a race share one data folder: the opponent drives the player's data. A clone of the car
-  folder for the race (with the sound bank's GUIDs renamed, as Content Manager does) would give each its own; the
-  overlay's sfx section is the half of that clone already done.
 - Engine sounds: `Assets\Sounds` holds no curated sound yet, so every choice is a harvested bank; the first ones
   to curate are the Kunos V8s of the full install (GT40 289, Cobra 427, Corvette C7, Mustang 2015, C4 with Borla)
   and the best mod banks, one per engine class. The harvest tags a bank with the stock engine the parts would give

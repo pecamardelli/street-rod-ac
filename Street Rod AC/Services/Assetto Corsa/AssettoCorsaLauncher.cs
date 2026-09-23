@@ -86,8 +86,15 @@ namespace Street_Rod_AC.Services
 
                 // PHASE 2.5: THE CARS' OWN DATA AND SOUND
                 // What the parts make of each car goes into the install now and comes out in the finally below,
-                // whatever happens in between. Two cars of one model share a folder: the first one's data stays.
-                foreach (var car in intent.CarData)
+                // whatever happens in between. A second car of a model already in the race races in a copy of the
+                // folder, made first, from the originals, before the other car's changes go in.
+                foreach (var car in intent.CarData.Where(c => c.CloneId != null))
+                {
+                    _logger.Information("PHASE: Copy of {Car} as {Clone}", car.CarId, car.CloneId);
+                    _carData.CreateClone(car.CarId, car.CloneId!, car.Build.Files, car.Build.Sound);
+                }
+
+                foreach (var car in intent.CarData.Where(c => c.CloneId == null))
                 {
                     _logger.Information("PHASE: Car data for {Car}", car.CarId);
                     if (!_carData.Apply(car.CarId, car.Build.Files, car.Build.Sound))
@@ -204,7 +211,7 @@ namespace Street_Rod_AC.Services
                 try
                 {
                     var restored = _carData.RestoreAll();
-                    if (restored > 0) _logger.Information("Data of {Count} car(s) put back", restored);
+                    if (restored > 0) _logger.Information("Data of {Count} car(s) put back, copies taken away", restored);
                 }
                 catch (Exception ex)
                 {

@@ -20,6 +20,15 @@ namespace Street_Rod_AC.Services.Race
         /// <summary>The car's folder under content\cars</summary>
         public string CarId { get; }
 
+        /// <summary>
+        /// The id the car races under when another car of its model is in the race: it gets a copy of the folder
+        /// with its own data and sound (<see cref="Parts.Export.AcCarFolder"/>); null races in the car's own folder
+        /// </summary>
+        public string? CloneId { get; init; }
+
+        /// <summary>A car that races as its author made it, in a copy of its folder</summary>
+        public static RaceCarData AsAuthored(string carId, string cloneId) => new(carId, new CarBuildResult()) { CloneId = cloneId };
+
         public CarBuildResult Build { get; }
 
         public bool CanDrive => Build.CanDrive;

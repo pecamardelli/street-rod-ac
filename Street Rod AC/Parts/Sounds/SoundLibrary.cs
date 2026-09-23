@@ -235,6 +235,7 @@ public sealed class SoundLibrary
     private HarvestedCar? ReadCar(string folder, string? masterGuidsPath, CarEngineFacts? facts)
     {
         var id = Path.GetFileName(folder);
+        if (AcCarFolder.IsClone(folder)) return null;
         if (Overrides.Cars.TryGetValue(id, out var excluded) && excluded.Exclude) return null;
         var sound = AcCarSound.FromCar(folder, masterGuidsPath);
         if (sound == null) return null;

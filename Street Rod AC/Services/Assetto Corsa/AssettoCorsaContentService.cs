@@ -53,6 +53,10 @@ public class AssettoCorsaContentService : IAssettoCorsaContentService
                 if (carFolder == null || uiFolder == null)
                     continue;
 
+                // A copy made for a race (one that a crash left behind) is not a car of the install
+                if (Street_Rod_AC.Parts.Export.AcCarFolder.IsClone(carFolder))
+                    continue;
+
                 // Use the folder name as car ID
                 var carId = Path.GetFileName(carFolder);
 

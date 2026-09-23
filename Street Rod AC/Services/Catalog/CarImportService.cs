@@ -148,6 +148,10 @@ namespace Street_Rod_AC.Services.Catalog
                     var uiFolder = Path.GetDirectoryName(uiJsonPath);
                     var carFolder = Path.GetDirectoryName(uiFolder);
 
+                    // A copy made for a race (one that a crash left behind) is not a car of the install
+                    if (carFolder != null && Street_Rod_AC.Parts.Export.AcCarFolder.IsClone(carFolder))
+                        continue;
+
                     if (carFolder == null || uiFolder == null)
                         continue;
 
