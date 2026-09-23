@@ -4,6 +4,7 @@ using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Parts.Export;
 using Street_Rod_AC.Parts.Logic;
+using Street_Rod_AC.Parts.Sounds;
 
 namespace Street_Rod_AC;
 
@@ -29,6 +30,7 @@ public static class Program
             Console.WriteLine("       EngineBench <parts folder> gear <AC cars folder>       factory running gear chosen for every car");
             Console.WriteLine("       EngineBench <parts folder> car <AC car folder> <build id> [output folder]   every data file the car's parts change");
             Console.WriteLine("       EngineBench <parts folder> sound <AC car folder> <car id> [output folder]   the car's sound written for another car id");
+            Console.WriteLine("       EngineBench <parts folder> sounds <AC cars folder> [sounds folder]        the sound library, and the sound every build gets");
             return 1;
         }
 
@@ -76,6 +78,9 @@ public static class Program
 
             case "sound" when args.Length > 3:
                 return Sound(args[2], args[3], args.Length > 4 ? args[4] : null);
+
+            case "sounds" when args.Length > 2:
+                return Sounds(catalog, args[2], args.Length > 3 ? args[3] : Path.Combine(args[0], "..", "Sounds"));
 
             default:
                 Console.WriteLine("Unknown command");
@@ -403,6 +408,41 @@ public static class Program
         return missing.Count == 0 ? 0 : 2;
     }
 
+    /// <summary>
+    /// The sound library as the game sees it: the curated sounds, the banks harvested off the installed cars
+    /// (one line per distinct bank, with its carriers), then the sound every runnable build would race with.
+    /// </summary>
+    private static int Sounds(PartsCatalog catalog, string carsFolder, string soundsFolder)
+    {
+        var index = EngineBuildIndex.Create(catalog);
+        var library = SoundLibrary.Load(Path.GetFullPath(soundsFolder));
+        var master = Path.GetFullPath(Path.Combine(carsFolder, "..", "sfx", AcCarSound.GuidsFileName));
+        var started = DateTime.Now;
+        var cars = library.Harvest(carsFolder, master, SoundLibrary.StockFacts(index, catalog));
+        Console.WriteLine($"{library.Curated.Count} curated sound(s) under {library.Root}, {library.Harvested.Count} harvested off {cars} car(s) in {(DateTime.Now - started).TotalMilliseconds:0} ms\n");
+
+        Console.WriteLine($"{"sound",-44} {"MB",5} {"cyl",3} {"family",-6} {"rpm",5} {"cars",4}  name / carriers");
+        foreach (var sound in library.All.OrderByDescending(e => e.Curated).ThenBy(e => e.Id, StringComparer.OrdinalIgnoreCase))
+        {
+            Console.WriteLine($"{Short(sound.Id),-44} {sound.Size / 1e6,5:0} {sound.Cylinders,3} {sound.Family,-6} {sound.RpmMax,5:0} {sound.Carriers.Count,4}  {sound.Name}" +
+                              (sound.Carriers.Count > 1 ? $"  [{string.Join(", ", sound.Carriers.Take(4))}{(sound.Carriers.Count > 4 ? ", ..." : "")}]" : ""));
+        }
+
+        Console.WriteLine($"\n{"build",-48} {"cyl",3} {"family",-6} {"limit",5}  sound: reason");
+        foreach (var build in index.Runnable)
+        {
+            var tree = PartTreeBuilder.BuildEngine(catalog, build.Build);
+            if (tree == null) continue;
+            var report = EngineEvaluator.Evaluate(catalog, tree);
+            var request = SoundMatcher.RequestFor(catalog, tree.Root.Definition.Id, report);
+            var choice = SoundMatcher.Choose(library, request);
+            Console.WriteLine($"{Short(build.Build.Id),-48} {request.Cylinders,3} {request.Family,-6} {request.LimiterRpm,5:0}  " +
+                              (choice == null ? "none" : $"{choice.Sound.Name} ({Short(choice.Sound.Id)}) [{choice.Score:0.0}]: {choice.Reason}"));
+        }
+
+        return 0;
+    }
+
     private static int Car(PartsCatalog catalog, string carFolder, string id, string? output)
     {
         var build = catalog.EngineBuilds.FirstOrDefault(b => b.Id.Contains(id, StringComparison.OrdinalIgnoreCase));
@@ -429,6 +469,14 @@ public static class Program
 
         Console.WriteLine($"{build.Name}: {report.Dyno?.MaxPowerHp:0} hp -> {string.Join(", ", result.Files.Keys)}");
         foreach (var problem in result.Problems) Console.WriteLine($"  PROBLEM {problem}");
+
+        // The sound the car would race with, from the library next to the parts and the cars next to this one
+        var carsFolder = Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(carFolder)) ?? carFolder;
+        var library = SoundLibrary.Load(Path.GetFullPath(Path.Combine(catalog.Root, "..", "Sounds")));
+        library.Harvest(carsFolder, Path.GetFullPath(Path.Combine(carsFolder, "..", "sfx", AcCarSound.GuidsFileName)), SoundLibrary.StockFacts(EngineBuildIndex.Create(catalog), catalog));
+        var carId = Path.GetFileName(Path.TrimEndingDirectorySeparator(carFolder));
+        var sound = SoundMatcher.ForCar(library, SoundMatcher.RequestFor(catalog, tree.Root.Definition.Id, report), carId, out var choice);
+        if (choice != null) Console.WriteLine($"  sound: {choice.Sound.Name} ({choice.Sound.Id}): {choice.Reason}{(sound == null ? " (the car's own bank)" : "")}");
 
         // Only what changed, line by line
         foreach (var (name, content) in result.Files)

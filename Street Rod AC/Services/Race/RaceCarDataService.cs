@@ -70,8 +70,10 @@ namespace Street_Rod_AC.Services.Race
             };
 
             var result = AcCarBuild.Generate(catalog, build, readFile);
-            _logger.Information("{Car}: {Power:0} hp, {Files} file(s) to change{Problems}", car.DefinitionId, build.Engine?.Dyno?.MaxPowerHp ?? 0,
-                result.Files.Count, result.Problems.Count == 0 ? "" : ", cannot drive: " + string.Join("; ", result.Problems));
+            if (result.CanDrive) result.Sound = _parts.ChooseSound(car, build.Engine);
+            _logger.Information("{Car}: {Power:0} hp, {Files} file(s) to change{Sound}{Problems}", car.DefinitionId, build.Engine?.Dyno?.MaxPowerHp ?? 0,
+                result.Files.Count, result.Sound == null ? "" : ", the sound of " + result.Sound.DonorId,
+                result.Problems.Count == 0 ? "" : ", cannot drive: " + string.Join("; ", result.Problems));
             return new RaceCarData(car.DefinitionId, result);
         }
     }

@@ -5,6 +5,7 @@ using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Parts.Export;
+using Street_Rod_AC.Parts.Sounds;
 using Street_Rod_AC.Parts.Logic;
 using System.Collections.Concurrent;
 using System.IO;
@@ -27,6 +28,7 @@ namespace Street_Rod_AC.Services.Parts
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger(LogCategory.Parts);
         private readonly Lazy<PartsCatalog> _catalog;
         private readonly Lazy<EngineBuildIndex> _builds;
+        private readonly Lazy<SoundLibrary> _sounds;
         private readonly object _assignLock = new();
         private readonly ConcurrentDictionary<string, AcCarSpecs?> _specs = new();
 
@@ -37,6 +39,7 @@ namespace Street_Rod_AC.Services.Parts
             PartPricing.Scale = AppSettings.Instance.PartsPriceScale;
             _catalog = new Lazy<PartsCatalog>(LoadCatalog);
             _builds = new Lazy<EngineBuildIndex>(CreateIndex);
+            _sounds = new Lazy<SoundLibrary>(LoadSounds);
         }
 
         public PartsCatalog Catalog => _catalog.Value;
@@ -96,6 +99,22 @@ namespace Street_Rod_AC.Services.Parts
         }
 
         public EngineReport? Evaluate(Car car) => IsAvailable && car.Engine is { } engine ? EngineFactory.Evaluate(Catalog, engine) : null;
+
+        public SoundLibrary Sounds => _sounds.Value;
+
+        public CarSound? ChooseSound(Car car, EngineReport? report)
+        {
+            if (!IsAvailable || car.Engine is not { } engine || Sounds.All.Count == 0) return null;
+
+            var request = SoundMatcher.RequestFor(Catalog, engine.DefinitionId, report);
+            var sound = SoundMatcher.ForCar(Sounds, request, car.DefinitionId, out var choice);
+            if (choice == null) return null;
+
+            _logger.Information("{Car}: {Block} ({Cylinders} cyl, {Family}, {Limiter:0} rpm) sounds like {Sound}: {Reason}{Own}",
+                car.DefinitionId, request.BlockId, request.Cylinders, request.Family, request.LimiterRpm, choice.Sound.Name, choice.Reason,
+                sound == null ? " (its own bank)" : "");
+            return sound;
+        }
 
         // The index weighed every build when it put them on the dyno
         public double? FactoryEngineMass(Car car)
@@ -281,6 +300,27 @@ namespace Street_Rod_AC.Services.Parts
             {
                 _logger.Error(ex, "Could not read the parts under {Path}: going without them", AppSettings.Instance.PartsPath);
                 return PartsCatalog.Empty(AppSettings.Instance.PartsPath);
+            }
+        }
+
+        // The library is the folder of sounds plus every installed car's own bank; a car's bank is tagged with the
+        // engine the parts would give the car, so the harvest waits for the build index
+        private SoundLibrary LoadSounds()
+        {
+            var settings = AppSettings.Instance;
+            try
+            {
+                var started = DateTime.Now;
+                var library = SoundLibrary.Load(settings.SoundsPath);
+                var cars = library.Harvest(settings.CarsPath, settings.SfxGuidsPath, SoundLibrary.StockFacts(Builds, Catalog));
+                _logger.Information("Sound library: {Curated} sound(s) under {Path}, {Harvested} more off {Cars} installed car(s), in {Ms} ms",
+                    library.Curated.Count, settings.SoundsPath, library.Harvested.Count, cars, (int)(DateTime.Now - started).TotalMilliseconds);
+                return library;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not read the sounds: cars race on their own");
+                return SoundLibrary.Empty(settings.SoundsPath);
             }
         }
 

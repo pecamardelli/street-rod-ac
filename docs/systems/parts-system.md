@@ -579,8 +579,24 @@ sound)` moves the car's own bank and GUIDs into `sfx\_streetrod_keep` (a rename,
 new bank in under the car's name (a copy only when the two are not on one volume), writes the GUIDs, and the manifest
 says so (`Sfx`: whether the folder, the bank and the GUIDs existed). `Restore` deletes the link and moves the originals
 back; every step checks what is there, so a restore cut short finishes the next time. Every installed car has
-`engine_ext` and `engine_int`; four lack `limiter` (`AcCarSound.MissingEngineEvents`). Nothing sets the sound yet:
-the sound library and the matcher come next.
+`engine_ext` and `engine_int`; four lack `limiter` (`AcCarSound.MissingEngineEvents`).
+
+**Sound library and matcher** (`Parts/Sounds`, `CarPartsService.Sounds`/`ChooseSound`). Two sources, one list
+(`SoundLibrary`): a folder under `Assets\Sounds` is a sound (a bank, a `GUIDs.txt`, an optional `sound.json` with
+name, donor id, cylinders, family, rev ceiling, tags; drop one in and the game has it, see the README there), and
+every installed car's own bank is a sound too, harvested at first use (`Harvest`): banks that are the same bytes
+(size plus the first 64 KB) are one sound with those cars as carriers, its rev ceiling the highest `LIMITER` among
+them, its cylinders and family those of the stock engine the parts would give the carriers, when they all agree
+(a bank under a Chevrolet, a Ford and a Plymouth says nothing). The install's 165 cars come to 59 sounds in about a
+second. `sounds.json` at the library root pins a block to a sound and corrects or excludes a car's bank. The
+matcher (`SoundMatcher`) scores every sound for a `SoundRequest` (block id, cylinders, family, limiter, from the
+block part and the dyno): cylinders decide (a six never gets a V8 bank), family counts, and the ceiling must reach
+the limiter: below it by more than 500 rpm (Content Manager's margin) the bank runs out of samples and the penalty
+grows with the shortfall; a little short costs a little; above, the tighter the better, since a bank made for
+8,500 rpm idles too low at 700; a curated sound beats a harvested one on equal terms; among equals a hash of the
+block id and the sound id decides, so a car sounds the same every race until its engine changes and different
+blocks spread over equal sounds. `ForCar` returns null when the choice is the bank the car already ships, so
+nothing is swapped. `RaceCarDataService.Prepare` sets `CarBuildResult.Sound` for a car that can drive.
 
 The diner prepares the data before a race (`RaceCarDataService.Prepare(car)`: the engine on the dyno, the running gear
 against the factory's, for the player's car and the opponent's, each on its own parts). A player's car with problems
@@ -606,7 +622,10 @@ EngineBench <parts folder> renew <older parts folder>  engines as a save made wi
 EngineBench <parts folder> gear <AC cars folder>       factory running gear chosen for every car, against its own data
 EngineBench <parts folder> car <AC car folder> <build id> [output folder]   every data file the car's parts change
 EngineBench <parts folder> sound <AC car folder> <car id> [output folder]   the car's sound written for another car id, with the engine events it lacks
+EngineBench <parts folder> sounds <AC cars folder> [sounds folder]        the sound library (curated, then harvested with carriers), and the sound every build gets, with the reason
 ```
+
+`car` also prints the sound the car would race with, and whether it is the car's own bank.
 
 The overlay's sfx section was checked with a dry-run console (a mirror of a car's `data` and `sfx`, the folder hashed
 before and after): sound plus data, sound only with a crash and `RestoreAll` from a fresh instance, a restore cut
@@ -617,10 +636,11 @@ short, a car without `GUIDs.txt`, the packed GT500, and a mirror on another volu
 - Two cars of one model in a race share one data folder: the opponent drives the player's data. A clone of the car
   folder for the race (with the sound bank's GUIDs renamed, as Content Manager does) would give each its own; the
   overlay's sfx section is the half of that clone already done.
-- Engine sounds: the overlay swaps them, but nothing chooses one yet. Next: a sound library under `Assets\Sounds`
-  (a folder per sound: bank, GUIDs with a placeholder id, `sound.json`), harvesting installed cars' banks as
-  candidates (deduplicated by a checksum of the first 16 KB, rev ceiling from their `engine.ini`), and a matcher on
-  the engine block (cylinders, family, rev range, deterministic among equals) that sets `CarBuildResult.Sound`.
+- Engine sounds: `Assets\Sounds` holds no curated sound yet, so every choice is a harvested bank; the first ones
+  to curate are the Kunos V8s of the full install (GT40 289, Cobra 427, Corvette C7, Mustang 2015, C4 with Borla)
+  and the best mod banks, one per engine class. The harvest tags a bank with the stock engine the parts would give
+  its car, so a slant-six Valiant carrying a V8 bank is tagged 8 cylinders; `sounds.json` corrects that per car.
+  Mufflers and headers do not change the sound yet; a garage preview through fmodstudio64.dll is not started.
 - Working on an engine outside a car (an engine stand): on the shelf an assembly can be taken apart, but parts only
   go together on a car.
 - Wear from mileage; tuning UI (the scripts' `buildTuningMenu` is not used, fields are set directly).
