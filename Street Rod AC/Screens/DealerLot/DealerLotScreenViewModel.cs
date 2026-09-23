@@ -39,7 +39,6 @@ namespace Street_Rod_AC.Screens.DealerLot
 
         public RelayCommand BackCommand { get; }
         public RelayCommand BackToLotCommand { get; }
-        public RelayCommand<UsedCarListingViewModel> SelectCarCommand { get; }
         public RelayCommand<UsedCarListingViewModel> PurchaseCarCommand { get; }
 
         /// <summary>Everything this dealer has, whether or not it fitted on the lot</summary>
@@ -85,7 +84,6 @@ namespace Street_Rod_AC.Screens.DealerLot
 
             BackCommand = new RelayCommand(OnBack);
             BackToLotCommand = new RelayCommand(() => SelectedIndex = -1);
-            SelectCarCommand = new RelayCommand<UsedCarListingViewModel>(OnSelectCar);
             PurchaseCarCommand = new RelayCommand<UsedCarListingViewModel>(OnPurchaseCar, CanPurchaseCar);
 
             ResolveShowroom();
@@ -214,18 +212,6 @@ namespace Street_Rod_AC.Screens.DealerLot
             }
         }
 
-        private void OnSelectCar(UsedCarListingViewModel? car)
-        {
-            if (car == null) return;
-
-            var index = Stock.IndexOf(car);
-            if (index < 0) return;
-
-            // Any car in stock can be read about. Only the ones out front have somewhere for the camera to
-            // stand: past that the viewport sees an index it has no car for and stays on the whole lot.
-            SelectedIndex = index;
-        }
-
         private bool CanPurchaseCar(UsedCarListingViewModel? car) =>
             car != null && _gameState.Player.Money >= car.Listing.Price;
 
@@ -277,15 +263,18 @@ namespace Street_Rod_AC.Screens.DealerLot
                     "Save Warning"));
             }
 
+            // The car is bought and it is in the garage; that is where the player wants to be, not stood on
+            // a lot looking at the gap where it was.
             _dialogService.ShowDialog(new InformationDialogViewModel(
                 _dialogService, result.Message, "Purchase Successful"));
 
-            Reload();
+            OnPropertyChanged(nameof(BankrollDisplay));
+            _navigationService.NavigateToGarage(_gameState, skipAnimation: true);
         }
 
         /// <summary>
-        /// The car that just sold has to come off the lot, which means standing the scene back up. Back to the
-        /// whole-lot view first: the car the camera was on is gone.
+        /// Puts the lot back the way the market says it is. Used when a car turned out to be gone: back to
+        /// the whole-lot view first, because the car the camera was on is no longer there.
         /// </summary>
         private void Reload()
         {

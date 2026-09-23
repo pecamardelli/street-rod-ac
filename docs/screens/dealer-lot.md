@@ -34,6 +34,13 @@ camera states and no free roam:
 `SelectedIndex` is the whole of it: `-1` is the lot view, anything else is that car. The viewport sets it
 itself on a click and a two-way binding carries it to the screen, so there is no code-behind.
 
+The lot **is** the list of stock: a lot carries no more cars than its room holds, so there is no second
+list of cards anywhere. Cars are picked by clicking them.
+
+Buying one goes straight back to the garage — the car is in the garage now, and that is where the player
+wants to be, not stood on a lot looking at the gap where it was. `CarPurchaseService` also makes the new car
+the selected one if nothing was selected.
+
 The camera eases between the two rather than cutting. Alpha is steered round to the car's front
 three-quarter until the player drags, at which point the camera is theirs and the steering stops.
 
@@ -121,7 +128,11 @@ The daily refresh tops each lot back up to its own target, for the same reason.
   stays on its books. `BuildPool` checks the folder exists. Without that check the dearest lots came out
   empty, because the cars that had been cleared out were the expensive ones.
 - The lot is covered until every car is standing in it (`IsLotReady`), then the cover fades and the viewport
-  fades up whole. Watching an empty room fill one car at a time is not worth showing.
+  fades up whole. Watching an empty room fill one car at a time is not worth showing. The cover goes back up
+  for a restock too, so cars do not blink in and out around the one just bought.
+- **Heading 0 faces +Z.** Seen in game: rows at negative Z given 200 ended up looking at the far wall. Bays
+  are headed by which side of the lot they stand on, so the rows in the middle face each other down the
+  aisle. `ModelHeadingOffset` is still the knob if a future model set faces the other way.
 - An empty `Cars` list with no showroom is how a lot ends when you leave the screen — bindings clear one at a
   time. That is not a failure and must not be reported as one.
 - Selling a car reuses the standing scene and swaps only the cars that moved; the showroom, which can be a

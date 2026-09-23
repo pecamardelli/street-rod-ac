@@ -264,18 +264,6 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         private set => SetValue(IsLotReadyPropertyKey, value);
     }
 
-    private static readonly DependencyPropertyKey ExpectedCountPropertyKey = DependencyProperty.RegisterReadOnly(
-        nameof(ExpectedCount), typeof(int), typeof(DealerLotViewport3D), new PropertyMetadata(0));
-
-    public static readonly DependencyProperty ExpectedCountProperty = ExpectedCountPropertyKey.DependencyProperty;
-
-    /// <summary>How many cars the lot is waiting on, so the wait can say how far along it is</summary>
-    public int ExpectedCount
-    {
-        get => (int)GetValue(ExpectedCountProperty);
-        private set => SetValue(ExpectedCountPropertyKey, value);
-    }
-
     private static readonly DependencyPropertyKey LoadedCountPropertyKey = DependencyProperty.RegisterReadOnly(
         nameof(LoadedCount), typeof(int), typeof(DealerLotViewport3D), new PropertyMetadata(0));
 
@@ -425,7 +413,6 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         _loaded = cars;
         _slots.Clear();
         LoadedCount = 0;
-        ExpectedCount = cars.Count;
         IsLotReady = false;
 
         ApplyLotCamera(immediate: true);
@@ -449,8 +436,6 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
         var previous = _loaded;
         _loaded = cars;
-        ExpectedCount = cars.Count;
-
         // Restocking after a sale moves several cars at once. Cover the lot for that too, rather than let
         // the player watch cars blink out and back in around the one they just bought.
         IsLotReady = false;
@@ -1071,7 +1056,6 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         _standing.Clear();
         _loaded = [];
         LoadedCount = 0;
-        ExpectedCount = 0;
         IsLotReady = false;
         IsReady = false;
         _hovered = -1;

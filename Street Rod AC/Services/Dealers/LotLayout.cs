@@ -26,9 +26,15 @@ namespace Street_Rod_AC.Services.Dealers
         /// <summary>Kept clear of the walls so no car is standing in one</summary>
         private const float WallMargin = 2.0f;
 
-        /// <summary>Rows face each other across the aisle, a little off square</summary>
-        private const float NearRowHeading = 200f;
-        private const float FarRowHeading = 20f;
+        /// <summary>
+        /// Which way a car points, a little off square so a row does not read as a wall of bumpers.
+        ///
+        /// Heading 0 faces +Z: seen in game, where rows at negative Z given 200 ended up looking at the far
+        /// wall. Cars face the middle of the lot, so a row on the near side looks across it and a row on the
+        /// far side looks back.
+        /// </summary>
+        private const float FacingAcrossFromNear = 20f;
+        private const float FacingAcrossFromFar = 200f;
 
         /// <summary>
         /// Where to stand <paramref name="cars"/> cars in <paramref name="showroom"/>. Never returns more
@@ -71,11 +77,17 @@ namespace Street_Rod_AC.Services.Dealers
 
                 for (var slot = 0; slot < inRow; slot++)
                 {
+                    var z = firstZ + row * RowPitch;
+
                     bays.Add(new LotBay
                     {
                         X = firstX + rowOffset + slot * CarPitch,
-                        Z = firstZ + row * RowPitch,
-                        Heading = row % 2 == 0 ? NearRowHeading : FarRowHeading
+                        Z = z,
+
+                        // By which side of the lot the row stands on, not by whether the row is odd or even:
+                        // with four rows that puts the two middle ones nose to nose down the aisle, the way
+                        // a real lot is set out, instead of alternating all the way across.
+                        Heading = z <= 0f ? FacingAcrossFromNear : FacingAcrossFromFar
                     });
                 }
             }

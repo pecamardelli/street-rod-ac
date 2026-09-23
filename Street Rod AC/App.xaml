@@ -38,7 +38,6 @@
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
             <converters:GaragePanelToVisibilityConverter x:Key="GaragePanelToVisibilityConverter"/>
             <converters:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
-            <converters:EqualityConverter x:Key="EqualityConverter"/>
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
 
             <!-- Effects -->

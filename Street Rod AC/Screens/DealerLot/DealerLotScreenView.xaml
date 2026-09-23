@@ -22,13 +22,33 @@
              fades up underneath. Watching an empty room fill a car at a time is not worth showing. -->
         <Grid Background="{StaticResource BgDarkBrush}"
               helpers:Reveal.IsShown="{Binding IsLotReady, ElementName=Viewport, Converter={StaticResource InverseBooleanConverter}}">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock FontSize="19"
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                <Border Width="60" Height="60" Margin="0,0,0,26" HorizontalAlignment="Center">
+                    <Border.RenderTransform>
+                        <RotateTransform x:Name="SpinnerRotation" CenterX="30" CenterY="30"/>
+                    </Border.RenderTransform>
+                    <Border.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever">
+                                    <DoubleAnimation Storyboard.TargetName="SpinnerRotation"
+                                                     Storyboard.TargetProperty="Angle"
+                                                     From="0" To="360"
+                                                     Duration="0:0:1"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Border.Triggers>
+                    <Ellipse Stroke="#FF6B00" StrokeThickness="4"
+                             StrokeDashArray="3 2"
+                             Fill="Transparent"/>
+                </Border>
+                <TextBlock FontSize="24"
                            Foreground="{StaticResource TextPrimaryBrush}"
                            HorizontalAlignment="Center">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
-                            <Setter Property="Text" Value="Pulling onto the lot..."/>
+                            <Setter Property="Text" Value="Loading dealer..."/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding HasFailed, ElementName=Viewport}" Value="True">
                                     <Setter Property="Text" Value="The lot could not be shown in 3D."/>
@@ -36,17 +56,6 @@
                             </Style.Triggers>
                         </Style>
                     </TextBlock.Style>
-                </TextBlock>
-                <TextBlock FontSize="13"
-                           Margin="0,10,0,0"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           HorizontalAlignment="Center">
-                    <TextBlock.Text>
-                        <MultiBinding StringFormat="{}{0} of {1} cars out">
-                            <Binding Path="LoadedCount" ElementName="Viewport"/>
-                            <Binding Path="ExpectedCount" ElementName="Viewport"/>
-                        </MultiBinding>
-                    </TextBlock.Text>
                 </TextBlock>
             </StackPanel>
         </Grid>
@@ -175,76 +184,5 @@
             </StackPanel>
         </Border>
 
-        <!-- Everything the dealer has, along the bottom. A lot is stocked to what its room holds, so these
-             are the same cars that are standing outside; clicking one walks the camera over to it. -->
-        <Border VerticalAlignment="Bottom"
-                Background="#C0101010"
-                BorderBrush="#40F5E6C8"
-                BorderThickness="0,1,0,0"
-                Padding="16,8,16,12">
-            <StackPanel>
-                <TextBlock Text="ON THE LOT"
-                           FontSize="11"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           Margin="2,0,0,6"/>
-                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <ItemsControl ItemsSource="{Binding Stock}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Margin="0,0,10,0"
-                                    Width="168"
-                                    Cursor="Hand"
-                                    HorizontalContentAlignment="Stretch"
-                                    Background="#D01E1E1E"
-                                    BorderThickness="1"
-                                    Padding="10,8,10,8"
-                                    Command="{Binding DataContext.SelectCarCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                    CommandParameter="{Binding}">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="BorderBrush" Value="{StaticResource BorderLightBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Value="True">
-                                                <DataTrigger.Binding>
-                                                    <MultiBinding Converter="{StaticResource EqualityConverter}">
-                                                        <Binding/>
-                                                        <Binding Path="DataContext.SelectedCar"
-                                                                 RelativeSource="{RelativeSource AncestorType=UserControl}"/>
-                                                    </MultiBinding>
-                                                </DataTrigger.Binding>
-                                                <Setter Property="BorderBrush" Value="{StaticResource AccentHoverBrush}"/>
-                                                <Setter Property="Background" Value="#F02A2A2A"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding DisplayName}"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"
-                                               TextTrimming="CharacterEllipsis"
-                                               Foreground="{StaticResource TextPrimaryBrush}"/>
-                                    <TextBlock Text="{Binding PriceDisplay}"
-                                               FontSize="14"
-                                               FontWeight="Bold"
-                                               Foreground="{StaticResource AccentSuccessBrush}"
-                                               Margin="0,2,0,0"/>
-                                    <TextBlock Text="{Binding ConditionDisplay}"
-                                               FontSize="11"
-                                               Foreground="{StaticResource TextSecondaryBrush}"/>
-                                </StackPanel>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                </ScrollViewer>
-            </StackPanel>
-        </Border>
     </Grid>
 </UserControl>
