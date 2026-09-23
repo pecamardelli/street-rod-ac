@@ -24,6 +24,9 @@ public sealed class CarBuildResult
     /// <summary>File name to new content, for the files of the car's data that change</summary>
     public Dictionary<string, string> Files { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>The sound the engine races with; null keeps the car's own</summary>
+    public CarSound? Sound { get; set; }
+
     /// <summary>What keeps the car from being driven, in words for the player; empty when it can go</summary>
     public List<string> Problems { get; } = new();
 

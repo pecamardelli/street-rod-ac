@@ -28,6 +28,7 @@ public static class Program
             Console.WriteLine("       EngineBench <parts folder> renew <older parts folder>  engines saved with an older conversion, brought up to date");
             Console.WriteLine("       EngineBench <parts folder> gear <AC cars folder>       factory running gear chosen for every car");
             Console.WriteLine("       EngineBench <parts folder> car <AC car folder> <build id> [output folder]   every data file the car's parts change");
+            Console.WriteLine("       EngineBench <parts folder> sound <AC car folder> <car id> [output folder]   the car's sound written for another car id");
             return 1;
         }
 
@@ -72,6 +73,9 @@ public static class Program
 
             case "car" when args.Length > 3:
                 return Car(catalog, args[2], args[3], args.Length > 4 ? args[4] : null);
+
+            case "sound" when args.Length > 3:
+                return Sound(args[2], args[3], args.Length > 4 ? args[4] : null);
 
             default:
                 Console.WriteLine("Unknown command");
@@ -367,6 +371,38 @@ public static class Program
     }
 
     /// <summary>Every data file a car's parts change: the build as its engine, the factory running gear as its wheels</summary>
+    /// <summary>
+    /// A donor car's sound as the overlay would write it under another car's id: what the GUIDs keep, what they
+    /// drop, and which engine events the donor lacks. The master GUIDs next to the cars folder serve a Kunos donor.
+    /// </summary>
+    private static int Sound(string donorFolder, string carId, string? output)
+    {
+        var master = Path.Combine(Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(donorFolder)) ?? "", "..", "sfx", AcCarSound.GuidsFileName);
+        var sound = AcCarSound.FromCar(donorFolder, Path.GetFullPath(master));
+        if (sound == null)
+        {
+            Console.WriteLine($"{donorFolder} has no bank of its own, or no GUIDs to go with it");
+            return 1;
+        }
+
+        var guids = sound.GuidsFor(carId);
+        var before = sound.GuidsText.Split('\n').Count(l => l.Contains('}'));
+        var after = guids.Split('\n').Count(l => l.Contains('}'));
+        Console.WriteLine($"{sound.DonorId}: {new FileInfo(sound.BankPath).Length / 1e6:0.0} MB bank, {before} GUID line(s) -> {after} for {carId}");
+        foreach (var line in guids.Split('\n').Where(l => l.Contains("event:/cars/") || l.Contains("bank:/"))) Console.WriteLine("  " + line.TrimEnd());
+        var missing = AcCarSound.MissingEngineEvents(guids, carId);
+        if (missing.Count > 0) Console.WriteLine($"  MISSING {string.Join(", ", missing)}");
+
+        if (output != null)
+        {
+            Directory.CreateDirectory(output);
+            File.WriteAllText(Path.Combine(output, AcCarSound.GuidsFileName), guids);
+            Console.WriteLine($"  written to {Path.Combine(output, AcCarSound.GuidsFileName)}");
+        }
+
+        return missing.Count == 0 ? 0 : 2;
+    }
+
     private static int Car(PartsCatalog catalog, string carFolder, string id, string? output)
     {
         var build = catalog.EngineBuilds.FirstOrDefault(b => b.Id.Contains(id, StringComparison.OrdinalIgnoreCase));

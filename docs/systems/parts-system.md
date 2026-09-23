@@ -566,6 +566,22 @@ for the race, since the game reads the folder when there is one, and the folder 
 put everything back and delete the kept copies; the launcher calls `RestoreAll` in its `finally`, and `App.OnStartup`
 calls it too, for what a crash or a power cut left behind.
 
+**Sound** (`Parts/Export/AcCarSound`, the overlay's sfx section). Assetto Corsa hangs a sound on a car folder: it opens
+`sfx\<car>.bank` by file name and finds `event:/cars/<car>/engine_ext` and the rest by GUID through the car's
+`sfx\GUIDs.txt` (a Kunos car has no file of its own and is in the install's `content\sfx\GUIDs.txt`). The GUIDs inside
+a bank are its author's and never change when the bank is reused, so a sound is a bank plus its GUID lines, and it
+plays under any car once the lines are written for that car's id. `CarSound(BankPath, GuidsText, DonorId)` is one;
+`AcCarSound.FromCar(carDirectory, masterGuids)` reads a car's own, and `GuidsFor(carId)` writes the lines for another
+car: buses, VCAs and snapshots as they are, the `common` bank and the donor's, the donor's events and the ones outside
+any car (collisions, surfaces), everything else dropped, since mod authors ship the whole master file with a hundred
+other cars in it more often than not. `CarBuildResult.Sound` carries the choice; `CarDataOverlay.Apply(carId, files,
+sound)` moves the car's own bank and GUIDs into `sfx\_streetrod_keep` (a rename, whatever their size), hard-links the
+new bank in under the car's name (a copy only when the two are not on one volume), writes the GUIDs, and the manifest
+says so (`Sfx`: whether the folder, the bank and the GUIDs existed). `Restore` deletes the link and moves the originals
+back; every step checks what is there, so a restore cut short finishes the next time. Every installed car has
+`engine_ext` and `engine_int`; four lack `limiter` (`AcCarSound.MissingEngineEvents`). Nothing sets the sound yet:
+the sound library and the matcher come next.
+
 The diner prepares the data before a race (`RaceCarDataService.Prepare(car)`: the engine on the dyno, the running gear
 against the factory's, for the player's car and the opponent's, each on its own parts). A player's car with problems
 does not race ("Your car is not going anywhere: no brake front right"); an opponent's car with problems races as its
@@ -589,12 +605,22 @@ EngineBench <parts folder> bench <build id>            every part comes off and 
 EngineBench <parts folder> renew <older parts folder>  engines as a save made with an older conversion holds them, brought up to date
 EngineBench <parts folder> gear <AC cars folder>       factory running gear chosen for every car, against its own data
 EngineBench <parts folder> car <AC car folder> <build id> [output folder]   every data file the car's parts change
+EngineBench <parts folder> sound <AC car folder> <car id> [output folder]   the car's sound written for another car id, with the engine events it lacks
 ```
+
+The overlay's sfx section was checked with a dry-run console (a mirror of a car's `data` and `sfx`, the folder hashed
+before and after): sound plus data, sound only with a crash and `RestoreAll` from a fresh instance, a restore cut
+short, a car without `GUIDs.txt`, the packed GT500, and a mirror on another volume for the copy fallback.
 
 ## Not done yet
 
 - Two cars of one model in a race share one data folder: the opponent drives the player's data. A clone of the car
-  folder for the race (with the sound bank's GUIDs renamed, as Content Manager does) would give each its own.
+  folder for the race (with the sound bank's GUIDs renamed, as Content Manager does) would give each its own; the
+  overlay's sfx section is the half of that clone already done.
+- Engine sounds: the overlay swaps them, but nothing chooses one yet. Next: a sound library under `Assets\Sounds`
+  (a folder per sound: bank, GUIDs with a placeholder id, `sound.json`), harvesting installed cars' banks as
+  candidates (deduplicated by a checksum of the first 16 KB, rev ceiling from their `engine.ini`), and a matcher on
+  the engine block (cylinders, family, rev range, deterministic among equals) that sets `CarBuildResult.Sound`.
 - Working on an engine outside a car (an engine stand): on the shelf an assembly can be taken apart, but parts only
   go together on a car.
 - Wear from mileage; tuning UI (the scripts' `buildTuningMenu` is not used, fields are set directly).

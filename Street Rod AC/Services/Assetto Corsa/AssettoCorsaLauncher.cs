@@ -84,13 +84,13 @@ namespace Street_Rod_AC.Services
 
                 _logger.Information("Configuration prepared successfully");
 
-                // PHASE 2.5: THE CARS' OWN DATA
+                // PHASE 2.5: THE CARS' OWN DATA AND SOUND
                 // What the parts make of each car goes into the install now and comes out in the finally below,
                 // whatever happens in between. Two cars of one model share a folder: the first one's data stays.
                 foreach (var car in intent.CarData)
                 {
                     _logger.Information("PHASE: Car data for {Car}", car.CarId);
-                    if (!_carData.Apply(car.CarId, car.Build.Files))
+                    if (!_carData.Apply(car.CarId, car.Build.Files, car.Build.Sound))
                         _logger.Warning("{Car}: its data was already changed for this race, so it races on the other car's", car.CarId);
                 }
 
