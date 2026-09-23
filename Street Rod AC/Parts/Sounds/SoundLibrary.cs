@@ -101,30 +101,59 @@ public sealed class SoundLibrary
     public IReadOnlyList<SoundEntry> Curated => _entries.Where(e => e.Curated).ToList();
     public IReadOnlyList<SoundEntry> Harvested => _entries.Where(e => !e.Curated).ToList();
 
+    /// <summary>What could not be read, or was left out and why: one line each, for the log</summary>
+    public IReadOnlyList<string> Problems => _problems;
+
+    private readonly List<string> _problems = new();
+
     public SoundEntry? Get(string? id) => id == null ? null : _byId.GetValueOrDefault(id);
 
     public static SoundLibrary Empty(string root) => new(root, new SoundOverrides());
 
     /// <summary>The library folder: one sound per subfolder. A folder that is not there is an empty library.</summary>
+    /// <remarks>
+    /// A sounds.json that does not read is no pins and no facts, a sound folder that does not read is not a sound: each
+    /// is one line in <see cref="Problems"/>, and the rest of the library stands.
+    /// </remarks>
     public static SoundLibrary Load(string root)
     {
+        var problems = new List<string>();
+        var overrides = new SoundOverrides();
         var overridesPath = Path.Combine(root, SoundsJson);
-        var overrides = File.Exists(overridesPath)
-            ? JsonConvert.DeserializeObject<SoundOverrides>(File.ReadAllText(overridesPath)) ?? new SoundOverrides()
-            : new SoundOverrides();
+        try
+        {
+            if (File.Exists(overridesPath)) overrides = JsonConvert.DeserializeObject<SoundOverrides>(File.ReadAllText(overridesPath)) ?? overrides;
+        }
+        catch (Exception ex)
+        {
+            problems.Add($"{SoundsJson}: {ex.Message}; no pins and no car facts");
+        }
+
+        // "pins": null in the file is no pins, and a dictionary the file made is given back its case-blind keys
+        overrides.Pins = new Dictionary<string, string>(overrides.Pins ?? new(), StringComparer.OrdinalIgnoreCase);
+        overrides.Cars = new Dictionary<string, SoundFacts>((overrides.Cars ?? new()).Where(c => c.Value != null), StringComparer.OrdinalIgnoreCase);
+
         var library = new SoundLibrary(root, overrides);
+        library._problems.AddRange(problems);
         if (!Directory.Exists(root)) return library;
 
         foreach (var folder in Directory.GetDirectories(root).OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
         {
-            var entry = ReadSoundFolder(folder);
-            if (entry != null) library.Add(entry);
+            try
+            {
+                var entry = library.ReadSoundFolder(folder);
+                if (entry != null) library.Add(entry);
+            }
+            catch (Exception ex)
+            {
+                library._problems.Add($"{Path.GetFileName(folder)}: {ex.Message}");
+            }
         }
 
         return library;
     }
 
-    private static SoundEntry? ReadSoundFolder(string folder)
+    private SoundEntry? ReadSoundFolder(string folder)
     {
         var id = Path.GetFileName(folder);
         var factsPath = Path.Combine(folder, SoundJson);
@@ -132,16 +161,29 @@ public sealed class SoundLibrary
 
         var bank = facts.Bank != null ? Path.Combine(folder, facts.Bank) : Directory.GetFiles(folder, "*.bank").OrderBy(f => f).FirstOrDefault();
         var guids = Path.Combine(folder, AcCarSound.GuidsFileName);
-        if (bank == null || !File.Exists(bank) || !File.Exists(guids)) return null;
+        if (bank == null || !File.Exists(bank) || !File.Exists(guids))
+        {
+            _problems.Add($"{id}: no bank or no {AcCarSound.GuidsFileName}; not a sound");
+            return null;
+        }
 
-        // The GUID lines name whatever car the bank was built for: the bank's own name unless the json says
+        // The GUID lines name whatever car the bank was built for: what the json says, else the bank's own name, else
+        // the one car the lines give an engine to (a bank renamed after its folder, with the donor's GUIDs)
+        var text = File.ReadAllText(guids);
         var donor = facts.DonorId ?? Path.GetFileNameWithoutExtension(bank);
+        if (facts.DonorId == null && !AcCarSound.HasEngine(text, donor) && AcCarSound.EngineCars(text) is { Count: 1 } only) donor = only[0];
+        if (!AcCarSound.HasEngine(text, donor))
+        {
+            _problems.Add($"{id}: {AcCarSound.GuidsFileName} has no engine events for '{donor}' (set donor_id in {SoundJson}); left out, it would race silent");
+            return null;
+        }
+
         return new SoundEntry
         {
             Id = id,
             Name = facts.Name ?? id,
             BankPath = bank,
-            GuidsText = File.ReadAllText(guids),
+            GuidsText = AcCarSound.RewriteGuids(text, donor, donor),
             DonorId = donor,
             Cylinders = facts.Cylinders,
             Family = facts.Family ?? "",
@@ -173,11 +215,23 @@ public sealed class SoundLibrary
     {
         if (!Directory.Exists(carsFolder)) return 0;
 
+        // Every Kunos car names its events in the master file: it is read once, for all of them
+        var master = new Lazy<string?>(() => masterGuidsPath != null && File.Exists(masterGuidsPath) ? File.ReadAllText(masterGuidsPath) : null);
         var groups = new Dictionary<string, List<HarvestedCar>>(StringComparer.Ordinal);
         var read = 0;
-        foreach (var folder in Directory.GetDirectories(carsFolder).OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
+        foreach (var folder in AcCarFolder.InstalledCars(carsFolder).OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
         {
-            var car = ReadCar(folder, masterGuidsPath, facts);
+            HarvestedCar? car;
+            try
+            {
+                car = ReadCar(folder, () => master.Value, facts);
+            }
+            catch (Exception ex)
+            {
+                _problems.Add($"{Path.GetFileName(folder)}: {ex.Message}; its bank is left out");
+                continue;
+            }
+
             if (car == null) continue;
             read++;
             if (!groups.TryGetValue(car.Checksum, out var list)) groups[car.Checksum] = list = new List<HarvestedCar>();
@@ -232,13 +286,20 @@ public sealed class SoundLibrary
     private sealed record HarvestedCar(string Id, string Name, string BankPath, string GuidsText, long Size, string Checksum,
         double? Limiter, int? Cylinders, string Family);
 
-    private HarvestedCar? ReadCar(string folder, string? masterGuidsPath, CarEngineFacts? facts)
+    private HarvestedCar? ReadCar(string folder, Func<string?> masterGuids, CarEngineFacts? facts)
     {
         var id = Path.GetFileName(folder);
-        if (AcCarFolder.IsClone(folder)) return null;
         if (Overrides.Cars.TryGetValue(id, out var excluded) && excluded.Exclude) return null;
-        var sound = AcCarSound.FromCar(folder, masterGuidsPath);
+        var sound = AcCarSound.FromCar(folder, masterGuids);
         if (sound == null) return null;
+        if (!AcCarSound.HasEngine(sound.GuidsText, id))
+        {
+            _problems.Add($"{id}: its GUIDs name no engine events for it; its bank is left out");
+            return null;
+        }
+
+        // While a race has the car on another sound, its own bank is the kept one
+        var bank = AcCarSound.OwnBank(sound.BankPath)!;
 
         string brand = "", name = id;
         double? bhp = null;
@@ -281,7 +342,7 @@ public sealed class SoundLibrary
             if (known.Name != null) name = known.Name;
         }
 
-        return new HarvestedCar(id, name, sound.BankPath, sound.GuidsText, new FileInfo(sound.BankPath).Length, ChecksumOf(sound.BankPath),
+        return new HarvestedCar(id, name, sound.BankPath, sound.GuidsText, new FileInfo(bank).Length, ChecksumOf(bank),
             limiter, cylinders, family);
     }
 
@@ -303,7 +364,7 @@ public sealed class SoundLibrary
     {
         var buffer = new byte[ChecksumBytes];
         int length;
-        using (var stream = File.OpenRead(bankPath)) length = stream.Read(buffer, 0, buffer.Length);
+        using (var stream = File.OpenRead(bankPath)) length = stream.ReadAtLeast(buffer, buffer.Length, throwOnEndOfStream: false);
         return new FileInfo(bankPath).Length + ":" + Convert.ToHexString(MD5.HashData(buffer.AsSpan(0, length)));
     }
 

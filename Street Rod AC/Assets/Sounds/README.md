@@ -31,7 +31,9 @@ the lines from `content\sfx\GUIDs.txt` (all of it works).
 ```
 
 - `donor_id` is the car id the GUID lines name (`event:/cars/<donor_id>/engine_ext`). Without it the bank's
-  file name is taken, so a bank copied under its own name needs nothing.
+  file name is taken, so a bank copied under its own name needs nothing; a renamed bank whose GUIDs give an engine
+  to one car only takes that car. A sound whose GUIDs have no engine for its donor is left out (it would race
+  silent), and the log says so.
 - `bank` names the bank file when the folder holds more than one.
 - `cylinders`, `family` (`gm`, `ford`, `mopar`) and `rpm_max` (the rev limiter of the car the bank was made
   for) are what the matcher goes by. A sound that says nothing fits anything, a little less well.

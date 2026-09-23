@@ -578,17 +578,24 @@ other cars in it more often than not. `CarBuildResult.Sound` carries the choice;
 sound)` moves the car's own bank and GUIDs into `sfx\_streetrod_keep` (a rename, whatever their size), hard-links the
 new bank in under the car's name (a copy only when the two are not on one volume), writes the GUIDs, and the manifest
 says so (`Sfx`: whether the folder, the bank and the GUIDs existed). `Restore` deletes the link and moves the originals
-back; every step checks what is there, so a restore cut short finishes the next time. Every installed car has
+back; every step checks what is there, so a restore cut short finishes the next time. A donor that races on another
+sound itself has its own bank in its keep folder, and `AcCarSound.OwnBank` finds the bytes wherever they are, so a
+car can take the sound of a car whose sound is swapped in the same race (two cars on each other's banks included). A
+file already in the keep folder is the car's own, from a race whose manifest was lost: it is never overwritten, the
+file in its place goes. A sound is never worth a race: a bank that is gone leaves the car on its own sound, and a
+choice that throws leaves the car on its parts with its own. Every installed car has
 `engine_ext` and `engine_int`; four lack `limiter` (`AcCarSound.MissingEngineEvents`).
 
 **Two cars of one model** (`CarDataOverlay.CreateClone`, `Parts/Export/AcCarFolder`). An opponent in the player's
 model races in a copy of the car folder under its own id (`<car>__sr_opponent`), so each car has its own data and
-sound. The copy is made first, from the untouched originals, before the player's changes go into the car itself:
-models, textures, skins and ui are hard links (a read-only file is copied, since its flag is shared with the link);
+sound. The copy is made first, from the untouched originals, before the player's changes go into the car itself
+(what an earlier race could not put back goes back first): models, textures, skins and ui are hard links (a
+read-only file is copied, since its flag is shared with the link, and so is a read-only bank wherever one is linked);
 the data is a real copy (the car's folder, or what its `data.acd` holds; the copy has no `data.acd`, whose key comes
 from the folder name) with the opponent's files over it; the sfx folder gets the opponent's sound, or the car's own,
-under the copy's name. A marker file (`streetrod_clone.json`) goes in first; only a folder with it is ever deleted,
-the car scanners (content service, catalog import, sound harvest) leave it out, and `RestoreAll` (after every race
+under the copy's name. A marker file (`streetrod_clone.json`) goes in first and comes out last; only a folder with
+it is ever deleted, every reader of the install's cars (content service, catalog import, sound harvest, EngineBench)
+goes through `AcCarFolder.InstalledCars`, which leaves it out, and `RestoreAll` (after every race
 and at start-up) takes every copy away. The diner sets the opponent's `MODEL` in race.ini to the copy's id; results
 are matched by car instance, not model, so nothing else changes. An opponent whose car cannot run races in a copy
 as its author made it. Checked with a dry-run console on full car folders (the Camaro, the packed GT500): the car's
@@ -597,11 +604,15 @@ own folder hashes the same after the copy, after the player's changes next to it
 **Sound library and matcher** (`Parts/Sounds`, `CarPartsService.Sounds`/`ChooseSound`). Two sources, one list
 (`SoundLibrary`): a folder under `Assets\Sounds` is a sound (a bank, a `GUIDs.txt`, an optional `sound.json` with
 name, donor id, cylinders, family, rev ceiling, tags; drop one in and the game has it, see the README there), and
-every installed car's own bank is a sound too, harvested at first use (`Harvest`): banks that are the same bytes
+every installed car's own bank is a sound too, harvested in the parts warm-up (`Harvest`): banks that are the same bytes
 (size plus the first 64 KB) are one sound with those cars as carriers, its rev ceiling the highest `LIMITER` among
 them, its cylinders and family those of the stock engine the parts would give the carriers, when they all agree
 (a bank under a Chevrolet, a Ford and a Plymouth says nothing). The install's 165 cars come to 59 sounds in about a
-second. `sounds.json` at the library root pins a block to a sound and corrects or excludes a car's bank. The
+second. `sounds.json` at the library root pins a block to a sound and corrects or excludes a car's bank. A sound
+whose GUIDs give its donor no engine (neither `engine_ext` nor `engine_int`) is left out rather than racing silent;
+a curated sound without `donor_id` whose bank name is not the donor takes the one car its GUIDs give an engine to. A
+folder, a car or a sounds.json that does not read is one line in `SoundLibrary.Problems` (logged) and the rest
+stands. A sound keeps only the GUID lines its bank answers; the master file is read once for every Kunos car. The
 matcher (`SoundMatcher`) scores every sound for a `SoundRequest` (block id, cylinders, family, limiter, from the
 block part and the dyno): cylinders decide (a six never gets a V8 bank), family counts, and the ceiling must reach
 the limiter: below it by more than 500 rpm (Content Manager's margin) the bank runs out of samples and the penalty
@@ -642,7 +653,11 @@ EngineBench <parts folder> sounds <AC cars folder> [sounds folder]        the so
 
 The overlay's sfx section was checked with a dry-run console (a mirror of a car's `data` and `sfx`, the folder hashed
 before and after): sound plus data, sound only with a crash and `RestoreAll` from a fresh instance, a restore cut
-short, a car without `GUIDs.txt`, the packed GT500, and a mirror on another volume for the copy fallback.
+short, a car without `GUIDs.txt`, the packed GT500, and a mirror on another volume for the copy fallback. After the
+PR review, a scratch console on made-up cars checked: a car taking the sound of a car already swapped in the race and
+two cars on each other's banks, a copy made while an earlier race's changes were still in, a kept bank whose
+manifest was lost, a donor bank that is gone, read-only donors, and the library's left-out sounds, bad json and
+`"pins": null`. The harvest of the install came out the same line for line.
 
 ## Not done yet
 

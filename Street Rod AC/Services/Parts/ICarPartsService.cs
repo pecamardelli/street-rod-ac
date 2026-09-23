@@ -9,8 +9,8 @@ using Street_Rod_AC.Parts.Logic;
 namespace Street_Rod_AC.Services.Parts
 {
     /// <summary>
-    /// Ties the cars of the game to the parts catalog. The catalog and the dyno figures of its engine builds
-    /// are loaded when first asked for; <see cref="WarmUpAsync"/> does that ahead of time, off the UI thread.
+    /// Ties the cars of the game to the parts catalog. The catalog, the dyno figures of its engine builds and the
+    /// sound library are loaded when first asked for; <see cref="WarmUpAsync"/> does that ahead of time, off the UI thread.
     /// </summary>
     public interface ICarPartsService
     {

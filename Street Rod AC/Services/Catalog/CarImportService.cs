@@ -135,41 +135,10 @@ namespace Street_Rod_AC.Services.Catalog
 
         private async Task<List<string>> DiscoverCarsAsync()
         {
-            var carFolders = new List<string>();
-
-            // Find all ui_car.json files
-            var uiCarFiles = Directory.GetFiles(_settings.CarsPath, "ui_car.json", SearchOption.AllDirectories);
-
-            foreach (var uiJsonPath in uiCarFiles)
-            {
-                try
-                {
-                    // Validate structure: carFolder/ui/ui_car.json
-                    var uiFolder = Path.GetDirectoryName(uiJsonPath);
-                    var carFolder = Path.GetDirectoryName(uiFolder);
-
-                    // A copy made for a race (one that a crash left behind) is not a car of the install
-                    if (carFolder != null && Street_Rod_AC.Parts.Export.AcCarFolder.IsClone(carFolder))
-                        continue;
-
-                    if (carFolder == null || uiFolder == null)
-                        continue;
-
-                    // Validate that ui folder is directly under car folder
-                    if (Path.GetFileName(uiFolder) != "ui")
-                        continue;
-
-                    // Validate that car folder is directly under content/cars
-                    if (Path.GetDirectoryName(carFolder) != _settings.CarsPath)
-                        continue;
-
-                    carFolders.Add(carFolder);
-                }
-                catch
-                {
-                    // Skip invalid paths
-                }
-            }
+            // Every folder directly under content/cars with a ui/ui_car.json; the copies made for a race are not cars of the install
+            var carFolders = Street_Rod_AC.Parts.Export.AcCarFolder.InstalledCars(_settings.CarsPath)
+                .Where(folder => File.Exists(Path.Combine(folder, "ui", "ui_car.json")))
+                .ToList();
 
             return await Task.FromResult(carFolders);
         }

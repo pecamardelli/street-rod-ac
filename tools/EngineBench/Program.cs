@@ -224,7 +224,7 @@ public static class Program
         var index = EngineBuildIndex.Create(catalog);
         Console.WriteLine($"{index.Runnable.Count} builds run\n");
 
-        foreach (var folder in Directory.GetDirectories(carsFolder))
+        foreach (var folder in AcCarFolder.InstalledCars(carsFolder))
         {
             var uiFile = Path.Combine(folder, "ui", "ui_car.json");
             if (!File.Exists(uiFile)) continue;
@@ -346,7 +346,7 @@ public static class Program
     /// <summary>The running gear every car leaves the factory with, matched to its own data</summary>
     private static int Gear(PartsCatalog catalog, string carsFolder)
     {
-        foreach (var folder in Directory.GetDirectories(carsFolder))
+        foreach (var folder in AcCarFolder.InstalledCars(carsFolder))
         {
             if (!File.Exists(Path.Combine(folder, "ui", "ui_car.json"))) continue;
 
@@ -375,10 +375,9 @@ public static class Program
         return 0;
     }
 
-    /// <summary>Every data file a car's parts change: the build as its engine, the factory running gear as its wheels</summary>
     /// <summary>
-    /// A donor car's sound as the overlay would write it under another car's id: what the GUIDs keep, what they
-    /// drop, and which engine events the donor lacks. The master GUIDs next to the cars folder serve a Kunos donor.
+    /// A donor car's sound as the overlay would write it under another car's id: the GUID lines the bank answers,
+    /// and which engine events the donor lacks. The master GUIDs next to the cars folder serve a Kunos donor.
     /// </summary>
     private static int Sound(string donorFolder, string carId, string? output)
     {
@@ -391,9 +390,8 @@ public static class Program
         }
 
         var guids = sound.GuidsFor(carId);
-        var before = sound.GuidsText.Split('\n').Count(l => l.Contains('}'));
-        var after = guids.Split('\n').Count(l => l.Contains('}'));
-        Console.WriteLine($"{sound.DonorId}: {new FileInfo(sound.BankPath).Length / 1e6:0.0} MB bank, {before} GUID line(s) -> {after} for {carId}");
+        var lines = guids.Split('\n').Count(l => l.Contains('}'));
+        Console.WriteLine($"{sound.DonorId}: {new FileInfo(sound.BankPath).Length / 1e6:0.0} MB bank, {lines} GUID line(s) the bank answers, for {carId}");
         foreach (var line in guids.Split('\n').Where(l => l.Contains("event:/cars/") || l.Contains("bank:/"))) Console.WriteLine("  " + line.TrimEnd());
         var missing = AcCarSound.MissingEngineEvents(guids, carId);
         if (missing.Count > 0) Console.WriteLine($"  MISSING {string.Join(", ", missing)}");
@@ -420,6 +418,8 @@ public static class Program
         var started = DateTime.Now;
         var cars = library.Harvest(carsFolder, master, SoundLibrary.StockFacts(index, catalog));
         Console.WriteLine($"{library.Curated.Count} curated sound(s) under {library.Root}, {library.Harvested.Count} harvested off {cars} car(s) in {(DateTime.Now - started).TotalMilliseconds:0} ms\n");
+        foreach (var problem in library.Problems) Console.WriteLine("  left out: " + problem);
+        if (library.Problems.Count > 0) Console.WriteLine();
 
         Console.WriteLine($"{"sound",-44} {"MB",5} {"cyl",3} {"family",-6} {"rpm",5} {"cars",4}  name / carriers");
         foreach (var sound in library.All.OrderByDescending(e => e.Curated).ThenBy(e => e.Id, StringComparer.OrdinalIgnoreCase))
@@ -443,6 +443,7 @@ public static class Program
         return 0;
     }
 
+    /// <summary>Every data file a car's parts change: the build as its engine, the factory running gear as its wheels</summary>
     private static int Car(PartsCatalog catalog, string carFolder, string id, string? output)
     {
         var build = catalog.EngineBuilds.FirstOrDefault(b => b.Id.Contains(id, StringComparison.OrdinalIgnoreCase));

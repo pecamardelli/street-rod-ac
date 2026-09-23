@@ -18,6 +18,7 @@ namespace Street_Rod_AC.Services
     /// The sound is the bank and GUIDs under the car's <c>sfx</c> folder: the car's own two files move into a keep
     /// folder next to them (a rename, whatever their size), the new bank is hard-linked in under the car's name
     /// (no copy either; a copy only when the link cannot be made), and the GUIDs are written for the car's id.
+    /// A sound is never worth a race: one whose bank is gone leaves the car on its own.
     /// </summary>
     public class CarDataOverlay
     {
@@ -25,7 +26,7 @@ namespace Street_Rod_AC.Services
         private const string FilesFolder = "files";
 
         /// <summary>Where a car's own sound waits inside its sfx folder while a race runs on another</summary>
-        public const string SfxKeepFolder = "_streetrod_keep";
+        public const string SfxKeepFolder = AcCarSound.KeepFolder;
 
         private readonly string _carsPath;
         private readonly string _keepPath;
@@ -101,6 +102,7 @@ namespace Street_Rod_AC.Services
         /// <param name="sound">The sound to race with; null leaves the car's own</param>
         public bool Apply(string carId, IReadOnlyDictionary<string, string> files, CarSound? sound = null)
         {
+            sound = Usable(carId, sound);
             if (files.Count == 0 && sound == null) return true;
             if (_appliedNow.Contains(carId))
             {
@@ -108,12 +110,7 @@ namespace Street_Rod_AC.Services
                 return false;
             }
 
-            // What an earlier race could not put back goes back before anything else goes in
-            if (IsApplied(carId))
-            {
-                _logger.Warning("{Car} still had changed data from an earlier race: putting it back first", carId);
-                Restore(carId);
-            }
+            RestoreLeftover(carId);
 
             var carDirectory = Path.Combine(_carsPath, carId);
             var dataDirectory = Path.Combine(carDirectory, AcCarData.DataFolder);
@@ -132,8 +129,7 @@ namespace Street_Rod_AC.Services
                 if (!Directory.Exists(dataDirectory))
                 {
                     // A packed car runs on its data folder once there is one: the whole of it, with our files over it
-                    var acd = Path.Combine(carDirectory, AcdFile.FileName);
-                    if (!File.Exists(acd)) throw new FileNotFoundException($"{carId} has neither a data folder nor {AcdFile.FileName}", acd);
+                    AcdOf(carId, carDirectory);
                     manifest.CreatedDataFolder = true;
                 }
                 else
@@ -150,12 +146,14 @@ namespace Street_Rod_AC.Services
 
             if (sound != null)
             {
-                if (!File.Exists(sound.BankPath)) throw new FileNotFoundException($"The sound for {carId} has no bank", sound.BankPath);
+                // A file already in the keep folder is the car's own too (see Keep): it goes back with the restore
+                var keepFolder = Path.Combine(sfxDirectory, SfxKeepFolder);
+                var bankName = AcCarSound.BankFileName(carId);
                 manifest.Sfx = new Manifest.SfxEntry
                 {
                     CreatedFolder = !Directory.Exists(sfxDirectory),
-                    BankExisted = File.Exists(Path.Combine(sfxDirectory, AcCarSound.BankFileName(carId))),
-                    GuidsExisted = File.Exists(Path.Combine(sfxDirectory, AcCarSound.GuidsFileName)),
+                    BankExisted = File.Exists(Path.Combine(sfxDirectory, bankName)) || File.Exists(Path.Combine(keepFolder, bankName)),
+                    GuidsExisted = File.Exists(Path.Combine(sfxDirectory, AcCarSound.GuidsFileName)) || File.Exists(Path.Combine(keepFolder, AcCarSound.GuidsFileName)),
                     Source = sound.BankPath
                 };
             }
@@ -165,8 +163,7 @@ namespace Street_Rod_AC.Services
 
             if (manifest.CreatedDataFolder)
             {
-                Directory.CreateDirectory(dataDirectory);
-                foreach (var (name, content) in AcdFile.Read(Path.Combine(carDirectory, AcdFile.FileName))) File.WriteAllBytes(Path.Combine(dataDirectory, name), content);
+                UnpackAcd(carId, carDirectory, dataDirectory);
                 _logger.Information("{Car}: data unpacked from {Acd} for the race", carId, AcdFile.FileName);
             }
 
@@ -185,14 +182,59 @@ namespace Street_Rod_AC.Services
 
             var bank = Path.Combine(sfxDirectory, AcCarSound.BankFileName(carId));
             var guids = Path.Combine(sfxDirectory, AcCarSound.GuidsFileName);
-            if (File.Exists(bank)) File.Move(bank, Path.Combine(keepFolder, AcCarSound.BankFileName(carId)), true);
-            if (File.Exists(guids)) File.Move(guids, Path.Combine(keepFolder, AcCarSound.GuidsFileName), true);
+            Keep(carId, bank, Path.Combine(keepFolder, AcCarSound.BankFileName(carId)));
+            Keep(carId, guids, Path.Combine(keepFolder, AcCarSound.GuidsFileName));
 
-            var linked = TryHardLink(sound.BankPath, bank);
-            if (!linked) File.Copy(sound.BankPath, bank, true);
+            var linked = LinkOrCopy(sound.BankPath, bank);
             File.WriteAllText(guids, sound.GuidsFor(carId), Encoding.ASCII);
 
             _logger.Information("{Car}: races on the sound of {Donor} ({Bank}, {How})", carId, sound.DonorId, sound.BankPath, linked ? "linked" : "copied");
+        }
+
+        /// <summary>
+        /// Moves a file of the car's sound into the keep folder. A file already there is the car's own, left by a race
+        /// whose manifest was lost: the one in place is what that race put in, and it is the one that goes, never the
+        /// only copy of the car's own.
+        /// </summary>
+        private void Keep(string carId, string file, string kept)
+        {
+            if (!File.Exists(file)) return;
+            if (File.Exists(kept))
+            {
+                _logger.Warning("{Car}: {File} was already kept from an earlier race; the one in its place is not the car's and goes", carId, Path.GetFileName(file));
+                File.Delete(file);
+                return;
+            }
+
+            File.Move(file, kept);
+        }
+
+        /// <summary>
+        /// The sound as it can go in right now, or null for none. A donor car that races on another sound itself has its
+        /// own bank in its keep folder, and the file under its name is the other sound's (the GUID text is always the
+        /// donor's own), so the bank is taken from where its bytes are. A bank that is gone (the car uninstalled, the
+        /// library folder removed while the game ran) leaves the car on its own sound.
+        /// </summary>
+        private CarSound? Usable(string carId, CarSound? sound)
+        {
+            if (sound == null) return null;
+
+            var bank = AcCarSound.OwnBank(sound.BankPath);
+            if (bank == null)
+            {
+                _logger.Warning("{Car}: the bank of {Donor} is gone ({Bank}); it keeps its own sound", carId, sound.DonorId, sound.BankPath);
+                return null;
+            }
+
+            return bank == sound.BankPath ? sound : sound with { BankPath = bank };
+        }
+
+        /// <summary>What an earlier race could not put back goes back before anything else goes in or is copied</summary>
+        private void RestoreLeftover(string carId)
+        {
+            if (!IsApplied(carId) || _appliedNow.Contains(carId)) return;
+            _logger.Warning("{Car} still had changed data from an earlier race: putting it back first", carId);
+            Restore(carId);
         }
 
         /// <summary>Puts a car's data back as it was. True when there was something to put back.</summary>
@@ -281,13 +323,18 @@ namespace Street_Rod_AC.Services
         /// A copy of a car folder under <paramref name="cloneId"/>, for a second car of that model in the race: it races
         /// on <paramref name="files"/> over the car's own data and on <paramref name="sound"/> (the car's own when null),
         /// and the original is not touched. Models, textures and skins are hard links (nothing is copied but the data,
-        /// which is written to); the marker goes in first, so a copy cut short is still known to be ours.
+        /// which is written to); the marker goes in first, so a copy cut short is still known to be ours. The copy is
+        /// made from the car as it ships: what an earlier race left changed in it goes back first, and a car already
+        /// changed for this race cannot be copied.
         /// </summary>
         public void CreateClone(string carId, string cloneId, IReadOnlyDictionary<string, string> files, CarSound? sound, string? masterGuidsPath = null)
         {
             var source = Path.Combine(_carsPath, carId);
             var target = Path.Combine(_carsPath, cloneId);
             if (!Directory.Exists(source)) throw new DirectoryNotFoundException($"{carId} is not installed");
+            if (_appliedNow.Contains(carId)) throw new InvalidOperationException($"{carId} is already changed for this race: its copy is made before that");
+            RestoreLeftover(carId);
+
             if (Directory.Exists(target))
             {
                 if (!AcCarFolder.IsClone(target)) throw new IOException($"{cloneId} is a car of the install, not a copy: it is left alone");
@@ -311,44 +358,33 @@ namespace Street_Rod_AC.Services
 
                 var destination = Path.Combine(target, relative);
                 Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-
-                // A read-only file is copied: clearing the flag on a link would clear it on the car's own file
-                if (!File.GetAttributes(file).HasFlag(FileAttributes.ReadOnly) && TryHardLink(file, destination))
-                {
-                    linked++;
-                    continue;
-                }
-
-                File.Copy(file, destination, true);
-                File.SetAttributes(destination, File.GetAttributes(destination) & ~FileAttributes.ReadOnly);
-                copied++;
+                if (LinkOrCopy(file, destination)) linked++;
+                else copied++;
             }
 
             // The data is written to, so it is a copy: the car's own folder, or what its data.acd holds
             var targetData = Path.Combine(target, AcCarData.DataFolder);
-            Directory.CreateDirectory(targetData);
             if (Directory.Exists(dataFolder))
             {
+                Directory.CreateDirectory(targetData);
                 foreach (var file in Directory.GetFiles(dataFolder)) File.Copy(file, Path.Combine(targetData, Path.GetFileName(file)), true);
             }
             else
             {
-                var acd = Path.Combine(source, AcdFile.FileName);
-                if (!File.Exists(acd)) throw new FileNotFoundException($"{carId} has neither a data folder nor {AcdFile.FileName}", acd);
-                foreach (var (name, content) in AcdFile.Read(acd)) File.WriteAllBytes(Path.Combine(targetData, name), content);
+                UnpackAcd(carId, source, targetData);
             }
 
             foreach (var file in Directory.GetFiles(targetData)) File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.ReadOnly);
             foreach (var (name, content) in files) File.WriteAllText(Path.Combine(targetData, name), content, Encoding.Latin1);
 
-            // The bank goes in under the copy's name, with the GUID lines written for it
-            sound ??= AcCarSound.FromCar(source, masterGuidsPath ?? AppSettings.Instance.SfxGuidsPath);
+            // The bank goes in under the copy's name, with the GUID lines written for it; a chosen sound whose bank is
+            // gone leaves the copy on the car's own
+            sound = Usable(cloneId, sound) ?? Usable(cloneId, AcCarSound.FromCar(source, masterGuidsPath ?? AppSettings.Instance.SfxGuidsPath));
             if (sound != null)
             {
                 var targetSfx = Path.Combine(target, AcCarSound.SfxFolder);
                 Directory.CreateDirectory(targetSfx);
-                var bank = Path.Combine(targetSfx, AcCarSound.BankFileName(cloneId));
-                if (!TryHardLink(sound.BankPath, bank)) File.Copy(sound.BankPath, bank, true);
+                LinkOrCopy(sound.BankPath, Path.Combine(targetSfx, AcCarSound.BankFileName(cloneId)));
                 File.WriteAllText(Path.Combine(targetSfx, AcCarSound.GuidsFileName), sound.GuidsFor(cloneId), Encoding.ASCII);
             }
             else
@@ -366,14 +402,17 @@ namespace Street_Rod_AC.Services
             var folder = Path.Combine(_carsPath, cloneId);
             if (!Directory.Exists(folder) || !AcCarFolder.IsClone(folder)) return false;
 
-            // Deleting a link leaves the car's own file where it is; the marker goes last, so a delete cut short is retried
-            foreach (var file in Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories))
+            // Deleting a link leaves the car's own file where it is. The marker goes last, after every file and folder,
+            // so a delete cut short leaves a folder still known to be ours, and the next start finishes it.
+            var marker = Path.Combine(folder, AcCarFolder.CloneMarker);
+            foreach (var file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories))
             {
-                if (Path.GetFileName(file).Equals(AcCarFolder.CloneMarker, StringComparison.OrdinalIgnoreCase)) continue;
-                File.Delete(file);
+                if (!file.Equals(marker, StringComparison.OrdinalIgnoreCase)) File.Delete(file);
             }
 
-            Directory.Delete(folder, true);
+            foreach (var directory in Directory.GetDirectories(folder)) Directory.Delete(directory, true);
+            File.Delete(marker);
+            Directory.Delete(folder);
             _logger.Information("{Clone}: the copy is gone", cloneId);
             return true;
         }
@@ -402,11 +441,35 @@ namespace Street_Rod_AC.Services
         private static bool IsUnder(string file, string folder) =>
             file.StartsWith(folder + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
 
-        /// <summary>A hard link when the two paths are on one volume; false when the file system will not have it</summary>
-        private static bool TryHardLink(string source, string destination)
+        /// <summary>A packed car's data.acd; a car with neither it nor a data folder cannot race on changed data</summary>
+        private static string AcdOf(string carId, string carDirectory)
+        {
+            var acd = Path.Combine(carDirectory, AcdFile.FileName);
+            if (!File.Exists(acd)) throw new FileNotFoundException($"{carId} has neither a data folder nor {AcdFile.FileName}", acd);
+            return acd;
+        }
+
+        /// <summary>What a packed car's data.acd holds, written out as a data folder</summary>
+        private static void UnpackAcd(string carId, string carDirectory, string dataDirectory)
+        {
+            var entries = AcdFile.Read(AcdOf(carId, carDirectory));
+            Directory.CreateDirectory(dataDirectory);
+            foreach (var (name, content) in entries) File.WriteAllBytes(Path.Combine(dataDirectory, name), content);
+        }
+
+        /// <summary>
+        /// A hard link to <paramref name="source"/> when the two paths are on one volume and the source is not read-only
+        /// (a link shares the flag: clearing it would clear it on the car's own file, and a read-only link could not be
+        /// deleted or replaced after the race); otherwise a writable copy. True when linked.
+        /// </summary>
+        private static bool LinkOrCopy(string source, string destination)
         {
             if (File.Exists(destination)) File.Delete(destination);
-            return CreateHardLink(destination, source, IntPtr.Zero);
+            if (!File.GetAttributes(source).HasFlag(FileAttributes.ReadOnly) && CreateHardLink(destination, source, IntPtr.Zero)) return true;
+
+            File.Copy(source, destination, true);
+            File.SetAttributes(destination, File.GetAttributes(destination) & ~FileAttributes.ReadOnly);
+            return false;
         }
 
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]

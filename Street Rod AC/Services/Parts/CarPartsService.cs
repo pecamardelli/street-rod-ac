@@ -59,6 +59,9 @@ namespace Street_Rod_AC.Services.Parts
                 }
 
                 SuggestStockEngines();
+
+                // Every installed car's bank is read for the library: here, not on the way to the first race
+                _ = Sounds;
             }
             catch (Exception ex)
             {
@@ -315,6 +318,7 @@ namespace Street_Rod_AC.Services.Parts
                 var cars = library.Harvest(settings.CarsPath, settings.SfxGuidsPath, SoundLibrary.StockFacts(Builds, Catalog));
                 _logger.Information("Sound library: {Curated} sound(s) under {Path}, {Harvested} more off {Cars} installed car(s), in {Ms} ms",
                     library.Curated.Count, settings.SoundsPath, library.Harvested.Count, cars, (int)(DateTime.Now - started).TotalMilliseconds);
+                foreach (var problem in library.Problems) _logger.Warning("Sound library: {Problem}", problem);
                 return library;
             }
             catch (Exception ex)

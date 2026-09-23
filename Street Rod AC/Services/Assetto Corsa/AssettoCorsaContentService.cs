@@ -38,24 +38,19 @@ public class AssettoCorsaContentService : IAssettoCorsaContentService
             throw new DirectoryNotFoundException(error);
         }
 
-        // Recursively find all ui_car.json files
-        var uiCarFiles = Directory.GetFiles(_settings.CarsPath, "ui_car.json", SearchOption.AllDirectories);
-        Console.WriteLine($"Found {uiCarFiles.Length} ui_car.json files in {_settings.CarsPath}");
+        // Every car folder's ui\ui_car.json; the copies made for a race are not cars of the install
+        var uiCarFiles = Street_Rod_AC.Parts.Export.AcCarFolder.InstalledCars(_settings.CarsPath)
+            .Select(folder => Path.Combine(folder, "ui", "ui_car.json"))
+            .Where(File.Exists)
+            .ToList();
+        Console.WriteLine($"Found {uiCarFiles.Count} ui_car.json files in {_settings.CarsPath}");
 
         foreach (var uiJsonPath in uiCarFiles)
         {
             try
             {
                 // Find the car root folder (parent of the ui folder)
-                var uiFolder = Path.GetDirectoryName(uiJsonPath);
-                var carFolder = Path.GetDirectoryName(uiFolder);
-
-                if (carFolder == null || uiFolder == null)
-                    continue;
-
-                // A copy made for a race (one that a crash left behind) is not a car of the install
-                if (Street_Rod_AC.Parts.Export.AcCarFolder.IsClone(carFolder))
-                    continue;
+                var carFolder = Path.GetDirectoryName(Path.GetDirectoryName(uiJsonPath))!;
 
                 // Use the folder name as car ID
                 var carId = Path.GetFileName(carFolder);

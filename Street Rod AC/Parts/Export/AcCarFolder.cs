@@ -17,4 +17,9 @@ public static class AcCarFolder
     public static string CloneIdFor(string carId) => carId + CloneSuffix;
 
     public static bool IsClone(string carFolder) => File.Exists(Path.Combine(carFolder, CloneMarker));
+
+    /// <summary>The car folders of the install, without the copies made for a race: what every reader of the cars goes through</summary>
+    /// <param name="carsFolder">The install's content\cars</param>
+    public static IEnumerable<string> InstalledCars(string carsFolder) =>
+        Directory.Exists(carsFolder) ? Directory.EnumerateDirectories(carsFolder).Where(f => !IsClone(f)) : Enumerable.Empty<string>();
 }
