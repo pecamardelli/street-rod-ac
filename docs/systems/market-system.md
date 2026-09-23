@@ -46,8 +46,10 @@ catalog order starves whole dealers.
 - Round to nearest $100
 
 ## Dealer Locations
-Ten dealers, defined in `Assets/Dealers/dealers.json` and read by `DealerCatalog`:
-- Downtown Motors, Eastside Garage, Suburban Autos, Riverside Cars, Industrial Motors
+Ten dealers, defined in `Assets/Dealers/dealers.json` and read by `DealerCatalog`: Downtown Motors,
+Sunset Motors, Colorado Motors, Suburban Autos, Ocean Park Autos, Riverside Cars, Vermont Auto Sales,
+Industrial Motors, Harbor Auto and Eastside Garage. `GetDefaultDealers()` still hands out the original five
+when the file cannot be read.
 
 The save holds only `DealerLocation` (Id, Name, Region). Map position, showroom, parking bays and stock
 character live in the JSON and are merged over the save on load, so new fields reach old saves. See
@@ -56,8 +58,9 @@ character live in the JSON and are merged over the save on load, so new fields r
 ## Which Dealer Gets a Car
 Not random. Each dealer claims a slice of the market's price range (`priceBandLow`/`priceBandHigh`); a car
 goes to one of the dealers whose slice covers where its base price sits, or to the nearest slice if none
-does. `conditionCenter` then pulls the condition roll toward that dealer's standard (two parts dealer, one
-part roll), so a cheap lot has rough cars without making a good find impossible.
+does. `conditionCenter` then shifts the condition roll by how far that dealer's standard sits from the middle
+of the range (the roll still leads, and one car in twelve is not shifted at all), so a cheap lot has rough
+cars without making a good find impossible.
 
 ## Purchase Flow
 `CarPurchaseService` owns this, shared by the listings screen and the dealer lot.

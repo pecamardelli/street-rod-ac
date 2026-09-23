@@ -24,6 +24,16 @@
               helpers:Reveal.IsShown="{Binding IsLotReady, ElementName=Viewport, Converter={StaticResource InverseBooleanConverter}}">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                 <Border Width="60" Height="60" Margin="0,0,0,26" HorizontalAlignment="Center">
+                    <!-- Nothing is coming once the viewport has failed; a spinner over that message would promise otherwise -->
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasFailed, ElementName=Viewport}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Border.RenderTransform>
                         <RotateTransform x:Name="SpinnerRotation" CenterX="30" CenterY="30"/>
                     </Border.RenderTransform>

@@ -103,12 +103,20 @@
                                         </Border>
                                     </StackPanel>
                                     <ControlTemplate.Triggers>
+                                        <!-- Too far to get back from today: still there to be clicked, but greyed so the
+                                             cost is visible before the click, not sprung by the dialog after it -->
+                                        <DataTrigger Binding="{Binding FitsToday}" Value="False">
+                                            <Setter TargetName="Dot" Property="Background" Value="#6E6A60"/>
+                                            <Setter TargetName="Dot" Property="BorderBrush" Value="#A09A8C"/>
+                                            <Setter TargetName="Root" Property="Opacity" Value="0.62"/>
+                                        </DataTrigger>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter TargetName="Dot" Property="Background" Value="{StaticResource AccentHoverBrush}"/>
                                             <Setter TargetName="Dot" Property="Width" Value="22"/>
                                             <Setter TargetName="Dot" Property="Height" Value="22"/>
                                             <Setter TargetName="Dot" Property="CornerRadius" Value="11"/>
                                             <Setter TargetName="Plate" Property="BorderBrush" Value="{StaticResource AccentHoverBrush}"/>
+                                            <Setter TargetName="Root" Property="Opacity" Value="1"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -137,6 +145,21 @@
                                                    FontSize="11"
                                                    Foreground="{StaticResource TextSecondaryBrush}"
                                                    Margin="0,4,0,0"/>
+                                        <TextBlock Text="{Binding DayCostDisplay}"
+                                                   FontSize="11"
+                                                   FontStyle="Italic"
+                                                   Margin="0,2,0,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding FitsToday}" Value="False">
+                                                            <Setter Property="Foreground" Value="#E8A15A"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
                                     </StackPanel>
                                 </ToolTip>
                             </Button.ToolTip>

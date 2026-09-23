@@ -519,12 +519,22 @@ public class CarViewport3D : System.Windows.Controls.Grid
             moving = true;
         }
 
-        // Round the short way
-        var delta = (float)Math.IEEERemainder(_alphaGoal - orbit.Alpha, Math.PI * 2);
-        if (Math.Abs(delta) > CameraSettled)
+        if (_renderer!.AutoRotate)
         {
-            orbit.Alpha += delta * k;
-            moving = true;
+            // The renderer is turning the car itself, a little further every tick. Easing alpha back to a
+            // goal at the same time would cancel that out and leave the car shivering on the spot instead of
+            // going round, so the goal follows the renderer until auto-rotate is switched off.
+            _alphaGoal = orbit.Alpha;
+        }
+        else
+        {
+            // Round the short way
+            var delta = (float)Math.IEEERemainder(_alphaGoal - orbit.Alpha, Math.PI * 2);
+            if (Math.Abs(delta) > CameraSettled)
+            {
+                orbit.Alpha += delta * k;
+                moving = true;
+            }
         }
 
         if (_targetGoal is { } target)

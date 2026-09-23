@@ -3,7 +3,7 @@
 Two screens that replace "pick a dealer from a dropdown" with going somewhere and looking at the cars.
 
 ```
-Garage (hub) ──▶ DealerMap ──▶ DealerLot ──▶ buy ──▶ stays on the lot
+Garage (hub) ──▶ DealerMap ──▶ DealerLot ──▶ buy ──▶ back to the garage
                                     └──▶ back to the map
 ```
 
@@ -37,9 +37,6 @@ changing its size — `MapImageWidth`/`Height` tell the panel what shape a crop 
 
 Each dealer sits on its real town, and `travelHours` matches: the lots round downtown are an hour, the
 valley and the harbour two, Riverside three and a half.
-
-`Helpers/FractionPanel` places the pins: children are laid out at a fraction of the panel's size, so a pin
-stays on its bit of the map at any window size.
 
 ### Driving there costs the day
 
@@ -178,10 +175,15 @@ The daily refresh tops each lot back up to its own target, for the same reason.
 - `ModelHeadingOffset` in the viewport is the knob if every car on every lot faces the same wrong way.
 - The camera eases with a per-second settle rate rather than a per-frame lerp, so it moves the same way at
   any frame rate. `CarViewport3D` does the same, and the first car of a session is still placed at once —
-  only later moves are eased.
-- The map is held at the shape of its crop by `Helpers/AspectPanel`, which hands the picture and the pin
-  layer the same rectangle. Stretching the map to fill the window would crop it by an unknown amount and
-  take every pin off its place.
+  only later moves are eased. While the garage is auto-rotating the alpha goal follows the renderer instead
+  of steering, or the easing cancels the rotation out and the car shivers on the spot.
+- A bay emptied during a restock keeps its slot for the next car: the renderer cannot take a slot out of the
+  scene again, so handing slots back would leave a fresh empty one behind every time. Only the main slot is
+  released, so the next bay that needs one picks it up rather than leaving it standing empty.
+- The map is `Helpers/MapPanel` and nothing else: the picture, the tint, the vignette and the pins are all
+  its children, and it grows the anchor crop to the window's shape so the pins stay on their towns at any
+  size. Stretching the map to fill the window instead would crop it by an unknown amount and take every pin
+  off its place.
 
 ## Files
 
@@ -189,8 +191,7 @@ The daily refresh tops each lot back up to its own target, for the same reason.
 - `Screens/DealerLot/` — lot screen
 - `Controls/DealerLotViewport3D.cs` — the 3D lot
 - `Controls/SharedTextureBridge.cs` — DX11-to-WPF presentation, shared with `CarViewport3D`
-- `Helpers/FractionPanel.cs` — fractional layout for the pins
-- `Helpers/AspectPanel.cs` — holds the map and its pins to one shape
+- `Helpers/MapPanel.cs` — the full-bleed map with the pins held on their places
 - `Services/Dealers/LotLayout.cs` — works the bays out from the room
 - `Assets/Dealers/showrooms.json` — measured showroom floors
 - `Services/Dealers/` — dealer definitions

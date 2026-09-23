@@ -516,8 +516,11 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
     }
 
     /// <summary>
-    /// Empties a bay: the car goes, and the slot is handed back for whatever needs one next. Leaving the slot
-    /// in place but forgetting it would strand the main slot, which the whole scene's shadows hang off.
+    /// Empties a bay: the car goes, and the slot stays behind for the next car put in that bay. The renderer
+    /// has no way to take a slot out of the scene again, so handing one back would mean a fresh slot for
+    /// every restock and the empty ones piling up in the renderer. The main slot is the one exception: the
+    /// scene's shadows hang off it, so it is forgotten here and picked up by whichever bay next needs a slot,
+    /// rather than left standing empty in a bay nothing is sold from.
     /// </summary>
     private async Task ClearBayAsync(int index, GarageRenderer renderer)
     {
@@ -534,7 +537,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
         if (_renderer != renderer) return;
 
-        _slots[index] = null;
+        if (ReferenceEquals(slot, renderer.MainSlot)) _slots[index] = null;
         if (index < _standing.Count) _standing[index] = null;
     }
 

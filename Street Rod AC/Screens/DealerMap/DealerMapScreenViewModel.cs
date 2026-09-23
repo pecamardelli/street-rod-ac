@@ -145,13 +145,17 @@ namespace Street_Rod_AC.Screens.DealerMap
 
             foreach (var dealer in _dealerCatalog.All)
             {
-                var onTheLot = listings.Count(l => !l.IsSold && l.DealerLocation == dealer.Id);
-
-                if (onTheLot == 0)
+                // Sold listings count here: a lot the player has just bought out still has its sold cars on
+                // the books until the next refresh, and that is not the same as a dealer the save has never
+                // heard of. Throwing the whole market away over a sale would clear every other lot as well.
+                var everStocked = listings.Any(l => l.DealerLocation == dealer.Id);
+                if (!everStocked)
                 {
-                    _logger.Information("{Dealer} has nothing for sale; restocking the whole market", dealer.Name);
+                    _logger.Information("{Dealer} has never been stocked; restocking the whole market", dealer.Name);
                     return true;
                 }
+
+                var onTheLot = listings.Count(l => !l.IsSold && l.DealerLocation == dealer.Id);
 
                 if (onTheLot > dealer.StockHigh * 2)
                 {
