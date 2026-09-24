@@ -1,0 +1,10 @@
+{
+  "donor_id": "acb_delage_15s8_seaman_special",
+  "name": "Delage 15S8 Seaman (straight eight)",
+  "cylinders": 8,
+  "rpm_max": 7600,
+  "tags": [
+    "prewar",
+    "flathead candidate"
+  ]
+}

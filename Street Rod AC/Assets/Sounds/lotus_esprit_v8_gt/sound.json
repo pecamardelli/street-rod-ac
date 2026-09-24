@@ -1,0 +1,9 @@
+{
+  "donor_id": "lotus_esprit_v8_gt",
+  "name": "Lotus Esprit V8 GT",
+  "cylinders": 8,
+  "rpm_max": 7500,
+  "tags": [
+    "turbo"
+  ]
+}

@@ -52,6 +52,10 @@ give the car. `sounds.json` corrects the harvest per car and pins a block to a s
 }
 ```
 
+A pin names a folder here, or `car:<car id>` for the bank an installed car ships: any car that ships those bytes
+will do, whichever one the harvest happened to name the sound after. A pin to a sound nobody has is logged and
+the block goes back to the matcher.
+
 `exclude` keeps a car's bank out of the library altogether: a modern engine under a period body, a bank that
 does not play right.
 
