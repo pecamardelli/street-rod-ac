@@ -29,6 +29,10 @@ namespace Street_Rod_AC.Screens.RaceLoading
         private readonly IGameStateRepository _gameStateRepo;
         private readonly IAppLogger _logger;
 
+        // The "Stop Race" question while it is up: withdrawn when the race ends on its own, so it never stays over
+        // the diner with the race's messages queued behind it
+        private ConfirmationDialogViewModel? _stopDialog;
+
         private string _statusMessage = "Launching race...";
         public string StatusMessage
         {
@@ -74,19 +78,24 @@ namespace Street_Rod_AC.Screens.RaceLoading
 
         private void ConfirmStopRace()
         {
+            // Before AC has started, stopping calls the launch off and costs nothing
             var atStake = Context is { } context && (context.IsPinkSlip || context.CashWager > 0);
-            var message = atStake
-                ? "Stop Assetto Corsa now?\n\nStopping before the finish counts as a loss: what was at stake is lost."
-                : "Stop Assetto Corsa now?\n\nThe race will not count.";
+            var message = !_launcher.IsAssettoCorsaRunning
+                ? "Call the race off?\n\nAssetto Corsa has not started yet, so nothing is lost."
+                : atStake
+                    ? "Stop Assetto Corsa now?\n\nStopping before the finish counts as a loss: what was at stake is lost."
+                    : "Stop Assetto Corsa now?\n\nThe race will not count.";
 
-            _dialogService.ShowDialog(new ConfirmationDialogViewModel(_dialogService, message, "Stop Race", confirmed =>
+            _stopDialog = new ConfirmationDialogViewModel(_dialogService, message, "Stop Race", confirmed =>
             {
+                _stopDialog = null;
                 if (!confirmed || !IsLoading) return;
 
                 _logger.Warning("The player stopped the race");
                 StatusMessage = "Stopping the race...";
                 _launcher.CancelRace();
-            }));
+            });
+            _dialogService.ShowDialog(_stopDialog);
         }
 
         /// <summary>The race as it was set up, carried by the intent; null for a launch without one</summary>
@@ -111,6 +120,21 @@ namespace Street_Rod_AC.Screens.RaceLoading
             }
 
             IsLoading = false;
+
+            // The race is over: a Stop question still up has nothing left to stop
+            if (_stopDialog is { } stopDialog)
+            {
+                _stopDialog = null;
+                try
+                {
+                    _dialogService.Withdraw(stopDialog);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning(ex, "Could not withdraw the Stop Race question");
+                }
+            }
+
             ReturnFromRace();
 
             // One at a time, over the screen the player came back to: the dialog service queues them
@@ -125,24 +149,34 @@ namespace Street_Rod_AC.Screens.RaceLoading
             var messages = new List<PlayerMessage>();
             try
             {
-                MarkRacePending();
-
+                // The launcher puts the race on record in the save (pending) before AC starts, after settling an
+                // earlier race still waiting for its result, and takes it off again if AC never starts
                 StatusMessage = "Racing...";
                 _logger.Information("Launching race with intent: Player={PlayerCar}, Opponent={OpponentCar}",
                     _launchIntent.PlayerCarId, _launchIntent.OpponentCarId);
 
                 var result = await _launcher.LaunchRaceAsync(_launchIntent);
                 messages.AddRange(result.PlayerMessages);
+                _logger.Information("Race over: {Outcome} (success: {Success})", result.Outcome, result.Success);
 
-                if (result.Success)
+                // Time passes for a race that was run, whatever came of it; not for one that never started
+                var raced = result.Outcome is RaceOutcome.Processed or RaceOutcome.NoResult
+                    or RaceOutcome.Quarantined or RaceOutcome.ResultPending;
+                if (raced)
                 {
-                    _logger.Information("Race over: {Outcome}", result.Outcome);
-                    StatusMessage = "Processing results...";
+                    StatusMessage = result.Outcome == RaceOutcome.ResultPending
+                        ? "The result is not in yet..."
+                        : "Processing results...";
 
                     await SpendRaceTime();
 
                     // Small delay to show the processing message
                     await Task.Delay(500);
+                }
+                else if (result.Outcome == RaceOutcome.Cancelled)
+                {
+                    StatusMessage = "Race called off";
+                    await Task.Delay(1000);
                 }
                 else
                 {
@@ -159,26 +193,6 @@ namespace Street_Rod_AC.Screens.RaceLoading
             }
 
             return messages;
-        }
-
-        /// <summary>
-        /// The race goes into the save before AC starts, so a result file that turns up after a crash is known
-        /// to belong to this save and this race. Processing the result (or the lack of one) clears it again.
-        /// </summary>
-        private void MarkRacePending()
-        {
-            if (Context is not { } context) return;
-
-            _gameState.PendingRace = context;
-            try
-            {
-                if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
-            }
-            catch (Exception ex)
-            {
-                // The race still goes ahead: the pending race is in memory and is saved with the next save
-                _logger.Error(ex, "Could not save the pending race before the launch");
-            }
         }
 
         /// <summary>The time the race took, and a save for it: late in the day that is the next morning</summary>

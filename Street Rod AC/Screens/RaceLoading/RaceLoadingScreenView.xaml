@@ -5,11 +5,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
              d:DesignHeight="720" d:DesignWidth="1280"
-             Background="#1a1a1a">
+             Background="{StaticResource BgPanelBrush}">
 
     <Grid>
         <!-- Dark overlay background -->
-        <Rectangle Fill="#1a1a1a" Opacity="0.95"/>
+        <Rectangle Fill="{StaticResource BgPanelBrush}" Opacity="0.95"/>
 
         <!-- Centered content -->
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -33,14 +33,14 @@
                         </BeginStoryboard>
                     </EventTrigger>
                 </Border.Triggers>
-                <Ellipse Stroke="#FF6B00" StrokeThickness="4"
+                <Ellipse Stroke="{StaticResource SpinnerOrangeBrush}" StrokeThickness="4"
                          StrokeDashArray="3 2"
                          Fill="Transparent"/>
             </Border>
 
             <!-- Status message -->
             <TextBlock Text="{Binding StatusMessage}"
-                       FontSize="32"
+                       FontSize="{StaticResource FontSizeScreenTitle}"
                        FontWeight="Bold"
                        Foreground="White"
                        HorizontalAlignment="Center"/>

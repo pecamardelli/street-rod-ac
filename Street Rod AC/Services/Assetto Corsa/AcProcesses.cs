@@ -39,6 +39,34 @@ namespace Street_Rod_AC.Services
         /// <summary>True when the race or the showroom runs</summary>
         public static bool AnyRunning() => IsRunning(Race) || IsRunning(Showroom);
 
+        /// <summary>
+        /// Whether the race or the showroom runs: null when the processes cannot be listed. For callers to whom
+        /// "cannot tell" is not the same as "running" (a wait that must not go on forever on an error that keeps
+        /// coming back).
+        /// </summary>
+        public static bool? QueryAnyRunning()
+        {
+            var race = Query(Race);
+            if (race == true) return true;
+            var showroom = Query(Showroom);
+            if (showroom == true) return true;
+            return race == null || showroom == null ? null : false;
+        }
+
+        private static bool? Query(string processName)
+        {
+            try
+            {
+                var processes = Process.GetProcessesByName(processName);
+                foreach (var process in processes) process.Dispose();
+                return processes.Length > 0;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         /// <summary>Kills every process of that name with its children; returns how many were asked to go. Never throws.</summary>
         public static int KillAll(string processName)
         {

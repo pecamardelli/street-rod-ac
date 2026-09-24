@@ -38,8 +38,8 @@ namespace Street_Rod_AC.Services.Storage
             {
                 var state = Database.Use(saveName, db => db.GetCollection<GameState>(Collection).FindById(1));
 
-                // LastPlayedDate is left as it was saved: the Load screen loads every save to list it, and
-                // stamping it here made them all "just now". Save stamps it.
+                // LastPlayedDate is left as it was saved; Save stamps it. (Stamping it here once made every
+                // save "just now", back when the Load screen loaded each save to list it.)
                 if (state != null)
                     state.SaveName = saveName;
 
@@ -115,10 +115,56 @@ namespace Street_Rod_AC.Services.Storage
                 .ToList();
         }
 
+        public IReadOnlyList<SaveHeader> ListSaveHeaders()
+        {
+            var headers = new List<SaveHeader>();
+            foreach (var saveName in ListSaves())
+            {
+                try
+                {
+                    // Only the fields the list shows are projected out of the document: the market, opponents
+                    // and career are never mapped to objects. Peek reads the save in use through its open
+                    // instance and any other save read-only, so listing never closes the game being played.
+                    var doc = Database.Peek(saveName, db => db.GetCollection(Collection)
+                        .Query()
+                        .Where("_id = 1")
+                        .Select("{ name: $.Player.Name, money: $.Player.Money, date: $.Date, played: $.LastPlayedDate }")
+                        .FirstOrDefault());
+
+                    if (doc == null)
+                    {
+                        _logger.Warning("Save {SaveName} holds no game; it is not listed", saveName);
+                        continue;
+                    }
+
+                    headers.Add(new SaveHeader(
+                        saveName,
+                        doc["name"].IsString ? doc["name"].AsString : string.Empty,
+                        doc["money"].IsNumber ? doc["money"].AsDecimal : 0m,
+                        doc["date"].IsDateTime ? doc["date"].AsDateTime : default,
+                        doc["played"].IsDateTime ? doc["played"].AsDateTime : default));
+                }
+                catch (Exception ex)
+                {
+                    // A corrupt save is left off the list, with a trace of why in the log
+                    _logger.Warning(ex, "Save {SaveName} could not be read; it is not listed", saveName);
+                }
+            }
+            return headers;
+        }
+
         public GameState CreateNew(string saveName, string playerName)
         {
             // Throws on a name that cannot be a save before anything is made
             Database.PathOf(saveName);
+
+            // Overwriting a save starts from nothing: the old game's race records (the dedup set) and its backups
+            // would otherwise live on in the new game's file
+            if (Exists(saveName))
+            {
+                _logger.Information("Save {SaveName} is overwritten by a new game: its files go first", saveName);
+                Delete(saveName);
+            }
 
             var state = GameState.CreateNew(playerName);
             state.SaveName = saveName;

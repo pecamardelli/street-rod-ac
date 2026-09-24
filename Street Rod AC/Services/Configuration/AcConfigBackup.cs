@@ -55,6 +55,12 @@ namespace Street_Rod_AC.Services.Configuration
                 public string Kept { get; set; } = string.Empty;
 
                 public DateTime KeptAt { get; set; }
+
+                /// <summary>
+                /// The user's file was read-only: writing it clears the flag, and the restore sets it again. False in
+                /// manifests written before it was recorded.
+                /// </summary>
+                public bool ReadOnly { get; set; }
             }
         }
 
@@ -73,6 +79,8 @@ namespace Street_Rod_AC.Services.Configuration
             if (!PathNames.IsUnder(_cfgDirectory, full))
                 throw new InvalidOperationException($"{full} is not an AC cfg file: it is not kept or changed");
 
+            // The install's one gate first (see AcInstallGate), then this file's own lock
+            using var gate = AcInstallGate.Hold();
             lock (_lock)
             {
                 var manifest = ReadManifestOrSetAside() ?? new Manifest();
@@ -83,7 +91,10 @@ namespace Street_Rod_AC.Services.Configuration
                 {
                     Path = full,
                     Existed = File.Exists(full),
-                    Kept = $"{manifest.Files.Count}_{Path.GetFileName(full)}",
+                    ReadOnly = File.Exists(full) && File.GetAttributes(full).HasFlag(FileAttributes.ReadOnly),
+                    // Unique, not the entry's index: after a partial restore the list is shorter, and an index could
+                    // name the kept copy of a file still waiting to go back
+                    Kept = $"{Guid.NewGuid():N}_{Path.GetFileName(full)}",
                     KeptAt = DateTime.Now
                 };
 
@@ -103,6 +114,7 @@ namespace Street_Rod_AC.Services.Configuration
         /// </summary>
         public int RestoreAll()
         {
+            using var gate = AcInstallGate.Hold();
             lock (_lock)
             {
                 if (ReadManifestOrSetAside() is not { } manifest) return 0;
@@ -125,7 +137,18 @@ namespace Street_Rod_AC.Services.Configuration
 
                 if (left.Count == 0)
                 {
-                    Directory.Delete(_keep, true);
+                    // Everything is back. The manifest goes first and on its own: a kept copy that cannot be deleted
+                    // (a virus scanner holding it) must not leave a manifest behind that would later write this old
+                    // original over a race.ini the user has edited since
+                    File.Delete(ManifestPath);
+                    try
+                    {
+                        Directory.Delete(_keep, true);
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                    {
+                        _logger.Warning(ex, "Every cfg file is back, but the keep folder {Keep} could not be deleted; it is left for the next restore", _keep);
+                    }
                 }
                 else
                 {
@@ -151,6 +174,7 @@ namespace Street_Rod_AC.Services.Configuration
 
                 if (File.Exists(entry.Path)) File.SetAttributes(entry.Path, File.GetAttributes(entry.Path) & ~FileAttributes.ReadOnly);
                 SafeFile.WriteAllBytes(entry.Path, File.ReadAllBytes(kept));
+                if (entry.ReadOnly) File.SetAttributes(entry.Path, File.GetAttributes(entry.Path) | FileAttributes.ReadOnly);
                 _logger.Information("{File}: the original is back", entry.Path);
             }
             else if (File.Exists(entry.Path))
@@ -179,7 +203,8 @@ namespace Street_Rod_AC.Services.Configuration
                 _logger.Error(ex, "The INI restore manifest {Path} is not readable", ManifestPath);
             }
 
-            if (manifest != null) return manifest;
+            // A manifest without its file list ("Files": null) cannot say what goes where either
+            if (manifest?.Files != null) return manifest;
 
             var aside = $"{_keep}.unreadable-{DateTime.Now:yyyyMMdd-HHmmss}";
             Directory.Move(_keep, aside);

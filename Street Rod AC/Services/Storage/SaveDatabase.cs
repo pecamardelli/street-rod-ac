@@ -9,7 +9,8 @@ namespace Street_Rod_AC.Services.Storage
     /// The one open LiteDB of the save in use. LiteDB's direct mode wants a single long-lived instance per
     /// file: a second open of the same file throws, and every open and close pays a full checkpoint. The game
     /// state and the race sessions of a save both go through here, so they never open the file twice and can
-    /// share a transaction. Opening another save (the Load screen reads them all) closes the one before it.
+    /// share a transaction. Opening another save closes the one before it; the Load screen lists the saves
+    /// through <see cref="Peek{T}"/>, which never switches the open save.
     ///
     /// Every use holds a lock for its whole duration: the UI thread saves while the race pipeline reads on a
     /// worker, and neither may see the instance switched or closed under it.
@@ -83,6 +84,35 @@ namespace Street_Rod_AC.Services.Storage
         public void Use(string saveName, Action<LiteDatabase> work) => Use(saveName, db => { work(db); return true; });
 
         /// <summary>
+        /// Runs a read on a save without making it the open one, so listing the saves never closes the save in
+        /// use. The save in use is read through its open instance; any other save through a short read-only
+        /// instance that is disposed before the lock is released. Read-only opens neither write nor checkpoint:
+        /// a journal left by a crash is read and left where it is. Holding the lock keeps this app from writing
+        /// the file while it is read. Throws when the file does not exist.
+        /// </summary>
+        public T Peek<T>(string saveName, Func<LiteDatabase, T> read)
+        {
+            var path = PathOf(saveName);
+            lock (_gate)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                if (_database != null && IsOpen(saveName))
+                    return read(_database);
+
+                if (!File.Exists(path))
+                    throw new FileNotFoundException($"Save '{saveName}' does not exist", path);
+
+                using var readOnly = new LiteDatabase(new ConnectionString
+                {
+                    Filename = path,
+                    ReadOnly = true,
+                    Connection = ConnectionType.Direct
+                });
+                return read(readOnly);
+            }
+        }
+
+        /// <summary>
         /// Runs <paramref name="work"/> in one LiteDB transaction: all of it is written, or none of it. LiteDB's
         /// transactions belong to the thread, and the lock keeps the whole of it on this one.
         /// </summary>
@@ -100,7 +130,20 @@ namespace Street_Rod_AC.Services.Storage
                 }
                 catch
                 {
-                    db.Rollback();
+                    try
+                    {
+                        db.Rollback();
+                    }
+                    catch (Exception rollbackError)
+                    {
+                        // LiteDB's transactions belong to the thread: one left open here would make every later
+                        // BeginTrans on this thread fail, and no save would succeed for the rest of the session.
+                        // Closing the instance drops it; the next use opens the file again cleanly. The error the
+                        // caller hears about stays the one that made the transaction fail.
+                        _logger.Error(rollbackError, "Rolling back a failed write to save {SaveName} failed too: the database is closed and reopened on next use", saveName);
+                        CloseOpen();
+                    }
+
                     throw;
                 }
             }

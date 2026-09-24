@@ -63,6 +63,13 @@ namespace Street_Rod_AC.Models.Race
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         /// <summary>
+        /// When Assetto Corsa was started for this race; null while it is being prepared, and for a race whose
+        /// launch never got that far. Only a race that ran can be forfeited for bringing back no result: a pending
+        /// race without it (the app died before AC started) is simply released.
+        /// </summary>
+        public DateTime? LaunchedAt { get; set; }
+
+        /// <summary>
         /// Event ID if this is an event race (null for regular races)
         /// </summary>
         public string? EventId { get; set; }

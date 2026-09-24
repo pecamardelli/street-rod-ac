@@ -83,6 +83,12 @@ namespace Street_Rod_AC
         // The crash path runs once, whichever handler gets there first
         private int _fatalPathRan;
 
+        /// <summary>How long the crash and exit paths wait for the UI thread or the install's gate before going without</summary>
+        private static readonly TimeSpan FatalPathWait = TimeSpan.FromSeconds(5);
+
+        // A wait for AC to exit (to put the install back and settle a pending race) is under way
+        private int _waitingForAcExit;
+
         // Recoverable UI exceptions lately: a handler failing over and over (a render callback) is not recoverable
         private readonly Queue<DateTime> _recentUiErrors = new();
         private bool _closeAfterRace;
@@ -178,7 +184,7 @@ namespace Street_Rod_AC
             PurchaseService = new CarPurchaseService(GameStateRepository, CarPartsService, GameTimeService);
 
             // Career services
-            CarFilterService = new CarFilterService();
+            CarFilterService = new CarFilterService(car => MarketService.ValueOf(car));
             MilestoneService = new MilestoneService();
             VictoryConditionService = new VictoryConditionService(
                 getTotalOpponents: gs => gs.Racers.TotalCount,
@@ -220,6 +226,9 @@ namespace Street_Rod_AC
 
             // Pass race result service to launcher
             Launcher = new AssettoCorsaLauncher(IniModificationService, RaceResultIngestionService, CarDataOverlay);
+
+            // A game that outlived its launch (or the app) has closed: its race can be settled now
+            Launcher.AssettoCorsaExited += OnAssettoCorsaExited;
 
             // NavigationService (must be created after all its dependencies)
             NavigationService = new NavigationService(
@@ -281,14 +290,14 @@ namespace Street_Rod_AC
             // A race that ended badly (a crash, the power) may have left cars with changed data and race.ini
             // rewritten. Not while the game still runs, though (the app was restarted during a race): it is reading
             // that data, so it goes back once the game has closed.
-            var acStillRunning = AcProcesses.AnyRunning()
-                && (CarDataOverlay.Applied.Count > 0 || IniModificationService.HasPendingRestore);
+            var acRunning = AcProcesses.AnyRunning();
+            var acStillRunning = acRunning && HasLeftoversToRestore(logger);
             if (acStillRunning)
             {
                 logger.Warning("Assetto Corsa is running: what an earlier race changed in it goes back once it closes");
-                _ = RestoreWhenAcExitsAsync(logger);
+                StartWaitForAcExit(logger);
             }
-            else if (AcProcesses.AnyRunning())
+            else if (acRunning)
             {
                 logger.Information("Assetto Corsa is running, and nothing of an earlier race is waiting to go back");
             }
@@ -371,30 +380,58 @@ namespace Street_Rod_AC
         // ===== THE AC INSTALL: PUT BACK =====
 
         /// <summary>
+        /// Whether an earlier race left anything in the install to put back. A probe that fails (the restore folder
+        /// unreadable) counts as yes: the restore is then deferred until AC has closed, never skipped, and start-up
+        /// goes on.
+        /// </summary>
+        private bool HasLeftoversToRestore(IAppLogger logger)
+        {
+            try
+            {
+                return CarDataOverlay.Applied.Count > 0 || IniModificationService.HasPendingRestore;
+            }
+            catch (Exception ex)
+            {
+                logger.Warning(ex, "Could not look for what an earlier race left changed; it is put back once Assetto Corsa closes");
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Car data, race copies and cfg INI files back as they were before a race. Each part on its own (one that
         /// fails does not stop the other), logged, never throws. Only call it when no AC process runs.
         /// </summary>
-        private void RestoreInstall(IAppLogger logger)
+        private void RestoreInstall(IAppLogger? logger)
         {
             try
             {
                 var restored = CarDataOverlay?.RestoreAll() ?? 0;
-                if (restored > 0) logger.Warning("Data of {Count} car(s) put back from an earlier race", restored);
+                if (restored > 0) logger?.Warning("Data of {Count} car(s) put back from an earlier race", restored);
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "Could not put the cars' data back");
+                logger?.Error(ex, "Could not put the cars' data back");
             }
 
             try
             {
                 var restored = IniModificationService?.RestoreAll() ?? 0;
-                if (restored > 0) logger.Warning("{Count} AC cfg file(s) put back from an earlier race", restored);
+                if (restored > 0) logger?.Warning("{Count} AC cfg file(s) put back from an earlier race", restored);
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "Could not put the AC cfg files back");
+                logger?.Error(ex, "Could not put the AC cfg files back");
             }
+        }
+
+        /// <summary>
+        /// Starts the wait for AC to exit (the install goes back after it, and a pending race is settled on
+        /// <see cref="IAssettoCorsaLauncher.AssettoCorsaExited"/>), unless one is already under way
+        /// </summary>
+        private void StartWaitForAcExit(IAppLogger logger)
+        {
+            if (Interlocked.Exchange(ref _waitingForAcExit, 1) == 1) return;
+            _ = RestoreWhenAcExitsAsync(logger);
         }
 
         /// <summary>The restore of an earlier race, once a game that was still running has closed; logged, never throws</summary>
@@ -408,6 +445,29 @@ namespace Street_Rod_AC
             catch (Exception ex)
             {
                 logger.Error(ex, "Could not put back what an earlier race changed once Assetto Corsa closed");
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _waitingForAcExit, 0);
+            }
+        }
+
+        /// <summary>
+        /// AC has closed after a wait for it (a race that outlived its launch, or one the app was restarted during):
+        /// the loaded game's pending race can be settled now. On the UI thread, which owns the game state.
+        /// </summary>
+        private void OnAssettoCorsaExited(object? sender, EventArgs e)
+        {
+            try
+            {
+                Dispatcher.InvokeAsync(() =>
+                {
+                    if (_currentGameState?.PendingRace != null) _ = ProcessOrphanedResultsAsync();
+                });
+            }
+            catch (Exception ex)
+            {
+                AppLoggerFactory.CreateLogger(LogCategory.RaceIngestion).Warning(ex, "Could not settle the pending race after Assetto Corsa closed");
             }
         }
 
@@ -426,16 +486,37 @@ namespace Street_Rod_AC
             return AcProcesses.AnyRunning();
         }
 
-        /// <summary>Orphaned race results for the game just loaded; logged, never throws</summary>
+        /// <summary>
+        /// Orphaned race results for the game just loaded (or once AC has closed); logged, never throws. What came of
+        /// it is told to the player through the dialog queue, over whatever screen they are on, and a garage that was
+        /// opened before the pass changed the game is opened again on the new state. A pending race whose game is
+        /// still running is settled once it closes.
+        /// </summary>
         private async Task ProcessOrphanedResultsAsync()
         {
             var logger = AppLoggerFactory.CreateLogger(LogCategory.RaceIngestion);
             try
             {
-                logger.Information("Processing orphaned race result files for {SaveName}", _currentGameState?.SaveName);
+                var state = _currentGameState;
+                logger.Information("Processing orphaned race result files for {SaveName}", state?.SaveName);
                 var orphanedResult = await RaceResultIngestionService.ProcessOrphanedResultsAsync();
-                logger.Information("Orphaned results processed: {Processed} files, {Errors} errors",
-                    orphanedResult.FilesProcessed, orphanedResult.Errors.Count);
+                logger.Information("Orphaned results processed: {Processed} files, {Deferred} left for later, forfeit {Forfeit}, {Errors} errors",
+                    orphanedResult.FilesProcessed, orphanedResult.FilesDeferred, orphanedResult.ForfeitApplied, orphanedResult.Errors.Count);
+
+                if (orphanedResult.WaitingForAssettoCorsa)
+                    StartWaitForAcExit(logger);
+
+                // The game may have been switched meanwhile: messages about another save are not shown over it
+                if (state == null || !ReferenceEquals(state, _currentGameState)) return;
+
+                var changed = orphanedResult.FilesProcessed > 0 || orphanedResult.ForfeitApplied;
+                if (changed && NavigationService.CurrentScreen is Screens.Garage.GarageScreenViewModel)
+                    NavigationService.NavigateToGarage(state, skipAnimation: true);
+
+                foreach (var message in orphanedResult.PlayerMessages)
+                {
+                    DialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(DialogService, message.Text, message.Title));
+                }
             }
             catch (Exception ex)
             {
@@ -449,7 +530,9 @@ namespace Street_Rod_AC
         /// </summary>
         private void OnMainWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (_closeAfterRace || Launcher == null || !Launcher.IsExecutionLocked) return;
+            // Only a launch under way asks. A wait for an earlier game to exit is not one: the app just goes, the game
+            // is left running, and the next start puts the install back and settles the race.
+            if (_closeAfterRace || Launcher == null || !Launcher.IsLaunchInProgress) return;
 
             e.Cancel = true;
             DialogService.ShowDialog(new Dialogs.Confirmation.ConfirmationDialogViewModel(
@@ -461,7 +544,7 @@ namespace Street_Rod_AC
                     if (!stop) return;
                     _closeAfterRace = true;
                     _ = StopRaceAndCloseAsync();
-                }));
+                }), jumpQueue: true);
         }
 
         private async Task StopRaceAndCloseAsync()
@@ -474,7 +557,7 @@ namespace Street_Rod_AC
                 // The launcher's finally puts the install back; the app waits for it (it gives up on a game that
                 // will not die after a while, and the next start puts things back then)
                 var waited = TimeSpan.Zero;
-                while (Launcher.IsExecutionLocked && waited < TimeSpan.FromSeconds(30))
+                while (Launcher.IsLaunchInProgress && waited < TimeSpan.FromSeconds(30))
                 {
                     await Task.Delay(250);
                     waited += TimeSpan.FromMilliseconds(250);
@@ -599,15 +682,19 @@ namespace Street_Rod_AC
         /// </summary>
         private void ShutDownCleanly(IAppLogger? logger)
         {
-            // Save current game state if one is loaded
+            // Save current game state if one is loaded. On the UI thread, which owns the state: the crash path can
+            // run on any thread (a pool thread, an FMOD callback) while the UI thread is changing the game. A UI
+            // thread that does not get to it in time (stuck, or it is what crashed) means no save rather than a hang.
             var state = _currentGameState;
             if (state != null && !string.IsNullOrEmpty(state.SaveName) && GameStateRepository != null)
             {
                 try
                 {
                     logger?.Information("Saving game state on exit: {SaveName}", state.SaveName);
-                    GameStateRepository.Save(state, state.SaveName);
-                    logger?.Information("Game state saved successfully");
+                    if (OnUiThread(() => GameStateRepository.Save(state, state.SaveName), logger))
+                        logger?.Information("Game state saved successfully");
+                    else
+                        logger?.Error("The game could not be saved on exit: the UI thread did not answer within {Seconds}s", FatalPathWait.TotalSeconds);
                 }
                 catch (Exception ex)
                 {
@@ -615,21 +702,18 @@ namespace Street_Rod_AC
                 }
             }
 
-            // The install goes back unless the game still runs on it; then the next start does it
+            // The install goes back unless the game still runs on it; then the next start does it. Under the install's
+            // gate, so it never falls in the middle of a launch preparing its changes; a gate that is not free in
+            // time leaves the restore to the next start rather than hang the way out.
             try
             {
                 if (IsAssettoCorsaRunning())
                 {
                     logger?.Warning("Assetto Corsa is still running: what the race changed in it goes back at the next start");
                 }
-                else if (logger != null)
+                else if (!AcInstallGate.TryRun(FatalPathWait, () => RestoreInstall(logger)))
                 {
-                    RestoreInstall(logger);
-                }
-                else
-                {
-                    CarDataOverlay?.RestoreAll();
-                    IniModificationService?.RestoreAll();
+                    logger?.Warning("A launch was changing the install: what it changed goes back at the next start");
                 }
             }
             catch (Exception ex)
@@ -658,6 +742,33 @@ namespace Street_Rod_AC
             }
 
             AppLoggerFactory.Shutdown();
+        }
+
+        /// <summary>
+        /// Runs <paramref name="action"/> on the UI thread: directly when already on it (or when the dispatcher is
+        /// gone), else through the dispatcher with a time limit. False when it did not run in time. Exceptions of
+        /// the action come through.
+        /// </summary>
+        private bool OnUiThread(Action action, IAppLogger? logger)
+        {
+            var dispatcher = Dispatcher;
+            if (dispatcher == null || dispatcher.CheckAccess() || dispatcher.HasShutdownStarted)
+            {
+                action();
+                return true;
+            }
+
+            var ran = false;
+            try
+            {
+                dispatcher.Invoke(() => { action(); ran = true; }, DispatcherPriority.Send, CancellationToken.None, FatalPathWait);
+            }
+            catch (TimeoutException)
+            {
+                logger?.Warning("The UI thread did not answer within {Seconds}s", FatalPathWait.TotalSeconds);
+            }
+
+            return ran;
         }
 
         /// <summary>

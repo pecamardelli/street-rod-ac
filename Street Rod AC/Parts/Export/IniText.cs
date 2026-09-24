@@ -39,12 +39,18 @@ public sealed class IniText
         {
             if (KeyOf(_lines[i]) != key) continue;
 
-            var value = _lines[i][(_lines[i].IndexOf('=') + 1)..];
-            var comment = value.IndexOf(';');
-            return (comment < 0 ? value : value[..comment]).Trim();
+            return ValueOnLine(_lines[i]);
         }
 
         return null;
+    }
+
+    /// <summary>The value of a key line: after the '=', before a comment, trimmed</summary>
+    private static string ValueOnLine(string line)
+    {
+        var value = line[(line.IndexOf('=') + 1)..];
+        var comment = value.IndexOf(';');
+        return (comment < 0 ? value : value[..comment]).Trim();
     }
 
     public double? GetNumber(string section, string key, int occurrence = 0) =>
@@ -52,10 +58,10 @@ public sealed class IniText
 
     public void Set(string section, string key, string value, int occurrence = 0)
     {
-        Changed = true;
         var (start, end) = Find(section, occurrence);
         if (start < 0)
         {
+            Changed = true;
             if (_lines.Count > 0) _lines.Add(string.Empty);
             _lines.Add($"[{section}]");
             _lines.Add($"{key}={value}");
@@ -67,13 +73,19 @@ public sealed class IniText
         {
             if (KeyOf(_lines[i]) != key) continue;
 
+            // The same value (as Get reads it) is no edit: the line, its spacing and its comment stay as they are,
+            // so a file whose values are already right is not written
+            if (ValueOnLine(_lines[i]) == value) return;
+
             // Keep the comment that explains the key
+            Changed = true;
             var comment = _lines[i].IndexOf(';');
             _lines[i] = comment < 0 ? $"{key}={value}" : $"{key}={value}\t\t\t{_lines[i][comment..]}";
             return;
         }
 
         // New keys go right after the last key of the section, before the blank lines that end it
+        Changed = true;
         var insertAt = end;
         while (insertAt > start + 1 && _lines[insertAt - 1].Trim().Length == 0) insertAt--;
         _lines.Insert(insertAt, $"{key}={value}");

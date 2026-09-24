@@ -1,8 +1,5 @@
 namespace Street_Rod_AC.Services.Configuration.Models
 {
-    /// <summary>
-    /// Result of a launch operation
-    /// </summary>
     /// <summary>What came of a race launch, for the screen that tells the player</summary>
     public enum RaceOutcome
     {
@@ -18,10 +15,23 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// <summary>A result was written but could not be used; it is kept in quarantine and nothing was applied</summary>
         Quarantined,
 
-        /// <summary>The launch or the ingestion failed (AC did not start, closed at once, or the result could not be read)</summary>
-        Failed
+        /// <summary>The launch failed (AC did not start or closed at once); nothing was raced and nothing is at stake any more</summary>
+        Failed,
+
+        /// <summary>
+        /// The race ran, but its result could not be settled yet: the file is there but could not be read or moved
+        /// right now, or Assetto Corsa has not closed. Nothing is forfeited; the race stays pending in the save and
+        /// is settled by a later pass (once AC closes, the next time the save loads, or before the next race).
+        /// </summary>
+        ResultPending,
+
+        /// <summary>The player stopped the race before Assetto Corsa started: nothing was raced, nothing is lost</summary>
+        Cancelled
     }
 
+    /// <summary>
+    /// Result of a launch operation
+    /// </summary>
     public class LaunchResult
     {
         /// <summary>

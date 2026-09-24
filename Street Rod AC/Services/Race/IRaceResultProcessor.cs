@@ -32,5 +32,18 @@ namespace Street_Rod_AC.Services.Race
         /// <c>GameState.PendingRace</c> if it is this race, and saves.
         /// </summary>
         void ReleasePendingRace(RaceContext context, GameState gameState);
+
+        /// <summary>
+        /// The race is about to be run: it becomes <c>GameState.PendingRace</c> and the game is saved, so a result
+        /// file that turns up after a crash is known to belong to this save and this race. Throws when the save
+        /// fails (the pending race is set in memory either way).
+        /// </summary>
+        void MarkRacePending(RaceContext context, GameState gameState);
     }
+
+    /// <summary>
+    /// A race was applied in memory but the save that records it failed; the state was put back as it was. The
+    /// result file is not at fault and can be tried again.
+    /// </summary>
+    public sealed class RaceNotSavedException(string message, Exception inner) : InvalidOperationException(message, inner);
 }

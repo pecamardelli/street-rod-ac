@@ -43,8 +43,9 @@ namespace Street_Rod_AC.Services.Race.Validation
                 {
                     jsonContent = await File.ReadAllTextAsync(filePath);
                 }
-                catch (IOException ex)
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
+                    // Locked, or access denied for now (a scanner, a sync client): tried again, never quarantined
                     _logger.Warning("Cannot read file {FilePath}: {Error}", filePath, ex.Message);
                     return ValidationResult.Failure(
                         ValidationFailureReason.FileUnreadable,

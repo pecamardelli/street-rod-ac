@@ -109,6 +109,19 @@ namespace Street_Rod_AC.Services
             PathNames.IsSafeSegment(carId) && File.Exists(Path.Combine(_keepPath, carId, ManifestFile));
 
         /// <summary>
+        /// A new race's preparation starts: whatever is still listed as changed "for this race" is from an earlier one
+        /// whose restore was skipped or failed, and is treated as a leftover from here on (put back before a car is
+        /// read, applied or copied) instead of blocking this race's changes.
+        /// </summary>
+        public void BeginRace()
+        {
+            using var gate = AcInstallGate.Hold();
+            if (_appliedNow.Count > 0)
+                _logger.Warning("{Count} car(s) still listed as changed from an earlier race: they are put back before they are used again", _appliedNow.Count);
+            _appliedNow.Clear();
+        }
+
+        /// <summary>
         /// A car whose data an earlier race left changed (its restore failed, or the app died during the race) is put
         /// back now, so what is read from its folder is the car's own. Nothing happens while AC runs (the game may be
         /// on that data) or when the car is changed for the race being prepared right now. True when it was put
@@ -116,6 +129,7 @@ namespace Street_Rod_AC.Services
         /// </summary>
         public bool RestoreIfLeftover(string carId)
         {
+            using var gate = AcInstallGate.Hold();
             if (!IsApplied(carId) || _appliedNow.Contains(carId)) return false;
             if (AcProcesses.AnyRunning())
             {
@@ -173,6 +187,7 @@ namespace Street_Rod_AC.Services
         /// <param name="sound">The sound to race with; null leaves the car's own</param>
         public bool Apply(string carId, IReadOnlyDictionary<string, string> files, CarSound? sound = null)
         {
+            using var gate = AcInstallGate.Hold();
             sound = Usable(carId, sound);
             if (files.Count == 0 && sound == null) return true;
             if (_appliedNow.Contains(carId))
@@ -331,6 +346,7 @@ namespace Street_Rod_AC.Services
         /// </summary>
         public bool Restore(string carId)
         {
+            using var gate = AcInstallGate.Hold();
             var keep = KeepDirectory(carId);
             var manifestPath = Path.Combine(keep, ManifestFile);
             if (!File.Exists(manifestPath)) return false;
@@ -347,6 +363,10 @@ namespace Street_Rod_AC.Services
 
             if (manifest == null)
                 throw new InvalidDataException($"The manifest of {carId} is empty; its originals are left under {keep}");
+
+            // "Files": null deserializes over the initializer: without the list the manifest cannot say what goes where
+            if (manifest.Files == null)
+                throw new InvalidDataException($"The manifest of {carId} has no file list; its originals are left under {keep}");
 
             var carDirectory = ChangedCarDirectory(carId, manifest);
             var dataDirectory = Path.Combine(carDirectory, AcCarData.DataFolder);
@@ -489,6 +509,7 @@ namespace Street_Rod_AC.Services
         /// </summary>
         public int RestoreAll()
         {
+            using var gate = AcInstallGate.Hold();
             var restored = 0;
             foreach (var carId in Applied)
             {
@@ -516,6 +537,7 @@ namespace Street_Rod_AC.Services
         /// </summary>
         public void CreateClone(string carId, string cloneId, IReadOnlyDictionary<string, string> files, CarSound? sound, string? masterGuidsPath = null)
         {
+            using var gate = AcInstallGate.Hold();
             var source = CarDirectory(carId);
             if (!IsCloneId(cloneId)) throw new ArgumentException($"'{cloneId}' is not a name for a copy (it must end with {AcCarFolder.CloneSuffix})", nameof(cloneId));
             var target = CarDirectory(cloneId);
@@ -592,6 +614,7 @@ namespace Street_Rod_AC.Services
         /// </summary>
         public bool RemoveClone(string cloneId)
         {
+            using var gate = AcInstallGate.Hold();
             if (!IsCloneId(cloneId)) return false;
             var folder = CarDirectory(cloneId);
             if (!Directory.Exists(folder) || !IsOurClone(folder)) return false;
@@ -614,6 +637,7 @@ namespace Street_Rod_AC.Services
         /// <summary>Every copy in the install, whichever race made it</summary>
         public int RemoveClones()
         {
+            using var gate = AcInstallGate.Hold();
             if (!Directory.Exists(_carsPath)) return 0;
 
             var removed = 0;

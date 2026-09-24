@@ -1,3 +1,4 @@
+using LiteDB;
 using Newtonsoft.Json;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Career.Milestones;
@@ -16,8 +17,11 @@ namespace Street_Rod_AC.Services.Race
     ///
     /// Works in three steps: everything that can fail on the file's data (the timestamp, who is who, the
     /// session record) is worked out first without touching the game; then the changes are applied to the
-    /// live game state in one go; then the state and the session record are saved in one transaction. A bad
-    /// file therefore never leaves a half-applied race behind in memory.
+    /// live game state in one go; then the state and the session record are saved in one transaction. The
+    /// parts of the state a race changes (the player, the racers, the career, the pending race) are
+    /// snapshotted before step 2: if anything in step 2 or 3 throws (a career check, the save itself), they
+    /// are put back from the snapshot before the exception goes on, so a race is never left half-applied in
+    /// memory for the next ordinary save to write without its session record.
     /// </summary>
     public class RaceResultProcessor : IRaceResultProcessor
     {
@@ -78,15 +82,113 @@ namespace Street_Rod_AC.Services.Race
 
             // 2. Apply the race to the game, once
             // (wear first: a pink slip may move the car to its new owner)
-            var messages = new List<PlayerMessage>();
-            ApplyCarUpdates(gameState, outcome, context);
-            ApplyRace(gameState, outcome, context, messages);
-
             // 3. The state and the record that the race was applied, together or not at all
-            _gameStateRepository.Save(gameState, saveName, db => _sessionRepository.Save(db, processedSession));
+            var messages = new List<PlayerMessage>();
+            ApplyAndSave(gameState, saveName, processedSession, () =>
+            {
+                ApplyCarUpdates(gameState, outcome, context);
+                ApplyRace(gameState, outcome, context, messages);
+            });
 
             _logger.Information("Race result processed successfully");
             return messages;
+        }
+
+        /// <summary>
+        /// Runs <paramref name="apply"/> on the live state and saves it with the session record. When either
+        /// throws, what a race can change is put back as it was before and the exception goes on; a failed save
+        /// as <see cref="RaceNotSavedException"/>, since the race itself was fine and can be tried again.
+        /// </summary>
+        private void ApplyAndSave(GameState gameState, string saveName, ProcessedRaceSession processedSession, Action apply)
+        {
+            var snapshot = RaceStateSnapshot.Take(gameState);
+            try
+            {
+                apply();
+            }
+            catch (Exception ex)
+            {
+                PutBack(snapshot, gameState, processedSession, ex);
+                throw;
+            }
+
+            try
+            {
+                _gameStateRepository.Save(gameState, saveName, db => _sessionRepository.Save(db, processedSession));
+            }
+            catch (Exception ex)
+            {
+                PutBack(snapshot, gameState, processedSession, ex);
+                throw new RaceNotSavedException($"The race could not be saved: {ex.Message}", ex);
+            }
+        }
+
+        private void PutBack(RaceStateSnapshot snapshot, GameState gameState, ProcessedRaceSession processedSession, Exception cause)
+        {
+            try
+            {
+                snapshot.Restore(gameState);
+                _logger.Warning("Race {ContextId} could not be applied ({Error}): the game is as it was before it", processedSession.RaceContextId, cause.Message);
+            }
+            catch (Exception restoreError)
+            {
+                // Nothing more can be done in memory; the save on disk still holds the state before the race
+                _logger.Critical(restoreError, "Race {ContextId} failed half-way and the state before it could not be put back", processedSession.RaceContextId);
+            }
+        }
+
+        /// <summary>
+        /// The parts of the game state a race changes, as the save would store them. Restoring replaces them with
+        /// fresh objects read back from that copy: the same round trip a save and a load make.
+        /// </summary>
+        private sealed class RaceStateSnapshot
+        {
+            // Its own mapper (the same defaults as the one the saves use), used under a lock: LiteDB builds a type's
+            // mapping on first use and a second thread can see it half-built, which would make a snapshot that
+            // silently drops members. The shared global mapper is also used by the catalog and the saves on
+            // other threads.
+            private static readonly BsonMapper Mapper = new();
+
+            private BsonDocument _player = null!;
+            private BsonDocument _racers = null!;
+            private BsonDocument _career = null!;
+            private RaceContext? _pendingRace;
+            private DateTime _lastPlayed;
+
+            public static RaceStateSnapshot Take(GameState gameState)
+            {
+                lock (Mapper)
+                {
+                    return new RaceStateSnapshot
+                    {
+                        _player = Mapper.ToDocument(gameState.Player),
+                        _racers = Mapper.ToDocument(gameState.Racers),
+                        _career = Mapper.ToDocument(gameState.Career),
+                        _pendingRace = gameState.PendingRace,
+                        _lastPlayed = gameState.LastPlayedDate
+                    };
+                }
+            }
+
+            public void Restore(GameState gameState)
+            {
+                // All three are read back before any is replaced: a restore that fails leaves the state as it is
+                Player player;
+                RacerCollection racers;
+                Models.GameState.CareerState career;
+                lock (Mapper)
+                {
+                    player = Mapper.ToObject<Player>(_player);
+                    racers = Mapper.ToObject<RacerCollection>(_racers);
+                    career = Mapper.ToObject<Models.GameState.CareerState>(_career);
+                }
+
+                gameState.Player = player;
+                gameState.Racers = racers;
+                gameState.Career = career;
+                gameState.PendingRace = _pendingRace;
+                gameState.LastPlayedDate = _lastPlayed;
+            }
         }
 
         public List<PlayerMessage> ApplyForfeit(RaceContext context, GameState gameState)
@@ -114,11 +216,21 @@ namespace Street_Rod_AC.Services.Race
                 WinCondition = outcome.WinCondition.ToString()
             };
 
-            var messages = new List<PlayerMessage> { ForfeitMessage(context) };
-            ApplyRace(gameState, outcome, context, messages);
-
-            _gameStateRepository.Save(gameState, saveName, db => _sessionRepository.Save(db, processedSession));
+            var messages = new List<PlayerMessage>();
+            ApplyAndSave(gameState, saveName, processedSession, () =>
+            {
+                var applied = ApplyRace(gameState, outcome, context, messages);
+                messages.Insert(0, ForfeitMessage(context, applied));
+            });
             return messages;
+        }
+
+        public void MarkRacePending(RaceContext context, GameState gameState)
+        {
+            gameState.PendingRace = context;
+            if (!string.IsNullOrEmpty(gameState.SaveName))
+                _gameStateRepository.Save(gameState, gameState.SaveName);
+            _logger.Information("Race {ContextId} is pending in save {SaveName} until its result is settled", context.ContextId, gameState.SaveName);
         }
 
         public void ReleasePendingRace(RaceContext context, GameState gameState)
@@ -131,16 +243,20 @@ namespace Street_Rod_AC.Services.Race
             _logger.Information("Race {ContextId} brought back no result and had no stakes - no longer pending", context.ContextId);
         }
 
-        /// <summary>Everything a settled race changes except the cars' wear, which needs the race's data</summary>
-        private void ApplyRace(GameState gameState, RaceDecision outcome, RaceContext context, List<PlayerMessage> messages)
+        /// <summary>
+        /// Everything a settled race changes except the cars' wear, which needs the race's data. Returns what of
+        /// the stakes actually changed hands.
+        /// </summary>
+        private StakesMoved ApplyRace(GameState gameState, RaceDecision outcome, RaceContext context, List<PlayerMessage> messages)
         {
             // Apply stat updates
             ApplyStatUpdates(gameState, outcome, context);
 
             // Handle wager/pink slip transfer
+            var moved = new StakesMoved(false, false);
             if (outcome.WinCondition != WinCondition.BothCrashed)
             {
-                ApplyWagerTransfer(gameState, outcome, context);
+                moved = ApplyWagerTransfer(gameState, outcome, context);
             }
 
             // Update reputations based on race outcome
@@ -165,7 +281,12 @@ namespace Street_Rod_AC.Services.Race
             // The race is settled: it is no longer waiting for a result
             if (gameState.PendingRace == null || gameState.PendingRace.ContextId == context.ContextId)
                 gameState.PendingRace = null;
+
+            return moved;
         }
+
+        /// <summary>What of a race's stakes changed hands: the cash wager, the pink slip's car</summary>
+        private readonly record struct StakesMoved(bool Cash, bool Car);
 
         /// <summary>
         /// Determine the race outcome (who won and how)
@@ -408,17 +529,19 @@ namespace Street_Rod_AC.Services.Race
         /// <summary>
         /// Apply wager transfer and pink slip car transfer
         /// </summary>
-        private void ApplyWagerTransfer(GameState gameState, RaceDecision outcome, RaceContext context)
+        private StakesMoved ApplyWagerTransfer(GameState gameState, RaceDecision outcome, RaceContext context)
         {
+            var cashMoved = false;
+            var carMoved = false;
             if (!outcome.IsDecided)
-                return;
+                return new StakesMoved(false, false);
 
             // Find opponent racer
             var opponent = FindRacer(gameState, context.OpponentName);
             if (opponent == null)
             {
                 _logger.Warning("Cannot apply wager transfer: opponent {OpponentName} not found", context.OpponentName);
-                return;
+                return new StakesMoved(false, false);
             }
 
             // Cash wager transfer
@@ -444,6 +567,8 @@ namespace Street_Rod_AC.Services.Race
                     _logger.Information("Player lost ${Wager} to {Opponent}",
                         context.CashWager, context.OpponentName);
                 }
+
+                cashMoved = true;
             }
 
             // Pink slip car transfer
@@ -458,6 +583,7 @@ namespace Street_Rod_AC.Services.Race
                         opponent.Cars.Remove(opponentCar);
                         gameState.Player.Cars.Add(opponentCar);
                         gameState.Player.Stats.CarsOwned++;
+                        carMoved = true;
 
                         _logger.Information("Player won {OpponentName}'s {CarDef} in pink slip race",
                             context.OpponentName, opponentCar.DefinitionId);
@@ -476,6 +602,7 @@ namespace Street_Rod_AC.Services.Race
                     {
                         gameState.Player.Cars.Remove(playerCar);
                         opponent.Cars.Add(playerCar);
+                        carMoved = true;
 
                         // Clear selected car if lost
                         if (gameState.Player.SelectedCarInstanceId == playerCar.InstanceId)
@@ -494,6 +621,8 @@ namespace Street_Rod_AC.Services.Race
                     }
                 }
             }
+
+            return new StakesMoved(cashMoved, carMoved);
         }
 
         /// <summary>
@@ -729,18 +858,25 @@ namespace Street_Rod_AC.Services.Race
             return new PlayerMessage("Event Complete!", message);
         }
 
-        /// <summary>What the player is told when a race with stakes came back without a result</summary>
-        private static PlayerMessage ForfeitMessage(RaceContext context)
+        /// <summary>
+        /// What the player is told when a race with stakes came back without a result: only what actually changed
+        /// hands (an event-only opponent has no purse or garage to take it)
+        /// </summary>
+        private static PlayerMessage ForfeitMessage(RaceContext context, StakesMoved moved)
         {
             var stakes = new List<string>();
-            if (context.CashWager > 0)
+            if (moved.Cash)
                 stakes.Add($"the ${context.CashWager:N0} wager goes to {context.OpponentName}");
-            if (context.IsPinkSlip)
+            if (moved.Car)
                 stakes.Add($"{context.OpponentName} takes your car's pink slip");
+
+            if (stakes.Count == 0)
+                return new PlayerMessage("Race Forfeited",
+                    "The race never came back with a result, and walking away from a race with something on it counts as a loss.");
 
             return new PlayerMessage(
                 "Race Forfeited",
-                "The race never came back with a result, and walking away from a race with money on it counts as a loss:\n\n"
+                "The race never came back with a result, and walking away from a race with something on it counts as a loss:\n\n"
                 + string.Join("\n", stakes.Select(s => $"  {char.ToUpper(s[0])}{s[1..]}.")));
         }
 
