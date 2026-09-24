@@ -160,7 +160,11 @@ namespace Street_Rod_AC.Navigation
             }
         }
 
-        /// <summary>Puts the screen the player came from back after a failed navigation, as far as it will go</summary>
+        /// <summary>
+        /// Puts the screen the player came from back after a failed navigation, as far as it will go. It is
+        /// resumed, never entered again: an Enter can launch AC (the race screen) or spend time and save (the
+        /// newspaper, the diner, the parts pages), and a failed navigation must do neither a second time.
+        /// </summary>
         private void BackTo(IScreen? previous, IScreen failed)
         {
             if (previous == null || ReferenceEquals(CurrentScreen, previous)) return;
@@ -177,7 +181,7 @@ namespace Street_Rod_AC.Navigation
             try
             {
                 CurrentScreen = previous;
-                previous.Enter();
+                previous.Resume();
             }
             catch (Exception ex)
             {

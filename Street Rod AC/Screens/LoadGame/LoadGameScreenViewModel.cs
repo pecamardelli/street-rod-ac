@@ -69,29 +69,18 @@ namespace Street_Rod_AC.Screens.LoadGame
             try
             {
                 SavedGames.Clear();
-                var saves = _repository.ListSaves();
 
-                foreach (var saveName in saves)
+                // Headers only: listing no longer loads every whole game, and never closes the save in use.
+                // A save that cannot be read is logged and left off by the repository.
+                foreach (var header in _repository.ListSaveHeaders())
                 {
-                    try
+                    SavedGames.Add(new SaveGameInfo
                     {
-                        var gameState = _repository.Load(saveName);
-                        if (gameState != null)
-                        {
-                            SavedGames.Add(new SaveGameInfo
-                            {
-                                SaveName = saveName,
-                                PlayerName = gameState.Player.Name,
-                                LastPlayedDate = gameState.LastPlayedDate,
-                                LastPlayedText = FormatLastPlayed(gameState.LastPlayedDate)
-                            });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // A corrupt save is left off the list, with a trace of why in the log
-                        _logger.Warning(ex, "Save {SaveName} could not be read; it is not listed", saveName);
-                    }
+                        SaveName = header.SaveName,
+                        PlayerName = header.PlayerName,
+                        LastPlayedDate = header.LastPlayedDate,
+                        LastPlayedText = FormatLastPlayed(header.LastPlayedDate)
+                    });
                 }
 
                 HasSaves = SavedGames.Count > 0;

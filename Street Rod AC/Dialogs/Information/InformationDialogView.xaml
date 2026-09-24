@@ -20,7 +20,7 @@
                 Padding="20,15">
             <TextBlock Text="{Binding Title}"
                        Foreground="{StaticResource TextPrimaryBrush}"
-                       FontSize="18"
+                       FontSize="{StaticResource FontSizeHeading}"
                        FontWeight="SemiBold"/>
         </Border>
 
@@ -29,7 +29,7 @@
                 Padding="20">
             <TextBlock Text="{Binding Message}"
                        Foreground="{StaticResource TextPrimaryBrush}"
-                       FontSize="14"
+                       FontSize="{StaticResource FontSizeBody}"
                        TextWrapping="Wrap"
                        VerticalAlignment="Center"/>
         </Border>

@@ -31,7 +31,7 @@
             <!-- Header -->
             <TextBlock Grid.Row="0"
                       Text="SELECT YOUR CAR"
-                      FontSize="32"
+                      FontSize="{StaticResource FontSizeScreenTitle}"
                       FontWeight="Bold"
                       Foreground="{StaticResource TextPrimaryBrush}"
                       HorizontalAlignment="Center"
@@ -60,8 +60,8 @@
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="Button">
                                                     <Border x:Name="CardBorder"
-                                                           Background="#2A2A2A"
-                                                           BorderBrush="#404040"
+                                                           Background="{StaticResource BgMediumBrush}"
+                                                           BorderBrush="{StaticResource BorderLightBrush}"
                                                            BorderThickness="2"
                                                            CornerRadius="10"
                                                            Width="800"
@@ -82,7 +82,7 @@
 
                                                             <!-- Preview Image -->
                                                             <Border Grid.Column="0"
-                                                                   Background="#1A1A1A"
+                                                                   Background="{StaticResource BgPanelBrush}"
                                                                    CornerRadius="10,0,0,10"
                                                                    Margin="0"
                                                                    ClipToBounds="True">
@@ -99,9 +99,9 @@
                                                                                HorizontalAlignment="Center"
                                                                                Visibility="{Binding HasPreviewImage, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                                                                         <TextBlock Text="NO PREVIEW"
-                                                                                  FontSize="16"
+                                                                                  FontSize="{StaticResource FontSizeSubheading}"
                                                                                   FontWeight="Bold"
-                                                                                  Foreground="#404040"
+                                                                                  Foreground="{StaticResource BorderLightBrush}"
                                                                                   HorizontalAlignment="Center"/>
                                                                     </StackPanel>
                                                                 </Grid>
@@ -113,39 +113,39 @@
                                                                        Margin="30,20,20,20">
                                                                 <!-- Car Name -->
                                                                 <TextBlock Text="{Binding DisplayName}"
-                                                                          FontSize="24"
+                                                                          FontSize="{StaticResource FontSizeTitleSmall}"
                                                                           FontWeight="Bold"
                                                                           Foreground="{StaticResource TextPrimaryBrush}"
                                                                           Margin="0,0,0,5"/>
 
                                                                 <!-- Year -->
                                                                 <TextBlock Text="{Binding YearDisplay}"
-                                                                          FontSize="18"
+                                                                          FontSize="{StaticResource FontSizeHeading}"
                                                                           Foreground="{StaticResource TextSecondaryBrush}"
                                                                           Margin="0,0,0,20"/>
 
                                                                 <!-- Stats -->
                                                                 <StackPanel Orientation="Vertical">
                                                                     <TextBlock Text="{Binding ConditionDisplay}"
-                                                                              FontSize="14"
+                                                                              FontSize="{StaticResource FontSizeBody}"
                                                                               Foreground="{StaticResource TextPrimaryBrush}"
                                                                               Margin="0,0,0,5"/>
                                                                     <TextBlock Text="{Binding MileageDisplay}"
-                                                                              FontSize="14"
+                                                                              FontSize="{StaticResource FontSizeBody}"
                                                                               Foreground="{StaticResource TextPrimaryBrush}"/>
                                                                 </StackPanel>
 
                                                                 <!-- Selected Indicator -->
-                                                                <Border Background="#90EE90"
+                                                                <Border Background="{StaticResource AccentSuccessBrush}"
                                                                        CornerRadius="3"
                                                                        Padding="10,5"
                                                                        HorizontalAlignment="Left"
                                                                        Margin="0,15,0,0"
                                                                        Visibility="{Binding IsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                                     <TextBlock Text="CURRENTLY SELECTED"
-                                                                              FontSize="12"
+                                                                              FontSize="{StaticResource FontSizeSmall}"
                                                                               FontWeight="Bold"
-                                                                              Foreground="#1A1A1A"/>
+                                                                              Foreground="{StaticResource BgPanelBrush}"/>
                                                                 </Border>
                                                             </StackPanel>
                                                         </Grid>
@@ -153,12 +153,12 @@
 
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="CardBorder" Property="BorderBrush" Value="#606060"/>
-                                                            <Setter TargetName="CardBorder" Property="Background" Value="#333333"/>
+                                                            <Setter TargetName="CardBorder" Property="BorderBrush" Value="{StaticResource TextDisabledBrush}"/>
+                                                            <Setter TargetName="CardBorder" Property="Background" Value="{StaticResource Gray33Brush}"/>
                                                         </Trigger>
                                                         <Trigger Property="IsPressed" Value="True">
-                                                            <Setter TargetName="CardBorder" Property="BorderBrush" Value="#808080"/>
-                                                            <Setter TargetName="CardBorder" Property="Background" Value="#3A3A3A"/>
+                                                            <Setter TargetName="CardBorder" Property="BorderBrush" Value="{StaticResource Gray80Brush}"/>
+                                                            <Setter TargetName="CardBorder" Property="Background" Value="{StaticResource BgLightBrush}"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -175,8 +175,8 @@
 
         <!-- Bottom Nav Bar -->
         <Border Grid.Row="1"
-                Background="#404040"
-                BorderBrush="#303030"
+                Background="{StaticResource BorderLightBrush}"
+                BorderBrush="{StaticResource Gray30Brush}"
                 BorderThickness="0,1,0,0"
                 Height="40">
             <Grid Margin="20,0">
@@ -191,12 +191,12 @@
                            VerticalAlignment="Center">
                     <TextBlock Text="Bankroll:"
                               Foreground="{StaticResource TextPrimaryBrush}"
-                              FontSize="16"
+                              FontSize="{StaticResource FontSizeSubheading}"
                               FontWeight="Bold"
                               Margin="0,0,10,0"/>
                     <TextBlock Text="{Binding BankrollDisplay}"
-                              Foreground="#90EE90"
-                              FontSize="16"
+                              Foreground="{StaticResource AccentSuccessBrush}"
+                              FontSize="{StaticResource FontSizeSubheading}"
                               FontWeight="Bold"/>
                 </StackPanel>
             </Grid>

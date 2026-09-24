@@ -11,5 +11,10 @@ namespace Street_Rod_AC.Navigation
         public virtual void Exit()
         {
         }
+
+        /// <inheritdoc cref="IScreen.Resume"/>
+        public virtual void Resume()
+        {
+        }
     }
 }

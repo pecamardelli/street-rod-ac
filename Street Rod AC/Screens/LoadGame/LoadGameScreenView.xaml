@@ -87,7 +87,7 @@
             <!-- Title -->
             <TextBlock Text="Load Game"
                        Foreground="{StaticResource TextPrimaryBrush}"
-                       FontSize="36"
+                       FontSize="{StaticResource FontSizeDisplaySmall}"
                        FontWeight="Bold"
                        HorizontalAlignment="Center"
                        Margin="0,0,0,30"/>
@@ -104,7 +104,7 @@
                     <!-- No Saves Message -->
                     <TextBlock Text="No saved games found"
                                Foreground="{StaticResource TextSecondaryBrush}"
-                               FontSize="16"
+                               FontSize="{StaticResource FontSizeSubheading}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
                                Visibility="{Binding HasSaves, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
@@ -148,20 +148,20 @@
                                             <!-- Player Name -->
                                             <TextBlock Text="{Binding PlayerName}"
                                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                                      FontSize="20"
+                                                      FontSize="{StaticResource FontSizeHeadingLarge}"
                                                       FontWeight="Bold"
                                                       Margin="0,0,0,5"/>
 
                                             <!-- Save Name -->
                                             <TextBlock Text="{Binding SaveName}"
                                                       Foreground="{StaticResource TextSecondaryBrush}"
-                                                      FontSize="14"
+                                                      FontSize="{StaticResource FontSizeBody}"
                                                       Margin="0,0,0,5"/>
 
                                             <!-- Last Played -->
                                             <TextBlock Text="{Binding LastPlayedText}"
                                                       Foreground="{StaticResource TextSecondaryBrush}"
-                                                      FontSize="12"/>
+                                                      FontSize="{StaticResource FontSizeSmall}"/>
                                         </StackPanel>
 
                                         <!-- Delete Button -->
@@ -170,7 +170,7 @@
                                                Style="{StaticResource DialogSecondaryButtonStyle}"
                                                Width="80"
                                                Height="35"
-                                               FontSize="12"
+                                               FontSize="{StaticResource FontSizeSmall}"
                                                Command="{Binding DataContext.DeleteSaveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                CommandParameter="{Binding}"
                                                VerticalAlignment="Center"
@@ -187,7 +187,7 @@
             <!-- Error Message -->
             <TextBlock Text="{Binding ErrorMessage}"
                        Foreground="{StaticResource AccentPrimaryBrush}"
-                       FontSize="14"
+                       FontSize="{StaticResource FontSizeBody}"
                        TextAlignment="Center"
                        Margin="0,20,0,0"
                        Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"/>

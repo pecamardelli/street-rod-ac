@@ -47,7 +47,12 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
         /// <summary>Whether the row offers a factory engine; answered without ranking the builds</summary>
         public bool HasEngineOptions => _hasEngineCatalog;
 
-        /// <summary>The engine build the car leaves the factory with</summary>
+        /// <summary>
+        /// The engine build the car leaves the factory with. The player can only ever pick one of this row's own
+        /// options: anything else written here comes from the list recycling a row's ComboBox for another car
+        /// (the Selector pushes null, or the previous car's pick, back while its items are swapped) and is
+        /// ignored, so scrolling never blanks an engine or marks a row changed.
+        /// </summary>
         public EngineOptionViewModel? StockEngine
         {
             get
@@ -63,6 +68,13 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
             set
             {
                 if (ReferenceEquals(StockEngine, value)) return;
+
+                if (value == null || !EngineOptions.Contains(value))
+                {
+                    // Tell the ComboBox again what the row really has; the binding re-reads it (WPF 4+)
+                    OnPropertyChanged();
+                    return;
+                }
 
                 _stockEngine = value;
                 IsDirty = true;

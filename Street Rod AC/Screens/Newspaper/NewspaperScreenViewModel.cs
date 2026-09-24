@@ -30,6 +30,10 @@ namespace Street_Rod_AC.Screens.Newspaper
         private readonly RaceSetupBuilder _raceSetup;
         private readonly IAppLogger _logger;
 
+        // True from the moment the player confirms an entry until the race is set up (or not): the paper stays
+        // clickable meanwhile, and a second entry would start a second race
+        private bool _isEntering;
+
         public RelayCommand BackCommand { get; }
         public RelayCommand UsedCarsCommand { get; }
         public RelayCommand UsedPartsCommand { get; }
@@ -73,7 +77,7 @@ namespace Street_Rod_AC.Screens.Newspaper
             BackCommand = new RelayCommand(OnBack);
             UsedCarsCommand = new RelayCommand(OnUsedCars);
             UsedPartsCommand = new RelayCommand(OnUsedParts);
-            EnterEventCommand = new RelayCommand<EventInvitationViewModel>(OnEnterEvent);
+            EnterEventCommand = new RelayCommand<EventInvitationViewModel>(OnEnterEvent, _ => !_isEntering);
 
             // The invitations are loaded in Enter, once: the screen is always entered right after it is made
         }
@@ -157,7 +161,7 @@ namespace Street_Rod_AC.Screens.Newspaper
 
         private void OnEnterEvent(EventInvitationViewModel? eventVm)
         {
-            if (eventVm == null || !eventVm.CanEnter)
+            if (eventVm == null || !eventVm.CanEnter || _isEntering)
                 return;
 
             try
@@ -208,9 +212,11 @@ namespace Street_Rod_AC.Screens.Newspaper
         /// </summary>
         private async void OnEventEntryComplete(Dialogs.EventEntry.EventEntryResult? result)
         {
-            if (result == null)
+            if (result == null || _isEntering)
                 return;
 
+            _isEntering = true;
+            RelayCommand.RaiseCanExecuteChanged();
             try
             {
                 await EnterEventAsync(result);
@@ -219,6 +225,11 @@ namespace Street_Rod_AC.Screens.Newspaper
             {
                 _logger.Error(ex, "Could not set up the race for {Event}", result.EventId);
                 ShowRaceError(ex);
+            }
+            finally
+            {
+                _isEntering = false;
+                RelayCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -274,6 +285,13 @@ namespace Street_Rod_AC.Screens.Newspaper
                 EventInstanceId = result.EventInstanceId,
                 IsEventOnlyOpponent = !opponent.IsPoolOpponent
             });
+
+            // Setting the cars up takes a moment: a player who put the paper down meanwhile has called it off
+            if (!ReferenceEquals(_navigationService.CurrentScreen, this))
+            {
+                _logger.Information("The player left the newspaper while {Event} was set up; no race", result.EventId);
+                return;
+            }
 
             if (setup.Intent == null)
             {

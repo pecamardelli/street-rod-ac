@@ -42,9 +42,8 @@ namespace Street_Rod_AC.Screens.Newspaper
             _ => "Race"
         };
 
-        public string ExpiryColor => IsExpiringSoon ? "#FF6B6B" : "#FFA500";
-
-        public string EligibilityColor => HasEligibleCars ? "#90EE90" : "#FF6B6B";
+        // The expiry and eligibility texts are coloured in the view from IsExpiringSoon and HasEligibleCars
+        // (DataTriggers in NewspaperScreenView.xaml), so the colours stay in Styles/.
 
         public string PinkSlipWarning => IsPinkSlip ? "PINK SLIP - Risk your car!" : string.Empty;
         public bool ShowPinkSlipWarning => IsPinkSlip;

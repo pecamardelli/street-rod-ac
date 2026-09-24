@@ -108,18 +108,20 @@ namespace Street_Rod_AC.Services.Settings
         }
 
         /// <summary>
-        /// Save current settings to file
+        /// Save current settings to file. False when they could not be written (logged here): the settings
+        /// screen tells the player, a remembered preference just tries again next time.
         /// </summary>
-        public void Save()
+        public bool Save()
         {
-            Save(_currentSettings);
+            return Save(_currentSettings);
         }
 
         /// <summary>
         /// Save settings to file: a temp file flushed to disk and renamed over the old one, so a crash mid-save
-        /// leaves the old settings, never a truncated file that loads as defaults
+        /// leaves the old settings, never a truncated file that loads as defaults. False when the file could not
+        /// be written; the settings in use only change when it was.
         /// </summary>
-        public void Save(GameSettings settings)
+        public bool Save(GameSettings settings)
         {
             try
             {
@@ -127,21 +129,25 @@ namespace Street_Rod_AC.Services.Settings
                 SafeFile.WriteAllText(_settingsPath, json);
                 _currentSettings = settings;
                 _logger.Information("Settings saved to {Path}", _settingsPath);
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, "Failed to save settings to {Path}", _settingsPath);
+                return false;
             }
         }
 
         /// <summary>
-        /// Reset settings to defaults
+        /// Reset settings to defaults. False when the defaults could not be written; the settings in use stay
+        /// as they were then, so what the screen shows is what is on disk.
         /// </summary>
-        public void ResetToDefaults()
+        public bool ResetToDefaults()
         {
-            _currentSettings = new GameSettings();
-            Save();
+            if (!Save(new GameSettings())) return false;
+
             _logger.Information("Settings reset to defaults");
+            return true;
         }
     }
 }

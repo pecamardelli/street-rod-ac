@@ -162,6 +162,13 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
 
                 _logger.Information("Found {Count} active car definitions", snapshot.Cars.Count);
 
+                // A second load (the screen entered again) starts from an empty list, not on top of the first
+                foreach (var item in _catalogItems) item.PropertyChanged -= OnItemPropertyChanged;
+                _catalogItems.Clear();
+                BrandOptions.Clear();
+                BrandOptions.Add("All Brands");
+                SelectedBrand = "All Brands";
+
                 foreach (var brand in snapshot.Cars.Select(c => c.Brand).Distinct().OrderBy(b => b))
                 {
                     BrandOptions.Add(brand);
@@ -404,6 +411,20 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
             }
 
             _logger.Information("Exited car catalog editor screen");
+        }
+
+        /// <summary>Back after a navigation away failed: the rows are still here, only their change tracking was let go</summary>
+        public override void Resume()
+        {
+            base.Resume();
+
+            foreach (var item in _catalogItems)
+            {
+                item.PropertyChanged -= OnItemPropertyChanged;
+                item.PropertyChanged += OnItemPropertyChanged;
+            }
+
+            OnPropertyChanged(nameof(HasDirtyItems));
         }
     }
 }

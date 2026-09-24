@@ -153,7 +153,7 @@ namespace Street_Rod_AC.Screens.NewGame
             _logger.Error(ex, "Could not create save {SaveName}", saveName);
             _dialogService.ShowDialog(new InformationDialogViewModel(
                 _dialogService,
-                $"The new game could not be saved:\n\n{ex.Message}",
+                $"The new game could not be set up:\n\n{ex.Message}",
                 "New Game Failed"));
         }
 

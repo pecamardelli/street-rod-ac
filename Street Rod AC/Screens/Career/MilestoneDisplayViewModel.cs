@@ -28,13 +28,8 @@ namespace Street_Rod_AC.Screens.Career
             : $"{Name}\n{Description}\n\nProgress: {CurrentValue}/{TargetValue}";
 
         // Visual properties
+        // The colours are the view's: it paints a completed badge from IsCompleted
         public string StatusIcon => IsCompleted ? "✓" : "○";
-
-        public string StatusColor => IsCompleted ? "#90EE90" : "#FFFFFF";
-
-        public string BackgroundColor => IsCompleted ? "#2A3A2A" : "#2A2A2A";
-
-        public string BorderColor => IsCompleted ? "#00AA00" : "#404040";
 
         public double Opacity => IsCompleted ? 1.0 : 0.8;
 

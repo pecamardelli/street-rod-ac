@@ -97,6 +97,7 @@ namespace Street_Rod_AC.Screens.Settings
         private void OnSave()
         {
             var folder = AssettoCorsaFolder.Trim();
+            var savedPath = Settings.AssettoCorsaPath;
 
             try
             {
@@ -106,49 +107,72 @@ namespace Street_Rod_AC.Screens.Settings
                     ? null
                     : folder;
 
-                _settingsService.Save();
+                // The service logs why; a false here means nothing reached the disk
+                if (!_settingsService.Save())
+                {
+                    // Not on disk, so not in use either: a later save of something else must not carry it along
+                    Settings.AssettoCorsaPath = savedPath;
+                    ShowNotSaved("The settings could not be saved. The details are in the log.");
+                    return;
+                }
+
                 _logger.Information("Settings saved");
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, "Could not save the settings");
-                _dialogService.ShowDialog(new InformationDialogViewModel(
-                    _dialogService,
-                    $"The settings could not be saved:\n\n{ex.Message}",
-                    "Settings Not Saved"));
+                Settings.AssettoCorsaPath = savedPath;
+                ShowNotSaved($"The settings could not be saved:\n\n{ex.Message}");
                 return;
             }
 
-            // The running game keeps the folder it started with
             AssettoCorsaFolder = SavedAssettoCorsaFolder;
-            if (!string.Equals(AssettoCorsaFolder, AppSettings.Instance.AssettoCorsaPath, StringComparison.OrdinalIgnoreCase))
-            {
-                _dialogService.ShowDialog(new InformationDialogViewModel(
-                    _dialogService,
-                    $"The game will use the Assetto Corsa folder\n{AssettoCorsaFolder}\nthe next time it starts. Restart the game for the change to take effect.",
-                    "Restart Needed"));
-            }
+            ShowRestartNoticeIfFolderChanged();
+        }
+
+        /// <summary>
+        /// The running game keeps the folder it started with: once a saved folder differs from it, the player
+        /// hears that it takes a restart
+        /// </summary>
+        private void ShowRestartNoticeIfFolderChanged()
+        {
+            if (string.Equals(AssettoCorsaFolder, AppSettings.Instance.AssettoCorsaPath, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            _dialogService.ShowDialog(new InformationDialogViewModel(
+                _dialogService,
+                $"The game will use the Assetto Corsa folder\n{AssettoCorsaFolder}\nthe next time it starts. Restart the game for the change to take effect.",
+                "Restart Needed"));
+        }
+
+        private void ShowNotSaved(string message)
+        {
+            _dialogService.ShowDialog(new InformationDialogViewModel(_dialogService, message, "Settings Not Saved"));
         }
 
         private void OnReset()
         {
             try
             {
-                _settingsService.ResetToDefaults();
+                if (!_settingsService.ResetToDefaults())
+                {
+                    ShowNotSaved("The settings could not be reset. The details are in the log.");
+                    return;
+                }
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, "Could not reset the settings");
-                _dialogService.ShowDialog(new InformationDialogViewModel(
-                    _dialogService,
-                    $"The settings could not be reset:\n\n{ex.Message}",
-                    "Settings Not Saved"));
+                ShowNotSaved($"The settings could not be reset:\n\n{ex.Message}");
                 return;
             }
 
             OnPropertyChanged(nameof(Settings));
             AssettoCorsaFolder = SavedAssettoCorsaFolder;
             _logger.Information("Settings reset to defaults");
+
+            // The defaults name the default folder: a player whose install is elsewhere needs to know
+            ShowRestartNoticeIfFolderChanged();
         }
 
         private void OnOpenCatalogEditor()

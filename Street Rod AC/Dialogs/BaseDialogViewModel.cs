@@ -11,5 +11,8 @@ namespace Street_Rod_AC.Dialogs
         public virtual void OnClosed()
         {
         }
+
+        /// <inheritdoc cref="IDialog.DuplicateKey"/>
+        public virtual string? DuplicateKey => null;
     }
 }

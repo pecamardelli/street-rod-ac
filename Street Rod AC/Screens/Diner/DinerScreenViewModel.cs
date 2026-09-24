@@ -274,6 +274,9 @@ namespace Street_Rod_AC.Screens.Diner
 
         private void LoadOpponents()
         {
+            // A new day can bring other racers to the tables: whoever was picked before stays picked only if
+            // they are still here, so the player can never challenge someone who has left
+            var previous = SelectedOpponent?.Opponent;
             Opponents.Clear();
 
             // Get opponents from the ReadyToRace collection
@@ -282,13 +285,9 @@ namespace Street_Rod_AC.Screens.Diner
                 .ToList();
 
             if (readyOpponents.Count == 0)
-            {
                 _logger.Information("No opponents available at diner");
-                OnPropertyChanged(nameof(BankrollDisplay));
-                return;
-            }
-
-            _logger.Information("Loading {Count} opponents", readyOpponents.Count);
+            else
+                _logger.Information("Loading {Count} opponents", readyOpponents.Count);
 
             foreach (var opponent in readyOpponents)
             {
@@ -342,11 +341,19 @@ namespace Street_Rod_AC.Screens.Diner
             // Notify UI about opponents availability
             OnPropertyChanged(nameof(HasOpponents));
 
-            // Auto-select first opponent if available
-            if (Opponents.Count > 0)
+            // Keep the one picked before if they are still here, else the first; with nobody here, nobody
+            var keep = Opponents.FirstOrDefault(o => ReferenceEquals(o.Opponent, previous));
+            if (keep != null || Opponents.Count > 0)
             {
-                OnSelectOpponent(Opponents[0]);
+                OnSelectOpponent(keep ?? Opponents[0]);
             }
+            else
+            {
+                SelectedOpponent = null;
+                OpponentMessage = "";
+                UpdateWagerLimits();
+            }
+            RelayCommand.RaiseCanExecuteChanged();
 
             // Update bankroll display
             OnPropertyChanged(nameof(BankrollDisplay));
@@ -664,6 +671,13 @@ namespace Street_Rod_AC.Screens.Diner
                 IsPinkSlip = isPinkSlip
             });
 
+            // Setting the cars up takes a moment: a player who walked out meanwhile has called it off
+            if (!ReferenceEquals(_navigationService.CurrentScreen, this))
+            {
+                _logger.Information("The player left the diner while the challenge was set up; no race");
+                return;
+            }
+
             if (setup.Intent == null)
             {
                 _dialogService.ShowDialog(new InformationDialogViewModel(
@@ -689,14 +703,23 @@ namespace Street_Rod_AC.Screens.Diner
             base.Enter();
             _logger.Information("Entered diner screen");
 
+            // Each on its own: a track folder that can't be read still leaves the racers at their tables
             try
             {
                 LoadTracks();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not list the tracks at the diner");
+            }
+
+            try
+            {
                 LoadOpponents();
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Could not set up the diner");
+                _logger.Error(ex, "Could not list the racers at the diner");
             }
 
             try

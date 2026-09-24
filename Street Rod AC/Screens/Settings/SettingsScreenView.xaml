@@ -86,7 +86,7 @@
 
             <!-- Settings Title -->
             <TextBlock Text="SETTINGS"
-                       FontSize="48"
+                       FontSize="{StaticResource FontSizeDisplay}"
                        FontWeight="Bold"
                        Foreground="{StaticResource TextPrimaryBrush}"
                        HorizontalAlignment="Center"
@@ -144,7 +144,7 @@
                     Style="{StaticResource DialogPrimaryButtonStyle}"
                     Width="200"
                     Height="45"
-                    FontSize="16"
+                    FontSize="{StaticResource FontSizeSubheading}"
                     HorizontalAlignment="Center"/>
         </StackPanel>
     </Grid>

@@ -9,7 +9,7 @@
     <UserControl.Resources>
         <Style x:Key="TabButtonStyle" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBodyLarge}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Margin" Value="0,0,8,0"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -17,8 +17,8 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
                         <Border x:Name="border"
-                                Background="#CC1A1A1A"
-                                BorderBrush="#404040"
+                                Background="{StaticResource BgPanelCCBrush}"
+                                BorderBrush="{StaticResource BorderLightBrush}"
                                 BorderThickness="1"
                                 CornerRadius="4"
                                 Padding="18,8">
@@ -26,7 +26,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="BorderBrush" Value="#808080"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Gray80Brush}"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{StaticResource AccentPrimaryBrush}"/>
@@ -68,13 +68,13 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0"
-                    Background="#CC1A1A1A"
+                    Background="{StaticResource BgPanelCCBrush}"
                     CornerRadius="5"
                     Padding="28,4"
                     HorizontalAlignment="Center"
                     Margin="0,0,0,14">
                 <TextBlock Text="PARTS"
-                           FontSize="32"
+                           FontSize="{StaticResource FontSizeScreenTitle}"
                            FontWeight="Bold"
                            Foreground="{StaticResource TextPrimaryBrush}"/>
             </Border>
@@ -100,15 +100,15 @@
 
             <!-- Filters -->
             <Border Grid.Row="2"
-                    Background="#CC1A1A1A"
-                    BorderBrush="#404040"
+                    Background="{StaticResource BgPanelCCBrush}"
+                    BorderBrush="{StaticResource BorderLightBrush}"
                     BorderThickness="1"
                     CornerRadius="5"
                     Padding="14,8"
                     Margin="0,0,0,8">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Kind:"
-                               FontSize="14"
+                               FontSize="{StaticResource FontSizeBody}"
                                Foreground="{StaticResource TextSecondaryBrush}"
                                VerticalAlignment="Center"
                                Margin="0,0,8,0"/>
@@ -116,18 +116,18 @@
                               SelectedItem="{Binding SelectedGroup}"
                               Width="220"
                               Height="28"
-                              FontSize="13"
+                              FontSize="{StaticResource FontSizeCompact}"
                               VerticalContentAlignment="Center"/>
 
                     <TextBlock Text="Name:"
-                               FontSize="14"
+                               FontSize="{StaticResource FontSizeBody}"
                                Foreground="{StaticResource TextSecondaryBrush}"
                                VerticalAlignment="Center"
                                Margin="20,0,8,0"/>
                     <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=250}"
                              Width="200"
                              Height="28"
-                             FontSize="13"
+                             FontSize="{StaticResource FontSizeCompact}"
                              Padding="5,3"
                              VerticalContentAlignment="Center"/>
 
@@ -135,7 +135,7 @@
                               IsChecked="{Binding OnlyFitting}"
                               Visibility="{Binding CanFilterByFit, Converter={StaticResource BooleanToVisibilityConverter}}"
                               Foreground="{StaticResource TextPrimaryBrush}"
-                              FontSize="14"
+                              FontSize="{StaticResource FontSizeBody}"
                               VerticalAlignment="Center"
                               VerticalContentAlignment="Center"
                               Margin="20,0,0,0"/>
@@ -144,8 +144,8 @@
 
             <!-- Offers -->
             <Border Grid.Row="3"
-                    Background="#E0141414"
-                    BorderBrush="#404040"
+                    Background="{StaticResource Glass14E0Brush}"
+                    BorderBrush="{StaticResource BorderLightBrush}"
                     BorderThickness="1"
                     CornerRadius="5">
                 <ListBox ItemsSource="{Binding Offers}"
@@ -163,14 +163,14 @@
                                     <ControlTemplate TargetType="ListBoxItem">
                                         <Border x:Name="row"
                                                 Background="Transparent"
-                                                BorderBrush="#303030"
+                                                BorderBrush="{StaticResource Gray30Brush}"
                                                 BorderThickness="0,0,0,1"
                                                 Padding="14,7">
                                             <ContentPresenter/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="row" Property="Background" Value="#20FFFFFF"/>
+                                                <Setter TargetName="row" Property="Background" Value="{StaticResource White20Brush}"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -190,10 +190,10 @@
 
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="{Binding Name}"
-                                               FontSize="15"
+                                               FontSize="{StaticResource FontSizeBodyLarge}"
                                                Foreground="{StaticResource TextPrimaryBrush}"
                                                TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock FontSize="12" Foreground="{StaticResource TextSecondaryBrush}">
+                                    <TextBlock FontSize="{StaticResource FontSizeSmall}" Foreground="{StaticResource TextSecondaryBrush}">
                                         <Run Text="{Binding Group, Mode=OneWay}"/>
                                         <Run Text="  ·  "/>
                                         <Run Text="{Binding Detail, Mode=OneWay}"/>
@@ -201,22 +201,22 @@
                                 </StackPanel>
 
                                 <Border Grid.Column="1"
-                                        Background="#3059FF73"
-                                        BorderBrush="#59FF73"
+                                        Background="{StaticResource Fit30Brush}"
+                                        BorderBrush="{StaticResource FitBrush}"
                                         BorderThickness="1"
                                         CornerRadius="3"
                                         Padding="8,2"
                                         VerticalAlignment="Center"
                                         Margin="10,0"
                                         Visibility="{Binding Fits, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <TextBlock Text="fits your car" FontSize="11" Foreground="#59FF73"/>
+                                    <TextBlock Text="fits your car" FontSize="{StaticResource FontSizeCaption}" Foreground="{StaticResource FitBrush}"/>
                                 </Border>
 
                                 <TextBlock Grid.Column="2"
                                            Text="{Binding PriceDisplay}"
-                                           FontSize="15"
+                                           FontSize="{StaticResource FontSizeBodyLarge}"
                                            FontWeight="Bold"
-                                           Foreground="#90EE90"
+                                           Foreground="{StaticResource AccentSuccessBrush}"
                                            HorizontalAlignment="Right"
                                            VerticalAlignment="Center"/>
 
@@ -227,7 +227,7 @@
                                         IsEnabled="{Binding CanAfford}"
                                         Style="{StaticResource DialogPrimaryButtonStyle}"
                                         Padding="16,4"
-                                        FontSize="13"
+                                        FontSize="{StaticResource FontSizeCompact}"
                                         MinWidth="70"
                                         VerticalAlignment="Center"
                                         Margin="14,0,0,0"/>
@@ -239,7 +239,7 @@
 
             <TextBlock Grid.Row="4"
                        Text="{Binding StatusText}"
-                       FontSize="13"
+                       FontSize="{StaticResource FontSizeCompact}"
                        Foreground="{StaticResource TextPrimaryBrush}"
                        HorizontalAlignment="Center"
                        Margin="0,8,0,0">

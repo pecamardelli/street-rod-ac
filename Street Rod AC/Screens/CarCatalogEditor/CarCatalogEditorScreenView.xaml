@@ -29,7 +29,7 @@
                     VerticalAlignment="Top"
                     Margin="0,30,0,20">
             <TextBlock Text="CAR CATALOG EDITOR"
-                       FontSize="32"
+                       FontSize="{StaticResource FontSizeScreenTitle}"
                        FontWeight="Bold"
                        Foreground="{StaticResource TextPrimaryBrush}"
                        HorizontalAlignment="Center"
@@ -49,14 +49,14 @@
                         Orientation="Horizontal"
                         HorizontalAlignment="Left">
                 <TextBlock Text="Search:"
-                           FontSize="14"
+                           FontSize="{StaticResource FontSizeBody}"
                            Foreground="{StaticResource TextPrimaryBrush}"
                            VerticalAlignment="Center"
                            Margin="0,0,10,0"/>
                 <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                          Width="250"
                          Height="30"
-                         FontSize="14"
+                         FontSize="{StaticResource FontSizeBody}"
                          Padding="5,3"
                          VerticalContentAlignment="Center"/>
             </StackPanel>
@@ -66,7 +66,7 @@
                         Orientation="Horizontal"
                         HorizontalAlignment="Right">
                 <TextBlock Text="Brand:"
-                           FontSize="14"
+                           FontSize="{StaticResource FontSizeBody}"
                            Foreground="{StaticResource TextPrimaryBrush}"
                            VerticalAlignment="Center"
                            Margin="0,0,10,0"/>
@@ -74,7 +74,7 @@
                           SelectedItem="{Binding SelectedBrand}"
                           Width="200"
                           Height="30"
-                          FontSize="14"/>
+                          FontSize="{StaticResource FontSizeBody}"/>
             </StackPanel>
         </Grid>
 
@@ -105,17 +105,17 @@
                 </ListBox.ItemContainerStyle>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Border Background="#2A2A2A"
+                        <Border Background="{StaticResource BgMediumBrush}"
                                 BorderThickness="2"
                                 CornerRadius="5"
                                 Margin="0,5"
                                 Padding="15">
                             <Border.Style>
                                 <Style TargetType="Border">
-                                    <Setter Property="BorderBrush" Value="#404040"/>
+                                    <Setter Property="BorderBrush" Value="{StaticResource BorderLightBrush}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsDirty}" Value="True">
-                                            <Setter Property="BorderBrush" Value="#FFD700"/>
+                                            <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -139,7 +139,7 @@
                                             Margin="0,10,0,0"
                                             Visibility="{Binding HasEngineOptions, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <TextBlock Text="Factory engine:"
-                                               FontSize="14"
+                                               FontSize="{StaticResource FontSizeBody}"
                                                Foreground="{StaticResource TextSecondaryBrush}"
                                                VerticalAlignment="Center"
                                                Margin="0,0,10,0"/>
@@ -148,7 +148,7 @@
                                               DisplayMemberPath="Label"
                                               Width="460"
                                               Height="28"
-                                              FontSize="13"
+                                              FontSize="{StaticResource FontSizeCompact}"
                                               VerticalContentAlignment="Center"/>
                                 </StackPanel>
 
@@ -156,16 +156,16 @@
                                 <StackPanel Grid.Column="0"
                                             VerticalAlignment="Center">
                                     <TextBlock Text="{Binding DisplayName}"
-                                               FontSize="16"
+                                               FontSize="{StaticResource FontSizeSubheading}"
                                                FontWeight="Bold"
                                                Foreground="{StaticResource TextPrimaryBrush}"/>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="{Binding YearDisplay}"
-                                                   FontSize="12"
+                                                   FontSize="{StaticResource FontSizeSmall}"
                                                    Foreground="{StaticResource TextSecondaryBrush}"
                                                    Margin="0,0,15,0"/>
                                         <TextBlock Text="{Binding BrandDisplay}"
-                                                   FontSize="12"
+                                                   FontSize="{StaticResource FontSizeSmall}"
                                                    Foreground="{StaticResource TextSecondaryBrush}"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -176,14 +176,14 @@
                                             VerticalAlignment="Center"
                                             Margin="20,0">
                                     <TextBlock Text="Base Price: $"
-                                               FontSize="14"
+                                               FontSize="{StaticResource FontSizeBody}"
                                                Foreground="{StaticResource TextSecondaryBrush}"
                                                VerticalAlignment="Center"
                                                Margin="0,0,5,0"/>
                                     <TextBox Text="{Binding BasePrice, StringFormat=N0, UpdateSourceTrigger=PropertyChanged}"
                                              Width="100"
                                              Height="28"
-                                             FontSize="14"
+                                             FontSize="{StaticResource FontSizeBody}"
                                              Padding="5,3"
                                              VerticalContentAlignment="Center"
                                              HorizontalContentAlignment="Right"/>
@@ -195,7 +195,7 @@
                                             VerticalAlignment="Center"
                                             Margin="20,0">
                                     <TextBlock Text="Spawn Rate:"
-                                               FontSize="14"
+                                               FontSize="{StaticResource FontSizeBody}"
                                                Foreground="{StaticResource TextSecondaryBrush}"
                                                VerticalAlignment="Center"
                                                Margin="0,0,10,0"/>
@@ -205,7 +205,7 @@
                                             Width="100"
                                             VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding DealerPrecedencePercent, StringFormat={}{0}%}"
-                                               FontSize="14"
+                                               FontSize="{StaticResource FontSizeBody}"
                                                Foreground="{StaticResource TextPrimaryBrush}"
                                                VerticalAlignment="Center"
                                                Width="40"
@@ -219,14 +219,14 @@
                                         CommandParameter="{Binding}"
                                         Width="60"
                                         Height="28"
-                                        FontSize="12"
+                                        FontSize="{StaticResource FontSizeSmall}"
                                         Margin="10,0,0,0"
                                         VerticalAlignment="Center">
                                     <Button.Style>
                                         <Style TargetType="Button">
-                                            <Setter Property="Background" Value="#505050"/>
+                                            <Setter Property="Background" Value="{StaticResource Gray50Brush}"/>
                                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-                                            <Setter Property="BorderBrush" Value="#606060"/>
+                                            <Setter Property="BorderBrush" Value="{StaticResource TextDisabledBrush}"/>
                                             <Setter Property="BorderThickness" Value="1"/>
                                             <Setter Property="Cursor" Value="Hand"/>
                                             <Setter Property="Template">
@@ -244,10 +244,10 @@
                                             </Setter>
                                             <Style.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#606060"/>
+                                                    <Setter Property="Background" Value="{StaticResource TextDisabledBrush}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsPressed" Value="True">
-                                                    <Setter Property="Background" Value="#707070"/>
+                                                    <Setter Property="Background" Value="{StaticResource Gray70Brush}"/>
                                                 </Trigger>
                                             </Style.Triggers>
                                         </Style>
@@ -262,7 +262,7 @@
         <!-- The catalog is read off the UI thread -->
         <TextBlock Grid.Row="2"
                    Text="Loading the catalog..."
-                   FontSize="16"
+                   FontSize="{StaticResource FontSizeSubheading}"
                    Foreground="{StaticResource TextSecondaryBrush}"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
@@ -270,8 +270,8 @@
 
         <!-- Bottom Bar -->
         <Border Grid.Row="3"
-                Background="#1A1A1A"
-                BorderBrush="#333333"
+                Background="{StaticResource BgPanelBrush}"
+                BorderBrush="{StaticResource Gray33Brush}"
                 BorderThickness="0,1,0,0"
                 Padding="20,15">
             <Grid>
@@ -284,8 +284,8 @@
                 <!-- Dirty indicator -->
                 <TextBlock Grid.Column="0"
                            Text="* Unsaved changes"
-                           FontSize="14"
-                           Foreground="#FFD700"
+                           FontSize="{StaticResource FontSizeBody}"
+                           Foreground="{StaticResource GoldBrush}"
                            VerticalAlignment="Center"
                            Visibility="{Binding HasDirtyItems, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
@@ -295,13 +295,13 @@
                         Command="{Binding ResetAllCommand}"
                         Width="150"
                         Height="35"
-                        FontSize="14"
+                        FontSize="{StaticResource FontSizeBody}"
                         Margin="0,0,15,0">
                     <Button.Style>
                         <Style TargetType="Button">
-                            <Setter Property="Background" Value="#505050"/>
+                            <Setter Property="Background" Value="{StaticResource Gray50Brush}"/>
                             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-                            <Setter Property="BorderBrush" Value="#606060"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource TextDisabledBrush}"/>
                             <Setter Property="BorderThickness" Value="1"/>
                             <Setter Property="Cursor" Value="Hand"/>
                             <Setter Property="Template">
@@ -319,10 +319,10 @@
                             </Setter>
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#606060"/>
+                                    <Setter Property="Background" Value="{StaticResource TextDisabledBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
-                                    <Setter Property="Background" Value="#707070"/>
+                                    <Setter Property="Background" Value="{StaticResource Gray70Brush}"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -335,7 +335,7 @@
                         Command="{Binding SaveCommand}"
                         Width="120"
                         Height="35"
-                        FontSize="14"
+                        FontSize="{StaticResource FontSizeBody}"
                         FontWeight="Bold"
                         Background="{StaticResource AccentPrimaryBrush}"
                         Foreground="{StaticResource TextPrimaryBrush}"

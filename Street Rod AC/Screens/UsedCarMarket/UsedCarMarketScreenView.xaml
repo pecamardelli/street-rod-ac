@@ -30,7 +30,7 @@
                     VerticalAlignment="Top"
                     Margin="0,30,0,20">
             <TextBlock Text="USED CAR MARKET"
-                      FontSize="32"
+                      FontSize="{StaticResource FontSizeScreenTitle}"
                       FontWeight="Bold"
                       Foreground="{StaticResource TextPrimaryBrush}"
                       HorizontalAlignment="Center"
@@ -40,7 +40,7 @@
             <StackPanel Orientation="Horizontal"
                        HorizontalAlignment="Center">
                 <TextBlock Text="Dealer:"
-                          FontSize="16"
+                          FontSize="{StaticResource FontSizeSubheading}"
                           Foreground="{StaticResource TextPrimaryBrush}"
                           VerticalAlignment="Center"
                           Margin="0,0,10,0"/>
@@ -48,14 +48,14 @@
                          SelectedItem="{Binding SelectedDealer}"
                          Width="200"
                          Height="30"
-                         FontSize="14"/>
+                         FontSize="{StaticResource FontSizeBody}"/>
             </StackPanel>
         </StackPanel>
 
         <!-- The first market of a game takes a few seconds to put together -->
         <TextBlock Grid.Row="1"
                    Text="The dealers are putting their cars out..."
-                   FontSize="18"
+                   FontSize="{StaticResource FontSizeHeading}"
                    Foreground="{StaticResource TextSecondaryBrush}"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
@@ -76,8 +76,8 @@
 
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Background="#2A2A2A"
-                               BorderBrush="#404040"
+                        <Border Background="{StaticResource BgMediumBrush}"
+                               BorderBrush="{StaticResource BorderLightBrush}"
                                BorderThickness="2"
                                CornerRadius="5"
                                Margin="10"
@@ -102,7 +102,7 @@
                                 <!-- Car Name -->
                                 <TextBlock Grid.Row="0"
                                           Text="{Binding DisplayName}"
-                                          FontSize="20"
+                                          FontSize="{StaticResource FontSizeHeadingLarge}"
                                           FontWeight="Bold"
                                           Foreground="{StaticResource TextPrimaryBrush}"
                                           TextWrapping="Wrap"
@@ -113,11 +113,11 @@
                                           Orientation="Horizontal"
                                           Margin="0,0,0,10">
                                     <TextBlock Text="{Binding YearDisplay}"
-                                              FontSize="14"
+                                              FontSize="{StaticResource FontSizeBody}"
                                               Foreground="{StaticResource TextSecondaryBrush}"
                                               Margin="0,0,15,0"/>
                                     <TextBlock Text="{Binding DealerName}"
-                                              FontSize="14"
+                                              FontSize="{StaticResource FontSizeBody}"
                                               Foreground="{StaticResource TextSecondaryBrush}"/>
                                 </StackPanel>
 
@@ -128,35 +128,35 @@
                                     <StackPanel Orientation="Horizontal"
                                               Margin="0,0,0,5">
                                         <TextBlock Text="Price:"
-                                                  FontSize="14"
+                                                  FontSize="{StaticResource FontSizeBody}"
                                                   Foreground="{StaticResource TextSecondaryBrush}"
                                                   Width="80"/>
                                         <TextBlock Text="{Binding PriceDisplay}"
-                                                  FontSize="14"
+                                                  FontSize="{StaticResource FontSizeBody}"
                                                   FontWeight="Bold"
-                                                  Foreground="#90EE90"/>
+                                                  Foreground="{StaticResource AccentSuccessBrush}"/>
                                     </StackPanel>
 
                                     <!-- Condition -->
                                     <StackPanel Orientation="Horizontal"
                                               Margin="0,0,0,5">
                                         <TextBlock Text="Condition:"
-                                                  FontSize="14"
+                                                  FontSize="{StaticResource FontSizeBody}"
                                                   Foreground="{StaticResource TextSecondaryBrush}"
                                                   Width="80"/>
                                         <TextBlock Text="{Binding ConditionDisplay}"
-                                                  FontSize="14"
+                                                  FontSize="{StaticResource FontSizeBody}"
                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
                                     </StackPanel>
 
                                     <!-- Mileage -->
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Mileage:"
-                                                  FontSize="14"
+                                                  FontSize="{StaticResource FontSizeBody}"
                                                   Foreground="{StaticResource TextSecondaryBrush}"
                                                   Width="80"/>
                                         <TextBlock Text="{Binding MileageDisplay}"
-                                                  FontSize="14"
+                                                  FontSize="{StaticResource FontSizeBody}"
                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
                                     </StackPanel>
 
@@ -165,11 +165,11 @@
                                                 Margin="0,5,0,0"
                                                 Visibility="{Binding EngineDisplay, Converter={StaticResource StringToVisibilityConverter}}">
                                         <TextBlock Text="Engine:"
-                                                  FontSize="14"
+                                                  FontSize="{StaticResource FontSizeBody}"
                                                   Foreground="{StaticResource TextSecondaryBrush}"
                                                   Width="80"/>
                                         <TextBlock Text="{Binding EngineDisplay}"
-                                                  FontSize="14"
+                                                  FontSize="{StaticResource FontSizeBody}"
                                                   Foreground="{StaticResource TextPrimaryBrush}"
                                                   TextWrapping="Wrap"
                                                   MaxWidth="220"/>
@@ -182,7 +182,7 @@
                                        Command="{Binding DataContext.PurchaseCarCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                        CommandParameter="{Binding}"
                                        Height="35"
-                                       FontSize="14"
+                                       FontSize="{StaticResource FontSizeBody}"
                                        FontWeight="Bold"
                                        Background="{StaticResource AccentPrimaryBrush}"
                                        Foreground="{StaticResource TextPrimaryBrush}"
@@ -206,8 +206,8 @@
                                             </Setter>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding CanAfford}" Value="False">
-                                                    <Setter Property="Background" Value="#505050"/>
-                                                    <Setter Property="Foreground" Value="#808080"/>
+                                                    <Setter Property="Background" Value="{StaticResource Gray50Brush}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource Gray80Brush}"/>
                                                     <Setter Property="IsEnabled" Value="False"/>
                                                     <Setter Property="Cursor" Value="Arrow"/>
                                                 </DataTrigger>
