@@ -62,7 +62,7 @@ dotnet sln "Street Rod AC.slnx" list
 dotnet list "Street Rod AC.slnx" package --include-transitive --format json
 
 # Non-.NET units: AC-side apps and scripts
-ls apps/lua apps/python tools/*.ps1
+ls apps/lua tools/*.ps1   # apps/python was removed 2026-09-24; list it too if it ever comes back
 ```
 
 For every .NET project capture from its `.csproj`: path, `OutputType`, `TargetFramework`, `Nullable`, `AllowUnsafeBlocks`, `UseWPF`/`UseWindowsForms`, `PackageReference`s (id + version), `Reference`s with `HintPath` (local DLLs — note path and whether it exists on disk), and **linked `<Compile Include="..\..\Street Rod AC\...">` items**. The tools compile game source by link: those files belong to the game project and must be audited once, under the game — a tool's audit covers only its own files plus how it uses the linked ones.
@@ -101,7 +101,7 @@ git ls-files | grep -iE '\.(db|pfx|snk|key|pem)$|secrets|\.env'   # things that 
 | `OutputType=WinExe` + `UseWPF`                              | WPF desktop app    |
 | `OutputType=Exe`, no UI                                     | CLI tool           |
 | `manifest.ini` + `*.lua` under `apps/lua`                   | CSP Lua app        |
-| Python AC app under `apps/python`                           | AC Python app (legacy) |
+| Python AC app under `apps/python`                           | AC Python app (legacy; removed 2026-09-24, no unit exists) |
 | `*.ps1` under `tools/`                                      | Build/ops script   |
 
 Write the classification + reference summary to `references/workspace-map.md` (overwrite each run — it's a snapshot, not history).
@@ -144,7 +144,7 @@ Write the inventory to `references/attack-surface.md` (overwrite each run; in di
 
 ## Phase 4 — Per-unit code review (parallel, bounded)
 
-Dispatch **one Explore subagent per audit slice**. Derive slices from the unit matrix, never hardcode them. The game project is large (≈260 `.cs` + ≈30 `.xaml`), so split it by top-level folder groups of similar size, e.g. `Parts/` · `Services/` · `Audio/ + Controls/ + interop windows` · `Screens/ + ViewModels/ + Views/ + Dialogs/ + Navigation/` · `Models/ + remaining`. Small units (each CLI tool, the Lua app, the legacy Python app, scripts) can share one agent. In diff mode, drop slices with no changed files. Keep the total at or under 8 agents.
+Dispatch **one Explore subagent per audit slice**. Derive slices from the unit matrix, never hardcode them. The game project is large (≈260 `.cs` + ≈30 `.xaml`), so split it by top-level folder groups of similar size, e.g. `Parts/` · `Services/` · `Audio/ + Controls/ + interop windows` · `Screens/ + ViewModels/ + Views/ + Dialogs/ + Navigation/` · `Models/ + remaining`. Small units (each CLI tool, the Lua app, scripts) can share one agent. In diff mode, drop slices with no changed files. Keep the total at or under 8 agents.
 
 Cross-cutting sections get their own agents on top of the slice agents, because a per-folder reviewer can't see them:
 

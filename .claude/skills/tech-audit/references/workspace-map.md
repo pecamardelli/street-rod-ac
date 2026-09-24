@@ -10,7 +10,7 @@
 | 2 | EngineBench | `tools/EngineBench/EngineBench.csproj` | CLI tool | net10.0 | Nullable |
 | 3 | SlrrPartsConverter | `tools/SlrrPartsConverter/SlrrPartsConverter.csproj` | CLI tool | net10.0 | Nullable, x64 |
 | 4 | sr_race_manager | `apps/lua/sr_race_manager` (`manifest.ini`, `sr_race_manager.lua`, 448 lines) | CSP Lua app | — | `LAZY = NONE` |
-| 5 | StreetRodRaceApp | `apps/python/StreetRodRaceApp/StreetRodRaceApp.py` (577 lines) | AC Python app (legacy) | — | not referenced by any C# |
+| 5 | ~~StreetRodRaceApp~~ | `apps/python/StreetRodRaceApp/StreetRodRaceApp.py` (577 lines) | AC Python app (legacy) | — | removed 2026-09-24 (after this snapshot); no unit exists now |
 | 6 | convert-parts.ps1 | `tools/convert-parts.ps1` | Build/ops script | — | drives SlrrPartsConverter |
 
 ## Packages

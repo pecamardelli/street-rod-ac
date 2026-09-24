@@ -4,6 +4,8 @@
 Custom Shaders Patch (CSP) Lua scripts extend Assetto Corsa's functionality. These scripts run inside AC and are located in `C:\GAMES\Street Rod AC\extension\lua\`.
 
 **Important**: These scripts are in the AC installation, NOT the C# project. They communicate with the launcher via file signals or CSP APIs.
+The one exception is the SR Race Manager app, which lives in the repo (`apps/lua/sr_race_manager/`) and writes the race
+results the launcher reads (see "Integration with C# Launcher").
 
 ## Street Rod Custom Scripts
 
@@ -153,6 +155,15 @@ The `sr_race` mode handles auto-start and auto-quit internally using CSP APIs. T
 | race.ini `[STREET_ROD] CONTEXT_ID` | Working | Launcher to Lua app: which race this is (see below) |
 | Result JSON | Working | Lua app to launcher, one file per race |
 
+### SR Race Manager app (`apps/lua/sr_race_manager/sr_race_manager.lua`)
+Auto-starts the race, tracks every car (G-force crash detection, finish, win/lose), writes the result file and quits
+AC (`ac.shutdownAssettoCorsa()`). Script version 2.2.0, result schema 1.1.
+- **Written once**: ending the session latches (`sessionEnded`); after that the update loop does nothing, so no
+  second session and no second result file start in the seconds before AC quits.
+- **AC always quits**: the write runs under `pcall`; a failed write is logged and AC still quits, since the launcher
+  waits for it (the launcher then sees no result).
+- **A hitch is not distance**: one tick accounts for at most 1 s (`MAX_TICK_SECONDS`).
+
 ### Race Result File (SR Race Manager)
 The app writes one file per race to `Documents\Assetto Corsa\out\sr_race_manager\<session_id>.json`: AC's own
 Documents folder (`ac.getFolder(ac.FolderID.ACDocuments)`), which is the known Documents folder the launcher reads even
@@ -165,7 +176,7 @@ Schema 1.1 added three fields to what 1.0 had (the launcher still reads 1.0 file
 |-------|------|---------|
 | `session.context_id` | string, may be absent | The race's `RaceContext.ContextId`, copied from race.ini `[STREET_ROD] CONTEXT_ID` (read with `ac.INIConfig.raceConfig()`); absent when race.ini had none |
 | `participants[].car_index` | int | AC's index of the car; 0 is the player's |
-| `participants[].is_player` | bool | True for the player's car |
+| `participants[].is_player` | bool | True for the player's car (car index 0 in AC) |
 
 ```json
 {

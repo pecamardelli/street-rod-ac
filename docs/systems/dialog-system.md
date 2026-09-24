@@ -7,7 +7,8 @@ Dialogs are modal overlays within the main window. Never nested. Never windows.
 - Main Screen (game state)
 - One Modal Dialog Overlay (optional)
 
-That's it. Two layers maximum.
+That's it. Two layers maximum. A dialog requested while another is open waits in a FIFO queue and shows when the one in
+front closes: it never replaces it (a "Save Warning" is not lost behind "Purchase Successful").
 
 ## Dialog Types
 
@@ -15,15 +16,16 @@ That's it. Two layers maximum.
 |------|---------|
 | ConfirmationDialog | Yes/No decisions |
 | InformationDialog | Read-only message, single OK |
-| FormDialog | Simple user input |
+| EventEntryDialog | Pick a car to enter an event with |
 
 ## DialogService
 Central service for showing/hiding dialogs.
 
 | Method | Purpose |
 |--------|---------|
-| ShowDialog(viewModel) | Display dialog |
-| CloseDialog() | Hide current dialog |
+| ShowDialog(viewModel) | Display the dialog, or queue it behind the open one |
+| CloseDialog() | Hide the current dialog; the next queued one shows |
+| CurrentDialog / IsDialogOpen | What is showing |
 
 ## Creating a Dialog
 
@@ -62,7 +64,7 @@ Central service for showing/hiding dialogs.
 |----|-------|
 | One dialog at a time | Nested dialogs |
 | Inline confirmation states | Dialog opening dialog |
-| Return results via callbacks | Native MessageBox |
+| Return results via callbacks (the dialog closes first, then calls back, so a callback may show the next dialog) | Native MessageBox |
 | Dim background | Multiple modal windows |
 
 ## Escalation Rule

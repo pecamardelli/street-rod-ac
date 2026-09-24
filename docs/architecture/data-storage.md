@@ -29,14 +29,23 @@ first time the new version needs it: `catalog.db` from `Saves\` (under the catal
 
 ### Save Database (`%AppData%\StreetRodAC\Saves\{name}.db`)
 **Purpose:** Dynamic player progress
-**Access:** Read/Write
+**Access:** Read/Write, through one open database (`SaveDatabase`)
+
+`SaveDatabase` holds one long-lived `LiteDatabase`: the save in use. `GameStateRepository` and the race session
+repository share it, so a race's session record and the state it changes are written in one transaction
+(`InTransaction`), and every use holds a lock (the UI saves while the race pipeline reads on a worker). Opening another
+save closes the one before it. The Load screen lists saves with `ListSaveHeaders()`, which projects only the player's
+name, money, game date and last-played time: through the open instance for the save in use, and through a short
+read-only open for the others (`SaveDatabase.Peek`), so listing never closes the game being played. `Save` keeps three
+rotating backups (`{name}.db.backup1..3`). The repository is disposed on exit and on the fatal path, after the last
+save.
 
 | Collection | Model | Purpose |
 |------------|-------|---------|
 | gamestate | GameState | Root save object |
 | - | UsedCarMarket | List of cars for sale |
 | - | Player.Cars | Owned car instances |
-| - | Opponents | AI racers |
+| - | Racers | AI racers |
 | - | ScheduledTasks | Task execution state |
 
 ## Key Models
@@ -54,12 +63,14 @@ first time the new version needs it: `catalog.db` from `Saves\` (under the catal
 - `Source` - Generated/Manual
 
 ### GameState (Save Root)
-- `CurrentDate` - Game time
-- `Money` - Player balance
+- `Date` - Game time
+- `Player.Money` - Player balance
 - `UsedCarMarket` - Active listings
 - `Player.Cars` - Owned CarInstances
-- `Opponents` - AI racers
+- `Racers` - AI racers
 - `ScheduledTasks` - Task state
+- `Career` - Career progress and event states
+- `PendingRace` - The race AC was started for and has not come back from; `LaunchedAt` is set once AC actually started, which decides whether a race with no result is forfeited or just released (see `docs/ac-integration/launcher.md`, "The pending race")
 
 ## Repository Pattern
 

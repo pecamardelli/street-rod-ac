@@ -52,6 +52,7 @@ Never modify untouched keys.
 | Member | Purpose |
 |--------|---------|
 | ApplyIntent(intent) | Keep the target file's original, then apply the modification |
+| ReadIniFile(name) | The cfg file as an `IniText`, decoded as UTF-8 or Latin-1 |
 | RestoreAll() | Put back every cfg file an intent changed, as it was before the first change |
 | HasPendingRestore | Whether a changed cfg file is waiting to go back |
 
@@ -66,7 +67,10 @@ The cfg files (`race.ini`, `showroom_start.ini`) are restored the way the cars' 
 - **Then write**: through `SafeFile` (temp file, flushed, renamed over the old one). An edited file keeps its encoding
   and every line but the ones changed (`IniText`); race.ini, which a race writes whole, is UTF-8 without a BOM.
 - **Restore** (`RestoreAll`), once AC has exited: in the launcher's `finally`, at start-up (a crash or a power cut
-  leaves the manifest behind), when the game exits, and from the fatal-exception handler. A file that did not exist
+  leaves the manifest behind), when the game exits, and from the fatal-exception handler. Never while an AC process
+  runs (`AcProcesses.AnyRunning`): the launcher's `finally`, exit and the fatal path then leave it for the next start,
+  and a start with AC still running waits for it to close (`RestoreWhenAcExitsAsync`, holding the launch lock) before
+  putting anything back. A file that did not exist
   is deleted; one that did gets its original bytes back. Idempotent; a file that cannot go back stays kept for the
   next call and is logged, and the others go back anyway. The `~cfg` folder has no car manifest, so the car-data
   restore never takes it for a car.
@@ -93,6 +97,8 @@ CONTEXT_ID=<RaceContext.ContextId, "D" format>
 | DragRaceIntent | race.ini | Race config, AI params |
 
 ## Safety Rules
+- One writer: every cfg INI write goes through `IniModificationService` (`IniText` + `SafeFile`); nothing else writes
+  `race.ini` or `showroom_start.ini`
 - Write to temp file first
 - Validate before replacing
 - Never leave partial writes

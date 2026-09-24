@@ -11,7 +11,7 @@ Used by Phase 1 of the tech-audit skill to classify each discovered unit by **si
 | 3   | `.csproj` with `OutputType=Exe`                                                | **CLI tool**              | Note linked `<Compile Include>` items — they belong to the game slice |
 | 4   | `.csproj` with no `OutputType` (library)                                       | **Library**               | None today                                                            |
 | 5   | folder with `manifest.ini` + `*.lua`                                          | **CSP Lua app**           | Runs inside AC via Custom Shaders Patch                               |
-| 6   | folder under `apps/python` with a `*.py` AC app                               | **AC Python app**         | Legacy — superseded by the Lua app                                    |
+| 6   | folder under `apps/python` with a `*.py` AC app                               | **AC Python app**         | Legacy — superseded by the Lua app; removed 2026-09-24, no unit exists |
 | 7   | `*.ps1` under `tools/`                                                        | **Build/ops script**      |                                                                       |
 | 8   | (none of the above)                                                           | **Unknown**               | Manual classification needed; flag in findings                        |
 

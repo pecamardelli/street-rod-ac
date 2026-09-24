@@ -38,7 +38,7 @@ private.
 
 ## Converter (`tools/SlrrPartsConverter`)
 
-`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>[*<count>],...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] [--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] [--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>[;...]]... [--previous <earlier conversion>] [--twin <old part id>=<new part id or ->,...] [--measure <part id pattern>,...]`
+`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>[*<count>],...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] [--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] [--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>]... [--previous <earlier conversion>] [--twin <old part id>=<new part id or ->,...] [--measure <part id pattern>,...]`
 
 The content in use is made with `tools/convert-parts.ps1` (both Chrysler packs are installed in the SLRR folder, see
 "Replacing a pack"). The script takes the SLRR folder and the build notes folder from `-Slrr`/`-Notes` or the
@@ -48,7 +48,14 @@ or folder it refused (nothing written), 2 when parts failed, packs were skipped 
 the end of the output). The converter works everything out and writes the models and classes into a folder next to
 the output (`.Parts.converting`) first; only then are the models moved into each pack, `pack.json`, the aliases, the
 constants and `engine_builds.json` written whole (temp file and rename), and `_scripts` swapped for the new one. A run
-that stops half way leaves the content as the last run left it. Mod content paths (an rpk's `sourcefile`, a cfg, a
+that stops before the commit leaves the content as the last run left it. The commit itself goes in an order where what is
+named always lands before what names it (classes, then every pack's models, then every `pack.json`, then constants,
+builds and aliases, stale packs last), with a marker (`Assets\.Parts.committing`) next to the output for its whole
+length: a commit that fails half way is reported ("part this run's, part the last one's"), exits 1, and the next run
+warns until a full run clears it. `_scripts` is parked as `_scripts.old` in the output folder while the new one moves
+in, put back if the move fails, and recovered at the start of the next run after a kill. A pack whose rpk could not be
+read this time is kept exactly as it was (models, `pack.json`, its aliases, the builds that name it, its classes)
+instead of being treated as gone. Mod content paths (an rpk's `sourcefile`, a cfg, a
 script, an external rpk) that lead outside the SLRR folder count as missing and are reported, and a truncated rpk or
 mesh is reported and left out instead of ending the run. It comes out as:
 
@@ -201,6 +208,10 @@ the part's axes, the sum of every nudge). The catalog applies the file when it l
 `convert-parts.ps1` folds such files (from the output folder and the build folders, `--absorb`) into
 **`tools/slot_shifts.json`**, kept for good and applied last on every conversion, and takes the game's files away,
 so the packs stay the truth and nothing is applied twice. The kept file is plain enough to edit by hand.
+`SlotShifts` is written atomically (`SafeFile`) and never throws on load: a file that does not read gives no shifts and
+a `Problem`, and then it is never written over (garage nudges don't save until it is fixed by hand; the next save reads it again and, once it reads, adds its offsets
+to the nudges made since and saves them together). The converter
+stops (exit 1) when the kept file has a Problem, and skips (without deleting) a game-written file that has one.
 
 ### Every carburettor part is one carburettor (`--single`, `--pads`, the shared air slot)
 
@@ -372,6 +383,16 @@ all 12 engines of the old pack up to date, nothing came off.
   initializers run, so `static Foo instance = new Foo()` ends; construction depth carries through initializers.
 - Method parameters are numbered backwards (last parameter = local 1, local 0 = this).
 - One `ScriptClassLoader` per catalog (`PartsCatalog.Scripts`, thread-safe): classes are read and parsed once.
+- **Limits.** Class files are mod content, so the VM cannot be driven out of bounds; for valid content nothing changes
+  (EngineBench output identical for all builds).
+  - Call depth 24 (`MaxDepth`), static initializers included: past it a static read gets a stand-in that is not cached.
+  - 500 000 steps per VM (`MaxSteps`). Running out sets the sticky `ScriptVm.BudgetExhausted`
+    (`PartScriptRuntime.BudgetExhausted`), and the engine does not run, with that as its Problem.
+  - Jump targets are range-checked: one before the start or past the end ends that tree, not the class.
+  - A string built by `+` longer than 64 K characters is unknown. A negative argument count is clamped. printf
+    precision is clamped to 0..20.
+  - Class and package names must be safe path segments, and a part's `source_script` must stay under the scripts root;
+    anything else counts as a missing script.
 
 ## Runtime (`Parts/Logic`)
 
@@ -394,6 +415,17 @@ all 12 engines of the old pack up to date, nothing came off.
   carburettor or injection the compression limit they derive from the fuel is 0 and they complain about compression
   ("not more than 0.0:1"); the report says that nothing feeds the engine instead.
 - Numbers in `properties`/`derived` come back from JSON as `long` or `double`; read them with `PartDefinition.Number`.
+
+**Fault containment.** A bad part costs that part, never the car's evaluation or the catalog:
+- `PartScriptRuntime` catches around the chassis, each part's instantiate/tune, every call and `UpdateCar`; the part
+  goes into `FaultedScripts` and a line into `Faults`. `EngineEvaluator.Evaluate` never throws: faults become the
+  report's `ScriptFaults` and the Problem "a part script failed: ...", and the engine does not run.
+  `CarPartsService.Evaluate` logs each distinct fault once; `EngineBuildIndex.ScriptFaults` does the same for the index.
+- `PartsCatalog.Load` reads each pack on its own: a pack.json that does not read, null parts or ids, a duplicate id
+  (the last read still wins), an alias to nothing, a broken aliases file or `engine_builds.json` are each one line in
+  `PartsCatalog.Problems` (logged), and the rest of the catalog stands.
+- Non-finite numbers never reach AC: report figures are sanitized, `EngineDyno` guards its inputs, prices clamp, and
+  `IniText.Set` leaves a line untouched for NaN or infinity.
 
 Model check: `EngineBench <parts> rated`. Currently mean error +4%, mean absolute 15% over 15 builds
 (Mopar 340 Six Pack: 310 hp @ 5750, 446 Nm @ 2750; factory 290 hp, 468 Nm).
