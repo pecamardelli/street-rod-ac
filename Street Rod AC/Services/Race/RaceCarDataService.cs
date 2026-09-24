@@ -55,8 +55,9 @@ namespace Street_Rod_AC.Services.Race
             _overlay = overlay;
         }
 
+        /// <param name="damage">The damage the car goes in with; null takes what its parts carry</param>
         /// <returns>The files to race with; null when the car has no parts to speak of and races as it is</returns>
-        public RaceCarData? Prepare(Car car)
+        public RaceCarData? Prepare(Car car, Models.Race.RaceStartState? damage = null)
         {
             if (!_parts.IsAvailable || !car.HasPartsAssigned) return null;
 
@@ -91,7 +92,8 @@ namespace Street_Rod_AC.Services.Race
                 Engine = _parts.Evaluate(car),
                 FactoryEngineMass = _parts.FactoryEngineMass(car),
                 RunningGear = car.HasRunningGearAssigned ? RunningGear.Mounted(car.Parts) : null,
-                FactoryRunningGear = car.HasRunningGearAssigned ? _parts.FactoryRunningGear(car) : null
+                FactoryRunningGear = car.HasRunningGearAssigned ? _parts.FactoryRunningGear(car) : null,
+                Damage = damage ?? CarCondition.StartState(car, CarCondition.Groups(catalog))
             };
 
             var result = AcCarBuild.Generate(catalog, build, readFile);

@@ -177,6 +177,12 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// </summary>
         public RaceType RaceType { get; set; } = RaceType.DragRace;
 
+        /// <summary>The shape the player's car starts in (damage from earlier races); null starts it as AC would</summary>
+        public RaceStartState? PlayerStart { get; set; }
+
+        /// <summary>The shape the opponent's car starts in; null starts it as AC would</summary>
+        public RaceStartState? OpponentStart { get; set; }
+
         public override string Executable => "acs.exe";
 
         public override string Description =>
@@ -197,6 +203,8 @@ namespace Street_Rod_AC.Services.Configuration.Models
                 OpponentAILevel = this.OpponentAILevel,
                 OpponentAIAggression = this.OpponentAIAggression,
                 RaceType = this.RaceType,
+                PlayerStart = this.PlayerStart,
+                OpponentStart = this.OpponentStart,
                 ContextId = Metadata.TryGetValue("RaceContext", out var context) && context is RaceContext raceContext
                     ? raceContext.ContextId
                     : null

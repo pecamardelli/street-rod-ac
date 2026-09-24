@@ -257,6 +257,122 @@ public sealed class RaceResultProcessorTests : IDisposable
     }
 
     [Fact]
+    public void A_player_breakdown_loses_the_race_and_says_what_gave_out()
+    {
+        var (state, context, _, rival) = World();
+        var json = File(playerPosition: 1);
+        json["session"]!["end_reason"] = EndReasons.BrokeDown;
+        json["participants"]![0]!["broke_down"] = true;
+        json["participants"]![0]!["breakdown"] = Breakdowns.Gearbox;
+
+        var messages = Processor().ProcessRaceResult(Result(json), context, state);
+
+        Assert.Equal(1, state.Player.Stats.Losses);
+        Assert.Equal(1_000_000m - 100m, state.Player.Money);
+        Assert.Equal(5100m, rival.Money);
+        Assert.Equal("PlayerBrokeDown", _repository.Recorded.Single().WinCondition);
+        Assert.Contains(messages, m => m.Title == "Broke Down" && m.Text.Contains("gearbox"));
+    }
+
+    [Fact]
+    public void A_rival_breakdown_wins_the_race_for_the_player()
+    {
+        var (state, context, _, _) = World();
+        var json = File(playerPosition: 2);
+        json["participants"]![1]!["broke_down"] = true;
+        json["participants"]![1]!["breakdown"] = Breakdowns.Engine;
+
+        var messages = Processor().ProcessRaceResult(Result(json), context, state);
+
+        Assert.Equal(1, state.Player.Stats.Wins);
+        Assert.Equal("OpponentBrokeDown", _repository.Recorded.Single().WinCondition);
+        Assert.Contains(messages, m => m.Title == "Rival Broke Down" && m.Text.Contains("engine"));
+    }
+
+    [Fact]
+    public void Nobody_reaching_the_line_is_a_draw_that_moves_nothing()
+    {
+        var (state, context, _, rival) = World(wager: 0, pinkSlip: true);
+        var json = File(playerPosition: 1);
+        json["session"]!["end_reason"] = EndReasons.BrokeDown;
+        json["participants"]![0]!["broke_down"] = true;
+        json["participants"]![1]!["crash"]!["crashed"] = true;
+
+        Processor().ProcessRaceResult(Result(json), context, state);
+
+        Assert.Single(state.Player.Cars);
+        Assert.Single(rival.Cars);
+        Assert.Equal(0, state.Player.Stats.Races);
+        Assert.Equal("BothOut", _repository.Recorded.Single().WinCondition);
+    }
+
+    [Fact]
+    public void The_cars_condition_lands_on_both_cars_and_the_player_gets_a_damage_report()
+    {
+        var (state, context, playerCar, rival) = World();
+        var json = File(playerPosition: 1);
+        json["participants"]![0]!["condition"] = JObject.Parse("{ \"body_damage_kmh\": [0, 0, 25.8, 0], \"engine_life\": 1000, \"gearbox_damage\": 0 }");
+        json["participants"]![1]!["condition"] = JObject.Parse("{ \"body_damage_kmh\": [40, 0, 0, 0], \"engine_life\": 700 }");
+
+        var messages = Processor().ProcessRaceResult(Result(json), context, state);
+
+        Assert.Equal(new double[] { 0, 0, 25.8, 0 }, playerCar.BodyDamageKmh);
+        var report = Assert.Single(messages, m => m.Title == "Damage Report");
+        Assert.Contains("left side", report.Text);
+        // No parts catalog: the cars' own figures take the rest
+        Assert.Equal(1.0, playerCar.EngineHealth);
+        var rivalCar = rival.Cars.Single();
+        Assert.Equal(new double[] { 40, 0, 0, 0 }, rivalCar.BodyDamageKmh);
+        Assert.Equal(0.7, rivalCar.EngineHealth, 6);
+    }
+
+    [Fact]
+    public void A_crashed_player_is_towed_to_the_garage_with_the_damage_report()
+    {
+        var (state, context, _, _) = World();
+        var json = File(playerPosition: 2);
+        json["session"]!["end_reason"] = EndReasons.Crash;
+        json["participants"]![0]!["crash"]!["crashed"] = true;
+        json["participants"]![0]!["condition"] = JObject.Parse("{ \"body_damage_kmh\": [60, 0, 0, 0] }");
+
+        var messages = Processor().ProcessRaceResult(Result(json), context, state);
+
+        var towed = Assert.Single(messages, m => m.TowedToGarage);
+        Assert.Equal("Towed Home", towed.Title);
+        Assert.Contains("front took a 60 km/h hit", towed.Text);
+        Assert.DoesNotContain(messages, m => m.Title == "Damage Report");
+    }
+
+    [Fact]
+    public void A_race_without_a_crash_sends_nobody_to_the_garage()
+    {
+        var (state, context, _, _) = World();
+        var json = File(playerPosition: 1);
+        json["participants"]![0]!["condition"] = JObject.Parse("{ \"body_damage_kmh\": [10, 0, 0, 0] }");
+
+        var messages = Processor().ProcessRaceResult(Result(json), context, state);
+
+        Assert.DoesNotContain(messages, m => m.TowedToGarage);
+        Assert.Single(messages, m => m.Title == "Damage Report");
+    }
+
+    [Fact]
+    public void A_drag_race_hands_out_the_timeslips_first()
+    {
+        var (state, context, _, _) = World();
+        var json = File(playerPosition: 1);
+        json["participants"]![0]!["timeslip"] = JObject.Parse("{ \"reaction_s\": 0.51, \"quarter_mile_s\": 14.2, \"quarter_mile_mph\": 98.7 }");
+
+        var messages = Processor().ProcessRaceResult(Result(json), context, state);
+
+        var slip = messages[0].Timeslip;
+        Assert.NotNull(slip);
+        Assert.Equal(PlayerName, slip!.PlayerName);
+        Assert.Equal(14.2, slip.Player!.QuarterMileSeconds);
+        Assert.Null(slip.Opponent);
+    }
+
+    [Fact]
     public void A_false_start_is_no_contest_that_costs_reputation()
     {
         var (state, context, playerCar, rival) = World(pinkSlip: true);

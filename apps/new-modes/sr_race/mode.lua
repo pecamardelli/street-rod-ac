@@ -7,7 +7,12 @@
     the race is over; a crashed rival is stopped where it lies and the player still has to finish
   - Judges a false start: the player's car moving before the green, or AC putting it back before it got anywhere
   - A drag race: whoever hits the other car out of their own lane is disqualified (crossing lanes alone is fine:
-    nobody judges lanes on the street). AC's own start lights give the green.
+    nobody judges lanes on the street). AC's own start lights give the green. Each car gets a timeslip.
+  - Puts each car into AC as its earlier races left it (race.ini [STREET_ROD] CAR_n_*): the body's damage, which
+    brings the scratches and dents with it, and the engine's life. AC cannot be told about a worn gearbox or a bent
+    corner; the career puts those into the car's data, and this mode adds them to what the race does.
+  - Judges a breakdown: a blown engine, a gearbox or a corner that gives out, a blown tyre. A player's breakdown ends
+    the race; a rival's is held where it stopped, and the player still has to finish
   - Reports the race to the career, one JSON file per race, written once, and quits Assetto Corsa
 
   Full control: every race, drag races too, is a one-lap race session (Street Corsa never asks AC for its drag
@@ -25,11 +30,31 @@
   to finish.
 ]]
 
-local SCRIPT_VERSION = "3.2.0"
+local SCRIPT_VERSION = "3.3.0"
 -- 1.1: session.context_id, participants[].car_index and participants[].is_player
 -- 1.2: session.end_reason, participants[].false_start, participants[].condition
 -- 1.3: participants[].disqualified, session.race_type
-local SCHEMA_VERSION = "1.3"
+-- 1.4: session.end_reason BROKE_DOWN, participants[].broke_down, participants[].breakdown, participants[].timeslip
+local SCHEMA_VERSION = "1.4"
+
+-- How far AC bends a steering rod at most, in metres (suspensions.ini MAX_DAMAGE, 0.05 on every car the game has):
+-- a corner bent this far, with what it carried in, has given out
+local MAX_SUSPENSION_BEND = 0.05
+
+-- A drag strip's marks, in metres from the line. The trap speed is the average over the last 66 ft before a mark,
+-- as the strips time it.
+local FEET = 0.3048
+local STAGE_METRES = 0.2
+local TRAP_METRES = 66 * FEET
+local MARKS = {
+  { key = 'sixty_ft_s', metres = 60 * FEET },
+  { key = 'three_thirty_ft_s', metres = 330 * FEET },
+  { key = 'eighth_trap', metres = 660 * FEET - TRAP_METRES, hidden = true },
+  { key = 'eighth_mile_s', metres = 660 * FEET, trap = 'eighth_trap', speed = 'eighth_mile_mph' },
+  { key = 'thousand_ft_s', metres = 1000 * FEET },
+  { key = 'quarter_trap', metres = 1320 * FEET - TRAP_METRES, hidden = true },
+  { key = 'quarter_mile_s', metres = 1320 * FEET, trap = 'quarter_trap', speed = 'quarter_mile_mph' }
+}
 
 -- A crash: a collision with a change of velocity of at least this, in g over one frame
 local CRASH_G = 15.0
@@ -65,6 +90,12 @@ local MSG_LOSE = "You lost, sucker!"
 local MSG_CRASH = "Lucky you weren't killed!\nBetter luck next time!"
 local MSG_FALSE_START = "You jumped the gun!\nNo contest, and everybody saw it."
 local MSG_DISQUALIFIED = "You hit him in his own lane!\nThat's a DQ, you lose."
+local MSG_BROKE_DOWN = {
+  ENGINE = "The engine let go!\nYou're out of the race.",
+  GEARBOX = "The gearbox gave out!\nYou're out of the race.",
+  SUSPENSION = "The suspension gave out!\nYou're out of the race.",
+  TYRE = "A tyre blew!\nYou're out of the race."
+}
 
 local sim = ac.getSim()
 
@@ -94,6 +125,12 @@ local raceType = nil
 -- A drag race's lanes: the sideways axis of the strip, from the player's car on the line. Each car's own lane is
 -- where it stood (data.laneStart).
 local stripSide = nil
+
+-- ...and the axis down the strip, for the timeslips
+local stripForward = nil
+
+-- Seconds since AC's green, on the game's clock; nil before it
+local raceClock = nil
 
 -- Overlay state
 local showResultOverlay = false
@@ -137,6 +174,18 @@ local function createCarData(carIndex)
     disqualified = false,
     laneStart = nil,
 
+    -- Breakdown: what the car carried in from its earlier races (race.ini), and what gave out
+    startGearbox = 0,
+    startSuspension = { 0, 0, 0, 0 },
+    brokeDown = false,
+    breakdown = nil,
+
+    -- Timeslip (drag races): the race clock when the car left the line, how far down the strip it was last frame,
+    -- and the time at each mark
+    leftAt = nil,
+    lastMetres = 0,
+    slip = {},
+
     -- Final result
     finalPosition = nil
   }
@@ -159,6 +208,51 @@ local function readRaceType()
   end)
   if ok and (value == 'DRAG' or value == 'ROAD') then return value end
   return nil
+end
+
+-- Numbers from race.ini [STREET_ROD] KEY=a,b,c; nil when the key is not there or is not all numbers
+local function readNumbers(key, count)
+  local ok, value = pcall(function()
+    return ac.INIConfig.raceConfig():get('STREET_ROD', key, '')
+  end)
+  if not ok or type(value) ~= 'string' or value == '' then return nil end
+  local numbers = {}
+  for part in value:gmatch('[^,]+') do
+    local n = tonumber(part)
+    if not n or n ~= n or n == math.huge or n == -math.huge then return nil end
+    numbers[#numbers + 1] = n
+  end
+  if #numbers < count then return nil end
+  return numbers
+end
+
+-- The shape a car goes into the race in, from the career: body and engine into AC, the gearbox and the corners
+-- remembered for the breakdowns (AC starts those new; the car's data already carries what they do)
+local function applyStartState(carIndex, data)
+  local prefix = 'CAR_' .. carIndex .. '_'
+  local gearbox = readNumbers(prefix .. 'GEARBOX', 1)
+  if gearbox then data.startGearbox = math.max(0, gearbox[1]) end
+  local suspension = readNumbers(prefix .. 'SUSPENSION', 4)
+  if suspension then
+    for w = 1, 4 do data.startSuspension[w] = math.max(0, suspension[w]) end
+  end
+
+  if not physics.allowed() then return end
+  local body = readNumbers(prefix .. 'BODY', 4)
+  if body then
+    pcall(physics.setCarBodyDamage, carIndex, vec4(body[1], body[2], body[3], body[4]))
+  end
+  local life = readNumbers(prefix .. 'ENGINE_LIFE', 1)
+  if life then
+    pcall(physics.setCarEngineLife, carIndex, math.max(1, life[1]))
+  end
+
+  local car = ac.getCar(carIndex)
+  if car and (body or life) then
+    ac.log(string.format('[Street Corsa] Car %d starts with body %.0f/%.0f/%.0f/%.0f km/h, engine life %.0f, gearbox %.2f, corners %.2f/%.2f/%.2f/%.2f',
+      carIndex, car.damage[0], car.damage[1], car.damage[2], car.damage[3], car.engineLifeLeft, data.startGearbox,
+      data.startSuspension[1], data.startSuspension[2], data.startSuspension[3], data.startSuspension[4]))
+  end
 end
 
 -- Seed the generator from several sources: os.time() alone changes once a second. The script clock, the
@@ -202,6 +296,8 @@ local function initializeSession()
   carCount = sim.carsCount
   for i = 0, carCount - 1 do
     carData[i] = createCarData(i)
+    local ok, err = pcall(applyStartState, i, carData[i])
+    if not ok then ac.log('[Street Corsa] Could not put car ' .. i .. ' into its shape: ' .. tostring(err)) end
   end
 
   local player = ac.getCar(0)
@@ -216,6 +312,7 @@ local function initializeSession()
     end
     local look = vec3(player.look.x, 0, player.look.z):normalize()
     stripSide = vec3(-look.z, 0, look.x)
+    stripForward = look
   end
 
   ac.log(string.format('[Street Corsa] Session started: %s with %d cars, context %s, physics allowed %s, session type %s, race %s',
@@ -244,7 +341,7 @@ local function holdAI(carIndex)
 end
 
 -- End session: write results, show the result, and quit
--- reason: FINISHED (WIN or LOSE), CRASH, FALSE_START, DISQUALIFIED or ABANDONED
+-- reason: FINISHED (WIN or LOSE), CRASH, FALSE_START, DISQUALIFIED, BROKE_DOWN or ABANDONED
 local function endSession(reason, won)
   if not sessionActive then return end
   sessionActive = false
@@ -275,6 +372,9 @@ local function endSession(reason, won)
     holdPlayer(30)
   elseif reason == 'DISQUALIFIED' then
     resultTitle, resultMessage = "Disqualified", MSG_DISQUALIFIED
+    holdPlayer(30)
+  elseif reason == 'BROKE_DOWN' then
+    resultTitle, resultMessage = "Broke Down", MSG_BROKE_DOWN[carData[0] and carData[0].breakdown or 'ENGINE'] or MSG_BROKE_DOWN.ENGINE
     holdPlayer(30)
   else
     resultTitle, resultMessage = "Race Over", won and MSG_WIN or MSG_LOSE
@@ -327,8 +427,8 @@ local function updateCrashes(dt)
       local g = _dv:length() / math.max(dt, 1 / 240) / 9.81
       data.velocity:set(car.velocity)
 
-      if data.crashed then
-        -- A crashed rival stays where it is
+      if data.crashed or data.brokeDown then
+        -- A crashed or broken-down rival stays where it is
         if carIndex ~= 0 then holdAI(carIndex) end
       elseif data.disqualified and carIndex ~= 0 and data.grace <= 0 and touching[carIndex] and g >= CRASH_G then
         -- A disqualified rival that crashed doing it: both on its record
@@ -345,6 +445,86 @@ local function updateCrashes(dt)
         crash(carIndex, data, g)
         if sessionEnded then return end
       end
+    end
+  end
+end
+
+-- What gave out on a car, or nil: the engine's life run out, the gearbox or a corner past what it could take with
+-- what it carried in, a blown tyre
+local function findBreakdown(car, data)
+  if car.engineLifeLeft <= 0 then return 'ENGINE' end
+  if data.startGearbox + math.max(0, car.gearboxDamage) >= 1 then return 'GEARBOX' end
+  for w = 0, 3 do
+    local wheel = car.wheels[w]
+    if wheel.isBlown then return 'TYRE' end
+    if data.startSuspension[w + 1] + math.max(0, wheel.suspensionDamage) / MAX_SUSPENSION_BEND >= 1 then return 'SUSPENSION' end
+  end
+  return nil
+end
+
+-- Every frame between the green and the line: a car that breaks down is out. The player's breakdown ends the race;
+-- a rival's is held where it stopped, and the player finishes to win. Both broken is a draw, which the career calls.
+local function updateBreakdowns()
+  if not sim.isSessionStarted then return end
+  for carIndex = 0, carCount - 1 do
+    local data = carData[carIndex]
+    local car = ac.getCar(carIndex)
+    if data and car and not data.crashed and not data.disqualified and not data.brokeDown and data.lapsCompleted < 1 then
+      local ok, what = pcall(findBreakdown, car, data)
+      if ok and what then
+        data.brokeDown = true
+        data.breakdown = what
+        ac.log(string.format('[Street Corsa] Car %d BROKE DOWN: %s', carIndex, what))
+        if carIndex == 0 then
+          endSession('BROKE_DOWN')
+          return
+        end
+        holdAI(carIndex)
+        pcall(ac.setMessage, 'Broke down', data.driverName .. "'s car gave out. Finish the race and it is yours!")
+      end
+    end
+  end
+end
+
+-- A drag race's timeslips: each car's time at every mark down the strip, from the moment it left the line. The
+-- moment a mark is passed is found between two frames, from where the car was on each side of it.
+local function updateTimeslips(tick)
+  if raceType ~= 'DRAG' or not stripForward or not sim.isSessionStarted then return end
+  local previousClock = raceClock or 0
+  raceClock = previousClock + tick
+  if tick <= 0 then return end
+
+  for carIndex = 0, carCount - 1 do
+    local data = carData[carIndex]
+    local car = ac.getCar(carIndex)
+    if data and car and data.laneStart then
+      local metres = (car.position - data.laneStart):dot(stripForward)
+      local function crossed(mark)
+        if data.lastMetres >= mark or metres < mark then return nil end
+        local share = (mark - data.lastMetres) / math.max(metres - data.lastMetres, 1e-6)
+        return previousClock + share * tick
+      end
+
+      if not data.leftAt then
+        data.leftAt = crossed(STAGE_METRES)
+      end
+      if data.leftAt then
+        for _, mark in ipairs(MARKS) do
+          if data.slip[mark.key] == nil then
+            local at = crossed(mark.metres)
+            if at then
+              data.slip[mark.key] = at - data.leftAt
+              if mark.trap and data.slip[mark.trap] then
+                local seconds = data.slip[mark.key] - data.slip[mark.trap]
+                -- m/s to mph
+                if seconds > 0 then data.slip[mark.speed] = TRAP_METRES / seconds * 2.2369363 end
+              end
+            end
+          end
+        end
+      end
+
+      data.lastMetres = metres
     end
   end
 end
@@ -415,8 +595,8 @@ local function round(value, places)
   return math.floor(value * k + 0.5) / k
 end
 
--- What the race left of the car, as AC tracks it. Nothing reads it yet but the log: the career puts it on the
--- car's parts in the next step. Every field is read on its own, so one AC does not have leaves the rest.
+-- What the race left of the car, as AC tracks it: the career puts it on the car's parts. Every field is read on its
+-- own, so one AC does not have leaves the rest.
 local function carCondition(carIndex)
   local car = ac.getCar(carIndex)
   if not car then return nil end
@@ -448,6 +628,17 @@ local function carCondition(carIndex)
   return condition
 end
 
+-- The timeslip as the result has it; nil for a car that never left the line, and in a road race
+local function timeslipOf(data)
+  if raceType ~= 'DRAG' or not data.leftAt then return nil end
+  local slip = { reaction_s = round(data.leftAt, 3) }
+  for _, mark in ipairs(MARKS) do
+    if not mark.hidden then slip[mark.key] = round(data.slip[mark.key], 3) end
+    if mark.speed then slip[mark.speed] = round(data.slip[mark.speed], 2) end
+  end
+  return slip
+end
+
 -- Convert car data to output format
 local function carDataToDict(data)
   local maxCrash = 0
@@ -465,6 +656,9 @@ local function carDataToDict(data)
     is_player = data.carIndex == 0,
     false_start = data.falseStart,
     disqualified = data.disqualified,
+    broke_down = data.brokeDown,
+    breakdown = data.breakdown,
+    timeslip = timeslipOf(data),
     performance = {
       final_position = data.finalPosition,
       laps_completed = data.lapsCompleted,
@@ -660,9 +854,13 @@ function script.update(dt)
   updateCrashes(dt)
   if sessionEnded then return end
 
+  updateBreakdowns()
+  if sessionEnded then return end
+
   local tick = measureTick()
   sessionDuration = sessionDuration + tick
   updateAllTelemetry(tick)
+  updateTimeslips(tick)
 
   checkRaceFinish()
 end

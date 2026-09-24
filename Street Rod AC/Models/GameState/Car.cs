@@ -14,6 +14,13 @@ namespace Street_Rod_AC.Models.GameState
         public double TireCondition { get; set; } // 0.0 to 1.0
 
         /// <summary>
+        /// Body damage by zone as Assetto Corsa keeps it: front, rear, left, right, each the collision speed in km/h
+        /// the zone has taken. It goes back into AC at the start of every race, scratches and dents with it, and
+        /// only a body shop takes it off (<see cref="Parts.Cars.CarCondition"/>).
+        /// </summary>
+        public double[] BodyDamageKmh { get; set; } = new double[4];
+
+        /// <summary>
         /// Parts mounted on the car itself, each with everything that is mounted on it in turn.
         /// <see cref="PartInstance.ParentSlot"/> says where on the car: the engine goes on <see cref="PartInstance.CarEngineSlot"/>.
         /// </summary>
