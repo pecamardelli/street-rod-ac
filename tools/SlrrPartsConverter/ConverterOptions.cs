@@ -115,7 +115,7 @@ internal sealed class ConverterOptions
     /// --name &lt;part id pattern&gt;=&lt;display name&gt;: what the part is called once it is not what its script says
     /// --shifts &lt;file&gt;: slots nudged into place in the garage (slot_shifts.json), kept for good: what the game
     ///   wrote next to the packs since the last run is folded into this file first, then all of it is applied
-    /// --absorb &lt;slot_shifts.json&gt;[;...]: more of the game's files to fold in (the game writes next to the content
+    /// --absorb &lt;slot_shifts.json&gt;: more of the game's files to fold in (the game writes next to the content
     ///   it runs on, in a build folder) and take away; the option may be given once per file (a path may hold a comma)
     /// --previous &lt;folder&gt;: an earlier conversion (the content in use): a part it had that goes by another name
     ///   now, because a release of the mod renamed its files, is aliased to what its rpk resource is now, and
@@ -153,8 +153,12 @@ internal sealed class ConverterOptions
                     options.TwinRules[pair[0].Trim()] = pair[1].Trim() == NoTwin ? null : pair[1].Trim();
                 }
             }
-            // One file per option, or several joined by ';' (a path may hold a comma, hardly ever a semicolon)
-            else if (args[i] == AbsorbOption && i + 1 < args.Length) options.Absorb.AddRange(args[++i].Split(';').Select(f => f.Trim()).Where(f => f.Length > 0));
+            // One file per option, taken whole: a path may hold a comma or a semicolon
+            else if (args[i] == AbsorbOption && i + 1 < args.Length)
+            {
+                var file = args[++i].Trim();
+                if (file.Length > 0) options.Absorb.Add(file);
+            }
             else if (args[i] == DropOption && i + 1 < args.Length)
             {
                 options.Drops.AddRange(args[++i].Split(',').Select(p => Program.Pattern(p.Trim())));
@@ -313,7 +317,7 @@ internal sealed class ConverterOptions
                               "[--merge <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] " +
                               "[--model <part id pattern>=<part id>,...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] " +
                               "[--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] " +
-                              "[--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>[;...]]... " +
+                              "[--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>]... " +
                               "[--previous <earlier conversion>] [--twin <old part id>=<new part id or ->,...] [--measure <part id pattern>,...]");
             Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""Street Rod AC\Assets\Parts"" engines/Mopar  (the full run: tools\convert-parts.ps1)");
             return null;

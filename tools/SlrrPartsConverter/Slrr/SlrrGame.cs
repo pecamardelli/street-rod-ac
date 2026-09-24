@@ -19,6 +19,7 @@ public sealed class SlrrGame
 
     private readonly Dictionary<string, SlrrRpk?> _rpks = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<string> _unreadable = new();
+    private readonly HashSet<string> _unreadablePaths = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _outside = new(StringComparer.OrdinalIgnoreCase);
 
     public SlrrGame(string root)
@@ -30,6 +31,14 @@ public sealed class SlrrGame
 
     /// <summary>Rpks that are there but could not be read, with why: they count as missing, and the run reports them</summary>
     public IReadOnlyList<string> UnreadableRpks => _unreadable;
+
+    /// <summary>
+    /// Whether the rpk at a path relative to the install (as a pack's source or a reference names it) is there but
+    /// could not be read. Not the same as gone: what was converted from it before is kept, not taken for stale
+    /// </summary>
+    public bool IsUnreadable(string relativePath) => _unreadablePaths.Contains(NormalPath(relativePath));
+
+    private static string NormalPath(string relativePath) => relativePath.Trim().Replace('/', '\\');
 
     /// <summary>
     /// The rpk at a path relative to the install, loaded once; null when it is missing, lies outside the install, or
@@ -50,6 +59,7 @@ public sealed class SlrrGame
             catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or ArgumentException)
             {
                 _unreadable.Add($"{relativePath}: {ex.Message}");
+                _unreadablePaths.Add(NormalPath(relativePath));
                 Console.WriteLine($"  Skipped {relativePath}: {ex.Message}");
             }
         }

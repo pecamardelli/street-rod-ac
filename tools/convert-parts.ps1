@@ -5,8 +5,9 @@
 # The SLRR install and the folder of build notes are this machine's: pass -Slrr and -Notes, or set SRAC_SLRR and
 # SRAC_SLRR_NOTES once. A folder that is not there stops the run (the notes' engine builds would silently go).
 # The converter is built (Release) from the sources first, so a stale build never makes the content; -Converter runs
-# a given exe instead. The exit code is the converter's: 0 clean, 1 a rule or folder it refused, 2 parts or packs
-# left out (listed at the end of its output).
+# a given exe instead. The exit code is the converter's: 0 clean, 1 a rule or folder it refused (or a commit that
+# stopped part way, which it says), 2 parts or packs left out, or packs of unreadable rpks kept as they were (listed at
+# the end of its output).
 param(
     [string]$Slrr = $env:SRAC_SLRR,
     [string]$Output = (Join-Path $PSScriptRoot "..\Street Rod AC\Assets\Parts"),
@@ -23,8 +24,22 @@ function Fail([string]$message) {
     exit 1
 }
 
+# Windows PowerShell 5.1 passes a native argument that ends in a backslash as "...\", which the converter reads as an
+# escaped quote: that argument swallows the ones after it. Folders set in the environment often end in one
+function Trim-Folder([string]$folder) {
+    if (-not $folder) { return $folder }
+    $trimmed = $folder.TrimEnd('\', '/')
+    # A drive root keeps its separator ("D:" alone is that drive's current folder), with a dot after it
+    if ($trimmed -match '^[A-Za-z]:$') { return "$trimmed\." }
+    return $trimmed
+}
+$Slrr = Trim-Folder $Slrr
+$Output = Trim-Folder $Output
+$Notes = Trim-Folder $Notes
+
 if (-not $Slrr) { Fail "no SLRR folder: pass -Slrr <folder> or set SRAC_SLRR" }
-if (-not (Test-Path -LiteralPath (Join-Path $Slrr "parts") -PathType Container)) { Fail "$Slrr is not an SLRR install (no 'parts' folder)" }
+# Not Join-Path: on a drive that is not there it throws before Fail can say what is wrong
+if (-not (Test-Path -LiteralPath "$Slrr\parts" -PathType Container)) { Fail "$Slrr is not an SLRR install (no 'parts' folder)" }
 if (-not $Notes) { Fail "no build notes folder: pass -Notes <folder> or set SRAC_SLRR_NOTES" }
 if (-not (Test-Path -LiteralPath $Notes -PathType Container)) { Fail "the build notes folder is not there: $Notes" }
 

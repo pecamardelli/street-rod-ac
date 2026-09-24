@@ -115,6 +115,10 @@ public sealed class SlrrMesh
             };
             position += materialSize;
 
+            // The vertex count and the triangle count after the vertices: a file that ends before them is cut short
+            if (position + 8 > data.Length)
+                throw new InvalidDataException($"SCX ends at {data.Length} before the vertex and triangle counts at {position}");
+
             var vertexCount = BitConverter.ToInt32(data, position);
             position += 4;
             // The triangle count follows the vertices
@@ -260,11 +264,12 @@ public sealed class SlrrMesh
 
     private static void ReadV4Vertices(byte[] data, int offset, int size, SlrrSubMesh sub)
     {
+        // Before the count and flags are read: they are the chunk's bytes 8 to 15
+        if (size < 16) throw new InvalidDataException($"SCX vertex chunk of {size} bytes at {offset} is too small");
+
         var count = BitConverter.ToInt32(data, offset + 8);
         var flags = BitConverter.ToUInt32(data, offset + 12);
         if (count <= 0 || (flags & FlagPosition) == 0) return;
-
-        if (size < 16) throw new InvalidDataException($"SCX vertex chunk of {size} bytes at {offset} is too small");
 
         var stride = (size - 16) / count;
         var normalOffset = 12 + ((flags & FlagBlendWeight) != 0 ? 4 : 0);

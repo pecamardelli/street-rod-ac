@@ -103,11 +103,22 @@ public static class SlrrKn5Builder
     /// </summary>
     private static string AddTextureFile(IKn5 kn5, string filename, string prefix)
     {
+        // A file this model already took goes by the key it got then: every material drawing it would otherwise
+        // read it again to compare
+        var added = TextureKeys.GetOrCreateValue(kn5);
+        var fullPath = Path.GetFullPath(filename);
+        if (added.TryGetValue(fullPath, out var known)) return known;
+
+        return added[fullPath] = NewTextureKey(kn5, filename, prefix);
+    }
+
+    private static string NewTextureKey(IKn5 kn5, string filename, string prefix)
+    {
         var name = Path.GetFileName(filename).ToLowerInvariant();
         var key = prefix + name;
         if (kn5.TexturesData.TryGetValue(key, out var existing))
         {
-            // Already there by name: the same picture, or another one of that name
+            // Already there by name: the same picture from another folder, or another one of that name
             var data = File.ReadAllBytes(filename);
             if (existing.AsSpan().SequenceEqual(data)) return key;
 
@@ -119,6 +130,9 @@ public static class SlrrKn5Builder
         AddTexture(kn5, key, File.ReadAllBytes(filename));
         return key;
     }
+
+    /// <summary>The key each texture file got, per model being built (dropped with the model)</summary>
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IKn5, Dictionary<string, string>> TextureKeys = new();
 
     private static string ContentHash(byte[] data) =>
         System.Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(data), 0, 4).ToLowerInvariant();

@@ -41,6 +41,7 @@ public static class Program
             Console.WriteLine("       EngineBench <parts folder> car <AC car folder> <build id> [output folder]   every data file the car's parts change");
             Console.WriteLine("       EngineBench <parts folder> sound <AC car folder> <car id> [output folder]   the car's sound written for another car id");
             Console.WriteLine("       EngineBench <parts folder> sounds <AC cars folder> [sounds folder]        the sound library, and the sound every build gets");
+            Console.WriteLine("A <build id> is the exact id or a part of one; a part that more than one build's id holds is refused with a list of them");
             return 1;
         }
 

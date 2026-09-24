@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Scripting;
@@ -22,9 +23,6 @@ public static class Program
     private const string ConstantsFile = "script_constants.json";
     private const string TakesPrefix = "takes:";
 
-    /// <summary>Ends the name of the folder next to the output that a run converts into before anything is moved in</summary>
-    private const string StagingSuffix = ".converting";
-
     /// <summary>Exit code of a run that wrote its output but left parts, packs or rpks out: a script must not take it for a clean run</summary>
     private const int ExitIncomplete = 2;
 
@@ -36,6 +34,13 @@ public static class Program
 
     private sealed record SourcePart(SlrrRpk Rpk, SlrrRpkEntry Entry, string ConfigFile, string? ScriptPath, string Id, string Name);
 
+    /// <summary>
+    /// A pack converted before from an rpk that could not be read this time: kept as it was, not taken for a pack
+    /// that left SLRR. Folder is where it goes in the output, From where it was read (the output itself, or the
+    /// --previous content for a run into another folder), Root the content From belongs to
+    /// </summary>
+    private sealed record KeptPack(string Id, string Folder, string From, string Root, string Json, PartPack Pack);
+
     /// <summary>What a run works out, phase by phase; nothing of it reaches the output before <see cref="Write"/></summary>
     private sealed class Run
     {
@@ -44,7 +49,7 @@ public static class Program
             Options = options;
             Game = new SlrrGame(options.Slrr);
             Scripts = new SlrrScriptEvaluator(Game);
-            Staging = StagingFolder(options.Output);
+            Staging = ConversionOutput.StagingFolder(options.Output);
         }
 
         public ConverterOptions Options { get; }
@@ -100,6 +105,12 @@ public static class Program
             new(StringComparer.OrdinalIgnoreCase);
 
         public Dictionary<string, PartDefinition> Definitions { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Packs of unreadable rpks kept as they were, by pack id</summary>
+        public Dictionary<string, KeptPack> Kept { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Whether an earlier run stopped while it moved its output in (its marker was there when this one started)</summary>
+        public bool InterruptedBefore { get; set; }
     }
 
     /// <remarks>The options are described at <see cref="ConverterOptions.Parse"/></remarks>
@@ -135,14 +146,39 @@ public static class Program
         if (options.Measure.Count > 0)
         {
             Measure(run.Game, run.Packs.SelectMany(p => p.Parts).Where(p => options.Measure.Any(m => m.IsMatch(p.Id))));
-            return 0;
+            // What an unreadable rpk holds was not measured: not a clean run
+            if (run.Game.UnreadableRpks.Count == 0) return 0;
+
+            Console.WriteLine($"{run.Game.UnreadableRpks.Count} rpks could not be read, their parts were not measured");
+            return ExitIncomplete;
         }
 
         if (!ReplacePacks(run) || !MergeParts(run) || !ChooseModels(run)) return 1;
 
+        // What a stopped run left: a classes folder parked mid-swap goes back before anything reads or replaces it,
+        // and a commit that never finished is said out loud (only a full run makes that content whole again)
+        try
+        {
+            var recovered = ConversionOutput.RecoverSwap(Path.Combine(options.Output, PartScripts.Folder));
+            if (recovered != null) Console.WriteLine($"  {recovered}");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Swapping the classes in over a parked copy that is still there would cost it
+            Console.WriteLine($"Could not undo what a stopped run left of {PartScripts.Folder}: {ex.Message}");
+            return 1;
+        }
+        run.InterruptedBefore = ConversionOutput.CommitWasInterrupted(options.Output);
+        if (run.InterruptedBefore)
+        {
+            Console.WriteLine($"The last run stopped while it moved its output in ({ConversionOutput.CommitMarker(options.Output)}): " +
+                              "the content is part that run's, part the one before" + (options.Filter == null ? "; this run replaces all of it" : "; run without a filter to make it whole"));
+        }
+
         // Models and classes are made in a folder next to the output, and moved in only once the whole run has worked
-        // out: a run that stops half way (a bad rule, an exception) leaves the content as the last run left it
-        ClearStaging(run.Staging, strict: true);
+        // out: a run that stops before the commit (a bad rule, an exception) leaves the content as the last run left
+        // it. The commit itself is ordered so that a stop part way leaves no file naming what is not there (Write)
+        ConversionOutput.ClearStaging(run.Staging, strict: true);
         try
         {
             ConvertPacks(run);
@@ -150,11 +186,11 @@ public static class Program
             if (!FoldSlotShifts(run)) return 1;
 
             ApplyNames(run);
-            Write(run);
+            if (!Write(run)) return 1;
         }
         finally
         {
-            ClearStaging(run.Staging);
+            ConversionOutput.ClearStaging(run.Staging);
         }
 
         return Report(run, stopwatch);
@@ -180,14 +216,14 @@ public static class Program
         foreach (var file in files)
         {
             var relativePath = Path.GetRelativePath(game.Root, file);
-            // An rpk that cannot be read is reported by the game and counted against the run
-            var rpk = game.GetRpk(relativePath);
-            if (rpk == null) continue;
-
             var rpkId = file == baseRpk
                 ? BasePackId
                 : Path.ChangeExtension(Path.GetRelativePath(run.PartsRoot, file), null).Replace('\\', '/');
+            // An rpk that cannot be read is reported by the game and counted against the run. It is still there: a
+            // rule naming it is no typo, and what was converted from it is kept (FindKeptPacks)
             rpkIds.Add(rpkId);
+            var rpk = game.GetRpk(relativePath);
+            if (rpk == null) continue;
 
             // Packs are named after the rpk they come from unless renamed
             var rules = options.Renames.Where(r => r.Rpk.Equals(rpkId, StringComparison.OrdinalIgnoreCase)).ToList();
@@ -272,7 +308,7 @@ public static class Program
             var newPacks = PacksOf(run, newId);
             if (oldPacks.Count == 0 || newPacks.Count == 0)
             {
-                Console.WriteLine($"Cannot replace {oldId} with {newId}: {(oldPacks.Count == 0 ? oldId : newId)} is not among the packs");
+                Console.WriteLine($"Cannot replace {oldId} with {newId}: {(oldPacks.Count == 0 ? oldId : newId)} is not among the packs{UnreadableHint(run)}");
                 return false;
             }
 
@@ -289,12 +325,20 @@ public static class Program
         var unusedTwinRules = twinRules.Keys.Where(id => !usedTwinRules.Contains(id)).ToList();
         if (unusedTwinRules.Count > 0)
         {
-            Console.WriteLine($"{TwinOption} names parts of no replaced pack: {string.Join(", ", unusedTwinRules)}");
+            Console.WriteLine($"{TwinOption} names parts of no replaced pack: {string.Join(", ", unusedTwinRules)}{UnreadableHint(run)}");
             return false;
         }
 
         return true;
     }
+
+    /// <summary>
+    /// Added to a rule refused for naming what is not there, when rpks could not be read: what they hold is not among
+    /// the parts. Refused all the same, before anything is written: a rule half applied would change other packs
+    /// </summary>
+    private static string UnreadableHint(Run run) => run.Game.UnreadableRpks.Count == 0
+        ? string.Empty
+        : $" (or is in one of the {run.Game.UnreadableRpks.Count} rpks that could not be read, above; nothing written)";
 
     private static List<(string Id, SlrrRpk Rpk, List<SourcePart> Parts)> PacksOf(Run run, string packId)
     {
@@ -348,8 +392,8 @@ public static class Program
         var unusedMerges = merges.Where(m => !merged.Any(p => m.Pattern.IsMatch(p.Source.Id))).ToList();
         if (unknownKept.Count > 0 || unusedMerges.Count > 0)
         {
-            if (unknownKept.Count > 0) Console.WriteLine($"{MergeOption} names parts that are not there to stand in: {string.Join(", ", unknownKept)}");
-            if (unusedMerges.Count > 0) Console.WriteLine($"{MergeOption} patterns that match no part: {string.Join(", ", unusedMerges.Select(m => m.Pattern))}");
+            if (unknownKept.Count > 0) Console.WriteLine($"{MergeOption} names parts that are not there to stand in: {string.Join(", ", unknownKept)}{UnreadableHint(run)}");
+            if (unusedMerges.Count > 0) Console.WriteLine($"{MergeOption} patterns that match no part: {string.Join(", ", unusedMerges.Select(m => m.Pattern))}{UnreadableHint(run)}");
             return false;
         }
 
@@ -399,7 +443,7 @@ public static class Program
             var matching = sources.Values.Where(p => rule.Pattern.IsMatch(p.Id)).ToList();
             if (matching.Count == 0)
             {
-                Console.WriteLine($"{SingleOption} {rule.Pattern} matches no part");
+                Console.WriteLine($"{SingleOption} {rule.Pattern} matches no part{UnreadableHint(run)}");
                 return false;
             }
 
@@ -420,8 +464,8 @@ public static class Program
             if (borrowers.Count == 0 || !sources.TryGetValue(rule.DonorId, out var donor))
             {
                 Console.WriteLine(borrowers.Count == 0
-                    ? $"{ModelOption} {rule.Pattern} matches no part"
-                    : $"{ModelOption} names a model donor that is not there: {rule.DonorId}");
+                    ? $"{ModelOption} {rule.Pattern} matches no part{UnreadableHint(run)}"
+                    : $"{ModelOption} names a model donor that is not there: {rule.DonorId}{UnreadableHint(run)}");
                 return false;
             }
 
@@ -516,6 +560,13 @@ public static class Program
 
         var keptFolder = Path.GetDirectoryName(Path.GetFullPath(shiftsFile))!;
         var kept = SlotShifts.Load(keptFolder);
+        if (kept.Problem != null)
+        {
+            // Folding into a file that could not be read would write over the user's shifts with only the new ones
+            Console.WriteLine($"{shiftsFile}: {kept.Problem}. Fix or move it and run again");
+            return false;
+        }
+
         var folded = 0;
         var absorbed = new List<string>();
         // The kept file itself is not one of the game's: folding it into itself would double it and take it away
@@ -523,6 +574,12 @@ public static class Program
                      .Distinct(StringComparer.OrdinalIgnoreCase).Where(f => !f.Equals(keptFolder, StringComparison.OrdinalIgnoreCase)))
         {
             var fresh = SlotShifts.Load(folder);
+            if (fresh.Problem != null)
+            {
+                // Not folded and not deleted: what the game wrote there is left for someone to look at
+                Console.WriteLine($"  {fresh.Path}: {fresh.Problem}; skipped");
+                continue;
+            }
             if (fresh.IsEmpty) continue;
 
             foreach (var (partId, slotId, offset) in fresh.All) kept.Add(partId, slotId, offset, save: false);
@@ -560,17 +617,35 @@ public static class Program
 
     /// <summary>
     /// Works out every file of the output first (pack definitions, the classes the parts use and, for a full run,
-    /// the constants, aliases and engine builds), and only then moves the models in and writes the files, each
-    /// one whole (<see cref="SafeFile"/>)
+    /// the constants, aliases and engine builds), and only then moves it all in (<see cref="Commit"/>). The packs of an
+    /// rpk that could not be read are kept as the last conversion left them. False when the commit stopped part way
     /// </summary>
-    private static void Write(Run run)
+    private static bool Write(Run run)
     {
         var output = run.Output;
+        FindKeptPacks(run);
+
         var packFiles = new List<(string Folder, string Staging, string Json)>();
         foreach (var (folder, staging, pack, models) in run.Written.Values)
         {
+            // Made from the rpks that could be read; the pack as it was holds the unreadable one's parts too
+            if (run.Kept.ContainsKey(pack.Id)) continue;
+
             packFiles.Add((folder, staging, JsonConvert.SerializeObject(pack, Formatting.Indented)));
             Console.WriteLine($"  {pack.Id,-45} {pack.Parts.Count,4} parts, {models.Values.Count(m => m != null),4} models");
+        }
+
+        foreach (var kept in run.Kept.Values)
+        {
+            Console.WriteLine($"  {kept.Id,-45} kept as it was: {kept.Pack.Source} could not be read");
+            if (SamePath(kept.From, kept.Folder)) continue;
+
+            // Kept from the --previous content for a run into another folder: its models go in through the staging
+            // folder like the run's own (a folder of their own there: the run may have made some of the pack too)
+            var staging = Path.Combine(run.Staging, ".kept", kept.Id.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(staging);
+            foreach (var model in Directory.EnumerateFiles(kept.From, "*.kn5")) File.Copy(model, Path.Combine(staging, Path.GetFileName(model)));
+            packFiles.Add((kept.Folder, staging, kept.Json));
         }
 
         // The game runs the part scripts itself. A filtered run adds the classes of its packs to what is there;
@@ -578,6 +653,7 @@ public static class Program
         // below are evaluated: the classes and constants those touch are no part's
         var classes = ScriptFiles(run.Game, run.Scripts);
         Console.WriteLine($"  {classes.Count} script classes");
+        if (run.Filter == null) StageScripts(run, classes);
 
         string? constants = null;
         string? aliases = null;
@@ -588,8 +664,9 @@ public static class Program
         if (run.Filter == null)
         {
             // Packs converted before under a name no longer produced (renamed, replaced, dropped whole) would be
-            // loaded next to the current ones
+            // loaded next to the current ones. A pack whose rpk could not be read has not left SLRR: it is kept
             var current = run.Packs.Select(p => Path.GetFullPath(Path.Combine(output, p.Id.Replace('/', Path.DirectorySeparatorChar))))
+                .Concat(run.Kept.Values.Select(k => Path.GetFullPath(k.Folder)))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
             if (Directory.Exists(output))
             {
@@ -597,37 +674,259 @@ public static class Program
                     .Select(f => Path.GetFullPath(Path.GetDirectoryName(f)!)).Where(f => !current.Contains(f)).ToList();
             }
 
-            constants = JsonConvert.SerializeObject(run.Scripts.Constants, Formatting.Indented);
+            constants = Constants(run);
+
+            // The parts the content ends up with: a kept pack's as it was, not what the run made of the rpks of it
+            // that it could read
+            var definitions = new Dictionary<string, PartDefinition>(run.Definitions, StringComparer.OrdinalIgnoreCase);
+            foreach (var kept in run.Kept.Values)
+            {
+                if (run.Written.TryGetValue(kept.Id, out var written))
+                {
+                    foreach (var part in written.Pack.Parts) definitions.Remove(part.Id);
+                }
+
+                foreach (var part in kept.Pack.Parts) definitions[part.Id] = part;
+            }
 
             if (run.Earlier != null)
             {
-                var (renamed, kept) = run.Earlier.Carry(run.Game, run.PartIds, run.Definitions, run.Aliases);
+                var (renamed, kept) = run.Earlier.Carry(run.Game, run.PartIds, definitions, run.Aliases);
                 if (renamed + kept > 0) Console.WriteLine($"  {renamed} parts renamed in their rpk and {kept} older aliases kept from {run.Options.Previous}");
             }
 
+            KeepAliases(run, definitions);
             aliases = JsonConvert.SerializeObject(run.Aliases, Formatting.Indented);
-            builds = JsonConvert.SerializeObject(EngineBuilds(run), Formatting.Indented);
+
+            var engineBuilds = EngineBuilds(run);
+            KeepBuilds(run, engineBuilds);
+            builds = JsonConvert.SerializeObject(engineBuilds, Formatting.Indented);
         }
 
-        // All of it worked out: in it goes
-        foreach (var (folder, staging, json) in packFiles) CommitPack(folder, staging, json);
-        CopyScripts(run.Game.Root, classes, Path.Combine(output, PartScripts.Folder), Path.Combine(run.Staging, PartScripts.Folder), replace: run.Filter == null);
+        return Commit(run, packFiles, classes, constants, aliases, builds, stale);
+    }
 
-        if (run.Filter == null)
+    /// <summary>
+    /// Moves the output in, in an order that leaves no file naming what is not there wherever it stops (a file held
+    /// open, the process killed): what is named goes in before what names it, what nothing names any more goes last.
+    /// <list type="number">
+    /// <item>The classes, which the packs name (a full run swaps the folder in whole, <see cref="ConversionOutput.SwapIn"/>).</item>
+    /// <item>Every pack's models: one moved over a model of the same name is the same part's, and no pack names a new one yet.</item>
+    /// <item>Every pack.json, each followed by the removal of the models it no longer names.</item>
+    /// <item>The constants, the engine builds and the aliases, which name the packs' parts.</item>
+    /// <item>The packs no longer converted, once nothing written by the run leads to them.</item>
+    /// </list>
+    /// Each file goes in whole (renames, <see cref="SafeFile"/>). What a stop part way can leave is old files next to new
+    /// ones: an old alias naming a part the new pack.json no longer has (a missing part, as for any save of a removed
+    /// part). A marker next to the output is there from the first step to the last, so the next run says the content
+    /// is a mix, and a full run, which rewrites every file, takes it away.
+    /// </summary>
+    private static bool Commit(Run run, List<(string Folder, string Staging, string Json)> packFiles, HashSet<string> classes,
+        string? constants, string? aliases, string? builds, List<string> stale)
+    {
+        var output = run.Output;
+        // A run that converted nothing has not made the folder yet
+        Directory.CreateDirectory(output);
+        ConversionOutput.BeginCommit(output);
+        try
         {
-            // A run that converted nothing has not made the folder yet
-            Directory.CreateDirectory(output);
-
-            foreach (var folder in stale)
+            if (run.Filter == null)
             {
-                RemovePack(folder);
-                Console.WriteLine($"  removed {Path.GetRelativePath(output, folder)}: no longer converted");
+                // Nothing staged (no class at all) leaves the folder as it is
+                ConversionOutput.SwapIn(Path.Combine(output, PartScripts.Folder), Path.Combine(run.Staging, PartScripts.Folder));
+            }
+            else CopyClasses(run.Game.Root, classes, Path.Combine(output, PartScripts.Folder));
+
+            var made = packFiles.Select(p => MoveModelsIn(p.Folder, p.Staging)).ToList();
+            for (var i = 0; i < packFiles.Count; i++) WritePack(packFiles[i].Folder, packFiles[i].Json, made[i]);
+
+            if (run.Filter == null)
+            {
+                SafeFile.WriteAllText(Path.Combine(output, ConstantsFile), constants!);
+                SafeFile.WriteAllText(Path.Combine(output, EngineBuild.FileName), builds!);
+                SafeFile.WriteAllText(Path.Combine(output, PartPack.AliasesFileName), aliases!);
+
+                foreach (var folder in stale)
+                {
+                    RemovePack(folder);
+                    Console.WriteLine($"  removed {Path.GetRelativePath(output, folder)}: no longer converted");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Stopped while moving the output in: {ex.Message}");
+            Console.WriteLine($"{output} is part this run's, part the last one's (every file whole); run again without a filter");
+            return false;
+        }
+
+        // A filtered run does not make whole what a stopped full commit left: the marker stays for the full run that does
+        if (run.Filter == null || !run.InterruptedBefore) ConversionOutput.EndCommit(output);
+        return true;
+    }
+
+    /// <summary>
+    /// The packs converted before from an rpk that could not be read this time, from the output and, for a full run,
+    /// from the --previous content (a run into another folder). A pack gone from SLRR is stale; one that could not be
+    /// read is not, and neither are its models, aliases and builds
+    /// </summary>
+    private static void FindKeptPacks(Run run)
+    {
+        if (run.Game.UnreadableRpks.Count == 0) return;
+
+        // A filtered run commits only its own pack: the output's is the one it must not write over
+        var roots = run.Filter == null ? ContentRoots(run) : ContentRoots(run).Where(r => SamePath(r, run.Output));
+        foreach (var root in roots)
+        {
+            foreach (var file in Directory.EnumerateFiles(root, PartPack.FileName, SearchOption.AllDirectories))
+            {
+                var folder = Path.GetDirectoryName(file)!;
+                var relative = Path.GetRelativePath(root, folder);
+                var id = relative.Replace('\\', '/');
+                if (run.Kept.ContainsKey(id) || (run.Filter != null && !run.Written.ContainsKey(id))) continue;
+
+                string json;
+                PartPack? pack;
+                try
+                {
+                    json = File.ReadAllText(file);
+                    pack = JsonConvert.DeserializeObject<PartPack>(json);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+                {
+                    Console.WriteLine($"  {file}: {ex.Message}; not kept");
+                    continue;
+                }
+
+                if (pack == null || !pack.Source.Split(',').Select(s => s.Trim()).Any(s => s.Length > 0 && run.Game.IsUnreadable(s))) continue;
+
+                run.Kept[id] = new KeptPack(id, Path.Combine(run.Output, relative), folder, root, json, pack);
+            }
+        }
+    }
+
+    /// <summary>The converted content there is to keep things from: the output as it is, then the --previous content</summary>
+    private static List<string> ContentRoots(Run run)
+    {
+        var roots = new List<string>();
+        if (Directory.Exists(run.Output)) roots.Add(run.Output);
+        var previous = run.Options.Previous;
+        if (previous != null && Directory.Exists(previous) && !SamePath(previous, run.Output)) roots.Add(previous);
+        return roots;
+    }
+
+    /// <summary>The content the kept packs came from, the output first</summary>
+    private static List<string> KeptRoots(Run run) =>
+        run.Kept.Values.Select(k => k.Root).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+    private static bool SamePath(string a, string b) =>
+        string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(a)), Path.TrimEndingDirectorySeparator(Path.GetFullPath(b)), StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>A JSON file of the content, or null when it is not there or cannot be read (said, not fatal: it only feeds what is kept)</summary>
+    private static T? ReadJson<T>(string file) where T : class
+    {
+        if (!File.Exists(file)) return null;
+
+        try
+        {
+            return JsonConvert.DeserializeObject<T>(File.ReadAllText(file));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            Console.WriteLine($"  {file}: {ex.Message}; nothing kept from it");
+            return null;
+        }
+    }
+
+    /// <summary>The constants of the classes the run evaluated, plus those of the kept packs' classes it could not evaluate</summary>
+    private static string Constants(Run run)
+    {
+        if (run.Kept.Count == 0) return JsonConvert.SerializeObject(run.Scripts.Constants, Formatting.Indented);
+
+        var merged = new SortedDictionary<string, object>(StringComparer.Ordinal);
+        foreach (var (className, values) in run.Scripts.Constants) merged[className] = values;
+        foreach (var root in KeptRoots(run))
+        {
+            var old = ReadJson<Dictionary<string, JToken>>(Path.Combine(root, ConstantsFile));
+            if (old == null) continue;
+
+            foreach (var (className, values) in old) merged.TryAdd(className, values);
+        }
+
+        return JsonConvert.SerializeObject(merged, Formatting.Indented);
+    }
+
+    /// <summary>
+    /// The aliases of the content the kept packs came from that lead to their parts: saves name those parts by
+    /// them, and with the rpk unreadable nothing else in the run knows they are still there
+    /// </summary>
+    private static void KeepAliases(Run run, Dictionary<string, PartDefinition> definitions)
+    {
+        // As many hops as the game follows (PartsCatalog.CurrentId)
+        const int maxHops = 8;
+        if (run.Kept.Count == 0) return;
+
+        var keptIds = run.Kept.Values.SelectMany(k => k.Pack.Parts).Select(p => p.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var added = 0;
+        foreach (var root in KeptRoots(run))
+        {
+            var old = ReadJson<Dictionary<string, string>>(Path.Combine(root, PartPack.AliasesFileName));
+            if (old == null) continue;
+
+            var oldAliases = new Dictionary<string, string>(old, StringComparer.OrdinalIgnoreCase);
+            foreach (var (gone, target) in old)
+            {
+                if (definitions.ContainsKey(gone) || run.Aliases.ContainsKey(gone) || !Leads(target)) continue;
+
+                run.Aliases[gone] = target;
+                added++;
             }
 
-            SafeFile.WriteAllText(Path.Combine(output, ConstantsFile), constants!);
-            SafeFile.WriteAllText(Path.Combine(output, PartPack.AliasesFileName), aliases!);
-            SafeFile.WriteAllText(Path.Combine(output, EngineBuild.FileName), builds!);
+            bool Leads(string id)
+            {
+                for (var hops = 0; hops < maxHops; hops++)
+                {
+                    if (keptIds.Contains(id)) return true;
+                    if (!run.Aliases.TryGetValue(id, out var next) && !oldAliases.TryGetValue(id, out next)) return false;
+
+                    id = next;
+                }
+
+                return false;
+            }
         }
+
+        if (added > 0) Console.WriteLine($"  {added} aliases of the kept packs kept");
+    }
+
+    /// <summary>
+    /// The engine builds of the converted content that name an rpk that could not be read (the car's, a part's)
+    /// stay as they were: made now, they would miss the car or have those parts unresolved
+    /// </summary>
+    private static void KeepBuilds(Run run, List<EngineBuild> builds)
+    {
+        if (run.Game.UnreadableRpks.Count == 0) return;
+
+        var handled = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var root in ContentRoots(run))
+        {
+            var old = ReadJson<List<EngineBuild>>(Path.Combine(root, EngineBuild.FileName));
+            if (old == null) continue;
+
+            foreach (var build in old.Where(b => Touches(b.Source) || b.Parts.Any(p => Touches(p.Source))))
+            {
+                if (!handled.Add(build.Id)) continue;
+
+                var at = builds.FindIndex(b => b.Id.Equals(build.Id, StringComparison.OrdinalIgnoreCase));
+                if (at >= 0) builds[at] = build;
+                else builds.Add(build);
+            }
+        }
+
+        if (handled.Count > 0) Console.WriteLine($"  {handled.Count} engine builds kept as they were: they name an rpk that could not be read");
+
+        bool Touches(string? reference) =>
+            reference != null && SlrrGame.TryParseReference(reference, out var rpkPath, out _) && run.Game.IsUnreadable(rpkPath);
     }
 
     /// <summary>The engines the game offers: the cars' own, the build notes', and the packs' complete kits</summary>
@@ -703,7 +1002,9 @@ public static class Program
         var unreadable = run.Game.UnreadableRpks;
         if (unreadable.Count > 0)
         {
-            Console.WriteLine($"{unreadable.Count} rpks could not be read, their parts are missing:");
+            // Kept, not removed: an rpk that could not be read has not left SLRR (FindKeptPacks)
+            Console.WriteLine($"{unreadable.Count} rpks could not be read: {run.Kept.Count} packs of theirs kept as the last conversion left them, " +
+                              "their parts missing where no earlier conversion had them:");
             foreach (var rpk in unreadable) Console.WriteLine("  " + rpk);
         }
 
@@ -711,32 +1012,6 @@ public static class Program
 
         Console.WriteLine($"Incomplete: {run.Failures.Count} parts failed, {run.Skipped.Count} packs skipped, {unreadable.Count} rpks unreadable");
         return ExitIncomplete;
-    }
-
-    /// <summary>The folder next to the output that a run converts into: same volume, so what is in it moves in by rename</summary>
-    private static string StagingFolder(string output)
-    {
-        var full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(output));
-        var parent = Path.GetDirectoryName(full) ?? full;
-        return Path.Combine(parent, "." + Path.GetFileName(full) + StagingSuffix);
-    }
-
-    /// <summary>
-    /// Takes away what a run left in its staging folder: a crashed run's before a run starts (strict: its models must
-    /// not be moved in with the new ones), all of it once the run is over
-    /// </summary>
-    private static void ClearStaging(string staging, bool strict = false)
-    {
-        if (!Directory.Exists(staging)) return;
-
-        try
-        {
-            Directory.Delete(staging, true);
-        }
-        catch (Exception ex) when (!strict && ex is IOException or UnauthorizedAccessException)
-        {
-            Console.WriteLine($"Could not remove {staging}: {ex.Message}");
-        }
     }
 
     /// <summary>
@@ -1350,14 +1625,25 @@ public static class Program
     }
 
     /// <summary>
-    /// Copies the classes in the folder layout class lookup depends on. When they are all there are, they are copied
-    /// into the staging folder and swapped in whole for what was there; a filtered run adds its classes to it.
+    /// A full run's classes, in the staging folder, for <see cref="Commit"/> to swap in whole for what was there. The
+    /// classes of the output's folder that the kept packs' parts use are not among the run's: the old folder's
+    /// classes the run did not make are kept with them
     /// </summary>
-    /// <param name="replace">Whether the classes are all there are: what was in the folder before goes</param>
-    private static void CopyScripts(string gameRoot, IEnumerable<string> files, string target, string staging, bool replace)
+    private static void StageScripts(Run run, IEnumerable<string> classes)
+    {
+        var staged = Path.Combine(run.Staging, PartScripts.Folder);
+        CopyClasses(run.Game.Root, classes, staged);
+        foreach (var root in KeptRoots(run))
+        {
+            var kept = ConversionOutput.FillMissing(staged, Path.Combine(root, PartScripts.Folder));
+            if (kept > 0) Console.WriteLine($"  {kept} script classes of {root} kept for the kept packs");
+        }
+    }
+
+    /// <summary>Copies the classes in the folder layout class lookup depends on</summary>
+    private static void CopyClasses(string gameRoot, IEnumerable<string> files, string destinationRoot)
     {
         var root = Path.GetFullPath(gameRoot);
-        var destinationRoot = replace ? staging : target;
         foreach (var file in files)
         {
             // Only classes inside the install keep their layout (on another drive the relative path is the file's
@@ -1368,36 +1654,34 @@ public static class Program
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
             File.Copy(file, destination, true);
         }
-
-        if (!replace) return;
-
-        // Two renames on one volume: the old folder is never half replaced
-        var previous = staging + ".old";
-        Directory.CreateDirectory(Path.GetDirectoryName(previous)!);
-        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-        if (Directory.Exists(target)) Directory.Move(target, previous);
-        if (Directory.Exists(staging)) Directory.Move(staging, target);
-        if (Directory.Exists(previous)) Directory.Delete(previous, true);
     }
 
     /// <summary>
-    /// Moves a pack's models in from the staging folder, then writes its definitions, then takes away the models
-    /// of its last conversion that this one did not make: the pack file never names a model that is not there
+    /// Moves a pack's models in from the staging folder: before any pack file names them. Returns the names of the
+    /// models it moved, the ones its pack file names
     /// </summary>
-    private static void CommitPack(string folder, string staging, string json)
+    private static HashSet<string> MoveModelsIn(string folder, string staging)
     {
         Directory.CreateDirectory(folder);
         var made = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        if (Directory.Exists(staging))
+        if (!Directory.Exists(staging)) return made;
+
+        foreach (var file in Directory.EnumerateFiles(staging, "*.kn5").ToList())
         {
-            foreach (var file in Directory.EnumerateFiles(staging, "*.kn5").ToList())
-            {
-                var name = Path.GetFileName(file);
-                File.Move(file, Path.Combine(folder, name), overwrite: true);
-                made.Add(name);
-            }
+            var name = Path.GetFileName(file);
+            File.Move(file, Path.Combine(folder, name), overwrite: true);
+            made.Add(name);
         }
 
+        return made;
+    }
+
+    /// <summary>
+    /// Writes a pack's definitions once its models are in, then takes away the models of its last conversion that
+    /// this one did not make: the pack file never names a model that is not there
+    /// </summary>
+    private static void WritePack(string folder, string json, HashSet<string> made)
+    {
         SafeFile.WriteAllText(Path.Combine(folder, PartPack.FileName), json);
 
         foreach (var file in Directory.EnumerateFiles(folder, "*.kn5").Where(f => !made.Contains(Path.GetFileName(f))).ToList())
