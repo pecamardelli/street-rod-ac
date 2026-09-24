@@ -55,14 +55,27 @@ public class AppSettings
     public string ShowroomsPath => Path.Combine(AssettoCorsaPath, "content", "showroom");
 
     /// <summary>
-    /// Showroom used as the 3D garage environment
+    /// The game's own garage scenes: showroom-style folders shipped next to it, like the parts
     /// </summary>
-    public string GarageShowroomId { get; set; } = "Hangar";
+    public string GaragesPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Garages");
 
     /// <summary>
-    /// Full path to the garage showroom model
+    /// Showroom used as the 3D garage environment
     /// </summary>
-    public string GarageShowroomKn5 => Path.Combine(ShowroomsPath, GarageShowroomId, GarageShowroomId + ".kn5");
+    public string GarageShowroomId { get; set; } = "garage";
+
+    /// <summary>
+    /// Full path to the garage showroom model: the game's own garage if it has one by that id, else the AC
+    /// install's showroom of that name
+    /// </summary>
+    public string GarageShowroomKn5
+    {
+        get
+        {
+            var own = Path.Combine(GaragesPath, GarageShowroomId, GarageShowroomId + ".kn5");
+            return File.Exists(own) ? own : Path.Combine(ShowroomsPath, GarageShowroomId, GarageShowroomId + ".kn5");
+        }
+    }
 
     /// <summary>
     /// Path to the converted part packs: the game's own content, shipped next to it (see tools/convert-parts.ps1)

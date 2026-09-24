@@ -365,3 +365,6 @@ FodyWeavers.xsd
 # Claude Code temporary files
 tmpclaude-*
 .aider*
+
+# Third-party garage showroom (Rob Taylor, no redistribution licence) - local only until we build our own
+Street Rod AC/Assets/Garages/garage/
