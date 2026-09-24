@@ -278,8 +278,34 @@ public sealed class AcConfigBackupTests : IDisposable
         Assert.Contains("[STREET_ROD]", lines);
         Assert.Contains($"CONTEXT_ID={context:D}", lines);
 
-        Assert.Equal(1, Service().RestoreAll());
+        // race.ini, and the assists file the race's damage went into (there was none: it goes again)
+        Assert.Equal(2, Service().RestoreAll());
         Assert.Equal("user's race.ini", File.ReadAllText(race));
+        Assert.False(File.Exists(CfgFile("assists.ini")));
+    }
+
+    [Fact]
+    public void A_race_runs_in_the_race_mode_with_damage_on_and_the_players_assists_come_back()
+    {
+        _temp.File(Path.Combine("cfg", "race.ini"), "user's race.ini");
+        const string assists = "[ASSISTS]\r\nABS=2\r\nVISUALDAMAGE=100\r\nDAMAGE=0\r\nFUEL_RATE=0\r\nTYRE_WEAR=0\r\n";
+        var assistsFile = _temp.File(Path.Combine("cfg", "assists.ini"), assists);
+
+        Assert.True(Service().ApplyIntent(new DragRaceIntent { PlayerCarId = "a", OpponentCarId = "b", PlayerName = "P", OpponentName = "O" }));
+
+        var race = File.ReadAllLines(CfgFile("race.ini"));
+        Assert.Contains($"__CM_CUSTOM_MODE={IniModificationService.RaceModeId}", race);
+        Assert.DoesNotContain(race, l => l.StartsWith("MODE=") || l.StartsWith("__CM_NEW_MODE_USED"));
+
+        var raced = File.ReadAllLines(assistsFile);
+        Assert.Contains("DAMAGE=100", raced);
+        Assert.Contains("TYRE_WEAR=1", raced);
+        Assert.Contains("ABS=2", raced);             // the player's own assists stay
+        Assert.Contains("VISUALDAMAGE=100", raced);
+        Assert.Contains("FUEL_RATE=0", raced);
+
+        Assert.Equal(2, Service().RestoreAll());
+        Assert.Equal(assists, File.ReadAllText(assistsFile));
     }
 
     [Theory]

@@ -34,6 +34,15 @@ namespace Street_Rod_AC.Models.GameState
         /// </summary>
         public int EventReputationBonus { get; set; }
 
+        /// <summary>
+        /// Races called off for jumping the start. No contest, so neither a win nor a loss, but everybody saw it:
+        /// each one costs <see cref="FalseStartPenalty"/> reputation, up to <see cref="MaxFalseStartPenalty"/>
+        /// </summary>
+        public int FalseStarts { get; set; }
+
+        public const int FalseStartPenalty = 3;
+        public const int MaxFalseStartPenalty = 15;
+
         public RacerStats()
         {
             Wins = 0;
@@ -102,6 +111,9 @@ namespace Street_Rod_AC.Models.GameState
 
             // Add event reputation bonus
             reputation += EventReputationBonus;
+
+            // Jumping the start: no contest, but a racer known for it is not taken seriously
+            reputation -= Math.Min(FalseStarts * FalseStartPenalty, MaxFalseStartPenalty);
 
             // Clamp to valid range
             return Math.Clamp(reputation, 0, 100);

@@ -96,7 +96,7 @@ git grep -nEi '(api[_-]?key|secret|password|token)\s*[:=]' -- ':!*.md'
 | Determinism  | Output is deterministic (the re-run workflow diffs scratch runs) — flag dictionary-order or time-dependent output              |
 | Exit codes   | Non-zero exit on failure so `convert-parts.ps1` can stop                                                                       |
 
-## CSP Lua app (`apps/lua/sr_race_manager`)
+## CSP race mode (`apps/new-modes/sr_race`, was the Lua app `apps/lua/sr_race_manager`)
 
 | Signal        | Check                                                                                                                  |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------- |

@@ -257,6 +257,57 @@ public sealed class RaceResultProcessorTests : IDisposable
     }
 
     [Fact]
+    public void A_false_start_is_no_contest_that_costs_reputation()
+    {
+        var (state, context, playerCar, rival) = World(pinkSlip: true);
+        var json = File(playerPosition: 1);
+        json["session"]!["end_reason"] = EndReasons.FalseStart;
+        json["participants"]![0]!["false_start"] = true;
+        var reputation = state.Player.Stats.Reputation;
+
+        var messages = Processor().ProcessRaceResult(Result(json), context, state);
+
+        Assert.Equal(1_000_000m, state.Player.Money);
+        Assert.Equal(5000m, rival.Money);
+        Assert.Contains(playerCar, state.Player.Cars);     // the pink slip stays with its owner
+        Assert.Equal(0, state.Player.Stats.Races);
+        Assert.Equal(1, state.Player.Stats.FalseStarts);
+        Assert.Equal(reputation - RacerStats.FalseStartPenalty, state.Player.Stats.Reputation);
+        Assert.Null(state.PendingRace);
+        Assert.Equal("FalseStart", _repository.Recorded.Single().WinCondition);
+        Assert.Contains(messages, m => m.Title == "False Start");
+    }
+
+    [Fact]
+    public void The_false_start_flag_alone_calls_the_race_off()
+    {
+        var (state, context, _, _) = World();
+        var json = File(playerPosition: 1);
+        json["participants"]![0]!["false_start"] = true;
+
+        Processor().ProcessRaceResult(Result(json), context, state);
+
+        Assert.Equal(0, state.Player.Stats.Wins);
+        Assert.Equal(1_000_000m, state.Player.Money);
+    }
+
+    [Fact]
+    public void Being_put_back_mid_race_is_a_loss()
+    {
+        var (state, context, _, rival) = World();
+        var json = File(playerPosition: 1);
+        json["session"]!["end_reason"] = EndReasons.Abandoned;
+
+        var messages = Processor().ProcessRaceResult(Result(json), context, state);
+
+        Assert.Equal(1, state.Player.Stats.Losses);
+        Assert.Equal(1_000_000m - 100m, state.Player.Money);
+        Assert.Equal(5100m, rival.Money);
+        Assert.Equal("PlayerAbandoned", _repository.Recorded.Single().WinCondition);
+        Assert.Contains(messages, m => m.Title == "Out of the Race");
+    }
+
+    [Fact]
     public void A_forfeit_is_a_loss_with_its_record_and_clears_the_pending_race()
     {
         var (state, context, _, rival) = World(wager: 250m);

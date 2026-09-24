@@ -15,7 +15,8 @@ namespace Street_Rod_AC.Services
     public class AssettoCorsaLauncher(
         IIniModificationService iniService,
         Race.IRaceResultIngestionService raceResultService,
-        CarDataOverlay carData) : IAssettoCorsaLauncher
+        CarDataOverlay carData,
+        SrRaceMode? raceMode = null) : IAssettoCorsaLauncher
     {
         /// <summary>
         /// A race whose game closed sooner than this never ran: AC failed to load (a missing DLL, CSP failing, a
@@ -48,6 +49,7 @@ namespace Street_Rod_AC.Services
         private readonly IIniModificationService _iniService = iniService;
         private readonly Race.IRaceResultIngestionService _raceResultService = raceResultService;
         private readonly CarDataOverlay _carData = carData;
+        private readonly SrRaceMode _raceMode = raceMode ?? new SrRaceMode();
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("ACLauncher");
         private readonly SemaphoreSlim _executionLock = new(1, 1);
 
@@ -390,7 +392,13 @@ namespace Street_Rod_AC.Services
             string? prepareError = null;
             using (AcInstallGate.Hold())
             {
-                foreach (var configIntent in configIntents)
+                // A race runs in the game's own CSP mode: without it nothing starts the race or reports it
+                if (intent is DragRaceLaunchIntent)
+                {
+                    prepareError = _raceMode.Install(AppSettings.Instance.AssettoCorsaPath);
+                }
+
+                foreach (var configIntent in prepareError == null ? configIntents : [])
                 {
                     _logger.Debug("Applying: {Description}", configIntent.Description);
 

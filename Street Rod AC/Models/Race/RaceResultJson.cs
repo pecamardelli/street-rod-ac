@@ -68,6 +68,29 @@ namespace Street_Rod_AC.Models.Race
         /// </summary>
         [JsonProperty("context_id")]
         public string? ContextId { get; set; }
+
+        /// <summary>
+        /// How the race mode ended the race (schema 1.2): <see cref="EndReasons"/>. Null in older files, whose
+        /// outcome comes from the positions and crashes alone.
+        /// </summary>
+        [JsonProperty("end_reason")]
+        public string? EndReason { get; set; }
+    }
+
+    /// <summary>The <see cref="RaceSession.EndReason"/> values the race mode writes</summary>
+    public static class EndReasons
+    {
+        /// <summary>The player crossed the line</summary>
+        public const string Finished = "FINISHED";
+
+        /// <summary>The player crashed</summary>
+        public const string Crash = "CRASH";
+
+        /// <summary>The player's car moved before the green, or AC put it back before it got anywhere</summary>
+        public const string FalseStart = "FALSE_START";
+
+        /// <summary>AC put the player's car back in the middle of the race: the pits, a lane violation</summary>
+        public const string Abandoned = "ABANDONED";
     }
 
     /// <summary>
@@ -89,6 +112,10 @@ namespace Street_Rod_AC.Models.Race
         /// <summary>True for the player's car; null in files written before schema 1.1</summary>
         [JsonProperty("is_player")]
         public bool? IsPlayer { get; set; }
+
+        /// <summary>This car jumped the start (schema 1.2); null in older files</summary>
+        [JsonProperty("false_start")]
+        public bool? FalseStart { get; set; }
 
         [JsonProperty("performance")]
         public ParticipantPerformance Performance { get; set; } = new();

@@ -75,11 +75,15 @@ The cfg files (`race.ini`, `showroom_start.ini`) are restored the way the cars' 
   next call and is logged, and the others go back anyway. The `~cfg` folder has no car manifest, so the car-data
   restore never takes it for a car.
 
-After a race the user's race.ini is what it was before: no `MODE=sr_race`, no `__CM_NEW_MODE_USED`, none of our cars,
-and a normal AC or Content Manager session is not affected.
+After a race the user's race.ini is what it was before: no `__CM_CUSTOM_MODE=sr_race`, none of our cars, and a normal
+AC or Content Manager session is not affected.
+
+A race also edits assists.ini: `DAMAGE=100` and `TYRE_WEAR=1` (`IniModificationService.RaceDamage`, `RaceTyreWear`), so
+the engine can blow and the body takes what it hits whatever the player last chose in AC. Only those two keys; the
+player's other assists and `VISUALDAMAGE` stay. Kept and put back like race.ini.
 
 ## Race Context Id
-A race's race.ini carries its context id, which the Lua app copies into its result file:
+A race's race.ini carries its context id, which the race mode copies into its result file:
 
 ```ini
 [STREET_ROD]

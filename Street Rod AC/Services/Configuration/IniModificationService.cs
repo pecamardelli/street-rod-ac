@@ -19,6 +19,18 @@ namespace Street_Rod_AC.Services.Configuration
     /// </summary>
     public class IniModificationService : IIniModificationService
     {
+        /// <summary>The CSP mode a race runs in: race.ini selects it by its folder name under extension\lua\new-modes</summary>
+        public const string RaceModeId = "sr_race";
+
+        /// <summary>AC's assists file, where the damage and tyre wear rates are</summary>
+        public const string AssistsFile = "assists.ini";
+
+        /// <summary>Mechanical and body damage in a race, in percent (AC's full rate)</summary>
+        public const int RaceDamage = 100;
+
+        /// <summary>Tyre wear in a race: 1 is AC's normal rate</summary>
+        public const int RaceTyreWear = 1;
+
         private readonly string _cfgDirectory;
         private readonly AcConfigBackup _backup;
         private readonly IAppLogger _logger;
@@ -265,6 +277,8 @@ namespace Street_Rod_AC.Services.Configuration
             // Write to race.ini; the user's own is kept until AC exits
             WriteIni(filePath, content, SafeFile.Utf8NoBom);
 
+            ApplyRaceDamage();
+
             _logger.Information("Applied drag race intent: Player={PlayerName} ({PlayerCarId}), Opponent={OpponentName} ({OpponentCarId}), AI={AILevel}/{AIAggression}, Context={ContextId}",
                 intent.PlayerName, intent.PlayerCarId, intent.OpponentName, intent.OpponentCarId, intent.OpponentAILevel, intent.OpponentAIAggression,
                 intent.ContextId?.ToString("D") ?? "(none)");
@@ -278,7 +292,7 @@ namespace Street_Rod_AC.Services.Configuration
         private string BuildDragRaceIni(DragRaceIntent intent)
         {
             var sb = new System.Text.StringBuilder();
-            AppendCommonSections(sb, "sr_race");
+            AppendCommonSections(sb);
 
             // [RACE] - Player car info and track
             sb.AppendLine("[RACE]");
@@ -294,7 +308,7 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("RACE_LAPS=1");
             sb.AppendLine($"SKIN={IniId(intent.PlayerSkin, "skin")}");
             sb.AppendLine($"TRACK={IniId(intent.TrackId, "track")}");
-            sb.AppendLine("MODE=sr_race");  // CSP new-mode for auto-start and auto-quit
+            sb.AppendLine($"__CM_CUSTOM_MODE={RaceModeId}");  // the CSP mode that runs the race (see SrRaceMode)
             sb.AppendLine();
 
             AppendTailSections(sb);
@@ -353,6 +367,21 @@ namespace Street_Rod_AC.Services.Configuration
             return sb.ToString();
         }
 
+        /// <summary>
+        /// A race is run with Assetto Corsa's damage and tyre wear on, whatever the player last picked in AC: the
+        /// engine can blow and the body takes what it hits. The rest of the assists (and visual damage) stay the
+        /// player's. Kept and put back like race.ini.
+        /// </summary>
+        private void ApplyRaceDamage()
+        {
+            EditIni(GetIniFilePath(AssistsFile), ini =>
+            {
+                ini.Set("ASSISTS", "DAMAGE", RaceDamage.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                ini.Set("ASSISTS", "TYRE_WEAR", RaceTyreWear.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            });
+            _logger.Information("Race assists: DAMAGE={Damage}, TYRE_WEAR={TyreWear}", RaceDamage, RaceTyreWear);
+        }
+
         private bool ApplyFreeRunIntent(FreeRunIntent intent)
         {
             var filePath = GetIniFilePath(intent.TargetFile);
@@ -370,7 +399,7 @@ namespace Street_Rod_AC.Services.Configuration
         private string BuildFreeRunIni(FreeRunIntent intent)
         {
             var sb = new System.Text.StringBuilder();
-            AppendCommonSections(sb, null);
+            AppendCommonSections(sb);
 
             sb.AppendLine("[RACE]");
             sb.AppendLine("AI_LEVEL=100");
@@ -408,8 +437,7 @@ namespace Street_Rod_AC.Services.Configuration
         }
 
         /// <summary>Everything before [RACE] that every launch shares</summary>
-        /// <param name="newMode">The CSP new-mode the launch runs in, null for the plain game</param>
-        private static void AppendCommonSections(System.Text.StringBuilder sb, string? newMode)
+        private static void AppendCommonSections(System.Text.StringBuilder sb)
         {
 
             // [BENCHMARK]
@@ -447,7 +475,6 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("[HEADER]");
             sb.AppendLine("VERSION=1");
             sb.AppendLine("__CM_FEATURE_SET=2");
-            if (newMode != null) sb.AppendLine($"__CM_NEW_MODE_USED={newMode}");  // CSP new-mode identifier
             sb.AppendLine();
 
             // [LAP_INVALIDATOR]

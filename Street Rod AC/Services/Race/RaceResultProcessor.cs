@@ -262,6 +262,12 @@ namespace Street_Rod_AC.Services.Race
             // Update reputations based on race outcome
             ApplyReputationUpdates(gameState, outcome, context);
 
+            if (outcome.WinCondition == WinCondition.FalseStart)
+                messages.Add(ApplyFalseStart(gameState, context));
+            else if (outcome.WinCondition == WinCondition.PlayerAbandoned)
+                messages.Add(new PlayerMessage("Out of the Race",
+                    $"You left the race before the finish, and that counts as a loss to {context.OpponentName}."));
+
             // Update career milestone counters
             UpdateMilestoneCounters(gameState, outcome, context);
 
@@ -283,6 +289,31 @@ namespace Street_Rod_AC.Services.Race
                 gameState.PendingRace = null;
 
             return moved;
+        }
+
+        /// <summary>
+        /// A false start: no contest, nothing changes hands, but the player's name takes the hit
+        /// (<see cref="RacerStats.FalseStarts"/>)
+        /// </summary>
+        private PlayerMessage ApplyFalseStart(GameState gameState, RaceContext context)
+        {
+            var stats = gameState.Player.Stats;
+            var before = stats.Reputation;
+            stats.FalseStarts++;
+            stats.Reputation = stats.CalculateReputation();
+            gameState.Career.SetCounter(MilestoneTrigger.ReputationReached, stats.Reputation);
+
+            _logger.Information("False start against {Opponent}: no contest, reputation {Before} -> {After}",
+                context.OpponentName, before, stats.Reputation);
+
+            var stakes = context.IsPinkSlip || context.CashWager > 0
+                ? " Nothing changes hands."
+                : string.Empty;
+            var reputation = stats.Reputation < before
+                ? $"\n\nReputation: {before} → {stats.Reputation}"
+                : string.Empty;
+            return new PlayerMessage("False Start",
+                $"You jumped the gun against {context.OpponentName}. No contest.{stakes}{reputation}");
         }
 
         /// <summary>What of a race's stakes changed hands: the cash wager, the pink slip's car</summary>
@@ -307,6 +338,22 @@ namespace Street_Rod_AC.Services.Race
             var (playerParticipant, opponentParticipant) = IdentifyPlayer(participants, context);
             outcome.Player = playerParticipant;
             outcome.Opponent = opponentParticipant;
+
+            // Jumping the start calls the race off before anything else counts: no contest
+            if (playerParticipant.FalseStart == true || result.Session.EndReason == EndReasons.FalseStart)
+            {
+                outcome.WinCondition = WinCondition.FalseStart;
+                outcome.PlayerWon = false;
+                return outcome;
+            }
+
+            // Put back in the middle of the race (the pits, a lane violation): the player is out, and loses
+            if (result.Session.EndReason == EndReasons.Abandoned)
+            {
+                outcome.WinCondition = WinCondition.PlayerAbandoned;
+                outcome.PlayerWon = false;
+                return outcome;
+            }
 
             // Check crash scenarios
             bool playerCrashed = playerParticipant.Crash.Crashed;
@@ -931,7 +978,7 @@ namespace Street_Rod_AC.Services.Race
         public WinCondition WinCondition { get; set; }
 
         /// <summary>True when the race has a winner and a loser (stats, money and reputation change)</summary>
-        public bool IsDecided => WinCondition is not (WinCondition.Inconclusive or WinCondition.BothCrashed);
+        public bool IsDecided => WinCondition is not (WinCondition.Inconclusive or WinCondition.BothCrashed or WinCondition.FalseStart);
 
         public RaceParticipant? Winner => !IsDecided ? null : PlayerWon ? Player : Opponent;
         public RaceParticipant? Loser => !IsDecided ? null : PlayerWon ? Opponent : Player;
@@ -970,6 +1017,16 @@ namespace Street_Rod_AC.Services.Race
         /// <summary>
         /// A race with stakes brought back no result: the player walked away and loses
         /// </summary>
-        Forfeit
+        Forfeit,
+
+        /// <summary>
+        /// The player jumped the start: no contest, nothing changes hands, reputation drops
+        /// </summary>
+        FalseStart,
+
+        /// <summary>
+        /// The player was put back in the middle of the race (the pits, a lane violation): out, and loses
+        /// </summary>
+        PlayerAbandoned
     }
 }
