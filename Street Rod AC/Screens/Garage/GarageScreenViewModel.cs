@@ -25,6 +25,7 @@ namespace Street_Rod_AC.Screens.Garage
         private readonly IContentCatalogRepository _catalogRepo;
         private readonly IAssettoCorsaLauncher _launcher;
         private readonly IGameStateRepository _gameStateRepo;
+        private readonly ICarPartsService _partsService;
         private readonly IAppLogger _logger;
 
         public RelayCommand BackCommand { get; }
@@ -93,8 +94,35 @@ namespace Street_Rod_AC.Screens.Garage
                 OnPropertyChanged(nameof(SelectedCar));
                 OnPropertyChanged(nameof(SelectedCarDisplay));
                 OnPropertyChanged(nameof(HasCars));
-                if (carChanged) Workbench.SetCar(value?.CarInstance);
+                if (carChanged)
+                {
+                    Workbench.SetCar(value?.CarInstance);
+                    RefreshEngine();
+                }
             }
+        }
+
+        private Audio.EngineSpec? _selectedEngine;
+        private int _engineVersion;
+
+        /// <summary>The selected car's engine, to start and rev where it stands; null without a car or an engine</summary>
+        public Audio.EngineSpec? SelectedEngine
+        {
+            get => _selectedEngine;
+            private set
+            {
+                _selectedEngine = value;
+                OnPropertyChanged(nameof(SelectedEngine));
+            }
+        }
+
+        /// <summary>Works the engine out again: the car changed, or what is in it</summary>
+        private async void RefreshEngine()
+        {
+            var version = ++_engineVersion;
+            var car = SelectedCar;
+            var spec = car == null ? null : await Services.Parts.EngineSpecs.ForAsync(_partsService, car.CarInstance, car.DisplayName);
+            if (version == _engineVersion) SelectedEngine = spec;
         }
 
         public string SelectedCarDisplay
@@ -199,6 +227,7 @@ namespace Street_Rod_AC.Screens.Garage
             _catalogRepo = catalogRepo;
             _launcher = launcher;
             _gameStateRepo = gameStateRepo;
+            _partsService = partsService;
             _logger = AppLoggerFactory.CreateLogger("Garage");
             SkipEnterAnimation = skipAnimation;
 
@@ -230,6 +259,11 @@ namespace Street_Rod_AC.Screens.Garage
                     if (!string.IsNullOrEmpty(_gameState.SaveName)) gameStateRepo.Save(_gameState, _gameState.SaveName);
                 },
                 spendMinutes: minutes => ((App)System.Windows.Application.Current).SpendTimeAsync(minutes));
+            // A new engine tree is a new engine to start: parts went on or came off
+            Workbench.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(PartsWorkbenchViewModel.Engine)) RefreshEngine();
+            };
             Workbench.StateChanged += () =>
             {
                 RefreshCalendarDisplay();

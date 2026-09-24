@@ -257,7 +257,8 @@ namespace Street_Rod_AC.Navigation
                 _catalogRepository,
                 _profileRepository,
                 _gameStateRepository,
-                _purchaseService);
+                _purchaseService,
+                ((App)System.Windows.Application.Current).CarPartsService);
             NavigateTo(screen);
         }
 

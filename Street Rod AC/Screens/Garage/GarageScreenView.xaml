@@ -63,6 +63,7 @@
                                 Gear="{Binding Workbench.Gear}"
                                 Candidates="{Binding Workbench.Candidates}"
                                 SelectedPart="{Binding Workbench.SelectedPart}"
+                                RunningEngine="{Binding Runner, ElementName=EnginePanel}"
                                 FadeInOnReady="False"/>
 
         <!-- Back Button -->
@@ -362,11 +363,17 @@
                         VerticalAlignment="Bottom"
                         Margin="0,0,0,42"
                         Visibility="{Binding ActivePanel, Converter={StaticResource GaragePanelToVisibilityConverter}, ConverterParameter=CarPreview}">
-                <!-- 3D Viewport Controls -->
+                <!-- 3D Viewport Controls: the engine on the left, the view toggles on the right -->
+                <Grid Margin="0,0,0,8"
+                      Visibility="{Binding HasCar, ElementName=Viewport3D, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <controls:EnginePanel x:Name="EnginePanel"
+                                      Width="340"
+                                      HorizontalAlignment="Left"
+                                      VerticalAlignment="Bottom"
+                                      Engine="{Binding SelectedEngine}"/>
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Right"
-                            Margin="0,0,0,8"
-                            Visibility="{Binding HasCar, ElementName=Viewport3D, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            VerticalAlignment="Bottom">
                     <ToggleButton Content="Lights"
                                   Style="{StaticResource ViewportToggleStyle}"
                                   IsChecked="{Binding HeadlightsOn, ElementName=Viewport3D, Mode=TwoWay}"/>
@@ -382,6 +389,7 @@
                                   Style="{StaticResource ViewportToggleStyle}"
                                   IsChecked="{Binding AutoRotate, ElementName=Viewport3D, Mode=TwoWay}"/>
                 </StackPanel>
+                </Grid>
 
                 <!-- Car Details -->
                 <Border Background="#CC1A1A1A"

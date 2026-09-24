@@ -89,6 +89,24 @@ public class GarageRenderer : DarkKn5ObjectRenderer
 
     public bool HasProp => _prop != null;
 
+    private Matrix _bodyLean = Matrix.Identity;
+
+    /// <summary>
+    /// How the running engine leans the body right now. The parts sit in the car without being part of its model, so
+    /// they are leaned along with it here.
+    /// </summary>
+    public Matrix BodyLean
+    {
+        get => _bodyLean;
+        set
+        {
+            _bodyLean = value;
+            if (_prop != null) _prop.LocalMatrix = value;
+            if (_candidates != null) _candidates.LocalMatrix = value;
+            IsDirty = true;
+        }
+    }
+
     /// <summary>
     /// Draws the car as a faint shell over whatever is inside it. Materials force their own blend state,
     /// so instead of fading them the solid car goes to a separate buffer that is blended over the scene;
@@ -298,7 +316,7 @@ public class GarageRenderer : DarkKn5ObjectRenderer
     public void SetProp(IKn5? kn5, Matrix placement)
     {
         _prop?.Dispose();
-        _prop = kn5 == null ? null : new Kn5RenderableFile(kn5, placement, asyncTexturesLoading: false);
+        _prop = kn5 == null ? null : new Kn5RenderableFile(kn5, placement * _bodyLean, asyncTexturesLoading: false);
         _propNodes = PartNode.Of(_prop);
         _motions.Clear();
         _hovered = null;
@@ -311,7 +329,7 @@ public class GarageRenderer : DarkKn5ObjectRenderer
     public void SetCandidates(IKn5? kn5)
     {
         _candidates?.Dispose();
-        _candidates = kn5 == null ? null : new Kn5RenderableFile(kn5, Matrix.Identity, asyncTexturesLoading: false);
+        _candidates = kn5 == null ? null : new Kn5RenderableFile(kn5, _bodyLean, asyncTexturesLoading: false);
         _candidateNodes = PartNode.Of(_candidates);
         if (_hovered?.Layer == PartLayer.Candidate) _hovered = null;
         SetShadowsDirty();
