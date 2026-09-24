@@ -1,10 +1,15 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using Street_Rod_AC.ViewModels;
 
 namespace Street_Rod_AC.Dialogs
 {
-    public class DialogService : INotifyPropertyChanged
+    /// <summary>
+    /// The one modal overlay of the main window. One dialog shows at a time; a dialog asked for while another
+    /// is up waits its turn and shows when the one in front is closed, so no message is ever lost by being
+    /// replaced before the player could read it (a "Save Warning" followed at once by "Purchase Successful").
+    /// </summary>
+    public class DialogService : ObservableObject
     {
+        private readonly Queue<IDialog> _waiting = new();
         private IDialog? _currentDialog;
 
         public IDialog? CurrentDialog
@@ -23,31 +28,32 @@ namespace Street_Rod_AC.Dialogs
 
         public bool IsDialogOpen => CurrentDialog != null;
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
+        /// <summary>Shows the dialog now, or after the ones already waiting when a dialog is up</summary>
         public void ShowDialog(IDialog dialog)
         {
             if (CurrentDialog != null)
             {
-                // Close current dialog before opening new one
-                CloseDialog();
+                _waiting.Enqueue(dialog);
+                return;
             }
 
             CurrentDialog = dialog;
-            CurrentDialog?.OnOpened();
+            dialog.OnOpened();
         }
 
+        /// <summary>Closes the dialog in front; the next one waiting, if any, shows in its place</summary>
         public void CloseDialog()
         {
-            if (CurrentDialog != null)
+            if (CurrentDialog == null)
+                return;
+
+            var closing = CurrentDialog;
+            CurrentDialog = null;
+            closing.OnClosed();
+
+            if (_waiting.Count > 0)
             {
-                CurrentDialog.OnClosed();
-                CurrentDialog = null;
+                ShowDialog(_waiting.Dequeue());
             }
         }
     }

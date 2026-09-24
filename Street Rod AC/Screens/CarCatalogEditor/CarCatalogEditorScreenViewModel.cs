@@ -78,6 +78,15 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
 
         public bool HasDirtyItems => _catalogItems?.Any(x => x.IsDirty) ?? false;
 
+        private bool _isLoading;
+
+        /// <summary>The catalog is being read; the list fills when it is done</summary>
+        public bool IsLoading
+        {
+            get => _isLoading;
+            private set => SetProperty(ref _isLoading, value);
+        }
+
         public CarCatalogEditorScreenViewModel(
             NavigationService navigationService,
             DialogService dialogService,
@@ -104,10 +113,10 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
 
             BrandOptions = new ObservableCollection<string> { "All Brands" };
 
-            LoadCatalog();
+            // The catalog is read in Enter, off the UI thread
         }
 
-        /// <summary>Every engine build that runs, the likeliest for this car first</summary>
+        /// <summary>Every engine build that runs, the likeliest for this car first. Only called once the parts catalog has loaded</summary>
         private IReadOnlyList<EngineOptionViewModel> EngineOptionsFor(CarDefinition car)
         {
             if (_partsService is not { IsAvailable: true }) return Array.Empty<EngineOptionViewModel>();
@@ -118,43 +127,74 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
                 .ToList();
         }
 
-        private void LoadCatalog()
+        /// <summary>What the list is made from, read off the UI thread</summary>
+        private sealed record CatalogSnapshot(List<CarDefinition> Cars, Dictionary<string, CarProfile> Profiles, bool HasEngines);
+
+        /// <summary>
+        /// Reads every active car and every profile in one go on a worker thread, and loads the parts catalog
+        /// there too (its first use is a full load). The rows are made back on the UI thread; their engine lists
+        /// are ranked only when a row is shown.
+        /// </summary>
+        private async Task LoadCatalogAsync()
         {
             _logger.Information("Loading car catalog for editing");
+            IsLoading = true;
 
-            var allCars = _catalogRepo.GetAllCars()
-                .Where(c => c.Status == ContentStatus.Active)
-                .OrderBy(c => c.Brand)
-                .ThenBy(c => c.Name)
-                .ToList();
-
-            _logger.Information("Found {Count} active car definitions", allCars.Count);
-
-            // Collect unique brands
-            var brands = allCars
-                .Select(c => c.Brand)
-                .Distinct()
-                .OrderBy(b => b)
-                .ToList();
-
-            foreach (var brand in brands)
+            try
             {
-                BrandOptions.Add(brand);
-            }
+                var snapshot = await Task.Run(() =>
+                {
+                    var cars = _catalogRepo.GetAllCars()
+                        .Where(c => c.Status == ContentStatus.Active)
+                        .OrderBy(c => c.Brand)
+                        .ThenBy(c => c.Name)
+                        .ToList();
 
-            // Load each car with its profile
-            foreach (var carDef in allCars)
+                    var profiles = new Dictionary<string, CarProfile>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var profile in _profileRepo.GetAllProfiles())
+                    {
+                        profiles[profile.CarDefinitionId] = profile;
+                    }
+
+                    var hasEngines = _partsService is { IsAvailable: true };
+                    return new CatalogSnapshot(cars, profiles, hasEngines);
+                });
+
+                _logger.Information("Found {Count} active car definitions", snapshot.Cars.Count);
+
+                foreach (var brand in snapshot.Cars.Select(c => c.Brand).Distinct().OrderBy(b => b))
+                {
+                    BrandOptions.Add(brand);
+                }
+
+                foreach (var carDef in snapshot.Cars)
+                {
+                    // A car imported since the profiles were made gets one now, as it did before
+                    if (!snapshot.Profiles.TryGetValue(carDef.Id, out var profile))
+                    {
+                        profile = _profileRepo.GetOrCreateProfile(carDef.Id, () => _profileService.GenerateDefaultProfile(carDef));
+                    }
+
+                    var definition = carDef;
+                    var itemVm = new CatalogItemViewModel(definition, profile, snapshot.HasEngines, () => EngineOptionsFor(definition));
+                    itemVm.PropertyChanged += OnItemPropertyChanged;
+                    _catalogItems.Add(itemVm);
+                }
+
+                _logger.Information("Loaded {Count} catalog items for editing", _catalogItems.Count);
+            }
+            catch (Exception ex)
             {
-                var profile = _profileRepo.GetOrCreateProfile(
-                    carDef.Id,
-                    () => _profileService.GenerateDefaultProfile(carDef));
-
-                var itemVm = new CatalogItemViewModel(carDef, profile, EngineOptionsFor(carDef));
-                itemVm.PropertyChanged += OnItemPropertyChanged;
-                _catalogItems.Add(itemVm);
+                _logger.Error(ex, "Could not load the car catalog for editing");
+                _dialogService.ShowDialog(new InformationDialogViewModel(
+                    _dialogService,
+                    $"The car catalog could not be read:\n\n{ex.Message}",
+                    "Catalog Not Loaded"));
             }
-
-            _logger.Information("Loaded {Count} catalog items for editing", _catalogItems.Count);
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -236,6 +276,36 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
 
             _logger.Information("Saving {Count} modified car profiles", dirtyItems.Count);
 
+            try
+            {
+                SaveProfiles(dirtyItems);
+            }
+            catch (Exception ex)
+            {
+                // catalog.db locked by a second copy of the game or a virus scanner, a read-only folder...
+                _logger.Error(ex, "Could not save the car profiles");
+                OnPropertyChanged(nameof(HasDirtyItems));
+                _dialogService.ShowDialog(new InformationDialogViewModel(
+                    _dialogService,
+                    $"The car profiles could not be saved:\n\n{ex.Message}",
+                    "Save Failed"));
+                return;
+            }
+
+            OnPropertyChanged(nameof(HasDirtyItems));
+
+            var successDialog = new InformationDialogViewModel(
+                _dialogService,
+                $"Saved {dirtyItems.Count} car profile(s).",
+                "Save Successful");
+            _dialogService.ShowDialog(successDialog);
+
+            _logger.Information("Save completed");
+        }
+
+        /// <summary>Writes the edited profiles, one by one; what was written before a failure stays written</summary>
+        private void SaveProfiles(List<CatalogItemViewModel> dirtyItems)
+        {
             foreach (var item in dirtyItems)
             {
                 item.ApplyChanges();
@@ -256,16 +326,6 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
                 if (!updated) _profileRepo.UpsertProfile(edited);
                 _logger.Debug("Saved profile for {CarId}", item.Definition.Id);
             }
-
-            OnPropertyChanged(nameof(HasDirtyItems));
-
-            var successDialog = new InformationDialogViewModel(
-                _dialogService,
-                $"Saved {dirtyItems.Count} car profile(s).",
-                "Save Successful");
-            _dialogService.ShowDialog(successDialog);
-
-            _logger.Information("Save completed");
         }
 
         private void OnResetAll()
@@ -317,10 +377,20 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
             OnPropertyChanged(nameof(HasDirtyItems));
         }
 
-        public override void Enter()
+        public override async void Enter()
         {
             base.Enter();
             _logger.Information("Entered car catalog editor screen");
+
+            // Guarded inside; this is only here so nothing can escape a fire-and-forget call
+            try
+            {
+                await LoadCatalogAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not open the car catalog editor");
+            }
         }
 
         public override void Exit()

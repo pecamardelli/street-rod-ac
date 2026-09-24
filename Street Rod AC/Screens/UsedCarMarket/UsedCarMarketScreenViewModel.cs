@@ -1,14 +1,12 @@
 using Street_Rod_AC.Dialogs;
-using Street_Rod_AC.Dialogs.Confirmation;
-using Street_Rod_AC.Dialogs.Information;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Screens.Shared;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Storage;
-using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -25,7 +23,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
         private readonly IContentCatalogRepository _catalogRepo;
         private readonly ICarProfileRepository _profileRepo;
         private readonly IGameStateRepository _gameStateRepo;
-        private readonly ICarPurchaseService _purchaseService;
+        private readonly PurchaseFlow _purchaseFlow;
         private readonly IAppLogger _logger;
 
         public RelayCommand BackCommand { get; }
@@ -87,8 +85,8 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             _catalogRepo = catalogRepo;
             _profileRepo = profileRepo;
             _gameStateRepo = gameStateRepo;
-            _purchaseService = purchaseService;
             _logger = AppLoggerFactory.CreateLogger("UsedCarMarket");
+            _purchaseFlow = new PurchaseFlow(dialogService, purchaseService, _logger);
 
             BackCommand = new RelayCommand(OnBack);
             PurchaseCarCommand = new RelayCommand<UsedCarListingViewModel>(OnPurchaseCar, CanPurchaseCar);
@@ -99,7 +97,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
 
             DealerOptions = ["All Dealers"];
 
-            InitializeMarket();
+            // The market is loaded in Enter, after the screen before it has been left
         }
 
         private bool _isLoading;
@@ -115,7 +113,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             }
         }
 
-        private async void InitializeMarket()
+        private async Task InitializeMarket()
         {
             _logger.Information("Initializing used car market screen");
 
@@ -166,7 +164,8 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
         {
             Listings.Clear();
 
-            var availableListings = _marketService.GetAvailableListings(_gameState.UsedCarMarket);
+            // A market that failed to spawn is empty, not missing
+            var availableListings = _marketService.GetAvailableListings(_gameState.UsedCarMarket ?? []);
             _logger.Information("Loading {Count} available listings", availableListings.Count);
 
             foreach (var listing in availableListings)
@@ -238,66 +237,12 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
         {
             if (viewModel == null) return;
 
-            var listing = viewModel.Listing;
-            var carDef = viewModel.CarDefinition;
-
-            _logger.Information("Player attempting to purchase car {CarId} for ${Price}",
-                carDef.Id, listing.Price);
-
-            // Show confirmation dialog
-            var message = $"Purchase this {carDef.Brand} {carDef.Name}?\n\n" +
-                         $"Year: {carDef.Year ?? 0}\n" +
-                         $"Price: ${listing.Price:N0}\n" +
-                         $"Condition: {GetConditionLabel(listing.Condition)}\n" +
-                         $"Mileage: {listing.Mileage:N0} km\n" +
-                         $"Dealer: {viewModel.DealerName}\n\n" +
-                         $"Your bankroll: ${_gameState.Player.Money:N0}";
-
-            var confirmDialog = new ConfirmationDialogViewModel(
-                _dialogService,
-                message,
-                "Purchase Car?",
-                confirmed =>
-                {
-                    if (confirmed)
-                    {
-                        CompletePurchase(listing, carDef, viewModel.DealerName);
-                    }
-                });
-
-            _dialogService.ShowDialog(confirmDialog);
-        }
-
-        private async void CompletePurchase(UsedCarListing listing, CarDefinition carDef, string dealerName)
-        {
-            var result = await _purchaseService.PurchaseAsync(_gameState, listing, carDef);
-
-            if (!result.Succeeded)
+            _purchaseFlow.Offer(_gameState, viewModel, result =>
             {
-                var errorDialog = new InformationDialogViewModel(
-                    _dialogService,
-                    result.Message,
-                    result.Outcome == PurchaseOutcome.NotEnoughMoney ? "Insufficient Funds" : "Car Unavailable");
-                _dialogService.ShowDialog(errorDialog);
-
-                if (result.Outcome == PurchaseOutcome.NoLongerAvailable) LoadListings();
-                return;
-            }
-
-            if (result.SaveFailed)
-            {
-                var saveDialog = new InformationDialogViewModel(
-                    _dialogService,
-                    "The purchase was successful but failed to save the game. Please save manually.",
-                    "Save Warning");
-                _dialogService.ShowDialog(saveDialog);
-            }
-
-            LoadListings();
-            OnPropertyChanged(nameof(BankrollDisplay));
-
-            var successDialog = new InformationDialogViewModel(_dialogService, result.Message, "Purchase Successful");
-            _dialogService.ShowDialog(successDialog);
+                // Bought, or sold to somebody else meanwhile: either way the ads are not what they were
+                if (result.Succeeded || result.Outcome == PurchaseOutcome.NoLongerAvailable) LoadListings();
+                OnPropertyChanged(nameof(BankrollDisplay));
+            });
         }
 
         private async void OnRefreshMarket()
@@ -331,19 +276,21 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             _navigationService.NavigateToNewspaper(_gameState, skipAnimation: true);
         }
 
-        private string GetConditionLabel(float condition)
-        {
-            if (condition >= 0.9f) return "Excellent";
-            if (condition >= 0.75f) return "Good";
-            if (condition >= 0.6f) return "Fair";
-            if (condition >= 0.4f) return "Poor";
-            return "Very Poor";
-        }
-
-        public override void Enter()
+        public override async void Enter()
         {
             base.Enter();
             _logger.Information("Entered used car market screen");
+
+            // The whole load in one guard: a market that cannot be put together leaves an empty page
+            try
+            {
+                await InitializeMarket();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not open the used car ads");
+                IsLoading = false;
+            }
         }
 
         public override void Exit()
@@ -369,6 +316,18 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
         public string PriceDisplay => $"${Listing.Price:N0}";
         public string ConditionDisplay => $"{(int)(Listing.Condition * 100)}%";
         public string MileageDisplay => $"{Listing.Mileage:N0} km";
+
+        /// <summary>The condition in a word, for the purchase question</summary>
+        public string ConditionLabel => ConditionLabelFor(Listing.Condition);
+
+        public static string ConditionLabelFor(float condition)
+        {
+            if (condition >= 0.9f) return "Excellent";
+            if (condition >= 0.75f) return "Good";
+            if (condition >= 0.6f) return "Fair";
+            if (condition >= 0.4f) return "Poor";
+            return "Very Poor";
+        }
 
         /// <summary>What is under the hood, with a word on it when somebody has been at it</summary>
         public string EngineDisplay => Listing.EngineSummary == null

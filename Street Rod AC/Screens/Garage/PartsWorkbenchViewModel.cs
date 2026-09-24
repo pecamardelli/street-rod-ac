@@ -1,6 +1,4 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts;
@@ -16,7 +14,7 @@ namespace Street_Rod_AC.Screens.Garage
     /// clicked on and taking it off, the shelf of loose parts and putting one of them on.
     /// Parts are picked in the 3D view; this is everything around it.
     /// </summary>
-    public class PartsWorkbenchViewModel : INotifyPropertyChanged
+    public class PartsWorkbenchViewModel : ObservableObject
     {
         private const int MinutesPerPart = 5;
 
@@ -43,8 +41,6 @@ namespace Street_Rod_AC.Screens.Garage
             TakeApartCommand = new RelayCommand(TakeApart, () => CanTakeApart);
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         /// <summary>Raised when money or time moved, for the screen around the workbench</summary>
         public event Action? StateChanged;
 
@@ -65,7 +61,7 @@ namespace Street_Rod_AC.Screens.Garage
             get => _isOpen;
             set
             {
-                if (!Set(ref _isOpen, value)) return;
+                if (!SetProperty(ref _isOpen, value)) return;
 
                 if (!value)
                 {
@@ -83,7 +79,7 @@ namespace Street_Rod_AC.Screens.Garage
             get => _catalog;
             private set
             {
-                if (Set(ref _catalog, value)) OnPropertyChanged(nameof(IsAvailable));
+                if (SetProperty(ref _catalog, value)) OnPropertyChanged(nameof(IsAvailable));
             }
         }
 
@@ -95,7 +91,7 @@ namespace Street_Rod_AC.Screens.Garage
         public InstalledPart? Engine
         {
             get => _engine;
-            private set => Set(ref _engine, value);
+            private set => SetProperty(ref _engine, value);
         }
 
         private IReadOnlyList<CarPart>? _gear;
@@ -104,7 +100,7 @@ namespace Street_Rod_AC.Screens.Garage
         public IReadOnlyList<CarPart>? Gear
         {
             get => _gear;
-            private set => Set(ref _gear, value);
+            private set => SetProperty(ref _gear, value);
         }
 
         private IReadOnlyList<MountCandidate>? _candidates;
@@ -112,7 +108,7 @@ namespace Street_Rod_AC.Screens.Garage
         public IReadOnlyList<MountCandidate>? Candidates
         {
             get => _candidates;
-            private set => Set(ref _candidates, value);
+            private set => SetProperty(ref _candidates, value);
         }
 
         private string _placementDisplay = string.Empty;
@@ -121,7 +117,7 @@ namespace Street_Rod_AC.Screens.Garage
         public string PlacementDisplay
         {
             get => _placementDisplay;
-            set => Set(ref _placementDisplay, value);
+            set => SetProperty(ref _placementDisplay, value);
         }
 
         private InstalledPart? _selectedPart;
@@ -131,7 +127,7 @@ namespace Street_Rod_AC.Screens.Garage
             get => _selectedPart;
             set
             {
-                if (!Set(ref _selectedPart, value)) return;
+                if (!SetProperty(ref _selectedPart, value)) return;
 
                 OnPropertyChanged(nameof(HasSelection));
                 OnPropertyChanged(nameof(SelectedName));
@@ -219,7 +215,7 @@ namespace Street_Rod_AC.Screens.Garage
             get => _selectedShelfItem;
             set
             {
-                if (!Set(ref _selectedShelfItem, value)) return;
+                if (!SetProperty(ref _selectedShelfItem, value)) return;
 
                 if (value != null) SelectedPart = null;
                 OnPropertyChanged(nameof(CanTakeApart));
@@ -236,7 +232,7 @@ namespace Street_Rod_AC.Screens.Garage
         public string ShelfHint
         {
             get => _shelfHint;
-            private set => Set(ref _shelfHint, value);
+            private set => SetProperty(ref _shelfHint, value);
         }
 
         #endregion
@@ -362,7 +358,15 @@ namespace Street_Rod_AC.Screens.Garage
             }
 
             Save();
-            StateChanged?.Invoke();
+
+            try
+            {
+                StateChanged?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "The garage could not catch up with the work on the car");
+            }
         }
 
         /// <summary>Nothing above this catches: a save that fails must not take the game down with it</summary>
@@ -382,53 +386,55 @@ namespace Street_Rod_AC.Screens.Garage
         /// <summary>Brings the saved tree to life again, fills the shelf, and puts the engine on the dyno</summary>
         private async void Refresh()
         {
-            var catalog = Catalog;
-            _live = catalog != null && _car?.Engine is { } engine ? PartTrees.ToInstalled(catalog, engine) : null;
-            Engine = _live?.Root;
-            _report = null;
-
-            _gearTrees.Clear();
-            if (catalog != null && _car != null)
-            {
-                foreach (var part in _car.Parts.Where(p => RunningGear.CornerOf(p.ParentSlot) >= 0))
-                {
-                    if (PartTrees.ToInstalled(catalog, part) is { } tree) _gearTrees.Add((part.ParentSlot, tree));
-                }
-            }
-
-            Gear = _gearTrees.Select(g => new CarPart(g.CarSlot, g.Tree.Root)).ToList();
-
-            Shelf.Clear();
-            if (catalog != null)
-            {
-                foreach (var part in _gameState.Player.Parts)
-                {
-                    if (catalog.Get(part.DefinitionId) is { } definition) Shelf.Add(new ShelfItemViewModel(part, definition, catalog));
-                }
-            }
-
-            OnPropertyChanged(nameof(HasShelfItems));
-            NotifySheet();
-
-            var live = _live;
-            if (catalog == null || live == null) return;
-
-            var evaluation = ++_evaluation;
+            // Everything in here runs on a saved tree the catalog may no longer be able to rebuild (a pack that
+            // changed since the save): whatever throws is logged, and the garage stays up without the sheet
             try
             {
+                var catalog = Catalog;
+                _live = catalog != null && _car?.Engine is { } engine ? PartTrees.ToInstalled(catalog, engine) : null;
+                Engine = _live?.Root;
+                _report = null;
+
+                _gearTrees.Clear();
+                if (catalog != null && _car != null)
+                {
+                    foreach (var part in _car.Parts.Where(p => RunningGear.CornerOf(p.ParentSlot) >= 0))
+                    {
+                        if (PartTrees.ToInstalled(catalog, part) is { } tree) _gearTrees.Add((part.ParentSlot, tree));
+                    }
+                }
+
+                Gear = _gearTrees.Select(g => new CarPart(g.CarSlot, g.Tree.Root)).ToList();
+
+                Shelf.Clear();
+                if (catalog != null)
+                {
+                    foreach (var part in _gameState.Player.Parts)
+                    {
+                        if (catalog.Get(part.DefinitionId) is { } definition) Shelf.Add(new ShelfItemViewModel(part, definition, catalog));
+                    }
+                }
+
+                OnPropertyChanged(nameof(HasShelfItems));
+                NotifySheet();
+
+                var live = _live;
+                if (catalog == null || live == null) return;
+
+                var evaluation = ++_evaluation;
+
                 // On a tree of its own: the one on screen belongs to the UI thread
                 var saved = live.Saved[live.Root];
                 var report = await Task.Run(() => EngineFactory.Evaluate(catalog, saved));
                 if (evaluation != _evaluation) return;
 
                 _report = report;
+                NotifySheet();
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Engine evaluation failed");
+                _logger.Error(ex, "Could not show the parts of {Car}", _car?.DefinitionId ?? "(none)");
             }
-
-            NotifySheet();
         }
 
         private void UpdateCandidates()
@@ -478,18 +484,6 @@ namespace Street_Rod_AC.Screens.Garage
         }
 
         private static string Capitalize(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
-
-        private bool Set<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-
-        private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
     /// <summary>A loose part on the shelf, with whatever is still mounted on it</summary>

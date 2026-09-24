@@ -88,8 +88,7 @@ namespace Street_Rod_AC.Screens.Career
             BackCommand = new RelayCommand(OnBack);
             SetActiveVictoryCommand = new RelayCommand<string>(OnSetActiveVictory);
 
-            LoadVictories();
-            LoadMilestones();
+            // Victories and milestones are loaded in Enter, once: the screen is always entered right after it is made
         }
 
         private void LoadVictories()
@@ -175,7 +174,6 @@ namespace Street_Rod_AC.Screens.Career
         {
             base.Enter();
 
-            // Refresh data in case it changed
             LoadVictories();
             LoadMilestones();
         }

@@ -44,6 +44,14 @@
                        FontWeight="Bold"
                        Foreground="White"
                        HorizontalAlignment="Center"/>
+
+            <!-- The way out when AC hangs -->
+            <Button Content="STOP RACE"
+                    Command="{Binding StopRaceCommand}"
+                    Style="{StaticResource DialogSecondaryButtonStyle}"
+                    Margin="0,40,0,0"
+                    HorizontalAlignment="Center"
+                    Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>
     </Grid>
 </UserControl>

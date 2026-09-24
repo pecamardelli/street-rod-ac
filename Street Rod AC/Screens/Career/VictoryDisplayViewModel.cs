@@ -1,4 +1,4 @@
-using System.ComponentModel;
+using Street_Rod_AC.ViewModels;
 using Street_Rod_AC.Models.Career.Victory;
 using Street_Rod_AC.Models.GameState;
 
@@ -7,10 +7,8 @@ namespace Street_Rod_AC.Screens.Career
     /// <summary>
     /// View model for displaying a victory condition in the career screen
     /// </summary>
-    public class VictoryDisplayViewModel : INotifyPropertyChanged
+    public class VictoryDisplayViewModel : ObservableObject
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         public string VictoryType { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
@@ -62,11 +60,6 @@ namespace Street_Rod_AC.Screens.Career
                 CompletedSteps = progress.CompletedSteps,
                 RemainingSteps = progress.RemainingSteps
             };
-        }
-
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

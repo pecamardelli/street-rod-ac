@@ -1,17 +1,15 @@
-using System.ComponentModel;
 using Street_Rod_AC.Models.Career.Events;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Models.Race;
+using Street_Rod_AC.ViewModels;
 
 namespace Street_Rod_AC.Screens.Newspaper
 {
     /// <summary>
     /// View model for displaying a race event invitation in the newspaper
     /// </summary>
-    public class EventInvitationViewModel : INotifyPropertyChanged
+    public class EventInvitationViewModel : ObservableObject
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         // Event definition info
         public string EventId { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
@@ -103,20 +101,13 @@ namespace Street_Rod_AC.Screens.Newspaper
 
             return "Expired";
         }
-
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 
     /// <summary>
     /// Represents a car that is eligible for an event
     /// </summary>
-    public class EligibleCarViewModel : INotifyPropertyChanged
+    public class EligibleCarViewModel : ObservableObject
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         public Guid InstanceId { get; set; }
         public string DisplayName { get; set; } = string.Empty;
         public string ConditionText { get; set; } = string.Empty;
@@ -125,12 +116,16 @@ namespace Street_Rod_AC.Screens.Newspaper
         public bool IsSelected
         {
             get => _isSelected;
-            set
-            {
-                _isSelected = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected)));
-            }
+            set => SetProperty(ref _isSelected, value);
         }
+
+        /// <summary>A copy for a dialog of its own: what one dialog selects must not show up in the next</summary>
+        public EligibleCarViewModel Copy() => new()
+        {
+            InstanceId = InstanceId,
+            DisplayName = DisplayName,
+            ConditionText = ConditionText
+        };
 
         public static EligibleCarViewModel FromCar(Car car, string displayName)
         {

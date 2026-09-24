@@ -6,6 +6,7 @@ using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Services.Dealers;
 using Street_Rod_AC.Services.Market;
+using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
 
 namespace Street_Rod_AC.Screens.DealerMap
@@ -40,6 +41,7 @@ namespace Street_Rod_AC.Screens.DealerMap
         private readonly Models.GameState.GameState _gameState;
         private readonly IDealerCatalog _dealerCatalog;
         private readonly IUsedCarMarketService _marketService;
+        private readonly IGameTimeService _timeService;
         private readonly IAppLogger _logger;
 
         public RelayCommand BackCommand { get; }
@@ -81,22 +83,24 @@ namespace Street_Rod_AC.Screens.DealerMap
             DialogService dialogService,
             Models.GameState.GameState gameState,
             IDealerCatalog dealerCatalog,
-            IUsedCarMarketService marketService)
+            IUsedCarMarketService marketService,
+            IGameTimeService timeService)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
             _gameState = gameState;
             _dealerCatalog = dealerCatalog;
             _marketService = marketService;
+            _timeService = timeService;
             _logger = AppLoggerFactory.CreateLogger("DealerMap");
 
             BackCommand = new RelayCommand(OnBack);
             VisitDealerCommand = new RelayCommand<DealerPinViewModel>(OnVisitDealer);
 
-            InitializeAsync();
+            // The map is filled in Enter, after the screen before it has been left
         }
 
-        private async void InitializeAsync()
+        private async Task InitializeAsync()
         {
             // The dealers the save carries are whatever the file says today: a save made before a dealer
             // existed still gets it, and one dropped from the file goes away
@@ -172,8 +176,7 @@ namespace Street_Rod_AC.Screens.DealerMap
         {
             Pins.Clear();
 
-            var remainingToday = ((App)System.Windows.Application.Current)
-                .GameTimeService.GetRemainingMinutesToday(_gameState);
+            var remainingToday = _timeService.GetRemainingMinutesToday(_gameState);
 
             foreach (var dealer in _dealerCatalog.All)
             {
@@ -236,13 +239,14 @@ namespace Street_Rod_AC.Screens.DealerMap
             try
             {
                 // The hours go before the lot is shown, so the clock on the way in is the time you arrived
-                await ((App)System.Windows.Application.Current).SpendTimeAsync(pin.TravelMinutes);
+                await _timeService.SpendTimeAsync(_gameState, pin.TravelMinutes);
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, "Could not spend the time for the drive to {Dealer}", pin.Name);
             }
 
+            // Guarded by the navigation service: a lot that will not open is reported and the map stays
             _navigationService.NavigateToDealerLot(_gameState, pin.Id);
         }
 
@@ -251,10 +255,22 @@ namespace Street_Rod_AC.Screens.DealerMap
             _navigationService.NavigateToGarage(_gameState, skipAnimation: true);
         }
 
-        public override void Enter()
+        public override async void Enter()
         {
             base.Enter();
             _logger.Information("Entered the dealer map");
+
+            // The whole load in one guard: a market that fails to spawn or a pin that fails to build leaves an
+            // empty map, not a dead game
+            try
+            {
+                await InitializeAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not put the dealers on the map");
+                IsLoading = false;
+            }
         }
     }
 

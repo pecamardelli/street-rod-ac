@@ -1,4 +1,4 @@
-using System.ComponentModel;
+using Street_Rod_AC.ViewModels;
 using Street_Rod_AC.Models.Career.Milestones;
 using Street_Rod_AC.Models.GameState;
 
@@ -7,10 +7,8 @@ namespace Street_Rod_AC.Screens.Career
     /// <summary>
     /// View model for displaying a milestone in the career screen
     /// </summary>
-    public class MilestoneDisplayViewModel : INotifyPropertyChanged
+    public class MilestoneDisplayViewModel : ObservableObject
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
@@ -63,11 +61,6 @@ namespace Street_Rod_AC.Screens.Career
                     ? Math.Min(100f, (currentValue / (float)milestone.TargetValue) * 100f)
                     : 0f
             };
-        }
-
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

@@ -1,6 +1,5 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using Street_Rod_AC.Models.Catalog;
+using Street_Rod_AC.ViewModels;
 
 namespace Street_Rod_AC.Screens.CarCatalogEditor
 {
@@ -8,40 +7,62 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
     /// View model for a single car catalog item in the editor
     /// Wraps CarDefinition + CarProfile for display and editing
     /// </summary>
-    public class CatalogItemViewModel : INotifyPropertyChanged
+    public class CatalogItemViewModel : ObservableObject
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         public CarDefinition Definition { get; }
         public CarProfile Profile { get; }
 
         private decimal _basePrice;
         private float _dealerPrecedence;
         private EngineOptionViewModel? _stockEngine;
+        private bool _stockEngineResolved;
         private bool _isDirty;
+        private readonly Lazy<IReadOnlyList<EngineOptionViewModel>> _engineOptions;
+        private readonly bool _hasEngineCatalog;
 
         /// <param name="engineOptions">Engine builds the car could leave the factory with, best match first; empty without a parts catalog</param>
         public CatalogItemViewModel(CarDefinition definition, CarProfile profile, IReadOnlyList<EngineOptionViewModel>? engineOptions = null)
+            : this(definition, profile, engineOptions is { Count: > 0 }, () => engineOptions ?? Array.Empty<EngineOptionViewModel>())
+        {
+        }
+
+        /// <param name="hasEngineCatalog">There is a parts catalog to pick a factory engine from</param>
+        /// <param name="engineOptions">
+        /// Makes the engine builds, best match first. Called the first time the row needs them: ranking every
+        /// build for every car up front is what made the editor slow to open, and a virtualized list only
+        /// shows a screenful of rows.
+        /// </param>
+        public CatalogItemViewModel(CarDefinition definition, CarProfile profile, bool hasEngineCatalog, Func<IReadOnlyList<EngineOptionViewModel>> engineOptions)
         {
             Definition = definition;
             Profile = profile;
             _basePrice = profile.BasePrice;
             _dealerPrecedence = profile.DealerPrecedence;
-            EngineOptions = engineOptions ?? Array.Empty<EngineOptionViewModel>();
-            _stockEngine = FindEngine(profile.StockEngineBuildId);
+            _hasEngineCatalog = hasEngineCatalog;
+            _engineOptions = new Lazy<IReadOnlyList<EngineOptionViewModel>>(engineOptions, LazyThreadSafetyMode.None);
         }
 
-        public IReadOnlyList<EngineOptionViewModel> EngineOptions { get; }
+        public IReadOnlyList<EngineOptionViewModel> EngineOptions => _engineOptions.Value;
 
-        public bool HasEngineOptions => EngineOptions.Count > 0;
+        /// <summary>Whether the row offers a factory engine; answered without ranking the builds</summary>
+        public bool HasEngineOptions => _hasEngineCatalog;
 
         /// <summary>The engine build the car leaves the factory with</summary>
         public EngineOptionViewModel? StockEngine
         {
-            get => _stockEngine;
+            get
+            {
+                if (!_stockEngineResolved)
+                {
+                    _stockEngine = FindEngine(Profile.StockEngineBuildId);
+                    _stockEngineResolved = true;
+                }
+
+                return _stockEngine;
+            }
             set
             {
-                if (ReferenceEquals(_stockEngine, value)) return;
+                if (ReferenceEquals(StockEngine, value)) return;
 
                 _stockEngine = value;
                 IsDirty = true;
@@ -118,7 +139,9 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
         {
             Profile.BasePrice = _basePrice;
             Profile.DealerPrecedence = _dealerPrecedence;
-            if (_stockEngine != null && !_stockEngine.BuildId.Equals(Profile.StockEngineBuildId, StringComparison.OrdinalIgnoreCase))
+
+            // Only a row whose engine was looked at can have a new one; the others keep the profile's
+            if (_stockEngineResolved && _stockEngine != null && !_stockEngine.BuildId.Equals(Profile.StockEngineBuildId, StringComparison.OrdinalIgnoreCase))
             {
                 Profile.StockEngineBuildId = _stockEngine.BuildId;
                 Profile.StockEngineIsManual = true;
@@ -136,7 +159,7 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
         {
             _basePrice = Profile.BasePrice;
             _dealerPrecedence = Profile.DealerPrecedence;
-            _stockEngine = FindEngine(Profile.StockEngineBuildId);
+            _stockEngineResolved = false;
             IsDirty = false;
             OnPropertyChanged(nameof(StockEngine));
             OnPropertyChanged(nameof(BasePrice));
@@ -154,18 +177,14 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
             _dealerPrecedence = generatedProfile.DealerPrecedence;
 
             // The options come best match first: the first one is what a fresh profile would get
-            _stockEngine = EngineOptions.FirstOrDefault() ?? _stockEngine;
+            _stockEngine = EngineOptions.FirstOrDefault() ?? StockEngine;
+            _stockEngineResolved = true;
             OnPropertyChanged(nameof(StockEngine));
             IsDirty = true;
             OnPropertyChanged(nameof(BasePrice));
             OnPropertyChanged(nameof(BasePriceDisplay));
             OnPropertyChanged(nameof(DealerPrecedence));
             OnPropertyChanged(nameof(DealerPrecedencePercent));
-        }
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 

@@ -1,7 +1,11 @@
 using Street_Rod_AC.Dialogs;
 using Street_Rod_AC.Dialogs.Confirmation;
 using Street_Rod_AC.Dialogs.Information;
+using Street_Rod_AC.Logging;
+using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Services.Parts;
+using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.ViewModels;
 using System.Collections.ObjectModel;
 
@@ -11,6 +15,10 @@ namespace Street_Rod_AC.Screens.LoadGame
     {
         private readonly NavigationService _navigationService;
         private readonly DialogService _dialogService;
+        private readonly IGameStateRepository _repository;
+        private readonly ICarPartsService _partsService;
+        private readonly Action<GameState?> _setCurrentGame;
+        private readonly IAppLogger _logger;
         private string _errorMessage = string.Empty;
         private bool _hasSaves;
 
@@ -32,10 +40,20 @@ namespace Street_Rod_AC.Screens.LoadGame
         public RelayCommand<SaveGameInfo> DeleteSaveCommand { get; }
         public RelayCommand BackCommand { get; }
 
-        public LoadGameScreenViewModel(NavigationService navigationService, DialogService dialogService)
+        /// <param name="setCurrentGame">Makes the loaded game the one the app saves on exit and races with</param>
+        public LoadGameScreenViewModel(
+            NavigationService navigationService,
+            DialogService dialogService,
+            IGameStateRepository repository,
+            ICarPartsService partsService,
+            Action<GameState?> setCurrentGame)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
+            _repository = repository;
+            _partsService = partsService;
+            _setCurrentGame = setCurrentGame;
+            _logger = AppLoggerFactory.CreateLogger(LogCategory.Save);
 
             SavedGames = new ObservableCollection<SaveGameInfo>();
 
@@ -43,24 +61,21 @@ namespace Street_Rod_AC.Screens.LoadGame
             DeleteSaveCommand = new RelayCommand<SaveGameInfo>(OnDeleteSave);
             BackCommand = new RelayCommand(OnBack);
 
-            LoadSavedGames();
+            // The saves are listed in Enter, once: the screen is always entered right after it is made
         }
 
         private void LoadSavedGames()
         {
             try
             {
-                var app = (App)System.Windows.Application.Current;
-                var repository = app.GameStateRepository;
-
                 SavedGames.Clear();
-                var saves = repository.ListSaves();
+                var saves = _repository.ListSaves();
 
                 foreach (var saveName in saves)
                 {
                     try
                     {
-                        var gameState = repository.Load(saveName);
+                        var gameState = _repository.Load(saveName);
                         if (gameState != null)
                         {
                             SavedGames.Add(new SaveGameInfo
@@ -72,10 +87,10 @@ namespace Street_Rod_AC.Screens.LoadGame
                             });
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Skip corrupted saves
-                        continue;
+                        // A corrupt save is left off the list, with a trace of why in the log
+                        _logger.Warning(ex, "Save {SaveName} could not be read; it is not listed", saveName);
                     }
                 }
 
@@ -88,6 +103,7 @@ namespace Street_Rod_AC.Screens.LoadGame
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Could not list the saved games");
                 ErrorMessage = $"Failed to load saved games: {ex.Message}";
                 HasSaves = false;
             }
@@ -118,10 +134,7 @@ namespace Street_Rod_AC.Screens.LoadGame
 
             try
             {
-                var app = (App)System.Windows.Application.Current;
-                var repository = app.GameStateRepository;
-
-                var gameState = repository.Load(saveInfo.SaveName);
+                var gameState = _repository.Load(saveInfo.SaveName);
 
                 if (gameState == null)
                 {
@@ -130,16 +143,17 @@ namespace Street_Rod_AC.Screens.LoadGame
                 }
 
                 // Parts saved under ids of a pack that has been replaced since
-                if (app.CarPartsService.BringUpToDate(gameState)) repository.Save(gameState, saveInfo.SaveName);
+                if (_partsService.BringUpToDate(gameState)) _repository.Save(gameState, saveInfo.SaveName);
 
                 // Store current game state in App for saving on exit
-                app.CurrentGameState = gameState;
+                _setCurrentGame(gameState);
 
                 // Navigate to game screen with loaded state
                 _navigationService.NavigateToGarage(gameState);
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Could not load save {SaveName}", saveInfo.SaveName);
                 ErrorMessage = $"Failed to load game: {ex.Message}";
             }
         }
@@ -159,15 +173,13 @@ namespace Street_Rod_AC.Screens.LoadGame
                     {
                         try
                         {
-                            var app = (App)System.Windows.Application.Current;
-                            var repository = app.GameStateRepository;
-
-                            repository.Delete(saveInfo.SaveName);
+                            _repository.Delete(saveInfo.SaveName);
                             SavedGames.Remove(saveInfo);
                             HasSaves = SavedGames.Count > 0;
                         }
                         catch (Exception ex)
                         {
+                            _logger.Error(ex, "Could not delete save {SaveName}", saveInfo.SaveName);
                             ErrorMessage = $"Failed to delete save: {ex.Message}";
                         }
                     }

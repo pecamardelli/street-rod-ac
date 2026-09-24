@@ -6,6 +6,7 @@ using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Cars;
+using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Parts;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
@@ -43,6 +44,8 @@ namespace Street_Rod_AC.Screens.UsedParts
         private readonly ICarPartsService _partsService;
         private readonly IPartsShopService _shopService;
         private readonly IGameStateRepository _gameStateRepo;
+        private readonly IContentCatalogRepository _catalogRepo;
+        private readonly IGameTimeService _timeService;
         private readonly IAppLogger _logger;
 
         private HashSet<string> _fitting = new(StringComparer.OrdinalIgnoreCase);
@@ -62,7 +65,9 @@ namespace Street_Rod_AC.Screens.UsedParts
             Models.GameState.GameState gameState,
             ICarPartsService partsService,
             IPartsShopService shopService,
-            IGameStateRepository gameStateRepo)
+            IGameStateRepository gameStateRepo,
+            IContentCatalogRepository catalogRepo,
+            IGameTimeService timeService)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
@@ -70,6 +75,8 @@ namespace Street_Rod_AC.Screens.UsedParts
             _partsService = partsService;
             _shopService = shopService;
             _gameStateRepo = gameStateRepo;
+            _catalogRepo = catalogRepo;
+            _timeService = timeService;
             _logger = AppLoggerFactory.CreateLogger("UsedParts");
 
             BackCommand = new RelayCommand(OnBack);
@@ -162,7 +169,7 @@ namespace Street_Rod_AC.Screens.UsedParts
         {
             get
             {
-                var definition = SelectedCar == null ? null : ((App)System.Windows.Application.Current).CatalogRepository.GetCar(SelectedCar.DefinitionId);
+                var definition = SelectedCar == null ? null : _catalogRepo.GetCar(SelectedCar.DefinitionId);
                 return definition?.Name ?? "car";
             }
         }
@@ -203,7 +210,7 @@ namespace Street_Rod_AC.Screens.UsedParts
             try
             {
                 // Spend time for visiting the used parts shop (30 min)
-                var spent = await ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.VisitUsedParts);
+                var spent = await _timeService.SpendTimeAsync(_gameState, GameAction.VisitUsedParts);
 
                 // Late in the evening that is the next morning, with another paper
                 if (spent.NewDayStarted) LoadOffers();

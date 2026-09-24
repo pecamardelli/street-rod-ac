@@ -4,8 +4,16 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:bottomBar="clr-namespace:Street_Rod_AC.Components.BottomBar"
+             xmlns:converters="clr-namespace:Street_Rod_AC.Converters"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <!-- How tough an opponent is, as the colour of their card and reputation -->
+        <converters:DifficultyToBrushConverter x:Key="DifficultyTextBrushConverter"
+                                               Easy="#90EE90" Matched="#FFD700" Hard="#FF6B6B" Other="#FFFFFF"/>
+        <converters:DifficultyToBrushConverter x:Key="DifficultyBorderBrushConverter"
+                                               Easy="#00AA00" Matched="#FFA500" Hard="#CC0000" Other="#404040"/>
+    </UserControl.Resources>
     <Grid Background="{StaticResource DinerBackgroundBrush}"
           Opacity="0">
         <Grid.RowDefinitions>
@@ -126,13 +134,11 @@
                                                     <Setter.Value>
                                                         <ControlTemplate TargetType="Button">
                                                             <Border x:Name="CardBorder"
+                                                                   BorderBrush="{Binding Difficulty, Converter={StaticResource DifficultyBorderBrushConverter}}"
                                                                    Background="#1A1A1A"
                                                                    BorderThickness="2"
                                                                    CornerRadius="5"
                                                                    Padding="10">
-                                                                <Border.BorderBrush>
-                                                                    <SolidColorBrush Color="{Binding DifficultyBorderColor}"/>
-                                                                </Border.BorderBrush>
 
                                                                 <Grid>
                                                                     <Grid.ColumnDefinitions>
@@ -189,11 +195,9 @@
                                                                             <TextBlock Text="Reputation: "
                                                                                       FontSize="11"
                                                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
-                                                                            <TextBlock FontSize="11"
+                                                                            <TextBlock Foreground="{Binding Difficulty, Converter={StaticResource DifficultyTextBrushConverter}}"
+                                                                                       FontSize="11"
                                                                                       FontWeight="Bold">
-                                                                                <TextBlock.Foreground>
-                                                                                    <SolidColorBrush Color="{Binding DifficultyColor}"/>
-                                                                                </TextBlock.Foreground>
                                                                                 <Run Text="{Binding ReputationTier, Mode=OneWay}"/>
                                                                                 <Run Text=" ("/>
                                                                                 <Run Text="{Binding Reputation, Mode=OneWay}"/>
@@ -348,18 +352,14 @@
 
                             <!-- Reputation Badge -->
                             <Border Background="#1A1A1A"
+                                   BorderBrush="{Binding SelectedOpponent.Difficulty, Converter={StaticResource DifficultyBorderBrushConverter}}"
                                    BorderThickness="2"
                                    CornerRadius="5"
                                    Padding="10,5"
                                    HorizontalAlignment="Left">
-                                <Border.BorderBrush>
-                                    <SolidColorBrush Color="{Binding SelectedOpponent.DifficultyBorderColor}"/>
-                                </Border.BorderBrush>
-                                <TextBlock FontSize="13"
+                                <TextBlock Foreground="{Binding SelectedOpponent.Difficulty, Converter={StaticResource DifficultyTextBrushConverter}}"
+                                          FontSize="13"
                                           FontWeight="Bold">
-                                    <TextBlock.Foreground>
-                                        <SolidColorBrush Color="{Binding SelectedOpponent.DifficultyColor}"/>
-                                    </TextBlock.Foreground>
                                     <Run Text="{Binding SelectedOpponent.ReputationTier, Mode=OneWay}"/>
                                     <Run Text=" ("/>
                                     <Run Text="{Binding SelectedOpponent.Reputation, Mode=OneWay}"/>

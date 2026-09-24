@@ -1,26 +1,36 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using Street_Rod_AC.Dialogs;
+using Street_Rod_AC.Dialogs.Information;
+using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Screens.Shared;
 using Street_Rod_AC.Services;
+using Street_Rod_AC.Services.Career;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Dealers;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Opponents;
+using Street_Rod_AC.Services.Parts;
+using Street_Rod_AC.Services.Race;
 using Street_Rod_AC.Services.Settings;
 using Street_Rod_AC.Services.Talk;
 using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.Services.Storage;
+using Street_Rod_AC.Services.Time;
+using Street_Rod_AC.ViewModels;
 
 namespace Street_Rod_AC.Navigation
 {
     /// <summary>
     /// Central navigation service with typed factory methods for all screens.
     /// Screens should use these factory methods rather than directly instantiating other screens.
+    ///
+    /// Every service a screen needs comes in through here, so a screen's dependencies are all in its
+    /// constructor. Every factory goes through <see cref="SafeNavigate"/>: a screen that fails to build or to
+    /// enter is logged and reported, and the player stays where they were.
     /// </summary>
-    public class NavigationService : INotifyPropertyChanged
+    public class NavigationService : ObservableObject
     {
-        private IScreen _currentScreen;
+        private IScreen? _currentScreen;
         private readonly DialogService _dialogService;
         private readonly IContentCatalogRepository _catalogRepository;
         private readonly ICarProfileRepository _profileRepository;
@@ -34,22 +44,27 @@ namespace Street_Rod_AC.Navigation
         private readonly ITalkService _talkService;
         private readonly IDealerCatalog _dealerCatalog;
         private readonly ICarPurchaseService _purchaseService;
+        private readonly IGameTimeService _timeService;
+        private readonly ICarPartsService _carPartsService;
+        private readonly IPartsShopService _partsShopService;
+        private readonly RaceCarDataService _raceCarDataService;
+        private readonly IRaceEventService _raceEventService;
+        private readonly ICarFilterService _carFilterService;
+        private readonly IEventOpponentService _eventOpponentService;
+        private readonly IVictoryConditionService _victoryConditionService;
+        private readonly IMilestoneService _milestoneService;
+        private readonly Action<GameState?> _setCurrentGame;
+        private readonly RaceSetupBuilder _raceSetup;
+        private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger(LogCategory.Navigation);
 
-        public IScreen CurrentScreen
+        /// <summary>The screen on show; null until the first navigation</summary>
+        public IScreen? CurrentScreen
         {
             get => _currentScreen;
-            private set
-            {
-                if (_currentScreen != value)
-                {
-                    _currentScreen = value;
-                    OnPropertyChanged();
-                }
-            }
+            private set => SetProperty(ref _currentScreen, value);
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-
+        /// <param name="setCurrentGame">Makes a loaded or new game the one the app saves on exit and races with</param>
         public NavigationService(
             DialogService dialogService,
             IContentCatalogRepository catalogRepository,
@@ -63,7 +78,17 @@ namespace Street_Rod_AC.Navigation
             ICarProfileService profileService,
             ITalkService talkService,
             IDealerCatalog dealerCatalog,
-            ICarPurchaseService purchaseService)
+            ICarPurchaseService purchaseService,
+            IGameTimeService timeService,
+            ICarPartsService carPartsService,
+            IPartsShopService partsShopService,
+            RaceCarDataService raceCarDataService,
+            IRaceEventService raceEventService,
+            ICarFilterService carFilterService,
+            IEventOpponentService eventOpponentService,
+            IVictoryConditionService victoryConditionService,
+            IMilestoneService milestoneService,
+            Action<GameState?> setCurrentGame)
         {
             _dialogService = dialogService;
             _catalogRepository = catalogRepository;
@@ -78,11 +103,17 @@ namespace Street_Rod_AC.Navigation
             _talkService = talkService;
             _dealerCatalog = dealerCatalog;
             _purchaseService = purchaseService;
-        }
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            _timeService = timeService;
+            _carPartsService = carPartsService;
+            _partsShopService = partsShopService;
+            _raceCarDataService = raceCarDataService;
+            _raceEventService = raceEventService;
+            _carFilterService = carFilterService;
+            _eventOpponentService = eventOpponentService;
+            _victoryConditionService = victoryConditionService;
+            _milestoneService = milestoneService;
+            _setCurrentGame = setCurrentGame;
+            _raceSetup = new RaceSetupBuilder(carPartsService, raceCarDataService);
         }
 
         /// <summary>
@@ -95,98 +126,157 @@ namespace Street_Rod_AC.Navigation
             CurrentScreen?.Enter();
         }
 
+        /// <summary>
+        /// Builds a screen and goes to it. A screen whose constructor throws is never shown; one whose Enter
+        /// throws is left again for the screen the player came from. Either way the error is logged and the
+        /// player told, instead of the exception ending the game. False when the player did not get there.
+        /// </summary>
+        private bool SafeNavigate(string screenName, Func<IScreen> create)
+        {
+            IScreen screen;
+            try
+            {
+                screen = create();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not open the {Screen} screen", screenName);
+                ShowNavigationError(screenName);
+                return false;
+            }
+
+            var previous = CurrentScreen;
+            try
+            {
+                NavigateTo(screen);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not go to the {Screen} screen", screenName);
+                BackTo(previous, screen);
+                ShowNavigationError(screenName);
+                return false;
+            }
+        }
+
+        /// <summary>Puts the screen the player came from back after a failed navigation, as far as it will go</summary>
+        private void BackTo(IScreen? previous, IScreen failed)
+        {
+            if (previous == null || ReferenceEquals(CurrentScreen, previous)) return;
+
+            try
+            {
+                if (ReferenceEquals(CurrentScreen, failed)) failed.Exit();
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "The screen that failed could not be left cleanly");
+            }
+
+            try
+            {
+                CurrentScreen = previous;
+                previous.Enter();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not go back to the screen before");
+            }
+        }
+
+        private void ShowNavigationError(string screenName)
+        {
+            _dialogService.ShowDialog(new InformationDialogViewModel(
+                _dialogService,
+                $"The {screenName} could not be opened. The details are in the log.",
+                "Something Went Wrong"));
+        }
+
         // ============================================================
         // TYPED FACTORY METHODS
         // Each method encapsulates the creation of a specific screen
         // ============================================================
 
-        public void NavigateToInit()
-        {
-            var screen = new Screens.Init.InitScreenViewModel(this, _dialogService);
-            NavigateTo(screen);
-        }
+        public bool NavigateToInit() => SafeNavigate("start screen", () =>
+            new Screens.Init.InitScreenViewModel(this, _dialogService));
 
-        public void NavigateToMainMenu()
-        {
-            var screen = new Screens.MainMenu.MainMenuScreenViewModel(this, _dialogService);
-            NavigateTo(screen);
-        }
+        public bool NavigateToMainMenu() => SafeNavigate("main menu", () =>
+            new Screens.MainMenu.MainMenuScreenViewModel(this, _dialogService));
 
-        public void NavigateToSettings()
-        {
-            var screen = new Screens.Settings.SettingsScreenViewModel(this, _dialogService, _gameSettingsService);
-            NavigateTo(screen);
-        }
+        public bool NavigateToSettings() => SafeNavigate("settings", () =>
+            new Screens.Settings.SettingsScreenViewModel(this, _dialogService, _gameSettingsService));
 
-        public void NavigateToNewGame()
-        {
-            var screen = new Screens.NewGame.NewGameScreenViewModel(this, _dialogService);
-            NavigateTo(screen);
-        }
+        public bool NavigateToNewGame() => SafeNavigate("new game screen", () =>
+            new Screens.NewGame.NewGameScreenViewModel(
+                this,
+                _dialogService,
+                _gameStateRepository,
+                _raceEventService,
+                _setCurrentGame));
 
-        public void NavigateToLoadGame()
-        {
-            var screen = new Screens.LoadGame.LoadGameScreenViewModel(this, _dialogService);
-            NavigateTo(screen);
-        }
+        public bool NavigateToLoadGame() => SafeNavigate("saved games", () =>
+            new Screens.LoadGame.LoadGameScreenViewModel(
+                this,
+                _dialogService,
+                _gameStateRepository,
+                _carPartsService,
+                _setCurrentGame));
 
-        public void NavigateToGarage(GameState gameState, bool skipAnimation = false)
-        {
-            var screen = new Screens.Garage.GarageScreenViewModel(
+        public bool NavigateToGarage(GameState gameState, bool skipAnimation = false) => SafeNavigate("garage", () =>
+            new Screens.Garage.GarageScreenViewModel(
                 this,
                 _dialogService,
                 gameState,
                 _catalogRepository,
                 _launcher,
-                ((App)System.Windows.Application.Current).CarPartsService,
+                _carPartsService,
                 _gameStateRepository,
-                skipAnimation);
-            NavigateTo(screen);
-        }
+                _timeService,
+                _gameSettingsService,
+                _contentService,
+                _raceCarDataService,
+                skipAnimation));
 
-        public void NavigateToCarSelection(GameState gameState)
-        {
-            var screen = new Screens.CarSelection.CarSelectionScreenViewModel(
+        public bool NavigateToCarSelection(GameState gameState) => SafeNavigate("car list", () =>
+            new Screens.CarSelection.CarSelectionScreenViewModel(
                 this,
                 _dialogService,
                 gameState,
                 _catalogRepository,
-                _gameStateRepository);
-            NavigateTo(screen);
-        }
+                _gameStateRepository,
+                _timeService));
 
-        public void NavigateToDiner(GameState gameState)
-        {
-            var screen = new Screens.Diner.DinerScreenViewModel(
+        public bool NavigateToDiner(GameState gameState) => SafeNavigate("diner", () =>
+            new Screens.Diner.DinerScreenViewModel(
                 this,
                 _dialogService,
                 gameState,
                 _catalogRepository,
                 _opponentChallengeService,
-                _launcher,
                 _contentService,
-                _talkService);
-            NavigateTo(screen);
-        }
+                _talkService,
+                _timeService,
+                _gameStateRepository,
+                _raceSetup));
 
-        public void NavigateToNewspaper(GameState gameState, bool skipAnimation = false)
-        {
-            var app = (App)System.Windows.Application.Current;
-            var screen = new Screens.Newspaper.NewspaperScreenViewModel(
+        public bool NavigateToNewspaper(GameState gameState, bool skipAnimation = false) => SafeNavigate("newspaper", () =>
+            new Screens.Newspaper.NewspaperScreenViewModel(
                 this,
                 _dialogService,
                 gameState,
-                app.RaceEventService,
-                app.CarFilterService,
+                _raceEventService,
+                _carFilterService,
                 _catalogRepository,
-                app.EventOpponentService,
-                skipAnimation);
-            NavigateTo(screen);
-        }
+                _eventOpponentService,
+                _contentService,
+                _timeService,
+                _gameStateRepository,
+                _raceSetup,
+                skipAnimation));
 
-        public void NavigateToUsedCarMarket(GameState gameState)
-        {
-            var screen = new Screens.UsedCarMarket.UsedCarMarketScreenViewModel(
+        public bool NavigateToUsedCarMarket(GameState gameState) => SafeNavigate("used car ads", () =>
+            new Screens.UsedCarMarket.UsedCarMarketScreenViewModel(
                 this,
                 _dialogService,
                 gameState,
@@ -194,60 +284,49 @@ namespace Street_Rod_AC.Navigation
                 _catalogRepository,
                 _profileRepository,
                 _gameStateRepository,
-                _purchaseService);
-            NavigateTo(screen);
-        }
+                _purchaseService));
 
-        public void NavigateToUsedParts(GameState gameState)
-        {
-            var app = (App)System.Windows.Application.Current;
-            var screen = new Screens.UsedParts.UsedPartsScreenViewModel(
+        public bool NavigateToUsedParts(GameState gameState) => SafeNavigate("parts pages", () =>
+            new Screens.UsedParts.UsedPartsScreenViewModel(
                 this,
                 _dialogService,
                 gameState,
-                app.CarPartsService,
-                app.PartsShopService,
-                _gameStateRepository);
-            NavigateTo(screen);
-        }
+                _carPartsService,
+                _partsShopService,
+                _gameStateRepository,
+                _catalogRepository,
+                _timeService));
 
-        public void NavigateToCarCatalogEditor()
-        {
-            var screen = new Screens.CarCatalogEditor.CarCatalogEditorScreenViewModel(
+        public bool NavigateToCarCatalogEditor() => SafeNavigate("car catalog editor", () =>
+            new Screens.CarCatalogEditor.CarCatalogEditorScreenViewModel(
                 this,
                 _dialogService,
                 _catalogRepository,
                 _profileRepository,
                 _profileService,
-                ((App)System.Windows.Application.Current).CarPartsService);
-            NavigateTo(screen);
-        }
+                _carPartsService));
 
-        public void NavigateToRaceLoading(GameState gameState, DragRaceLaunchIntent launchIntent)
-        {
-            var screen = new Screens.RaceLoading.RaceLoadingScreenViewModel(
+        public bool NavigateToRaceLoading(GameState gameState, DragRaceLaunchIntent launchIntent) => SafeNavigate("race", () =>
+            new Screens.RaceLoading.RaceLoadingScreenViewModel(
                 this,
                 _dialogService,
                 gameState,
                 _launcher,
-                launchIntent);
-            NavigateTo(screen);
-        }
+                launchIntent,
+                _timeService,
+                _gameStateRepository));
 
-        public void NavigateToDealerMap(GameState gameState)
-        {
-            var screen = new Screens.DealerMap.DealerMapScreenViewModel(
+        public bool NavigateToDealerMap(GameState gameState) => SafeNavigate("dealer map", () =>
+            new Screens.DealerMap.DealerMapScreenViewModel(
                 this,
                 _dialogService,
                 gameState,
                 _dealerCatalog,
-                _marketService);
-            NavigateTo(screen);
-        }
+                _marketService,
+                _timeService));
 
-        public void NavigateToDealerLot(GameState gameState, string dealerId)
-        {
-            var screen = new Screens.DealerLot.DealerLotScreenViewModel(
+        public bool NavigateToDealerLot(GameState gameState, string dealerId) => SafeNavigate("dealer's lot", () =>
+            new Screens.DealerLot.DealerLotScreenViewModel(
                 this,
                 _dialogService,
                 gameState,
@@ -258,20 +337,14 @@ namespace Street_Rod_AC.Navigation
                 _profileRepository,
                 _gameStateRepository,
                 _purchaseService,
-                ((App)System.Windows.Application.Current).CarPartsService);
-            NavigateTo(screen);
-        }
+                _carPartsService));
 
-        public void NavigateToCareer(GameState gameState)
-        {
-            var app = (App)System.Windows.Application.Current;
-            var screen = new Screens.Career.CareerScreenViewModel(
+        public bool NavigateToCareer(GameState gameState) => SafeNavigate("career screen", () =>
+            new Screens.Career.CareerScreenViewModel(
                 this,
                 _dialogService,
-                app.VictoryConditionService,
-                app.MilestoneService,
-                gameState);
-            NavigateTo(screen);
-        }
+                _victoryConditionService,
+                _milestoneService,
+                gameState));
     }
 }

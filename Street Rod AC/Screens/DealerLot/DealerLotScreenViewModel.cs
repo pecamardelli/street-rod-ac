@@ -3,11 +3,10 @@ using System.IO;
 using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Controls;
 using Street_Rod_AC.Dialogs;
-using Street_Rod_AC.Dialogs.Confirmation;
-using Street_Rod_AC.Dialogs.Information;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Screens.Shared;
 using Street_Rod_AC.Screens.UsedCarMarket;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Dealers;
@@ -34,7 +33,7 @@ namespace Street_Rod_AC.Screens.DealerLot
         private readonly IContentCatalogRepository _catalogRepo;
         private readonly ICarProfileRepository _profileRepo;
         private readonly IGameStateRepository _gameStateRepo;
-        private readonly ICarPurchaseService _purchaseService;
+        private readonly PurchaseFlow _purchaseFlow;
         private readonly ICarPartsService _partsService;
         private readonly IAppLogger _logger;
         private readonly DealerDefinition? _dealer;
@@ -85,9 +84,9 @@ namespace Street_Rod_AC.Screens.DealerLot
             _catalogRepo = catalogRepo;
             _profileRepo = profileRepo;
             _gameStateRepo = gameStateRepo;
-            _purchaseService = purchaseService;
             _partsService = partsService;
             _logger = AppLoggerFactory.CreateLogger("DealerLot");
+            _purchaseFlow = new PurchaseFlow(dialogService, purchaseService, _logger);
             _dealer = dealerCatalog.Get(dealerId);
 
             BackCommand = new RelayCommand(OnBack);
@@ -138,8 +137,16 @@ namespace Street_Rod_AC.Screens.DealerLot
             SelectedEngine = null;
             if (car == null) return;
 
-            var spec = await EngineSpecs.ForSaleAsync(_partsService, car.Listing, car.DisplayName);
-            if (version == _engineVersion) SelectedEngine = spec;
+            try
+            {
+                var spec = await EngineSpecs.ForSaleAsync(_partsService, car.Listing, car.DisplayName);
+                if (version == _engineVersion) SelectedEngine = spec;
+            }
+            catch (Exception ex)
+            {
+                // No engine to start is all that comes of it: the lot and the car are still there to look at
+                _logger.Error(ex, "Could not work out the engine of {Car}", car.DisplayName);
+            }
         }
 
         /// <summary>The car being looked at, or null on the lot view</summary>
@@ -255,57 +262,19 @@ namespace Street_Rod_AC.Screens.DealerLot
         {
             if (car == null) return;
 
-            var def = car.CarDefinition;
-            var message = $"Purchase this {def.Brand} {def.Name}?\n\n" +
-                          $"Year: {def.Year ?? 0}\n" +
-                          $"Price: ${car.Listing.Price:N0}\n" +
-                          $"Condition: {ConditionLabel(car.Listing.Condition)}\n" +
-                          $"Mileage: {car.Listing.Mileage:N0} km\n" +
-                          $"Dealer: {DealerName}\n\n" +
-                          $"Your bankroll: ${_gameState.Player.Money:N0}";
-
-            var confirm = new ConfirmationDialogViewModel(
-                _dialogService,
-                message,
-                "Purchase Car?",
-                confirmed =>
+            _purchaseFlow.Offer(_gameState, car, result =>
+            {
+                if (!result.Succeeded)
                 {
-                    if (confirmed) CompletePurchase(car);
-                });
+                    if (result.Outcome == PurchaseOutcome.NoLongerAvailable) Reload();
+                    return;
+                }
 
-            _dialogService.ShowDialog(confirm);
-        }
-
-        private async void CompletePurchase(UsedCarListingViewModel car)
-        {
-            var result = await _purchaseService.PurchaseAsync(_gameState, car.Listing, car.CarDefinition);
-
-            if (!result.Succeeded)
-            {
-                _dialogService.ShowDialog(new InformationDialogViewModel(
-                    _dialogService,
-                    result.Message,
-                    result.Outcome == PurchaseOutcome.NotEnoughMoney ? "Insufficient Funds" : "Car Unavailable"));
-
-                if (result.Outcome == PurchaseOutcome.NoLongerAvailable) Reload();
-                return;
-            }
-
-            if (result.SaveFailed)
-            {
-                _dialogService.ShowDialog(new InformationDialogViewModel(
-                    _dialogService,
-                    "The purchase was successful but failed to save the game. Please save manually.",
-                    "Save Warning"));
-            }
-
-            // The car is bought and it is in the garage; that is where the player wants to be, not stood on
-            // a lot looking at the gap where it was.
-            _dialogService.ShowDialog(new InformationDialogViewModel(
-                _dialogService, result.Message, "Purchase Successful"));
-
-            OnPropertyChanged(nameof(BankrollDisplay));
-            _navigationService.NavigateToGarage(_gameState, skipAnimation: true);
+                // The car is bought and it is in the garage; that is where the player wants to be, not stood on
+                // a lot looking at the gap where it was.
+                OnPropertyChanged(nameof(BankrollDisplay));
+                _navigationService.NavigateToGarage(_gameState, skipAnimation: true);
+            });
         }
 
         /// <summary>
@@ -317,15 +286,6 @@ namespace Street_Rod_AC.Screens.DealerLot
             SelectedIndex = -1;
             LoadStock();
             OnPropertyChanged(nameof(BankrollDisplay));
-        }
-
-        private static string ConditionLabel(float condition)
-        {
-            if (condition >= 0.9f) return "Excellent";
-            if (condition >= 0.75f) return "Good";
-            if (condition >= 0.6f) return "Fair";
-            if (condition >= 0.4f) return "Poor";
-            return "Very Poor";
         }
 
         private void OnBack()

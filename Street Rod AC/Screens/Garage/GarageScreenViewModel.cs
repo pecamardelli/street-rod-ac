@@ -4,10 +4,13 @@ using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Screens.Shared;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.Services.Parts;
+using Street_Rod_AC.Services.Race;
+using Street_Rod_AC.Services.Settings;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
@@ -26,6 +29,10 @@ namespace Street_Rod_AC.Screens.Garage
         private readonly IAssettoCorsaLauncher _launcher;
         private readonly IGameStateRepository _gameStateRepo;
         private readonly ICarPartsService _partsService;
+        private readonly IGameTimeService _timeService;
+        private readonly GameSettingsService _settingsService;
+        private readonly IAssettoCorsaContentService _contentService;
+        private readonly RaceCarDataService _raceCarDataService;
         private readonly IAppLogger _logger;
 
         public RelayCommand BackCommand { get; }
@@ -46,9 +53,8 @@ namespace Street_Rod_AC.Screens.Garage
                 if (!SetProperty(ref _freeRunTrack, value) || value == null) return;
 
                 // Remembered for next time, across saves
-                var settings = ((App)System.Windows.Application.Current).GameSettingsService;
-                settings.Current.FreeRunTrack = value.Key;
-                settings.Save();
+                _settingsService.Current.FreeRunTrack = value.Key;
+                _settingsService.Save();
                 FreeRunCommand.RaiseCanExecuteChanged();
             }
         }
@@ -69,6 +75,12 @@ namespace Street_Rod_AC.Screens.Garage
         /// Awaited before navigating away so the garage doesn't just pop off screen.
         /// </summary>
         public Func<Task>? ExitTransition { get; set; }
+
+        /// <summary>
+        /// Set by the view: brings the screen back after the exit transition played but the navigation failed,
+        /// so the player is not left looking at a faded-out garage
+        /// </summary>
+        public Action? ExitCancelled { get; set; }
 
         private bool _isLeaving;
 
@@ -170,14 +182,45 @@ namespace Street_Rod_AC.Screens.Garage
         public BitmapImage CalendarImage2 => GetRandomCalendarImage(1);
         public BitmapImage CalendarImage3 => GetRandomCalendarImage(2);
 
+        /// <summary>The calendar pictures once decoded, by number, for the whole session: the same twelve come round every year</summary>
+        private static readonly Dictionary<int, BitmapImage> CalendarImages = new();
+
+        /// <summary>
+        /// Height the pictures are decoded at. They are 1536x1024 PNGs shown 120 px high; decoded at twice that
+        /// they stay sharp on a high-DPI screen at a small fraction of the memory and the decode time.
+        /// </summary>
+        private const int CalendarDecodeHeight = 240;
+
+        /// <summary>The month whose pictures the view was last told about, so they are raised only when it turns</summary>
+        private int _shownCalendarMonth = -1;
+
+        /// <summary>The day the calendar grid was last raised for</summary>
+        private DateTime _shownCalendarDay = DateTime.MinValue;
+
         private BitmapImage GetRandomCalendarImage(int index)
         {
             // Seed random with year and month so images are consistent for each month but different between months
             var seed = _gameState.Date.Year * 100 + _gameState.Date.Month + index * 17;
             var random = new Random(seed);
             var imageNumber = random.Next(1, 13); // 1-12
-            var uri = new Uri($"pack://application:,,,/Assets/Images/Misc/Calendar/calendar{imageNumber:D2}.png", UriKind.Absolute);
-            return new BitmapImage(uri);
+            return CalendarImage(imageNumber);
+        }
+
+        /// <summary>One calendar picture, decoded small and frozen once, then shared</summary>
+        public static BitmapImage CalendarImage(int imageNumber)
+        {
+            if (CalendarImages.TryGetValue(imageNumber, out var cached)) return cached;
+
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.UriSource = new Uri($"pack://application:,,,/Assets/Images/Misc/Calendar/calendar{imageNumber:D2}.png", UriKind.Absolute);
+            image.DecodePixelHeight = CalendarDecodeHeight;
+            image.CacheOption = BitmapCacheOption.OnLoad;
+            image.EndInit();
+            image.Freeze();
+
+            CalendarImages[imageNumber] = image;
+            return image;
         }
 
         public List<CalendarDayViewModel> CalendarDays
@@ -219,6 +262,10 @@ namespace Street_Rod_AC.Screens.Garage
             IAssettoCorsaLauncher launcher,
             ICarPartsService partsService,
             IGameStateRepository gameStateRepo,
+            IGameTimeService timeService,
+            GameSettingsService settingsService,
+            IAssettoCorsaContentService contentService,
+            RaceCarDataService raceCarDataService,
             bool skipAnimation = false)
         {
             _navigationService = navigationService;
@@ -228,6 +275,10 @@ namespace Street_Rod_AC.Screens.Garage
             _launcher = launcher;
             _gameStateRepo = gameStateRepo;
             _partsService = partsService;
+            _timeService = timeService;
+            _settingsService = settingsService;
+            _contentService = contentService;
+            _raceCarDataService = raceCarDataService;
             _logger = AppLoggerFactory.CreateLogger("Garage");
             SkipEnterAnimation = skipAnimation;
 
@@ -258,7 +309,7 @@ namespace Street_Rod_AC.Screens.Garage
                 {
                     if (!string.IsNullOrEmpty(_gameState.SaveName)) gameStateRepo.Save(_gameState, _gameState.SaveName);
                 },
-                spendMinutes: minutes => ((App)System.Windows.Application.Current).SpendTimeAsync(minutes));
+                spendMinutes: minutes => _timeService.SpendTimeAsync(_gameState, minutes));
             // A new engine tree is a new engine to start: parts went on or came off
             Workbench.PropertyChanged += (_, e) =>
             {
@@ -278,7 +329,7 @@ namespace Street_Rod_AC.Screens.Garage
                 if (e.PropertyName == nameof(PartsWorkbenchViewModel.IsOpen)) OnPropertyChanged(nameof(ShowNavigation));
             };
 
-            LoadPlayerCars();
+            // The cars are loaded in Enter, once: the screen is always entered right after it is made
         }
 
         private void LoadPlayerCars()
@@ -293,39 +344,14 @@ namespace Street_Rod_AC.Screens.Garage
 
             _logger.Information("Loading {Count} player cars", _gameState.Player.Cars.Count);
 
-            foreach (var car in _gameState.Player.Cars)
+            foreach (var entry in PlayerCars.Load(_gameState, _catalogRepo, _logger))
             {
-                var carDef = _catalogRepo.GetCar(car.DefinitionId);
-                if (carDef == null)
+                Cars.Add(new CarDisplayViewModel
                 {
-                    _logger.Warning("Car definition not found for car instance {InstanceId}, definition {DefinitionId}",
-                        car.InstanceId, car.DefinitionId);
-                    continue;
-                }
-
-                // Get preview image path for the specific skin
-                var skinId = !string.IsNullOrEmpty(car.SkinId) ? car.SkinId : "default";
-                var previewPath = Path.Combine(AppSettings.Instance.CarsPath, carDef.Id, "skins", skinId, "preview.jpg");
-
-                if (!File.Exists(previewPath))
-                {
-                    // Fallback to generic car preview if skin preview doesn't exist
-                    previewPath = Path.Combine(AppSettings.Instance.CarsPath, carDef.Id, "preview.jpg");
-                    if (!File.Exists(previewPath))
-                    {
-                        // Final fallback to ui folder preview
-                        previewPath = Path.Combine(AppSettings.Instance.CarsPath, carDef.Id, "ui", "preview.jpg");
-                    }
-                }
-
-                var displayVm = new CarDisplayViewModel
-                {
-                    CarInstance = car,
-                    CarDefinition = carDef,
-                    PreviewImagePath = File.Exists(previewPath) ? previewPath : string.Empty
-                };
-
-                Cars.Add(displayVm);
+                    CarInstance = entry.Car,
+                    CarDefinition = entry.Definition,
+                    PreviewImagePath = entry.PreviewImagePath
+                });
             }
 
             // Select the car that matches the game state's selected car, or first car by default
@@ -374,7 +400,7 @@ namespace Street_Rod_AC.Screens.Garage
                     _logger.Information("Showroom launched successfully");
 
                     // Spend time for viewing the showroom (15 min)
-                    await ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.ViewShowroom);
+                    await _timeService.SpendTimeAsync(_gameState, GameAction.ViewShowroom);
                 }
                 else
                 {
@@ -401,15 +427,14 @@ namespace Street_Rod_AC.Screens.Garage
         {
             try
             {
-                var app = (App)System.Windows.Application.Current;
-                foreach (var track in app.ContentService.GetTracks().OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase))
+                foreach (var track in _contentService.GetTracks().OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase))
                 {
                     if (track.Configurations.Count == 0) FreeRunTracks.Add(new FreeRunTrackViewModel(track.TrackId, null, track.Name));
                     foreach (var configuration in track.Configurations)
                         FreeRunTracks.Add(new FreeRunTrackViewModel(track.TrackId, configuration.FolderName, $"{track.Name} - {configuration.Name}"));
                 }
 
-                var remembered = app.GameSettingsService.Current.FreeRunTrack;
+                var remembered = _settingsService.Current.FreeRunTrack;
                 _freeRunTrack = FreeRunTracks.FirstOrDefault(t => t.Key == remembered) ?? FreeRunTracks.FirstOrDefault(t => !t.Key.Contains("drag", StringComparison.OrdinalIgnoreCase)) ?? FreeRunTracks.FirstOrDefault();
             }
             catch (Exception ex)
@@ -427,17 +452,16 @@ namespace Street_Rod_AC.Screens.Garage
             if (SelectedCar == null || FreeRunTrack is not { } track) return;
 
             var car = SelectedCar.CarInstance;
-            var app = (App)System.Windows.Application.Current;
             _logger.Information("Free run: {Car} on {Track}", car.DefinitionId, track.Key);
 
             try
             {
                 // The car races on its parts; one that will not go stays in
                 Services.Race.RaceCarData? data = null;
-                if (app.CarPartsService.IsAvailable)
+                if (_partsService.IsAvailable)
                 {
-                    if (await app.CarPartsService.EnsurePartsAsync(car) && !string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
-                    data = await Task.Run(() => app.RaceCarDataService.Prepare(car));
+                    if (await _partsService.EnsurePartsAsync(car) && !string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
+                    data = await Task.Run(() => _raceCarDataService.Prepare(car));
                 }
 
                 if (data is { CanDrive: false })
@@ -463,7 +487,7 @@ namespace Street_Rod_AC.Screens.Garage
                 var result = await _launcher.LaunchRaceAsync(intent);
                 if (result.Success)
                 {
-                    await app.SpendTimeAsync(GameAction.FreeRun);
+                    await _timeService.SpendTimeAsync(_gameState, GameAction.FreeRun);
                 }
                 else
                 {
@@ -494,7 +518,7 @@ namespace Street_Rod_AC.Screens.Garage
         /// <summary>
         /// Plays the exit transition (if the view provided one), then navigates
         /// </summary>
-        private async void LeaveTo(Action navigate)
+        private async void LeaveTo(Func<bool> navigate)
         {
             if (_isLeaving) return;
             _isLeaving = true;
@@ -511,7 +535,20 @@ namespace Street_Rod_AC.Screens.Garage
                 _logger.Warning("Exit transition failed, navigating anyway: {Error}", ex.Message);
             }
 
-            navigate();
+            try
+            {
+                // The navigation service reports a screen that would not open; the garage then comes back
+                if (!navigate()) ExitCancelled?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not leave the garage");
+                ExitCancelled?.Invoke();
+            }
+            finally
+            {
+                _isLeaving = false;
+            }
         }
 
         private void OnShowCalendar()
@@ -566,14 +603,20 @@ namespace Street_Rod_AC.Screens.Garage
             base.Enter();
             _logger.Information("Entered garage screen");
 
-            // Refresh calendar properties to reflect current game time
-            RefreshCalendarDisplay();
+            try
+            {
+                // Refresh calendar properties to reflect current game time
+                RefreshCalendarDisplay();
 
-            // Refresh bankroll display in case money changed
-            OnPropertyChanged(nameof(BankrollDisplay));
+                // Refresh bankroll display in case money changed
+                OnPropertyChanged(nameof(BankrollDisplay));
 
-            // Reload player cars in case the collection changed
-            LoadPlayerCars();
+                LoadPlayerCars();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not set up the garage");
+            }
         }
 
         /// <summary>
@@ -586,10 +629,21 @@ namespace Street_Rod_AC.Screens.Garage
             OnPropertyChanged(nameof(CurrentDay));
             OnPropertyChanged(nameof(CurrentDayOfWeek));
             OnPropertyChanged(nameof(CurrentTimeDisplay));
+
+            // The grid changes with the day and the pictures with the month: not on every piece of work in the garage
+            if (_gameState.Date.Date != _shownCalendarDay)
+            {
+                _shownCalendarDay = _gameState.Date.Date;
+                OnPropertyChanged(nameof(CalendarDays));
+            }
+
+            var month = _gameState.Date.Year * 100 + _gameState.Date.Month;
+            if (month == _shownCalendarMonth) return;
+
+            _shownCalendarMonth = month;
             OnPropertyChanged(nameof(CalendarImage1));
             OnPropertyChanged(nameof(CalendarImage2));
             OnPropertyChanged(nameof(CalendarImage3));
-            OnPropertyChanged(nameof(CalendarDays));
         }
 
         public override void Exit()

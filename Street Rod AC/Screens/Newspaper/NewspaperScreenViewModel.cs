@@ -1,8 +1,15 @@
 using System.Collections.ObjectModel;
 using Street_Rod_AC.Dialogs;
+using Street_Rod_AC.Dialogs.Information;
+using Street_Rod_AC.Logging;
+using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Screens.Shared;
+using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Career;
 using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Opponents;
+using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
 
@@ -17,6 +24,11 @@ namespace Street_Rod_AC.Screens.Newspaper
         private readonly ICarFilterService _filterService;
         private readonly IContentCatalogRepository _catalogRepository;
         private readonly IEventOpponentService _eventOpponentService;
+        private readonly IAssettoCorsaContentService _contentService;
+        private readonly IGameTimeService _timeService;
+        private readonly IGameStateRepository _gameStateRepo;
+        private readonly RaceSetupBuilder _raceSetup;
+        private readonly IAppLogger _logger;
 
         public RelayCommand BackCommand { get; }
         public RelayCommand UsedCarsCommand { get; }
@@ -38,6 +50,10 @@ namespace Street_Rod_AC.Screens.Newspaper
             ICarFilterService filterService,
             IContentCatalogRepository catalogRepository,
             IEventOpponentService eventOpponentService,
+            IAssettoCorsaContentService contentService,
+            IGameTimeService timeService,
+            IGameStateRepository gameStateRepo,
+            RaceSetupBuilder raceSetup,
             bool skipAnimation = false)
         {
             _navigationService = navigationService;
@@ -47,6 +63,11 @@ namespace Street_Rod_AC.Screens.Newspaper
             _filterService = filterService;
             _catalogRepository = catalogRepository;
             _eventOpponentService = eventOpponentService;
+            _contentService = contentService;
+            _timeService = timeService;
+            _gameStateRepo = gameStateRepo;
+            _raceSetup = raceSetup;
+            _logger = AppLoggerFactory.CreateLogger("Newspaper");
             SkipEnterAnimation = skipAnimation;
 
             BackCommand = new RelayCommand(OnBack);
@@ -54,7 +75,7 @@ namespace Street_Rod_AC.Screens.Newspaper
             UsedPartsCommand = new RelayCommand(OnUsedParts);
             EnterEventCommand = new RelayCommand<EventInvitationViewModel>(OnEnterEvent);
 
-            LoadRaceInvitations();
+            // The invitations are loaded in Enter, once: the screen is always entered right after it is made
         }
 
         private void OnUsedCars()
@@ -139,111 +160,173 @@ namespace Street_Rod_AC.Screens.Newspaper
             if (eventVm == null || !eventVm.CanEnter)
                 return;
 
-            // Get event definition
-            var eventDef = _eventService.GetEventDefinition(eventVm.EventId);
-            if (eventDef == null)
-                return;
-
-            // Get opponent for the event
-            var opponent = _eventOpponentService.GetOpponentForEvent(eventDef, _gameState);
-            if (opponent == null)
+            try
             {
-                var errorDialog = new Dialogs.Information.InformationDialogViewModel(
+                // Get event definition
+                var eventDef = _eventService.GetEventDefinition(eventVm.EventId);
+                if (eventDef == null)
+                    return;
+
+                // Get opponent for the event
+                var opponent = _eventOpponentService.GetOpponentForEvent(eventDef, _gameState);
+                if (opponent == null)
+                {
+                    var errorDialog = new InformationDialogViewModel(
+                        _dialogService,
+                        "No opponent available for this event.",
+                        "Cannot Enter Event");
+                    _dialogService.ShowDialog(errorDialog);
+                    return;
+                }
+
+                // Get opponent car display name
+                var opponentCarDef = _catalogRepository.GetCar(opponent.CarDefinitionId);
+                var opponentCarDisplay = opponentCarDef != null
+                    ? $"{opponentCarDef.Year} {opponentCarDef.Brand} {opponentCarDef.Name}"
+                    : "Unknown Car";
+
+                // Show event entry dialog
+                var dialog = new Dialogs.EventEntry.EventEntryDialogViewModel(
                     _dialogService,
-                    "No opponent available for this event.",
-                    "Cannot Enter Event");
-                _dialogService.ShowDialog(errorDialog);
-                return;
+                    eventVm,
+                    eventDef,
+                    opponent,
+                    opponentCarDisplay,
+                    OnEventEntryComplete);
+                _dialogService.ShowDialog(dialog);
             }
-
-            // Get opponent car display name
-            var opponentCarDef = _catalogRepository.GetCar(opponent.CarDefinitionId);
-            var opponentCarDisplay = opponentCarDef != null
-                ? $"{opponentCarDef.Year} {opponentCarDef.Brand} {opponentCarDef.Name}"
-                : "Unknown Car";
-
-            // Show event entry dialog
-            var dialog = new Dialogs.EventEntry.EventEntryDialogViewModel(
-                _dialogService,
-                eventVm,
-                eventDef,
-                opponent,
-                opponentCarDisplay,
-                OnEventEntryComplete);
-            _dialogService.ShowDialog(dialog);
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not open the entry for {Event}", eventVm.EventId);
+                ShowRaceError(ex);
+            }
         }
 
-        private void OnEventEntryComplete(Dialogs.EventEntry.EventEntryResult? result)
+        /// <summary>
+        /// The player entered: the event is raced on its own track, with each car on what its parts make of it,
+        /// through the same set-up as a challenge at the diner.
+        /// </summary>
+        private async void OnEventEntryComplete(Dialogs.EventEntry.EventEntryResult? result)
         {
             if (result == null)
                 return;
 
+            try
+            {
+                await EnterEventAsync(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not set up the race for {Event}", result.EventId);
+                ShowRaceError(ex);
+            }
+        }
+
+        private async Task EnterEventAsync(Dialogs.EventEntry.EventEntryResult result)
+        {
             // Get player's selected car
             var playerCar = _gameState.Player.Cars.FirstOrDefault(c => c.InstanceId == result.PlayerCarInstanceId);
             if (playerCar == null)
                 return;
 
-            // Create race launch intent
             var playerCarDef = _catalogRepository.GetCar(playerCar.DefinitionId);
             var opponentCarDef = _catalogRepository.GetCar(result.Opponent.CarDefinitionId);
-
             if (playerCarDef == null || opponentCarDef == null)
+            {
+                _logger.Warning("Event {Event}: a car is missing from the catalog (player {Player}, opponent {Opponent})",
+                    result.EventId, playerCar.DefinitionId, result.Opponent.CarDefinitionId);
                 return;
+            }
 
-            // Build the launch intent for the event race
-            var launchIntent = new Services.Configuration.Models.DragRaceLaunchIntent
+            var definition = result.EventDefinition;
+            var track = RaceSetupBuilder.PickTrack(
+                _contentService.GetTracks(), definition.RaceType, definition.TrackId, result.EventInstanceId.GetHashCode());
+            if (track == null)
             {
-                PlayerCarId = playerCar.DefinitionId,
-                PlayerSkin = playerCar.SkinId ?? "default",
-                PlayerName = _gameState.Player.Name,
-                PlayerCarInstanceId = playerCar.InstanceId,
-                OpponentCarId = result.Opponent.CarDefinitionId,
-                OpponentSkin = result.Opponent.CarSkin,
-                OpponentName = result.Opponent.OpponentName,
-                OpponentCarInstanceId = result.Opponent.PoolOpponentCar?.InstanceId ?? Guid.Empty,
-                OpponentAILevel = result.Opponent.Skill,
-                OpponentAIAggression = result.Opponent.Aggression,
-                IsPinkSlip = result.IsPinkSlip
-            };
+                _dialogService.ShowDialog(new InformationDialogViewModel(
+                    _dialogService,
+                    "There is no track installed this event can be raced on.",
+                    "Cannot Enter Event"));
+                return;
+            }
 
-            // Create race context for result processing
-            var raceContext = new Models.Race.RaceContext
+            // The pool racer drives as they are; a one-off entrant is given the event's skill and aggression.
+            // Either way the AC values come from the adapter, the one place they are made.
+            var opponent = result.Opponent;
+            var driver = opponent.PoolOpponent
+                ?? new Opponent(opponent.OpponentName, 25, Gender.Other, opponent.Skill, opponent.Aggression);
+
+            var setup = await _raceSetup.BuildAsync(new RaceEntry
             {
                 PlayerName = _gameState.Player.Name,
-                OpponentName = result.Opponent.OpponentName,
-                PlayerCarInstanceId = playerCar.InstanceId,
-                OpponentCarInstanceId = result.Opponent.PoolOpponentCar?.InstanceId ?? Guid.Empty,
+                PlayerCar = playerCar,
+                OpponentName = opponent.OpponentName,
+                OpponentCarId = opponent.CarDefinitionId,
+                OpponentSkin = opponent.CarSkin,
+                OpponentCar = opponent.PoolOpponentCar,
+                OpponentAI = OpponentAIAdapter.ToAssettoCorsaAI(driver),
+                TrackId = track.Value.TrackId,
+                TrackConfig = track.Value.TrackConfig,
+                RaceType = definition.RaceType,
                 CashWager = 0, // Event rewards handled separately
                 IsPinkSlip = result.IsPinkSlip,
-                TrackId = result.EventDefinition.TrackId ?? "drag_strip",
-                RaceType = result.EventDefinition.RaceType,
                 EventId = result.EventId,
-                IsEventOnlyOpponent = !result.Opponent.IsPoolOpponent
-            };
+                EventInstanceId = result.EventInstanceId,
+                IsEventOnlyOpponent = !opponent.IsPoolOpponent
+            });
 
-            launchIntent.Metadata["RaceContext"] = raceContext;
+            if (setup.Intent == null)
+            {
+                _dialogService.ShowDialog(new InformationDialogViewModel(
+                    _dialogService,
+                    $"Your car is not going anywhere: {setup.PlayerCarProblem}.\n\nSort it out in the garage first.",
+                    "Car Won't Run"));
+                return;
+            }
 
-            // Navigate to race loading
-            _navigationService.NavigateToRaceLoading(_gameState, launchIntent);
+            _logger.Information("Entering {Event} on {Track} {Config}", result.EventId, track.Value.TrackId, track.Value.TrackConfig ?? "");
+            _navigationService.NavigateToRaceLoading(_gameState, setup.Intent);
         }
 
-        public override void Enter()
+        private void ShowRaceError(Exception ex)
+        {
+            _dialogService.ShowDialog(new InformationDialogViewModel(
+                _dialogService,
+                $"The race could not be set up:\n\n{ex.Message}",
+                "Race Not Started"));
+        }
+
+        public override async void Enter()
         {
             base.Enter();
 
-            // Refresh event list in case it changed
-            LoadRaceInvitations();
+            try
+            {
+                LoadRaceInvitations();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not list the race invitations");
+            }
 
             // Only spend time when actually visiting (not returning from sub-screens)
-            if (!SkipEnterAnimation)
-            {
-                _ = ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.VisitNewspaper);
-            }
-        }
+            if (SkipEnterAnimation)
+                return;
 
-        public override void Exit()
-        {
-            base.Exit();
+            try
+            {
+                // Late in the evening that is the next morning, with another paper: the invitations are read
+                // again, and the new day is saved
+                var spent = await _timeService.SpendTimeAsync(_gameState, GameAction.VisitNewspaper);
+                if (spent.NewDayStarted) LoadRaceInvitations();
+                OnPropertyChanged(nameof(BankrollDisplay));
+
+                if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not spend and save the time for the newspaper");
+            }
         }
     }
 }

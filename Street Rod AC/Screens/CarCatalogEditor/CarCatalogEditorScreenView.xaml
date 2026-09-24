@@ -78,13 +78,32 @@
             </StackPanel>
         </Grid>
 
-        <!-- Car Listings -->
-        <ScrollViewer Grid.Row="2"
-                      VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled"
-                      Margin="40,10,40,10">
-            <ItemsControl ItemsSource="{Binding CatalogView}">
-                <ItemsControl.ItemTemplate>
+        <!-- Car Listings: virtualized, so only the rows on screen are built (each carries a ranked engine list) -->
+        <ListBox Grid.Row="2"
+                 ItemsSource="{Binding CatalogView}"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 Margin="40,10,40,10"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 ScrollViewer.CanContentScroll="True"
+                 VirtualizingPanel.IsVirtualizing="True"
+                 VirtualizingPanel.VirtualizationMode="Recycling"
+                 VirtualizingPanel.ScrollUnit="Pixel">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Focusable" Value="False"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <ContentPresenter/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Border Background="#2A2A2A"
                                 BorderThickness="2"
@@ -237,9 +256,17 @@
                             </Grid>
                         </Border>
                     </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+                </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- The catalog is read off the UI thread -->
+        <TextBlock Grid.Row="2"
+                   Text="Loading the catalog..."
+                   FontSize="16"
+                   Foreground="{StaticResource TextSecondaryBrush}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
         <!-- Bottom Bar -->
         <Border Grid.Row="3"
