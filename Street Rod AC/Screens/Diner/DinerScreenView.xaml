@@ -945,6 +945,13 @@
                                                             <Run Text="{Binding MaxWager, StringFormat='{}{0:N0}', Mode=OneWay}"/>
                                                         </TextBlock>
                                                     </StackPanel>
+
+                                                    <TextBlock Text="{Binding StakesNote}"
+                                                              FontSize="{StaticResource FontSizeTiny}"
+                                                              Foreground="{StaticResource GoldBrush}"
+                                                              HorizontalAlignment="Center"
+                                                              Margin="0,3,0,0"
+                                                              Visibility="{Binding HasStakesNote, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                                 </StackPanel>
 
                                                 <!-- Placeholder when not selected -->

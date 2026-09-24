@@ -44,6 +44,9 @@ namespace Street_Rod_AC.Models.GameState
         // Career Progression
         public CareerState Career { get; set; }
 
+        /// <summary>The difficulty the career was started on; fixed for the life of the save</summary>
+        public GameRules Rules { get; set; }
+
         /// <summary>
         /// The race the player went off to and has not come back from yet: set just before AC starts and saved
         /// with the game, cleared once its result (or the lack of one) has been dealt with. A result file left
@@ -78,6 +81,7 @@ namespace Street_Rod_AC.Models.GameState
             DealerLocations = [];
             ScheduledTasks = [];
             Career = CareerState.CreateNew();
+            Rules = new GameRules();
 
             CatalogVersion = 1;
             // Real-world timestamps for save file metadata
@@ -85,12 +89,13 @@ namespace Street_Rod_AC.Models.GameState
             LastPlayedDate = now;
         }
 
-        public static GameState CreateNew(string playerName)
+        public static GameState CreateNew(string playerName, GameRules? rules = null)
         {
             var state = new GameState
             {
                 Player = new Player(playerName),
-                Date = GetStartingDateTime()
+                Date = GetStartingDateTime(),
+                Rules = rules ?? new GameRules()
             };
 
             // TODO: Initialize used car market

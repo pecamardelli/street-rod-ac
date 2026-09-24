@@ -55,7 +55,8 @@ namespace Street_Rod_AC.Screens.Newspaper
             RaceEventInstance instance,
             RaceEventDefinition definition,
             List<EligibleCarViewModel> eligibleCars,
-            DateTime currentTime)
+            DateTime currentTime,
+            double prizeMultiplier)
         {
             var expiresIn = CalculateExpiresIn(instance.ExpiresAt, currentTime);
             var isExpiringSoon = instance.ExpiresAt.HasValue &&
@@ -68,7 +69,7 @@ namespace Street_Rod_AC.Screens.Newspaper
                 Name = definition.Name,
                 Description = definition.Description,
                 RequirementsDescription = definition.GetEntryRequirementsDescription(),
-                RewardDescription = definition.Reward.GetDescription(),
+                RewardDescription = definition.Reward.ScaledBy(prizeMultiplier).GetDescription(),
                 RaceType = definition.RaceType,
                 IsPinkSlip = definition.IsPinkSlip,
                 ExpiresAt = instance.ExpiresAt,

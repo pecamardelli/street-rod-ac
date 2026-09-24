@@ -25,7 +25,7 @@ namespace Street_Rod_AC.Services.Configuration
         /// <summary>AC's assists file, where the damage and tyre wear rates are</summary>
         public const string AssistsFile = "assists.ini";
 
-        /// <summary>Mechanical and body damage in a race, in percent (AC's full rate)</summary>
+        /// <summary>Mechanical and body damage in a race, in percent: AC's full rate, which an easy game turns down</summary>
         public const int RaceDamage = 100;
 
         /// <summary>Tyre wear in a race: 1 is AC's normal rate</summary>
@@ -277,7 +277,7 @@ namespace Street_Rod_AC.Services.Configuration
             // Write to race.ini; the user's own is kept until AC exits
             WriteIni(filePath, content, SafeFile.Utf8NoBom);
 
-            ApplyRaceDamage();
+            ApplyRaceDamage(intent.DamagePercent);
 
             _logger.Information("Applied drag race intent: Player={PlayerName} ({PlayerCarId}), Opponent={OpponentName} ({OpponentCarId}), AI={AILevel}/{AIAggression}, Context={ContextId}",
                 intent.PlayerName, intent.PlayerCarId, intent.OpponentName, intent.OpponentCarId, intent.OpponentAILevel, intent.OpponentAIAggression,
@@ -374,14 +374,15 @@ namespace Street_Rod_AC.Services.Configuration
         /// engine can blow and the body takes what it hits. The rest of the assists (and visual damage) stay the
         /// player's. Kept and put back like race.ini.
         /// </summary>
-        private void ApplyRaceDamage()
+        private void ApplyRaceDamage(int damagePercent)
         {
+            var damage = Math.Clamp(damagePercent, 0, RaceDamage);
             EditIni(GetIniFilePath(AssistsFile), ini =>
             {
-                ini.Set("ASSISTS", "DAMAGE", RaceDamage.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                ini.Set("ASSISTS", "DAMAGE", damage.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 ini.Set("ASSISTS", "TYRE_WEAR", RaceTyreWear.ToString(System.Globalization.CultureInfo.InvariantCulture));
             });
-            _logger.Information("Race assists: DAMAGE={Damage}, TYRE_WEAR={TyreWear}", RaceDamage, RaceTyreWear);
+            _logger.Information("Race assists: DAMAGE={Damage}, TYRE_WEAR={TyreWear}", damage, RaceTyreWear);
         }
 
         private bool ApplyFreeRunIntent(FreeRunIntent intent)

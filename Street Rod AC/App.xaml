@@ -24,6 +24,7 @@
              xmlns:eventEntry="clr-namespace:Street_Rod_AC.Dialogs.EventEntry"
              xmlns:timeslip="clr-namespace:Street_Rod_AC.Dialogs.Timeslip"
              xmlns:repairShop="clr-namespace:Street_Rod_AC.Dialogs.RepairShop"
+             xmlns:sellCar="clr-namespace:Street_Rod_AC.Dialogs.SellCar"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -134,6 +135,10 @@
 
             <DataTemplate DataType="{x:Type repairShop:RepairShopDialogViewModel}">
                 <repairShop:RepairShopDialogView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type sellCar:SellCarDialogViewModel}">
+                <sellCar:SellCarDialogView/>
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

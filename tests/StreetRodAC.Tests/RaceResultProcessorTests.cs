@@ -18,7 +18,7 @@ public sealed class RaceResultProcessorTests : IDisposable
 
     // ---- Fakes: the processor's collaborators, recording what reached them ----
 
-    private sealed class FakeRepository : IGameStateRepository
+    internal sealed class FakeRepository : IGameStateRepository
     {
         public int Saves { get; private set; }
         public Exception? Throw { get; set; }
@@ -39,7 +39,7 @@ public sealed class RaceResultProcessorTests : IDisposable
         public bool Exists(string saveName) => throw new NotSupportedException();
         public void Delete(string saveName) => throw new NotSupportedException();
         public List<string> ListSaves() => throw new NotSupportedException();
-        public GameState CreateNew(string saveName, string playerName) => throw new NotSupportedException();
+        public GameState CreateNew(string saveName, string playerName, GameRules? rules = null) => throw new NotSupportedException();
         public void Dispose() { }
     }
 
@@ -54,7 +54,7 @@ public sealed class RaceResultProcessorTests : IDisposable
         public RaceEventDefinition? GetEventDefinition(string eventId) => null;
         public IEnumerable<RaceEventDefinition> GetEligibleEvents(CareerState career) => [];
         public IEnumerable<RaceEventInstance> GetActiveEvents(CareerState career, DateTime currentTime) => [];
-        public List<RaceEventInstance> GenerateEvents(CareerState career, DateTime currentTime) => [];
+        public List<RaceEventInstance> GenerateEvents(CareerState career, DateTime currentTime, double pinkSlipFactor = 1.0) => [];
         public bool CanEnterEvent(string eventId, string carDefinitionId, Car? carInstance, CareerState career) => false;
         public EventReward? CompleteEvent(Guid eventInstanceId, bool playerWon, CareerState career, DateTime completedAt) => null;
         public int CleanupExpiredEvents(CareerState career, DateTime currentTime) => 0;

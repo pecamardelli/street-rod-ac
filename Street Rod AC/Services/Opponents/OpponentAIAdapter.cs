@@ -15,18 +15,30 @@ namespace Street_Rod_AC.Services.Opponents
     /// </summary>
     public static class OpponentAIAdapter
     {
+        /// <summary>The lowest AI level the difficulty can bring a rival down to</summary>
+        public const int EasiestSkill = 85;
+
         /// <summary>
         /// Convert opponent traits to Assetto Corsa AI parameters
         /// </summary>
         /// <param name="opponent">The opponent to convert</param>
+        /// <param name="rules">The save's difficulty, which moves every rival's skill and aggression; null for none</param>
         /// <returns>AC AI parameters ready for race.ini configuration</returns>
-        public static AssettoCorsaAIParameters ToAssettoCorsaAI(Opponent opponent)
+        public static AssettoCorsaAIParameters ToAssettoCorsaAI(Opponent opponent, GameRules? rules = null)
         {
             // Direct mapping (1:1) - no transformation needed since ranges align
             // Clamped all the same: a save edited by hand or an older one may hold a skill out of range, and
             // AC takes whatever race.ini says
             var aiStrength = Math.Clamp(opponent.Skill, Opponent.MinSkill, Opponent.MaxSkill);  // 90-100
             var aiAggression = Math.Clamp(opponent.Aggression, 0, 100);
+
+            // The difficulty on top. An easy game may take the rivals a little under the usual floor, never
+            // far: below that AC's AI is too slow to be a race
+            if (rules != null)
+            {
+                aiStrength = Math.Clamp(aiStrength + rules.OpponentSkillModifier, EasiestSkill, Opponent.MaxSkill);
+                aiAggression = Math.Clamp(aiAggression + rules.OpponentAggressionModifier, 0, 100);
+            }
 
             return new AssettoCorsaAIParameters
             {

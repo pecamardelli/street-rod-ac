@@ -8,6 +8,7 @@ using Street_Rod_AC.Screens.Shared;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Configuration.Models;
+using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Parts;
 using Street_Rod_AC.Services.Race;
 using Street_Rod_AC.Services.Settings;
@@ -31,6 +32,7 @@ namespace Street_Rod_AC.Screens.Garage
         private readonly ICarPartsService _partsService;
         private readonly IGameTimeService _timeService;
         private readonly GameSettingsService _settingsService;
+        private readonly ICarSaleService _saleService;
         private readonly IAssettoCorsaContentService _contentService;
         private readonly RaceCarDataService _raceCarDataService;
         private readonly IAppLogger _logger;
@@ -40,6 +42,7 @@ namespace Street_Rod_AC.Screens.Garage
         public AsyncRelayCommand LaunchShowroomCommand { get; }
         public AsyncRelayCommand FreeRunCommand { get; }
         public RelayCommand RepairsCommand { get; }
+        public RelayCommand SellCommand { get; }
 
         /// <summary>Where a free run can go: every track of the install, one entry per layout</summary>
         public ObservableCollection<FreeRunTrackViewModel> FreeRunTracks { get; } = new();
@@ -107,6 +110,7 @@ namespace Street_Rod_AC.Screens.Garage
                 OnPropertyChanged(nameof(SelectedCar));
                 OnPropertyChanged(nameof(SelectedCarDisplay));
                 OnPropertyChanged(nameof(HasCars));
+                OnPropertyChanged(nameof(SellButtonText));
                 if (carChanged)
                 {
                     Workbench.SetCar(value?.CarInstance);
@@ -267,8 +271,10 @@ namespace Street_Rod_AC.Screens.Garage
             GameSettingsService settingsService,
             IAssettoCorsaContentService contentService,
             RaceCarDataService raceCarDataService,
+            ICarSaleService saleService,
             bool skipAnimation = false)
         {
+            _saleService = saleService;
             _navigationService = navigationService;
             _dialogService = dialogService;
             _gameState = gameState;
@@ -289,6 +295,7 @@ namespace Street_Rod_AC.Screens.Garage
             FreeRunCommand = new AsyncRelayCommand(OnFreeRun, () => SelectedCar != null && FreeRunTrack != null && !_launcher.IsExecutionLocked);
             LoadFreeRunTracks();
             RepairsCommand = new RelayCommand(OnRepairs, () => SelectedCar != null);
+            SellCommand = new RelayCommand(OnSell, () => SelectedCar != null && !_launcher.IsExecutionLocked);
             SelectCarCommand = new RelayCommand(OnSelectCar);
             ShowCalendarCommand = new RelayCommand(OnShowCalendar);
             NewspaperCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToNewspaper(_gameState)));
@@ -529,7 +536,7 @@ namespace Street_Rod_AC.Screens.Garage
 
             var car = selected.CarInstance;
             _dialogService.ShowDialog(new Dialogs.RepairShop.RepairShopDialogViewModel(
-                _dialogService, car, selected.DisplayName, Workbench.Catalog,
+                _dialogService, car, selected.DisplayName, Workbench.Catalog, _gameState.Rules.PartPriceMultiplier,
                 () => _gameState.Player.Money,
                 async job =>
                 {
@@ -564,6 +571,41 @@ namespace Street_Rod_AC.Screens.Garage
                     // The parts view shows the parts' shape: it gets the repaired ones
                     Workbench.SetCar(car);
                 }));
+        }
+
+        /// <summary>"Sell", or where the selected car's sale stands when it is in the paper</summary>
+        public string SellButtonText
+        {
+            get
+            {
+                if (SelectedCar is not { } selected || _saleService.AdFor(_gameState, selected.CarInstance) is not { } ad) return "Sell";
+                return ad.Offer is { } offer && offer.Expires >= _gameState.Date ? "Sell (offer!)" : "Sell (in the paper)";
+            }
+        }
+
+        /// <summary>Selling the selected car: to the dealer, or through the paper</summary>
+        private void OnSell()
+        {
+            if (SelectedCar is not { } selected) return;
+
+            _dialogService.ShowDialog(new Dialogs.SellCar.SellCarDialogViewModel(
+                _dialogService, _gameState, selected.CarInstance, selected.DisplayName, _saleService,
+                sold: () =>
+                {
+                    // The car is gone: the garage shows what is left, the selected car the sale moved on to
+                    LoadPlayerCars();
+                    if (Cars.Count == 0) SelectedCar = null;
+                    OnPropertyChanged(nameof(HasCars));
+                    AfterSale();
+                },
+                changed: AfterSale));
+        }
+
+        private void AfterSale()
+        {
+            RefreshCalendarDisplay();
+            OnPropertyChanged(nameof(BankrollDisplay));
+            OnPropertyChanged(nameof(SellButtonText));
         }
 
         private void OnSelectCar()

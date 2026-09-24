@@ -41,7 +41,13 @@ namespace Street_Rod_AC.Services.Storage
                 // LastPlayedDate is left as it was saved; Save stamps it. (Stamping it here once made every
                 // save "just now", back when the Load screen loaded each save to list it.)
                 if (state != null)
+                {
                     state.SaveName = saveName;
+
+                    // A save from before the difficulty was picked plays on Normal
+                    state.Rules ??= new GameRules();
+                    state.NewspaperAds.PlayerCars ??= [];
+                }
 
                 return state;
             }
@@ -153,7 +159,7 @@ namespace Street_Rod_AC.Services.Storage
             return headers;
         }
 
-        public GameState CreateNew(string saveName, string playerName)
+        public GameState CreateNew(string saveName, string playerName, GameRules? rules = null)
         {
             // Throws on a name that cannot be a save before anything is made
             Database.PathOf(saveName);
@@ -166,7 +172,7 @@ namespace Street_Rod_AC.Services.Storage
                 Delete(saveName);
             }
 
-            var state = GameState.CreateNew(playerName);
+            var state = GameState.CreateNew(playerName, rules);
             state.SaveName = saveName;
 
             // Initialize opponents if service is available

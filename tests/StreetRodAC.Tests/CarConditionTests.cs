@@ -207,6 +207,32 @@ public sealed class CarConditionTests : IDisposable
     }
 
     [Fact]
+    public void A_harder_game_wears_the_engine_faster()
+    {
+        var car = NewCar();
+
+        CarCondition.ApplyRace(car, Report(), 400, GroupOf, wearMultiplier: 1.5);
+
+        Assert.Equal(1 - 600 * CarCondition.MileageWearPerKm, Part(car, "block").Wear, 9);
+    }
+
+    [Fact]
+    public void An_easy_game_turns_AC_damage_down()
+    {
+        var cfg = _temp.Combine("cfg");
+        Directory.CreateDirectory(cfg);
+        var service = new IniModificationService(cfg, _temp.Combine("AcRestore"));
+
+        Assert.True(service.ApplyIntent(new DragRaceIntent
+        {
+            PlayerCarId = "a", OpponentCarId = "b", PlayerName = "P", OpponentName = "O",
+            DamagePercent = GameRules.For(Difficulty.Easy).RaceDamagePercent
+        }));
+
+        Assert.Contains("DAMAGE=60", File.ReadAllLines(Path.Combine(cfg, "assists.ini")));
+    }
+
+    [Fact]
     public void The_cars_figures_follow_its_parts()
     {
         var car = NewCar();

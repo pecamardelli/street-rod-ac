@@ -41,6 +41,7 @@ namespace Street_Rod_AC
         public IUsedCarMarketService MarketService { get; private set; }
         public Services.Dealers.IDealerCatalog DealerCatalog { get; private set; }
         public ICarPurchaseService PurchaseService { get; private set; }
+        public ICarSaleService SaleService { get; private set; }
         public Services.Parts.ICarPartsService CarPartsService { get; private set; }
         public Services.Parts.IPartsShopService PartsShopService { get; private set; }
         public IIniModificationService IniModificationService { get; private set; }
@@ -182,6 +183,7 @@ namespace Street_Rod_AC
             var saveDatabase = new Services.Storage.SaveDatabase();
             GameStateRepository = new GameStateRepository(OpponentInitializationService, saveDatabase);
             PurchaseService = new CarPurchaseService(GameStateRepository, CarPartsService, GameTimeService);
+            SaleService = new CarSaleService(MarketService, GameTimeService, GameStateRepository);
 
             // Career services
             CarFilterService = new CarFilterService(car => MarketService.ValueOf(car));
@@ -202,6 +204,7 @@ namespace Street_Rod_AC
 
             // Register event generation task (must be after RaceEventService is created)
             Scheduler.RegisterTask(new Services.Scheduler.Tasks.EventGenerationTask(RaceEventService));
+            Scheduler.RegisterTask(new CarAdsReviewTask(SaleService));
 
             // Last: these two put engines together on a worker thread and hand the day back before they are
             // done. What comes before them is finished by the time whoever spent the time carries on.
@@ -234,7 +237,7 @@ namespace Street_Rod_AC
             NavigationService = new NavigationService(
                 DialogService, CatalogRepository, ProfileRepository, Launcher, ContentService, OpponentChallengeService,
                 GameStateRepository, MarketService, GameSettingsService, ProfileService, TalkService, DealerCatalog,
-                PurchaseService,
+                PurchaseService, SaleService,
                 GameTimeService, CarPartsService, PartsShopService, RaceCarDataService, RaceEventService, CarFilterService,
                 EventOpponentService, VictoryConditionService, MilestoneService,
                 game => CurrentGameState = game);

@@ -42,7 +42,8 @@ namespace Street_Rod_AC.Services.Parts
 
         public IReadOnlyList<PartDefinition> Assortment => _assortment.Value;
 
-        public decimal NewPrice(PartDefinition part) => PartPricing.Round(PartPricing.NewPrice(part));
+        public decimal NewPrice(PartDefinition part, double priceMultiplier) =>
+            PartPricing.Round(PartPricing.NewPrice(part) * GameRules.Sane(priceMultiplier));
 
         public decimal TradeInPrice(PartInstance part) =>
             PartPricing.Round(PartPricing.WorthOfAssembly(_parts.Catalog, part) * PartPricing.TradeInFactor);
@@ -54,7 +55,8 @@ namespace Street_Rod_AC.Services.Parts
             var wanted = target - ads.Count(ad => !IsExpired(ad, currentDate));
 
             // Loose from the game state: the list of ads belongs to the caller's thread, which may be saving it right now
-            var fresh = await Task.Run(() => IsAvailable ? CreateAds(wanted, currentDate) : null);
+            var priceMultiplier = gameState.Rules.PartPriceMultiplier;
+            var fresh = await Task.Run(() => IsAvailable ? CreateAds(wanted, currentDate, priceMultiplier) : null);
             if (fresh == null) return;
 
             var expired = ads.RemoveAll(ad => IsExpired(ad, currentDate) || _parts.Catalog.Get(ad.Part.DefinitionId) == null);
@@ -69,10 +71,10 @@ namespace Street_Rod_AC.Services.Parts
 
         private static bool IsExpired(PartAd ad, DateTime currentDate) => (currentDate - ad.PostedDate).TotalDays > AdLifetimeDays;
 
-        private List<PartAd> CreateAds(int count, DateTime currentDate)
+        private List<PartAd> CreateAds(int count, DateTime currentDate, double priceMultiplier)
         {
             var ads = new List<PartAd>();
-            while (ads.Count < count && CreateAd(currentDate) is { } ad) ads.Add(ad);
+            while (ads.Count < count && CreateAd(currentDate, priceMultiplier) is { } ad) ads.Add(ad);
             return ads;
         }
 
@@ -115,7 +117,7 @@ namespace Street_Rod_AC.Services.Parts
 
         public bool BuyNew(Models.GameState.GameState gameState, PartDefinition part)
         {
-            var price = NewPrice(part);
+            var price = NewPrice(part, gameState.Rules.PartPriceMultiplier);
             if (gameState.Player.Money < price) return false;
 
             gameState.Player.Money -= price;
@@ -144,7 +146,7 @@ namespace Street_Rod_AC.Services.Parts
             return true;
         }
 
-        private PartAd? CreateAd(DateTime currentDate)
+        private PartAd? CreateAd(DateTime currentDate, double priceMultiplier)
         {
             var random = Random.Shared;
             var catalog = _parts.Catalog;
@@ -164,8 +166,9 @@ namespace Street_Rod_AC.Services.Parts
                 part = new PartInstance(Assortment[random.Next(Assortment.Count)].Id) { Wear = wear };
             }
 
-            // Private sellers ask around what a shop would, some more, some less
-            var asking = PartPricing.WorthOfAssembly(catalog, part) * PartPricing.UsedShopFactor * (0.8 + random.NextDouble() * 0.4);
+            // Private sellers ask around what a shop would, some more, some less, and more in a harder game
+            var asking = PartPricing.WorthOfAssembly(catalog, part) * PartPricing.UsedShopFactor * (0.8 + random.NextDouble() * 0.4)
+                         * GameRules.Sane(priceMultiplier);
             return new PartAd(part, PartPricing.Round(asking), Sellers[random.Next(Sellers.Length)])
             {
                 PostedDate = currentDate.AddDays(-random.Next(0, 4))

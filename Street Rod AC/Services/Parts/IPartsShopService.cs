@@ -12,7 +12,9 @@ namespace Street_Rod_AC.Services.Parts
         /// <summary>Every part that can be ordered new, by name</summary>
         IReadOnlyList<PartDefinition> Assortment { get; }
 
-        decimal NewPrice(PartDefinition part);
+        /// <summary>What the shop asks for the part new</summary>
+        /// <param name="priceMultiplier">The save's <see cref="GameRules.PartPriceMultiplier"/></param>
+        decimal NewPrice(PartDefinition part, double priceMultiplier);
 
         /// <summary>What the player gets for a part of theirs, with whatever is mounted on it</summary>
         decimal TradeInPrice(PartInstance part);

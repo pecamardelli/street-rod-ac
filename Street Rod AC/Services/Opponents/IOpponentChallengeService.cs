@@ -16,6 +16,7 @@ namespace Street_Rod_AC.Services.Opponents
         /// <param name="opponentCar">The opponent's car</param>
         /// <param name="isPinkSlip">Whether this is a pink slip race</param>
         /// <param name="cashWager">Cash wager amount (if not pink slip)</param>
+        /// <param name="pinkSlipFactor">The save's <see cref="GameRules.PinkSlipFactor"/>: how readily a pink slip is taken on</param>
         /// <returns>Challenge response with acceptance decision and reason</returns>
         ChallengeResponse EvaluateChallenge(
             Opponent opponent,
@@ -23,7 +24,8 @@ namespace Street_Rod_AC.Services.Opponents
             Car playerCar,
             Car opponentCar,
             bool isPinkSlip,
-            decimal cashWager = 0);
+            decimal cashWager = 0,
+            double pinkSlipFactor = 1.0);
     }
 
     /// <summary>

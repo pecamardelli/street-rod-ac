@@ -98,6 +98,9 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// </summary>
         public RaceType RaceType { get; set; } = RaceType.DragRace;
 
+        /// <summary>AC's damage for the race, in percent (the difficulty's; 100 is AC's full rate)</summary>
+        public int DamagePercent { get; set; } = IniModificationService.RaceDamage;
+
         /// <summary>
         /// The race's <see cref="RaceContext.ContextId"/>, written to race.ini as [STREET_ROD] CONTEXT_ID so the Lua
         /// app can put it into the result; null for a launch without a context (nothing is written then)

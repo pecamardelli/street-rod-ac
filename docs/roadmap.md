@@ -70,10 +70,39 @@ Left for later: overheating and oil starvation modelled by the game (CSP only fi
 fuel carried between races, body dirt, each car's best elapsed time, bracket racing with a dial-in, and whether AC's
 full damage wrecks 1970 street cars too fast (the user chose 100% to start).
 
-## Next: step 4, economy
+**Done: step 4, the economy** (`feature/economy`). See `docs/systems/market-system.md` "Selling Cars".
+- **The user decided:**
+  - the difficulty belongs to the save, picked on the New Game screen (Easy, Normal, Hard, each figure adjustable, which
+    makes it Custom), not app-wide settings;
+  - selling through the paper is an ad with buyers calling over the days;
+  - a dealer pays 60% of what the car is worth.
+- **`GameRules`** (`GameState.Rules`; saves from before load as Normal) replaced the unused economy and difficulty fields
+  of `GameSettings`, which now only holds the AC folder and the last free-run track. It drives:
+  - `CarPriceMultiplier`: what the lots ask (new listings, relisted pink slips and trade-ins);
+  - `PartPriceMultiplier`: the parts shop, the parts ads and the repair bay;
+  - `RacePrizeMultiplier`: event cash, shown and paid (`EventReward.ScaledBy`);
+  - `OpponentSkill/AggressionModifier`: on top of each rival's AI in `OpponentAIAdapter`, never under AI level 85;
+  - `CarWearMultiplier`: AC's `DAMAGE` (`RaceDamagePercent`, at most 100) and the parts' mileage wear, and the simulated
+    rivals' wear;
+  - `PinkSlipFrequency`: rival-vs-rival pink slips (10% of road races on Medium), pink-slip events turning up, and how
+    readily a rival takes a pink slip on;
+  - `RaceSimulationEnabled`, `SeasonalRacingEnabled`, `MarketRefreshEnabled`: the daily rival races, their summer and
+    winter rhythm, the dealers restocking.
+  Presets: Easy 0.85/0.85/1.25, skill −3, aggression −15, wear 0.6, pink slips Low; Hard 1.15/1.15/0.85, +3, +15,
+  1.3, High. The starting money stays $1M on every difficulty until a first release.
+- **Selling** (`CarSaleService`, the garage's Sell button): the dealer on the spot, the scrapyard for a totaled car
+  (15% ±20%), or an ad in the paper whose buyers show in the Sell dialog and under "Your Ads" in the newspaper.
+  `CarsSold` and `CarsOwned` (on a purchase) are now counted.
+- **Bigger bets** (`MatchupCalculator.StakesFactor`): the house limit grows by one for every 25 points of the rival's
+  reputation over 50 (three times at 100) and doubles from 20:00, still capped by the poorer racer's money. The diner
+  says why the stakes are up. Races still run in daylight: a night race (`SUN_ANGLE`) belongs with step 6.
 
-Step 3 is done (see below) and step 2b went in with step 2, so the economy is next. Before starting: check that PR #18
-is merged into `dev`, and branch from `dev`.
+Not yet tested by the user in the game: the New Game difficulty panel, the Sell dialog, the newspaper's "Your Ads",
+night stakes in the diner.
+
+## Next: step 5, living opponents
+
+Before starting: check that the economy PR is merged into `dev`, and branch from `dev`.
 
 ## Step 2: damage, as real as AC allows (done, PR #18)
 
@@ -146,7 +175,9 @@ and each car's best elapsed time.
 
 **Dismissed:** a flagger in the street. The user thought AC had one; building one (a model and an animation, or a picture standing in the road) was dismissed, so AC's start lights stay.
 
-## Step 4: economy
+## Step 4: economy (done)
+
+The plan as it stood; what was built is under "Where things stand".
 
 **User:** yes to all, except that the starting money stays at the $1M placeholder until a first release (they are testing).
 - **Selling cars:** to the dealer and in the newspaper. `GameAction.SellCar` exists but nothing uses it, and `CarsSold` is never written.
