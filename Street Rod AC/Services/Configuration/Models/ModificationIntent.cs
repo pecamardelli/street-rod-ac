@@ -104,6 +104,12 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// </summary>
         public Guid? ContextId { get; set; }
 
+        /// <summary>The player's car's damage for the race mode to put into AC at the start ([STREET_ROD] CAR_0_*)</summary>
+        public Street_Rod_AC.Models.Race.RaceStartState? PlayerStart { get; set; }
+
+        /// <summary>The opponent's car's damage ([STREET_ROD] CAR_1_*)</summary>
+        public Street_Rod_AC.Models.Race.RaceStartState? OpponentStart { get; set; }
+
         public override string Description =>
             $"Configure drag race: {PlayerName} ({PlayerCarId}) vs {OpponentName} ({OpponentCarId}) [AI: {OpponentAILevel}/{OpponentAIAggression}]";
 

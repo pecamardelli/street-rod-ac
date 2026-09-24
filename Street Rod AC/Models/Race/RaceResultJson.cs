@@ -94,6 +94,28 @@ namespace Street_Rod_AC.Models.Race
 
         /// <summary>The player hit the rival out of their own lane in a drag race</summary>
         public const string Disqualified = "DISQUALIFIED";
+
+        /// <summary>The player's car broke down: the engine blew, the gearbox or a corner gave out, a tyre blew (schema 1.4)</summary>
+        public const string BrokeDown = "BROKE_DOWN";
+    }
+
+    /// <summary>What gave out in a <see cref="RaceParticipant.Breakdown"/></summary>
+    public static class Breakdowns
+    {
+        public const string Engine = "ENGINE";
+        public const string Gearbox = "GEARBOX";
+        public const string Suspension = "SUSPENSION";
+        public const string Tyre = "TYRE";
+
+        /// <summary>The breakdown in the player's words: "engine", "gearbox"...</summary>
+        public static string Describe(string? breakdown) => breakdown switch
+        {
+            Engine => "engine",
+            Gearbox => "gearbox",
+            Suspension => "suspension",
+            Tyre => "tyre",
+            _ => "car"
+        };
     }
 
     /// <summary>
@@ -126,6 +148,22 @@ namespace Street_Rod_AC.Models.Race
         /// </summary>
         [JsonProperty("disqualified")]
         public bool? Disqualified { get; set; }
+
+        /// <summary>This car broke down during the race and was out of it (schema 1.4); null in older files</summary>
+        [JsonProperty("broke_down")]
+        public bool? BrokeDown { get; set; }
+
+        /// <summary>What gave out, one of <see cref="Breakdowns"/>; null when nothing did</summary>
+        [JsonProperty("breakdown")]
+        public string? Breakdown { get; set; }
+
+        /// <summary>What the race left of the car, as AC tracks it (schema 1.2); null in older files</summary>
+        [JsonProperty("condition")]
+        public RaceCarCondition? Condition { get; set; }
+
+        /// <summary>The car's run down the strip, for a drag race (schema 1.4); null for a road race and older files</summary>
+        [JsonProperty("timeslip")]
+        public Timeslip? Timeslip { get; set; }
 
         [JsonProperty("performance")]
         public ParticipantPerformance Performance { get; set; } = new();
@@ -179,5 +217,88 @@ namespace Street_Rod_AC.Models.Race
 
         [JsonProperty("crash_timestamp")]
         public string? CrashTimestamp { get; set; }
+    }
+
+    /// <summary>
+    /// A car as AC left it at the end of the race. Every field is read on its own in the race mode, so any may be
+    /// missing; a missing one changes nothing.
+    /// </summary>
+    public class RaceCarCondition
+    {
+        /// <summary>Body damage by zone (front, rear, left, right), the collision speed in km/h</summary>
+        [JsonProperty("body_damage_kmh")]
+        public List<double>? BodyDamageKmh { get; set; }
+
+        /// <summary>1000 for a new engine, 0 or less for a blown one</summary>
+        [JsonProperty("engine_life")]
+        public double? EngineLife { get; set; }
+
+        /// <summary>What this race did to the gearbox: 0 nothing, 1 non-functional. AC starts every race at 0.</summary>
+        [JsonProperty("gearbox_damage")]
+        public double? GearboxDamage { get; set; }
+
+        [JsonProperty("water_temperature_c")]
+        public double? WaterTemperatureC { get; set; }
+
+        [JsonProperty("oil_temperature_c")]
+        public double? OilTemperatureC { get; set; }
+
+        [JsonProperty("oil_pressure")]
+        public double? OilPressure { get; set; }
+
+        [JsonProperty("fuel_litres")]
+        public double? FuelLitres { get; set; }
+
+        /// <summary>Front left, front right, rear left, rear right</summary>
+        [JsonProperty("wheels")]
+        public List<WheelCondition>? Wheels { get; set; }
+    }
+
+    public class WheelCondition
+    {
+        /// <summary>How much of the tread this race took, from 0; AC's tyres start every race new</summary>
+        [JsonProperty("tyre_wear")]
+        public double? TyreWear { get; set; }
+
+        [JsonProperty("tyre_virtual_km")]
+        public double? TyreVirtualKm { get; set; }
+
+        [JsonProperty("tyre_blown")]
+        public bool? TyreBlown { get; set; }
+
+        /// <summary>How far this race bent the steering rod, in metres (AC's MAX_DAMAGE, 0.05 on nearly every car, is as far as it goes)</summary>
+        [JsonProperty("suspension_damage")]
+        public double? SuspensionDamage { get; set; }
+    }
+
+    /// <summary>
+    /// A drag strip timeslip. The elapsed times run from the moment the car leaves the line; the reaction time is
+    /// from AC's green to that moment. A mark the car never reached is null.
+    /// </summary>
+    public class Timeslip
+    {
+        [JsonProperty("reaction_s")]
+        public double? ReactionSeconds { get; set; }
+
+        [JsonProperty("sixty_ft_s")]
+        public double? SixtyFeetSeconds { get; set; }
+
+        [JsonProperty("three_thirty_ft_s")]
+        public double? ThreeThirtyFeetSeconds { get; set; }
+
+        [JsonProperty("eighth_mile_s")]
+        public double? EighthMileSeconds { get; set; }
+
+        [JsonProperty("eighth_mile_mph")]
+        public double? EighthMileMph { get; set; }
+
+        [JsonProperty("thousand_ft_s")]
+        public double? ThousandFeetSeconds { get; set; }
+
+        [JsonProperty("quarter_mile_s")]
+        public double? QuarterMileSeconds { get; set; }
+
+        [JsonProperty("quarter_mile_mph")]
+        public double? QuarterMileMph { get; set; }
     }
 }

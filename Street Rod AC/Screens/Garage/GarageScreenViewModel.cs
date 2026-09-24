@@ -39,6 +39,7 @@ namespace Street_Rod_AC.Screens.Garage
         public RelayCommand ExitCommand { get; }
         public AsyncRelayCommand LaunchShowroomCommand { get; }
         public AsyncRelayCommand FreeRunCommand { get; }
+        public RelayCommand RepairsCommand { get; }
 
         /// <summary>Where a free run can go: every track of the install, one entry per layout</summary>
         public ObservableCollection<FreeRunTrackViewModel> FreeRunTracks { get; } = new();
@@ -287,6 +288,7 @@ namespace Street_Rod_AC.Screens.Garage
             LaunchShowroomCommand = new AsyncRelayCommand(OnLaunchShowroom, CanLaunchShowroom);
             FreeRunCommand = new AsyncRelayCommand(OnFreeRun, () => SelectedCar != null && FreeRunTrack != null && !_launcher.IsExecutionLocked);
             LoadFreeRunTracks();
+            RepairsCommand = new RelayCommand(OnRepairs, () => SelectedCar != null);
             SelectCarCommand = new RelayCommand(OnSelectCar);
             ShowCalendarCommand = new RelayCommand(OnShowCalendar);
             NewspaperCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToNewspaper(_gameState)));
@@ -461,6 +463,18 @@ namespace Street_Rod_AC.Screens.Garage
                 if (_partsService.IsAvailable)
                 {
                     if (await _partsService.EnsurePartsAsync(car) && !string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
+
+                    // Blown, wrecked or totaled: it goes nowhere until it is repaired
+                    var damage = Parts.Cars.CarCondition.WhyCannotRace(car, Parts.Cars.CarCondition.Groups(_partsService.Catalog));
+                    if (damage.Count > 0)
+                    {
+                        _dialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(
+                            _dialogService,
+                            $"The car is not going anywhere: {string.Join("; ", damage)}.\n\nThe Repairs button sorts it out.",
+                            "Car Won't Run"));
+                        return;
+                    }
+
                     data = await Task.Run(() => _raceCarDataService.Prepare(car));
                 }
 
@@ -506,6 +520,50 @@ namespace Street_Rod_AC.Screens.Garage
             {
                 FreeRunCommand.RaiseCanExecuteChanged();
             }
+        }
+
+        /// <summary>The repair bay for the selected car: each job paid for, timed and saved as it is done</summary>
+        private void OnRepairs()
+        {
+            if (SelectedCar is not { } selected) return;
+
+            var car = selected.CarInstance;
+            _dialogService.ShowDialog(new Dialogs.RepairShop.RepairShopDialogViewModel(
+                _dialogService, car, selected.DisplayName, Workbench.Catalog,
+                () => _gameState.Player.Money,
+                async job =>
+                {
+                    if (_gameState.Player.Money < job.Cost) return;
+
+                    _gameState.Player.Money -= job.Cost;
+                    job.Apply();
+                    _logger.Information("Repaired {Car}: {Job} for ${Cost}", car.DefinitionId, job.Name, job.Cost);
+
+                    try
+                    {
+                        // Before saving: the time the work took belongs in the save, and so does the new day it may end in
+                        await _timeService.SpendTimeAsync(_gameState, job.Time);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warning("Could not spend the time for the repair: {Error}", ex.Message);
+                    }
+
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, "Could not save the game after a repair");
+                    }
+
+                    RefreshCalendarDisplay();
+                    OnPropertyChanged(nameof(BankrollDisplay));
+                    OnPropertyChanged(nameof(SelectedCar));
+                    // The parts view shows the parts' shape: it gets the repaired ones
+                    Workbench.SetCar(car);
+                }));
         }
 
         private void OnSelectCar()
@@ -668,7 +726,11 @@ namespace Street_Rod_AC.Screens.Garage
 
         public string DisplayName => $"{CarDefinition.Brand} {CarDefinition.Name}";
         public string YearDisplay => CarDefinition.Year?.ToString() ?? "Unknown";
-        public string ConditionDisplay => $"{(int)(CarInstance.EngineHealth * 100)}%";
+        /// <summary>What is worst about the car, or its overall shape: the one condition the market prices it by</summary>
+        public string ConditionDisplay =>
+            Parts.Cars.CarCondition.IsTotaled(CarInstance) ? "Totaled"
+            : CarInstance.EngineHealth <= 0 ? "Blown engine"
+            : $"{(int)(Services.Market.CarValuation.ConditionOf(CarInstance) * 100)}%";
         public string MileageDisplay => $"{CarInstance.OdometerKM:N0} km";
         public bool HasPreviewImage => !string.IsNullOrEmpty(PreviewImagePath);
     }

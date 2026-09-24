@@ -22,6 +22,8 @@
              xmlns:confirmation="clr-namespace:Street_Rod_AC.Dialogs.Confirmation"
              xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
              xmlns:eventEntry="clr-namespace:Street_Rod_AC.Dialogs.EventEntry"
+             xmlns:timeslip="clr-namespace:Street_Rod_AC.Dialogs.Timeslip"
+             xmlns:repairShop="clr-namespace:Street_Rod_AC.Dialogs.RepairShop"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -124,6 +126,14 @@
 
             <DataTemplate DataType="{x:Type eventEntry:EventEntryDialogViewModel}">
                 <eventEntry:EventEntryDialogView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type timeslip:TimeslipDialogViewModel}">
+                <timeslip:TimeslipDialogView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type repairShop:RepairShopDialogViewModel}">
+                <repairShop:RepairShopDialogView/>
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

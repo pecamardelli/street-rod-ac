@@ -114,6 +114,7 @@ NavigationService.NavigateTo[ScreenName](dependencies) : bool
 4. Show via `DialogService.ShowDialog(viewModel)` (queued if another dialog is open)
 
 ## Documentation Index
+- [Roadmap](roadmap.md): next steps (damage, timeslips, economy, living opponents, police), decisions and research
 - [Architecture Overview](architecture/overview.md)
 - [Data Storage](architecture/data-storage.md)
 - [Navigation System](architecture/navigation.md)

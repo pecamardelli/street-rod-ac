@@ -152,6 +152,34 @@ The `sr_race` mode runs the race and reports it. The C# launcher:
 2. Launches AC and waits for the process to exit
 3. Reads the result the mode wrote to `Documents/Assetto Corsa/out/sr_race_manager/*.json`
 
+### Damage
+
+Every race runs with AC's damage at 100% and tyre wear on (assists.ini). What AC reports in `condition` goes onto the
+car (`CarCondition.ApplyRace`), and back into AC at the start of the next race:
+
+| AC | After the race | Next race |
+|----|----------------|-----------|
+| `body_damage_kmh[4]` | `Car.BodyDamageKmh` (a car's parts have no panels); the worse of the car's and AC's per zone | `CAR_n_BODY`, set with `physics.setCarBodyDamage`: the scratches and dents of `damage.ini` come with it |
+| `engine_life` | `Tear` of the rotating engine parts (crankshaft, rods, pistons, camshafts): none is better than life/1000 | `CAR_n_ENGINE_LIFE` = 1000 x the weakest one's `Tear`, set with `physics.setCarEngineLife` |
+| `gearbox_damage` (AC starts at 0) | subtracted from the transmission's `Tear` | No setter: drivetrain.ini shifts slower and engages in a narrower window (`AcDamageData`); `CAR_n_GEARBOX` tells the mode, which adds it to the race's |
+| `suspension_damage` (metres of steering rod, AC's MAX_DAMAGE 0.05) | /0.05 subtracted from that corner's spring and shock `Tear` | No setter: suspensions.ini `TOE_OUT` of the axle gains the mean bend of its corners in metres; `CAR_n_SUSPENSION` tells the mode |
+| `tyre_wear` (AC starts at 0) | subtracted from the tyre's `Wear`; `tyre_blown` sets its `Tear` to 0 | Nothing: the tyre's wear already lowers its grip in tyres.ini. AC's tyre km would count it twice |
+| distance | a little `Wear` on every engine part (1/40000 per km) | |
+
+The mode puts a car out of the race (a breakdown) when its engine life reaches 0, its gearbox's carried wear plus
+AC's gearbox damage reaches 1, a corner's carried bend plus AC's reaches 1, or a tyre blows. A car the last races
+left blown, with a gearbox or a corner under 10%, a blown tyre, or a body of 200 km/h or more (totaled) does not race
+or go on a free run until it is repaired (`CarCondition.WhyCannotRace`). An opponent's car races whatever shape it is
+in, with just enough to leave the line (`CarCondition.Runnable`), until opponents look after their cars.
+
+The garage's Repairs button (`RepairShop`) takes `Tear` off: an engine rebuild, a gearbox rebuild, a straightened
+corner, a new tyre for a blown one, body work. A part repair costs 60% of the damaged parts' new price as far as the
+damage goes, plus $15; body work $8 per km/h. Small jobs take `GarageWorkMinor` (30 min), big ones
+`GarageWorkMajor` (2 h). Mileage (`Wear`) is not repaired: a worn part is replaced.
+
+Oil temperature, oil pressure and water temperature are reported but not used: CSP fills oil figures only for cars
+with a script, and overheating is for the game to model.
+
 ### Communication Methods
 
 | Method | Status | Notes |
@@ -159,6 +187,7 @@ The `sr_race` mode runs the race and reports it. The C# launcher:
 | `ac.shutdownAssettoCorsa()` | Working | The mode quits AC once the result is written |
 | Signal files | Removed | Was in Python app, didn't work reliably |
 | race.ini `[STREET_ROD] CONTEXT_ID` | Working | Launcher to the mode: which race this is (see below) |
+| race.ini `[STREET_ROD] CAR_n_*` | Working | Launcher to the mode: the damage car n carries into the race (see below) |
 | Result JSON | Working | The mode to the launcher, one file per race |
 
 ### Race Result File
@@ -182,7 +211,7 @@ Schema 1.2 (the race mode) added:
 |-------|------|---------|
 | `session.end_reason` | string | `FINISHED`, `CRASH`, `FALSE_START` or `ABANDONED` (`EndReasons` in C#) |
 | `participants[].false_start` | bool | This car jumped the start |
-| `participants[].condition` | object | What the race left of the car, as AC tracks it: `body_damage_kmh[4]`, `engine_life` (1000 new, 0 dead), `gearbox_damage`, `water_temperature_c`, `oil_temperature_c`, `oil_pressure`, `fuel_litres`, `wheels[4]` (`tyre_wear`, `tyre_virtual_km`, `tyre_blown`, `suspension_damage`). Each field read on its own; not read by the launcher yet (next: onto the car's parts). Oil temperature and pressure read near 0 on a stock car: CSP fills them only for cars with a script |
+| `participants[].condition` | object | What the race left of the car, as AC tracks it: `body_damage_kmh[4]`, `engine_life` (1000 new, 0 dead), `gearbox_damage`, `water_temperature_c`, `oil_temperature_c`, `oil_pressure`, `fuel_litres`, `wheels[4]` (`tyre_wear`, `tyre_virtual_km`, `tyre_blown`, `suspension_damage`). Each field read on its own; the launcher puts it on the car's parts (see "Damage" below). Oil temperature and pressure read near 0 on a stock car: CSP fills them only for cars with a script |
 
 Schema 1.3 added:
 
@@ -192,9 +221,18 @@ Schema 1.3 added:
 | `session.race_type` | string | `DRAG` or `ROAD`, from race.ini (not read by the launcher, which has the race's context) |
 | `participants[].disqualified` | bool | This car hit the other one out of its own lane in a drag race |
 
+Schema 1.4 added:
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `session.end_reason` | string | Now also `BROKE_DOWN`: the player's car broke down |
+| `participants[].broke_down` | bool | This car broke down before the line and was out of the race |
+| `participants[].breakdown` | string or absent | What gave out: `ENGINE`, `GEARBOX`, `SUSPENSION` or `TYRE` |
+| `participants[].timeslip` | object or absent | A drag race only: `reaction_s` (AC's green to the car leaving the line, 0.2 m), then from leaving the line `sixty_ft_s`, `three_thirty_ft_s`, `eighth_mile_s`, `eighth_mile_mph`, `thousand_ft_s`, `quarter_mile_s`, `quarter_mile_mph`. A mark the car never reached is absent. The speeds are trap speeds, the average over the last 66 ft |
+
 ```json
 {
-  "metadata": { "schema_version": "1.3", "script_version": "3.2.0", "source": "sr_race_manager", "generated_at": "ISO8601" },
+  "metadata": { "schema_version": "1.4", "script_version": "3.3.0", "source": "sr_race_manager", "generated_at": "ISO8601" },
   "session": { "session_id": "UUID", "context_id": "UUID of the race context", "track_id": "...", "duration_seconds": 12.3, "end_reason": "FINISHED" },
   "participants": [
     { "driver_name": "...", "car_name": "...", "car_index": 0, "is_player": true, "false_start": false,
@@ -209,6 +247,8 @@ How the launcher uses them (`RaceResultIngestionService`, `RaceResultProcessor`)
   win or loss, and `RacerStats.FalseStarts` costs reputation (3 each, up to 15). `ABANDONED` is a loss.
 - A disqualification decides the race before any crash does: the player's (`DISQUALIFIED` or the player's
   `disqualified`) is a loss, the rival's a win.
+- A breakdown puts a car out like a crash: the player's (`BROKE_DOWN` or the player's `broke_down`) is a loss, the
+  rival's a win. Both cars out, whatever put each one out, is a draw (`BothOut`, or `BothCrashed` when both crashed).
 - A file whose `context_id` does not match the race in hand is never applied with that race's context.
 - The race about to be driven is saved as `GameState.PendingRace` before AC starts. A result left over from a race
   that ended badly is applied when a save is loaded, only if its `context_id` is that save's `PendingRace.ContextId`

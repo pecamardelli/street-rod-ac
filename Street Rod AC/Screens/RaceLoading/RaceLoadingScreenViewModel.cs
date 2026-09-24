@@ -135,12 +135,15 @@ namespace Street_Rod_AC.Screens.RaceLoading
                 }
             }
 
-            ReturnFromRace();
+            ReturnFromRace(towed: messages.Any(m => m.TowedToGarage));
 
             // One at a time, over the screen the player came back to: the dialog service queues them
             foreach (var message in messages)
             {
-                _dialogService.ShowDialog(new InformationDialogViewModel(_dialogService, message.Text, message.Title));
+                if (message.Timeslip is { } slip)
+                    _dialogService.ShowDialog(new Dialogs.Timeslip.TimeslipDialogViewModel(_dialogService, slip));
+                else
+                    _dialogService.ShowDialog(new InformationDialogViewModel(_dialogService, message.Text, message.Title));
             }
         }
 
@@ -213,9 +216,19 @@ namespace Street_Rod_AC.Screens.RaceLoading
             }
         }
 
-        /// <summary>Back to the diner, or to the garage when the diner cannot be opened</summary>
-        private void ReturnFromRace()
+        /// <summary>
+        /// Back to the diner, or to the garage when the diner cannot be opened. A player whose car was towed home
+        /// after a crash goes to the garage, where the car is.
+        /// </summary>
+        private void ReturnFromRace(bool towed)
         {
+            if (towed)
+            {
+                _logger.Information("The car was towed home after a crash: navigating to the garage");
+                _navigationService.NavigateToGarage(_gameState, skipAnimation: true);
+                return;
+            }
+
             _logger.Information("Navigating back to diner");
             if (_navigationService.NavigateToDiner(_gameState)) return;
 

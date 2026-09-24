@@ -1,6 +1,7 @@
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Models.Race;
+using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Parts.Export;
 using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.Services.Opponents;
@@ -88,7 +89,23 @@ namespace Street_Rod_AC.Screens.Shared
         /// </summary>
         public async Task<RaceSetupResult> BuildAsync(RaceEntry entry)
         {
-            var playerData = await PrepareCarDataAsync(entry.PlayerCar);
+            // A car the last races left blown, wrecked or totaled goes nowhere until it is repaired. Its parts are
+            // judged, so it gets them first if it never had any.
+            await EnsurePartsAsync(entry.PlayerCar);
+            if (entry.OpponentCar != null) await EnsurePartsAsync(entry.OpponentCar);
+            var groupOf = await PartGroupsAsync();
+            var damage = CarCondition.WhyCannotRace(entry.PlayerCar, groupOf);
+            if (damage.Count > 0)
+            {
+                return new RaceSetupResult { PlayerCarProblem = string.Join("; ", damage) };
+            }
+
+            // Each car goes in with the damage it carries. An opponent's car races whatever shape it is in (they do
+            // not look after their cars yet): it gets just enough to leave the line.
+            var playerStart = CarCondition.StartState(entry.PlayerCar, groupOf);
+            var opponentStart = entry.OpponentCar == null ? null : CarCondition.Runnable(CarCondition.StartState(entry.OpponentCar, groupOf));
+
+            var playerData = await PrepareCarDataAsync(entry.PlayerCar, playerStart);
             if (playerData is { CanDrive: false })
             {
                 return new RaceSetupResult { PlayerCarProblem = playerData.Problem };
@@ -97,7 +114,7 @@ namespace Street_Rod_AC.Screens.Shared
             RaceCarData? opponentData = null;
             if (entry.OpponentCar != null)
             {
-                opponentData = await PrepareCarDataAsync(entry.OpponentCar);
+                opponentData = await PrepareCarDataAsync(entry.OpponentCar, opponentStart);
                 if (opponentData is { CanDrive: false })
                 {
                     _logger.Warning("{Opponent}'s car would not run ({Problem}): it races as its author made it", entry.OpponentName, opponentData.Problem);
@@ -115,7 +132,10 @@ namespace Street_Rod_AC.Screens.Shared
             if (playerData != null) carData.Add(playerData);
             if (sharedData != null) carData.Add(sharedData);
 
-            return new RaceSetupResult { Intent = BuildIntent(entry, opponentRacesAs, carData) };
+            var intent = BuildIntent(entry, opponentRacesAs, carData);
+            intent.PlayerStart = playerStart;
+            intent.OpponentStart = opponentStart;
+            return new RaceSetupResult { Intent = intent };
         }
 
         /// <summary>
@@ -219,13 +239,39 @@ namespace Street_Rod_AC.Screens.Shared
             return candidates[(int)((uint)seed % (uint)candidates.Count)];
         }
 
-        /// <summary>The car's data as its parts make it, put together off the UI thread; null when it races as it is</summary>
-        public async Task<RaceCarData?> PrepareCarDataAsync(Car car)
+        private async Task EnsurePartsAsync(Car car)
         {
             try
             {
                 await _parts.EnsurePartsAsync(car);
-                return await Task.Run(() => _raceCarData.Prepare(car));
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not give {Car} its parts: it races on its own figures", car.DefinitionId);
+            }
+        }
+
+        /// <summary>The parts' groups off the catalog, loaded off the UI thread; null when there are no parts</summary>
+        private async Task<Func<string, string?>?> PartGroupsAsync()
+        {
+            try
+            {
+                return await Task.Run(() => _parts.IsAvailable ? CarCondition.Groups(_parts.Catalog) : null);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "The parts catalog could not be read: the cars race on their own figures");
+                return null;
+            }
+        }
+
+        /// <summary>The car's data as its parts make it, put together off the UI thread; null when it races as it is</summary>
+        public async Task<RaceCarData?> PrepareCarDataAsync(Car car, RaceStartState? damage = null)
+        {
+            try
+            {
+                await _parts.EnsurePartsAsync(car);
+                return await Task.Run(() => _raceCarData.Prepare(car, damage));
             }
             catch (Exception ex)
             {

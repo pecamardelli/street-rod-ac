@@ -348,15 +348,22 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("NATIONALITY=");
             sb.AppendLine("NATION_CODE=");
 
-            // [STREET_ROD] - What the race mode needs to know: the kind of race (a drag race has lanes and a
-            // flagger), and which race this is, which it writes into the result so a result is only ever applied
-            // to the race it came from
+            // [STREET_ROD] - What the race mode needs to know: the kind of race (a drag race has lanes and
+            // timeslips), which race this is, which it writes into the result so a result is only ever applied
+            // to the race it came from, and the damage each car carries into it
             sb.AppendLine();
             sb.AppendLine("[STREET_ROD]");
             sb.AppendLine(isDrag ? "RACE_TYPE=DRAG" : "RACE_TYPE=ROAD");
             if (intent.ContextId is { } contextId)
             {
                 sb.AppendLine($"CONTEXT_ID={contextId:D}");
+            }
+
+            // The shape each car goes in, from its earlier races: the mode puts it into AC before the green
+            foreach (var (index, start) in new[] { (0, intent.PlayerStart), (1, intent.OpponentStart) })
+            {
+                if (start == null) continue;
+                foreach (var (key, value) in start.IniKeys(index)) sb.AppendLine($"{key}={value}");
             }
 
             return sb.ToString();

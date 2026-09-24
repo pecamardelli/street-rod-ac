@@ -17,6 +17,9 @@ public sealed class CarBuild
 
     /// <summary>The running gear the car's data describes</summary>
     public (RunningGearFactory.AxleParts Front, RunningGearFactory.AxleParts Rear)? FactoryRunningGear { get; init; }
+
+    /// <summary>The damage the car goes in with; null or none leaves the data as the parts make it</summary>
+    public Models.Race.RaceStartState? Damage { get; init; }
 }
 
 public sealed class CarBuildResult
@@ -35,7 +38,8 @@ public sealed class CarBuildResult
 
 /// <summary>
 /// Everything a car's parts change in its Assetto Corsa data: the engine and transmission
-/// (<see cref="AcEngineData"/>) and the running gear (<see cref="AcRunningGearData"/>), one file set.
+/// (<see cref="AcEngineData"/>), the running gear (<see cref="AcRunningGearData"/>) and the damage they carry
+/// (<see cref="AcDamageData"/>), one file set.
 /// </summary>
 public static class AcCarBuild
 {
@@ -57,6 +61,13 @@ public static class AcCarBuild
             // The running gear reads what the engine left (the mass in car.ini) before the car's own files
             string? Read(string name) => result.Files.GetValueOrDefault(name) ?? readFile(name);
             foreach (var (name, content) in AcRunningGearData.Generate(catalog, build.RunningGear, factory, Read, result.Problems)) result.Files[name] = content;
+        }
+
+        // Last: the damage goes on top of what the parts made of the files
+        if (build.Damage != null && result.CanDrive)
+        {
+            string? Read(string name) => result.Files.GetValueOrDefault(name) ?? readFile(name);
+            foreach (var (name, content) in AcDamageData.Generate(build.Damage, Read)) result.Files[name] = content;
         }
 
         return result;

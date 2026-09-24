@@ -675,6 +675,34 @@ save) races on the data its author gave it.
 Check: `EngineBench <parts> car <AC car folder> <build id> [output folder]` writes every file the car's parts change,
 with the factory running gear mounted (so only the engine files differ).
 
+## Damage and repairs (`Parts/Cars/CarCondition`, `RepairShop`, `Parts/Export/AcDamageData`)
+
+A part's `Wear` is mileage and only replacing the part undoes it; its `Tear` is damage and a repair takes it off.
+Races set both from what Assetto Corsa reports at the end (`CarCondition.ApplyRace`, called by
+`RaceResultProcessor`):
+
+- AC's engine life (1000 new) caps the `Tear` of the rotating parts (groups Crankshafts, Connecting rods, Pistons,
+  Camshafts) at life/1000; the next race starts with 1000 x the weakest one's `Tear`.
+- AC's gearbox damage (from 0 each race) comes off the transmission's `Tear`.
+- A bent steering rod (AC's `suspension_damage` / 0.05 m) comes off that corner's spring and shock.
+- The tyre's `Wear` loses AC's tyre wear; a blown tyre's `Tear` goes to 0.
+- The engine gets 1/40000 of `Wear` per km driven.
+- Body damage has no part to go on: it stays on the car, `Car.BodyDamageKmh` (front, rear, left, right), in AC's km/h.
+  All zones together at 200 km/h or more is a totaled car.
+
+`CarCondition.RefreshFigures` works the car's own figures out from the parts (engine: its parts' mean `Wear` x its
+life; gearbox and tyres: `Wear` x `Tear`; body: from the damage), so prices and the garage follow the parts.
+`CarCondition.StartState` gives what the next race starts with; `AcDamageData` puts what AC cannot be told into the
+car's data (a worn gearbox shifts slower, a bent axle gets the mean bend of its corners as extra `TOE_OUT`).
+`CarCondition.WhyCannotRace` keeps a car home with a blown engine, a gearbox or corner under 10%, a blown tyre or a
+totaled body.
+
+`RepairShop.Jobs` lists what the garage can fix, each with its cost and time: an engine rebuild (every engine part
+with `Tear`), a gearbox rebuild, a corner straightened, a new tyre for a blown one, body work. A part repair costs
+`PartShare` (60%) of the damaged parts' new price times the damage, plus `Labour` ($15); body work `BodyCostPerKmh`
+($8) per km/h. The garage's Repairs button shows them (`Dialogs/RepairShop`); the parts view shows a part's damage
+next to its wear.
+
 ## Bench (`tools/EngineBench`)
 
 ```
@@ -709,7 +737,8 @@ manifest was lost, a donor bank that is gone, read-only donors, and the library'
   Mufflers and headers do not change the sound yet; a garage preview through fmodstudio64.dll is not started.
 - Working on an engine outside a car (an engine stand): on the shelf an assembly can be taken apart, but parts only
   go together on a car.
-- Wear from mileage; tuning UI (the scripts' `buildTuningMenu` is not used, fields are set directly).
+- Tuning UI (the scripts' `buildTuningMenu` is not used, fields are set directly). Wear from mileage is only the
+  engine's small per-km share: brakes, clutch and the rest of the running gear do not wear by the km yet.
 - Nitrous: the parts exist and gate on their slots, but neither the dyno nor Assetto Corsa has a model for it.
 - The running gear's placement in the garage is an estimate from the hubs (springs and shocks 24 cm inboard); a
   car-level part cannot be nudged with F5, only parts on a parent.

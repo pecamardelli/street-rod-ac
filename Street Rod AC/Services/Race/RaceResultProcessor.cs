@@ -4,7 +4,9 @@ using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Career.Milestones;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Models.Race;
+using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Career;
+using Street_Rod_AC.Services.Parts;
 using Street_Rod_AC.Services.Race.Validation;
 using Street_Rod_AC.Services.Storage;
 using System.IO;
@@ -29,9 +31,10 @@ namespace Street_Rod_AC.Services.Race
         private readonly IRaceSessionRepository _sessionRepository;
         private readonly ICareerProgressService _careerProgressService;
         private readonly IRaceEventService _raceEventService;
+        private readonly ICarPartsService? _parts;
         private readonly IAppLogger _logger;
 
-        // Car health degradation constants (per race)
+        // Car health degradation constants (per race), for result files without the car's condition (before schema 1.2)
         private const double BASE_ENGINE_DEGRADATION = 0.01;        // -1%
         private const double BASE_TRANSMISSION_DEGRADATION = 0.005; // -0.5%
         private const double BASE_TIRE_DEGRADATION = 0.02;          // -2%
@@ -53,12 +56,14 @@ namespace Street_Rod_AC.Services.Race
             IGameStateRepository gameStateRepository,
             IRaceSessionRepository sessionRepository,
             ICareerProgressService careerProgressService,
-            IRaceEventService raceEventService)
+            IRaceEventService raceEventService,
+            ICarPartsService? parts = null)
         {
             _gameStateRepository = gameStateRepository;
             _sessionRepository = sessionRepository;
             _careerProgressService = careerProgressService;
             _raceEventService = raceEventService;
+            _parts = parts;
             _logger = AppLoggerFactory.CreateLogger(LogCategory.RaceIngestion);
         }
 
@@ -86,9 +91,31 @@ namespace Street_Rod_AC.Services.Race
             var messages = new List<PlayerMessage>();
             ApplyAndSave(gameState, saveName, processedSession, () =>
             {
-                ApplyCarUpdates(gameState, outcome, context);
+                var damage = ApplyCarUpdates(gameState, outcome, context);
                 ApplyRace(gameState, outcome, context, messages);
+
+                // A crashed car is towed home, and the player goes with it to see what the crash did
+                if (outcome.Player?.Crash.Crashed == true)
+                {
+                    damage = new PlayerMessage("Towed Home", damage == null
+                        ? "Your car was towed back to the garage."
+                        : "Your car was towed back to the garage. Here's what the crash did:\n\n" + damage.Text)
+                    {
+                        TowedToGarage = true
+                    };
+                }
+
+                if (damage != null) messages.Add(damage);
             });
+
+            // A drag race hands out timeslips, whatever came of it: first, before what the race did
+            if (outcome.Player?.Timeslip != null || outcome.Opponent?.Timeslip != null)
+            {
+                messages.Insert(0, new PlayerMessage("Timeslip", string.Empty)
+                {
+                    Timeslip = new TimeslipCard(context.PlayerName, outcome.Player?.Timeslip, context.OpponentName, outcome.Opponent?.Timeslip)
+                });
+            }
 
             _logger.Information("Race result processed successfully");
             return messages;
@@ -254,7 +281,7 @@ namespace Street_Rod_AC.Services.Race
 
             // Handle wager/pink slip transfer
             var moved = new StakesMoved(false, false);
-            if (outcome.WinCondition != WinCondition.BothCrashed)
+            if (outcome.WinCondition is not (WinCondition.BothCrashed or WinCondition.BothOut))
             {
                 moved = ApplyWagerTransfer(gameState, outcome, context);
             }
@@ -273,6 +300,15 @@ namespace Street_Rod_AC.Services.Race
             else if (outcome.WinCondition == WinCondition.OpponentDisqualified)
                 messages.Add(new PlayerMessage("Rival Disqualified",
                     $"{context.OpponentName} hit you in your own lane. That's a DQ, and the race is yours."));
+            else if (outcome.WinCondition == WinCondition.PlayerBrokeDown)
+                messages.Add(new PlayerMessage("Broke Down",
+                    $"Your {Breakdowns.Describe(outcome.Player?.Breakdown)} gave out before the line. The race is {context.OpponentName}'s."));
+            else if (outcome.WinCondition == WinCondition.OpponentBrokeDown)
+                messages.Add(new PlayerMessage("Rival Broke Down",
+                    $"{context.OpponentName}'s {Breakdowns.Describe(outcome.Opponent?.Breakdown)} gave out before the line. The race is yours."));
+            else if (outcome.WinCondition == WinCondition.BothOut)
+                messages.Add(new PlayerMessage("Nobody Finished",
+                    "Neither car made it to the line. It's a draw, and nothing changes hands."));
 
             // Update career milestone counters
             UpdateMilestoneCounters(gameState, outcome, context);
@@ -376,14 +412,24 @@ namespace Street_Rod_AC.Services.Race
                 return outcome;
             }
 
-            // Check crash scenarios
+            // Check crash and breakdown scenarios: a car that crashed or broke down is out of the race
             bool playerCrashed = playerParticipant.Crash.Crashed;
             bool opponentCrashed = opponentParticipant.Crash.Crashed;
+            bool playerBroke = playerParticipant.BrokeDown == true || (result.Session.EndReason == EndReasons.BrokeDown && !playerCrashed);
+            bool opponentBroke = opponentParticipant.BrokeDown == true;
 
             if (playerCrashed && opponentCrashed)
             {
                 // Both crashed - draw
                 outcome.WinCondition = WinCondition.BothCrashed;
+                outcome.PlayerWon = false;
+                return outcome;
+            }
+
+            if ((playerCrashed || playerBroke) && (opponentCrashed || opponentBroke))
+            {
+                // Neither car made it: a draw, whatever put each one out
+                outcome.WinCondition = WinCondition.BothOut;
                 outcome.PlayerWon = false;
                 return outcome;
             }
@@ -396,10 +442,24 @@ namespace Street_Rod_AC.Services.Race
                 return outcome;
             }
 
+            if (playerBroke)
+            {
+                outcome.WinCondition = WinCondition.PlayerBrokeDown;
+                outcome.PlayerWon = false;
+                return outcome;
+            }
+
             if (opponentCrashed)
             {
                 // Opponent crashed, player wins
                 outcome.WinCondition = WinCondition.OpponentCrashed;
+                outcome.PlayerWon = true;
+                return outcome;
+            }
+
+            if (opponentBroke)
+            {
+                outcome.WinCondition = WinCondition.OpponentBrokeDown;
                 outcome.PlayerWon = true;
                 return outcome;
             }
@@ -525,21 +585,26 @@ namespace Street_Rod_AC.Services.Race
         }
 
         /// <summary>
-        /// Apply car health degradation and odometer updates
+        /// What the race did to both cars, and their odometers. Returns the player's damage report, null when
+        /// nothing worth telling happened to the car.
         /// </summary>
-        private void ApplyCarUpdates(GameState gameState, RaceDecision outcome, RaceContext context)
+        private PlayerMessage? ApplyCarUpdates(GameState gameState, RaceDecision outcome, RaceContext context)
         {
             if (outcome.Player == null || outcome.Opponent == null)
             {
                 _logger.Warning("Participants not identified - skipping car updates");
-                return;
+                return null;
             }
+
+            var groupOf = PartGroups();
+            PlayerMessage? report = null;
 
             // Update player car
             var playerCar = gameState.Player.Cars.FirstOrDefault(c => c.InstanceId == context.PlayerCarInstanceId);
             if (playerCar != null)
             {
-                ApplyCarDegradation(playerCar, outcome.Player);
+                var damage = ApplyCarDegradation(playerCar, outcome.Player, groupOf);
+                if (damage.Count > 0) report = new PlayerMessage("Damage Report", string.Join("\n", damage));
                 playerCar.OdometerKM += RaceDistance(outcome.Player);
                 _logger.Debug("Player car updated: Odometer={Odometer}km, Engine={Engine}%, Transmission={Trans}%",
                     playerCar.OdometerKM, playerCar.EngineHealth * 100, playerCar.TransmissionHealth * 100);
@@ -554,10 +619,26 @@ namespace Street_Rod_AC.Services.Race
             var opponentCar = opponent?.Cars.FirstOrDefault(c => c.InstanceId == context.OpponentCarInstanceId);
             if (opponentCar != null)
             {
-                ApplyCarDegradation(opponentCar, outcome.Opponent);
+                ApplyCarDegradation(opponentCar, outcome.Opponent, groupOf);
                 opponentCar.OdometerKM += RaceDistance(outcome.Opponent);
                 _logger.Debug("Opponent car updated: Odometer={Odometer}km",
                     opponentCar.OdometerKM);
+            }
+
+            return report;
+        }
+
+        /// <summary>The parts' groups off the catalog; null when there are no parts (the cars' own figures take the race)</summary>
+        private Func<string, string?>? PartGroups()
+        {
+            try
+            {
+                return _parts is { IsAvailable: true } parts ? CarCondition.Groups(parts.Catalog) : null;
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("The parts catalog could not be read: the race's damage goes on the cars' own figures ({Error})", ex.Message);
+                return null;
             }
         }
 
@@ -566,10 +647,19 @@ namespace Street_Rod_AC.Services.Race
             Math.Clamp(participant.Performance.DistanceKm, 0.0, MAX_RACE_DISTANCE_KM);
 
         /// <summary>
-        /// Apply degradation to a single car
+        /// What the race did to one car. AC's report of the car (schema 1.2 on) goes onto its parts; an older file,
+        /// which has none, takes the flat wear of before. Returns the report's lines for the player.
         /// </summary>
-        private void ApplyCarDegradation(Car car, RaceParticipant participant)
+        private List<string> ApplyCarDegradation(Car car, RaceParticipant participant, Func<string, string?>? groupOf)
         {
+            if (participant.Condition is { } condition)
+            {
+                var report = CarCondition.ApplyRace(car, condition, RaceDistance(participant), groupOf);
+                _logger.Information("{Car}: {Report}", car.DefinitionId, report.Count == 0 ? "no damage" : string.Join(" ", report));
+                return report;
+            }
+
+            // A file from before the race mode reported the car's condition
             double engineDeg = BASE_ENGINE_DEGRADATION;
             double transDeg = BASE_TRANSMISSION_DEGRADATION;
             double tireDeg = BASE_TIRE_DEGRADATION;
@@ -592,6 +682,7 @@ namespace Street_Rod_AC.Services.Race
             car.TransmissionHealth = Math.Clamp(car.TransmissionHealth - transDeg, 0.0, 1.0);
             car.TireCondition = Math.Clamp(car.TireCondition - tireDeg, 0.0, 1.0);
             car.BodyCondition = Math.Clamp(car.BodyCondition - bodyDeg, 0.0, 1.0);
+            return new List<string>();
         }
 
         /// <summary>
@@ -999,7 +1090,7 @@ namespace Street_Rod_AC.Services.Race
         public WinCondition WinCondition { get; set; }
 
         /// <summary>True when the race has a winner and a loser (stats, money and reputation change)</summary>
-        public bool IsDecided => WinCondition is not (WinCondition.Inconclusive or WinCondition.BothCrashed or WinCondition.FalseStart);
+        public bool IsDecided => WinCondition is not (WinCondition.Inconclusive or WinCondition.BothCrashed or WinCondition.BothOut or WinCondition.FalseStart);
 
         public RaceParticipant? Winner => !IsDecided ? null : PlayerWon ? Player : Opponent;
         public RaceParticipant? Loser => !IsDecided ? null : PlayerWon ? Opponent : Player;
@@ -1058,6 +1149,21 @@ namespace Street_Rod_AC.Services.Race
         /// <summary>
         /// Drag race: the rival hit the player out of their own lane and is disqualified: the player wins
         /// </summary>
-        OpponentDisqualified
+        OpponentDisqualified,
+
+        /// <summary>
+        /// The player's car broke down before the line (engine, gearbox, a corner, a tyre): out, and loses
+        /// </summary>
+        PlayerBrokeDown,
+
+        /// <summary>
+        /// The rival's car broke down before the line: the player wins
+        /// </summary>
+        OpponentBrokeDown,
+
+        /// <summary>
+        /// Neither car made it to the line, one broke down and the other crashed or broke down too: a draw
+        /// </summary>
+        BothOut
     }
 }

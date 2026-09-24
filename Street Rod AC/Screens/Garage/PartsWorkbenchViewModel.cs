@@ -179,7 +179,9 @@ namespace Street_Rod_AC.Screens.Garage
         public string SelectedName => _selectedPart?.Definition.DisplayName ?? _selectedPart?.Definition.Name ?? string.Empty;
         public string SelectedKind => _selectedPart == null ? string.Empty : PartKinds.GroupOf(_selectedPart.Definition);
         public double SelectedCondition => _selectedPart?.Wear ?? 0;
-        public string SelectedConditionDisplay => _selectedPart == null ? string.Empty : $"{_selectedPart.Wear * 100:0}%";
+        public string SelectedConditionDisplay => _selectedPart == null
+            ? string.Empty
+            : $"{_selectedPart.Wear * 100:0}%" + (_selectedPart.Tear < 0.995 ? $", damaged ({_selectedPart.Tear * 100:0}% left)" : string.Empty);
 
         public string SelectedWorthDisplay => _selectedPart != null && SavedOf(_selectedPart) is { } saved
             ? $"${PartPricing.Round(PartPricing.Worth(_selectedPart.Definition, saved)):N0}"
