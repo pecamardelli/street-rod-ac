@@ -17,7 +17,7 @@ namespace Street_Rod_AC.Controls;
 /// The renderer draws off-screen into a shared DX11 texture which is presented through a D3DImage,
 /// so the viewport composes like any other WPF element (overlays, opacity, dialogs on top all work).
 /// </summary>
-public class CarViewport3D : System.Windows.Controls.Grid
+public class CarViewport3D : D3DViewportBase
 {
     // Orbit camera limits: stay above the floor and inside the showroom walls
     private const float MinBeta = 0.02f;
@@ -42,17 +42,6 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     // Keep drawing for a while after a toggle so door/light animations play out
     private static readonly TimeSpan AnimationWindow = TimeSpan.FromSeconds(3);
-    private static readonly TimeSpan FadeInDuration = TimeSpan.FromMilliseconds(600);
-
-    // D3DImage can drop the first frame after a back buffer swap, and the shared surface is read without
-    // GPU sync, so a lone frame may never show up. Keep drawing briefly after every change instead.
-    private static readonly TimeSpan SettleWindow = TimeSpan.FromMilliseconds(300);
-
-    private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("Viewport3D");
-    private readonly System.Windows.Controls.Image _image;
-    private readonly SharedTextureBridge _bridge = new();
-
-    private GarageRenderer? _renderer;
 
     // Where the camera is headed, eased toward each frame
     private float _radiusGoal = DefaultRadius;
@@ -61,11 +50,6 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private SlimDX.Vector3? _targetGoal;
 
     private string? _loadedCarDirectory;
-    private bool _isLoading;
-    private bool _reloadRequested;
-    private bool _failed;
-    private TimeSpan _lastRenderingTime;
-    private DateTime _animateUntil = DateTime.MinValue;
     private System.Windows.Point _lastMouse;
     private bool _isDragging;
     private bool _isLoadingParts;
@@ -87,60 +71,13 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private static readonly TimeSpan HoverInterval = TimeSpan.FromMilliseconds(30);
     private System.Windows.Point _pressedAt;
     private DateTime _lastHoverPick = DateTime.MinValue;
-    private readonly System.Windows.Controls.Border _partLabel;
-    private readonly System.Windows.Controls.TextBlock _partLabelText;
 
     public CarViewport3D()
+        : base("Viewport3D", new LabelLook(13, 0xD0, 0x80, new Thickness(8, 4, 8, 4), new Vector(18, 14)))
     {
-        Background = System.Windows.Media.Brushes.Transparent;
-        ClipToBounds = true;
-        Focusable = false;
-
-        _image = new System.Windows.Controls.Image
-        {
-            Source = _bridge.Image,
-            Stretch = Stretch.Fill,
-            Opacity = 0
-        };
-        Children.Add(_image);
-
-        // Name of the part under the pointer, next to the pointer
-        _partLabelText = new System.Windows.Controls.TextBlock
-        {
-            Foreground = System.Windows.Media.Brushes.White,
-            FontSize = 13,
-            FontWeight = FontWeights.SemiBold
-        };
-        _partLabel = new System.Windows.Controls.Border
-        {
-            Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0xD0, 0x10, 0x10, 0x10)),
-            BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0x80, 0xFF, 0xE6, 0x8C)),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(3),
-            Padding = new Thickness(8, 4, 8, 4),
-            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
-            VerticalAlignment = System.Windows.VerticalAlignment.Top,
-            IsHitTestVisible = false,
-            Visibility = Visibility.Collapsed,
-            Child = _partLabelText
-        };
-        Children.Add(_partLabel);
-
-        Loaded += (_, _) => RequestLoad();
-        Unloaded += (_, _) => DisposeRenderer();
-        IsVisibleChanged += (_, _) => RequestLoad();
-        SizeChanged += (_, _) => UpdateRendererSize();
-        _bridge.FrontBufferRestored += (_, _) =>
-        {
-            if (_renderer != null) _renderer.IsDirty = true;
-        };
     }
 
-    /// <summary>Raised once when the first 3D frame is on screen</summary>
-    public event EventHandler? Ready;
-
-    /// <summary>Raised if the renderer could not be started or crashed</summary>
-    public event EventHandler? Failed;
+    protected override string ViewportName => "3D viewport";
 
     /// <summary>A mounted part was clicked in the parts view; null for a click on nothing</summary>
     public event Action<InstalledPart?>? PartClicked;
@@ -286,41 +223,6 @@ public class CarViewport3D : System.Windows.Controls.Grid
         set => SetValue(SelectedPartProperty, value);
     }
 
-    public static readonly DependencyProperty RunningEngineProperty = DependencyProperty.Register(
-        nameof(RunningEngine), typeof(Audio.EngineRunner), typeof(CarViewport3D),
-        new PropertyMetadata(null, (d, e) => ((CarViewport3D)d).OnRunningEngineChanged((Audio.EngineRunner?)e.OldValue, (Audio.EngineRunner?)e.NewValue)));
-
-    /// <summary>The car's engine, started where it stands: the body rocks with it</summary>
-    public Audio.EngineRunner? RunningEngine
-    {
-        get => (Audio.EngineRunner?)GetValue(RunningEngineProperty);
-        set => SetValue(RunningEngineProperty, value);
-    }
-
-    private static readonly DependencyPropertyKey IsReadyPropertyKey = DependencyProperty.RegisterReadOnly(
-        nameof(IsReady), typeof(bool), typeof(CarViewport3D), new PropertyMetadata(false));
-
-    public static readonly DependencyProperty IsReadyProperty = IsReadyPropertyKey.DependencyProperty;
-
-    /// <summary>True once the first 3D frame is on screen. Until then the viewport is transparent.</summary>
-    public bool IsReady
-    {
-        get => (bool)GetValue(IsReadyProperty);
-        private set => SetValue(IsReadyPropertyKey, value);
-    }
-
-    private static readonly DependencyPropertyKey HasFailedPropertyKey = DependencyProperty.RegisterReadOnly(
-        nameof(HasFailed), typeof(bool), typeof(CarViewport3D), new PropertyMetadata(false));
-
-    public static readonly DependencyProperty HasFailedProperty = HasFailedPropertyKey.DependencyProperty;
-
-    /// <summary>True if the 3D renderer could not be started; hosts should show a 2D fallback</summary>
-    public bool HasFailed
-    {
-        get => (bool)GetValue(HasFailedProperty);
-        private set => SetValue(HasFailedPropertyKey, value);
-    }
-
     private static readonly DependencyPropertyKey HasCarPropertyKey = DependencyProperty.RegisterReadOnly(
         nameof(HasCar), typeof(bool), typeof(CarViewport3D), new PropertyMetadata(false));
 
@@ -349,45 +251,16 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     #region Loading
 
-    private async void RequestLoad()
+    // An empty directory means "no car": only the showroom is rendered
+    private string RequestedCarDirectory => CarDirectory ?? string.Empty;
+
+    protected override bool IsUpToDate => Renderer != null && RequestedCarDirectory == _loadedCarDirectory;
+
+    protected override string LoadDescription => RequestedCarDirectory;
+
+    protected override async Task LoadAsync()
     {
-        if (!IsLoaded || !IsVisible || _failed) return;
-
-        // An empty directory means "no car": only the showroom is rendered
-        var carDirectory = CarDirectory ?? string.Empty;
-        if (_renderer != null && carDirectory == _loadedCarDirectory) return;
-
-        if (_isLoading)
-        {
-            _reloadRequested = true;
-            return;
-        }
-
-        _isLoading = true;
-        try
-        {
-            await LoadCarAsync(carDirectory);
-        }
-        catch (Exception ex)
-        {
-            // Leave the viewport transparent so whatever is behind it stays visible
-            _logger.Error(ex, "3D viewport failed for {CarDirectory}", carDirectory);
-            Fail();
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-
-        if (_reloadRequested)
-        {
-            _reloadRequested = false;
-            RequestLoad();
-        }
-    }
-
-    private async Task LoadCarAsync(string carDirectory)
-    {
+        var carDirectory = RequestedCarDirectory;
         var hasCar = carDirectory.Length > 0;
         if (hasCar && !Directory.Exists(carDirectory))
             throw new DirectoryNotFoundException($"Car folder not found: {carDirectory}");
@@ -396,75 +269,44 @@ public class CarViewport3D : System.Windows.Controls.Grid
         var car = hasCar ? CarDescription.FromDirectory(carDirectory) : null;
         var skinId = SkinId;
 
-        if (_renderer == null)
+        var renderer = Renderer;
+        if (renderer == null)
         {
             var showroom = ShowroomKn5;
             if (showroom != null && !File.Exists(showroom))
             {
-                _logger.Warning("Showroom not found, rendering without it: {Showroom}", showroom);
+                Logger.Warning("Showroom not found, rendering without it: {Showroom}", showroom);
                 showroom = null;
             }
 
             if (car == null && showroom == null)
                 throw new InvalidOperationException("Nothing to render: no car and no showroom");
 
-            var (width, height) = GetPixelSize();
-            var renderer = new GarageRenderer(car, showroom)
-            {
-                WpfMode = true,
-                UseMsaa = false, // shared surfaces can't be multisampled
-                VisibleUi = false,
-                AutoRotate = false,
-                UseFxaa = true,
-                UseSslr = true,
-                UseAo = true,
-                UseBloom = true,
-                EnableShadows = true,
-                UsePcss = true,
-                Width = width,
-                Height = height
-            };
+            renderer = NewRenderer(car, showroom);
+            if (!await StartRendererAsync(renderer)) return;
 
-            try
-            {
-                await Task.Run(() => renderer.Initialize());
-            }
-            catch
-            {
-                renderer.Dispose();
-                throw;
-            }
-
-            // The control may have been unloaded while the car was loading. Check before raising a device,
-            // or one is left behind on a control that will never draw again.
-            if (!IsLoaded)
-            {
-                renderer.Dispose();
-                return;
-            }
-
-            _bridge.EnsureDevice();
-
-            _renderer = renderer;
             ResetCamera(immediate: true);
-            CompositionTarget.Rendering += OnRendering;
         }
         else
         {
             ReleaseRock();
-            await _renderer.MainSlot.SetCarAsync(car, skinId ?? Kn5RenderableCar.DefaultSkin);
+            await TrackDeviceWork(renderer.MainSlot.SetCarAsync(car, skinId ?? Kn5RenderableCar.DefaultSkin));
+
+            // The control may have been unloaded while the car was loading, and the renderer is gone then
+            if (renderer != Renderer) return;
+
             ResetCamera();
         }
 
         _loadedCarDirectory = carDirectory;
-        HasCar = _renderer.CarNode != null;
-        HasDoors = _renderer.CarNode?.HasLeftDoorAnimation == true || _renderer.CarNode?.HasRightDoorAnimation == true;
+        HasCar = renderer.CarNode != null;
+        HasDoors = renderer.CarNode?.HasLeftDoorAnimation == true || renderer.CarNode?.HasRightDoorAnimation == true;
         ApplySkin();
         ApplyCarState();
         ApplyParts();
-        _renderer.IsDirty = true;
+        Invalidate();
 
-        _logger.Information("Loaded {Car} in {Ms} ms", hasCar ? Path.GetFileName(carDirectory) : "(empty garage)",
+        Logger.Information("Loaded {Car} in {Ms} ms", hasCar ? Path.GetFileName(carDirectory) : "(empty garage)",
             (int)(DateTime.Now - started).TotalMilliseconds);
     }
 
@@ -474,7 +316,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
     /// </summary>
     private void ResetCamera(bool immediate = false)
     {
-        var orbit = _renderer?.CameraOrbit;
+        var orbit = Renderer?.CameraOrbit;
         if (orbit == null) return;
 
         _radiusGoal = DefaultRadius;
@@ -482,17 +324,17 @@ public class CarViewport3D : System.Windows.Controls.Grid
         _betaGoal = DefaultBeta;
         _targetGoal = null;
 
-        if (_renderer!.CarNode == null)
+        if (Renderer!.CarNode == null)
         {
             // Empty garage: nothing to frame, so look across the room at eye level instead of at the floor
-            _renderer.AutoAdjustTarget = false;
+            Renderer.AutoAdjustTarget = false;
             _targetGoal = new SlimDX.Vector3(0f, EmptyGarageEyeHeight, 0f);
             _radiusGoal = MaxRadius;
             _betaGoal = MinBeta;
         }
         else
         {
-            _renderer.AutoAdjustTarget = true;
+            Renderer.AutoAdjustTarget = true;
         }
 
         if (immediate)
@@ -503,8 +345,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
             if (_targetGoal is { } target) orbit.Target = target;
         }
 
-        _animateUntil = DateTime.Now + AnimationWindow;
-        _renderer.IsDirty = true;
+        AnimateFor(AnimationWindow);
     }
 
     /// <summary>
@@ -513,7 +354,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
     /// </summary>
     private bool StepCamera(float dt)
     {
-        var orbit = _renderer?.CameraOrbit;
+        var orbit = Renderer?.CameraOrbit;
         if (orbit == null) return false;
 
         var k = 1f - (float)Math.Exp(-CameraSettleRate * dt);
@@ -531,7 +372,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
             moving = true;
         }
 
-        if (_renderer!.AutoRotate)
+        if (Renderer!.AutoRotate)
         {
             // The renderer is turning the car itself, a little further every tick. Easing alpha back to a
             // goal at the same time would cancel that out and leave the car shivering on the spot instead of
@@ -578,9 +419,25 @@ public class CarViewport3D : System.Windows.Controls.Grid
         });
     }
 
+    /// <summary>
+    /// Builds the parts view for what is bound now. Runs from property callbacks, so nothing may escape it: a throw
+    /// anywhere in it is logged and the garage goes on without the parts view.
+    /// </summary>
     private async void ApplyParts()
     {
-        var renderer = _renderer;
+        try
+        {
+            await ApplyPartsAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Could not lay out the parts");
+        }
+    }
+
+    private async Task ApplyPartsAsync()
+    {
+        var renderer = Renderer;
         if (renderer == null || _isLoadingParts) return;
 
         var carDirectory = _loadedCarDirectory;
@@ -604,7 +461,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
             _partsEngine = null;
             _partsGear = null;
             ShowPartLabel(null, default);
-            _animateUntil = DateTime.Now + AnimationWindow;
+            AnimateFor(AnimationWindow);
             return;
         }
 
@@ -616,7 +473,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
         var anchors = GetAnchors(carNode);
         if (anchors == null)
         {
-            _logger.Warning("Car has no wheel nodes to place the parts by: {Car}", carDirectory);
+            Logger.Warning("Car has no wheel nodes to place the parts by: {Car}", carDirectory);
             return;
         }
 
@@ -634,7 +491,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
             if (leaving.Count > 0)
             {
                 renderer.MoveParts(leaving, arriving: false);
-                _animateUntil = DateTime.Now + AnimationWindow;
+                AnimateFor(AnimationWindow);
             }
 
             var (placed, model) = await Task.Run(() =>
@@ -644,10 +501,10 @@ public class CarViewport3D : System.Windows.Controls.Grid
             });
 
             // The renderer only moves things while it draws: never wait on it for long
-            for (var waited = 0; waited < 1500 && renderer == _renderer && renderer.IsMovingParts; waited += 30) await Task.Delay(30);
+            for (var waited = 0; waited < 1500 && renderer == Renderer && renderer.IsMovingParts; waited += 30) await Task.Delay(30);
 
             // The renderer or the car may have been replaced, or the toggle flipped back, while loading
-            if (renderer == _renderer && PartsVisible && _loadedCarDirectory == carDirectory)
+            if (renderer == Renderer && PartsVisible && _loadedCarDirectory == carDirectory)
             {
                 renderer.SetProp(model.Kn5, SlimDX.Matrix.Identity);
 
@@ -660,7 +517,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
                 _anchors = anchors;
                 _partNodes = model.Nodes;
                 _partWorlds = placed.Where(p => p.Source != null).ToDictionary(p => p.Source!, p => p.World);
-                _animateUntil = DateTime.Now + AnimationWindow;
+                AnimateFor(AnimationWindow);
 
                 // The part being placed is gone, or the tree was made anew: the mode is over
                 if (_placing != null && !_partWorlds.ContainsKey(_placing))
@@ -669,7 +526,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
                     PlacementChanged?.Invoke(null);
                 }
 
-                _logger.Information("Parts of {Car} laid out in {Ms} ms ({Count} parts, engine {Engine})", Path.GetFileName(carDirectory),
+                Logger.Information("Parts of {Car} laid out in {Ms} ms ({Count} parts, engine {Engine})", Path.GetFileName(carDirectory),
                     (int)(DateTime.Now - started).TotalMilliseconds, placed.Count, engine?.Definition.Id ?? "none");
 
                 ApplySelection();
@@ -679,7 +536,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
         catch (Exception ex)
         {
             // The garage works fine without the parts view, so just leave it off
-            _logger.Error(ex, "Could not lay out the parts");
+            Logger.Error(ex, "Could not lay out the parts");
         }
         finally
         {
@@ -687,7 +544,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
         }
 
         // Catch up with whatever changed in the meantime
-        if (_renderer != null && (!PartsVisible || _loadedCarDirectory != carDirectory || !ReferenceEquals(Engine, engine) || !ReferenceEquals(Gear, gear))) ApplyParts();
+        if (Renderer != null && (!PartsVisible || _loadedCarDirectory != carDirectory || !ReferenceEquals(Engine, engine) || !ReferenceEquals(Gear, gear))) ApplyParts();
     }
 
     private static HashSet<Guid> IdsOf(IReadOnlyList<PlacedPart> nodes) =>
@@ -788,7 +645,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private void Shift(PartsCatalog catalog, PartDefinition definition, int slotId, float[] delta)
     {
         if (!catalog.ShiftSlot(definition, slotId, delta))
-            _logger.Warning("Slot {Slot} of {Part} moved in the garage, but the move could not be written to {File}", slotId, definition.Id, catalog.Shifts.Path);
+            Logger.Warning("Slot {Slot} of {Part} moved in the garage, but the move could not be written to {File}", slotId, definition.Id, catalog.Shifts.Path);
 
         Relayout();
         ReportPlacement();
@@ -817,7 +674,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
     /// <summary>Puts every mounted part where the slots say now, without rebuilding the model</summary>
     private void Relayout()
     {
-        var renderer = _renderer;
+        var renderer = Renderer;
         var catalog = PartsCatalog;
         var anchors = _anchors;
         if (renderer == null || catalog == null || anchors == null || !renderer.HasProp) return;
@@ -841,7 +698,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
         renderer.PlaceParts(moves);
         _partWorlds = worlds;
-        _animateUntil = DateTime.Now + AnimationWindow;
+        AnimateFor(AnimationWindow);
 
         // The places a loose part could go were worked out from where its parent was
         if (_shownCandidates is { Count: > 0 }) ApplyCandidates();
@@ -849,10 +706,25 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     #endregion
 
-    /// <summary>Shows the loose part of <see cref="Candidates"/> in the places it could go</summary>
+    /// <summary>
+    /// Shows the loose part of <see cref="Candidates"/> in the places it could go. Runs from property callbacks, so
+    /// nothing may escape it.
+    /// </summary>
     private async void ApplyCandidates()
     {
-        var renderer = _renderer;
+        try
+        {
+            await ApplyCandidatesAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Could not show where the part goes");
+        }
+    }
+
+    private async Task ApplyCandidatesAsync()
+    {
+        var renderer = Renderer;
         if (renderer == null) return;
 
         // The places of the part picked before are no places for this one: they go at once, not when the
@@ -873,7 +745,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
         try
         {
             var worlds = _partWorlds;
-            var (model, owners) = await Task.Run(() =>
+            var (model, owners) = await Task.Run<(AssemblyModel? Model, MountCandidate[] Owners)>(() =>
             {
                 var placed = new List<PlacedPart>();
                 var ownerOf = new Dictionary<InstalledPart, MountCandidate>();
@@ -905,12 +777,12 @@ public class CarViewport3D : System.Windows.Controls.Grid
                 return (built, built.Nodes.Select(n => ownerOf[n.Source!]).ToArray());
             });
 
-            if (renderer == _renderer && ReferenceEquals(candidates, Candidates))
+            if (renderer == Renderer && ReferenceEquals(candidates, Candidates))
             {
                 renderer.SetCandidates(model?.Kn5);
                 _candidateNodes = owners;
                 _shownCandidates = candidates;
-                _animateUntil = DateTime.Now + AnimationWindow;
+                AnimateFor(AnimationWindow);
             }
         }
         catch (InvalidOperationException)
@@ -920,14 +792,14 @@ public class CarViewport3D : System.Windows.Controls.Grid
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Could not show where the part goes");
+            Logger.Error(ex, "Could not show where the part goes");
         }
         finally
         {
             _isLoadingCandidates = false;
         }
 
-        if (_renderer != null && !ReferenceEquals(candidates, Candidates)) ApplyCandidates();
+        if (Renderer != null && !ReferenceEquals(candidates, Candidates)) ApplyCandidates();
     }
 
     private void ClearCandidates(GarageRenderer renderer)
@@ -935,12 +807,12 @@ public class CarViewport3D : System.Windows.Controls.Grid
         renderer.SetCandidates(null);
         _candidateNodes = Array.Empty<MountCandidate>();
         _shownCandidates = null;
-        renderer.IsDirty = true;
+        Invalidate();
     }
 
     private void ApplySelection()
     {
-        if (_renderer == null) return;
+        if (Renderer == null) return;
 
         // The model on screen may still be the one of the tree before: the same part is known by its id there
         var selected = SelectedPart;
@@ -951,7 +823,8 @@ public class CarViewport3D : System.Windows.Controls.Grid
             if (ReferenceEquals(source, selected) || (source != null && selected.InstanceId != Guid.Empty && source.InstanceId == selected.InstanceId)) node = i;
         }
 
-        _renderer.SelectedPart = node < 0 ? null : node;
+        Renderer.SelectedPart = node < 0 ? null : node;
+        InvalidateIfDirty();
     }
 
     private static CarAnchors? GetAnchors(Kn5RenderableCar carNode)
@@ -967,21 +840,21 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     private void ApplySkin()
     {
-        if (_renderer == null || string.IsNullOrEmpty(_loadedCarDirectory)) return;
+        if (Renderer == null || string.IsNullOrEmpty(_loadedCarDirectory)) return;
 
         var skinId = SkinId;
         if (string.IsNullOrEmpty(skinId)) return;
 
         if (Directory.Exists(Path.Combine(_loadedCarDirectory, "skins", skinId)))
         {
-            _renderer.SelectSkin(skinId);
-            _renderer.IsDirty = true;
+            Renderer.SelectSkin(skinId);
+            Invalidate();
         }
     }
 
     private void ApplyCarState()
     {
-        var renderer = _renderer;
+        var renderer = Renderer;
         if (renderer == null) return;
 
         renderer.AutoRotate = AutoRotate;
@@ -994,163 +867,40 @@ public class CarViewport3D : System.Windows.Controls.Grid
             if (carNode.HasRightDoorAnimation) carNode.RightDoorOpen = DoorsOpen;
         }
 
-        _animateUntil = DateTime.Now + AnimationWindow;
-        renderer.IsDirty = true;
+        AnimateFor(AnimationWindow);
     }
 
     #endregion
 
     #region Body rock
 
-    private CarBodyRock? _rock;
-
-    private void OnRunningEngineChanged(Audio.EngineRunner? before, Audio.EngineRunner? after)
-    {
-        if (before != null) before.PoseChanged -= OnPoseChanged;
-        if (after != null) after.PoseChanged += OnPoseChanged;
-        OnPoseChanged();
-    }
+    protected override bool LeansParts => true;
 
     /// <summary>The engine moved the body: the car leans, and the parts in it with it</summary>
-    private void OnPoseChanged()
-    {
-        var renderer = _renderer;
-        var carNode = renderer?.CarNode;
-        var pose = RunningEngine?.Pose ?? Audio.BodyPose.Rest;
-        if (renderer == null || carNode == null)
-        {
-            _rock = null;
-            return;
-        }
-
-        if (pose.IsRest && RunningEngine?.IsActive != true)
-        {
-            ReleaseRock();
-            return;
-        }
-
-        if (_rock == null || !ReferenceEquals(_rock.Car, carNode)) _rock = new CarBodyRock(carNode);
-        if (!_rock.Apply(pose)) return;
-
-        renderer.BodyLean = _rock.WorldLean;
-        renderer.RefreshShadows();
-        renderer.IsDirty = true;
-        _animateUntil = DateTime.Now + SettleWindow;
-    }
-
-    private void ReleaseRock()
-    {
-        if (_rock == null) return;
-
-        _rock.Release();
-        _rock = null;
-        if (_renderer != null)
-        {
-            _renderer.BodyLean = SlimDX.Matrix.Identity;
-            _renderer.RefreshShadows();
-            _renderer.IsDirty = true;
-        }
-    }
+    protected override void OnPoseChanged() => RockCar(Renderer?.CarNode);
 
     #endregion
 
     #region Rendering
 
-    private void OnRendering(object? sender, EventArgs e)
+    protected override bool StepFrame(GarageRenderer renderer, float dt)
     {
-        // CompositionTarget.Rendering can fire more than once per frame
-        var args = (RenderingEventArgs)e;
-        if (args.RenderingTime == _lastRenderingTime) return;
-
-        var dt = (float)(args.RenderingTime - _lastRenderingTime).TotalSeconds;
-        _lastRenderingTime = args.RenderingTime;
-        if (dt <= 0f || dt > 0.25f) dt = 1f / 60f;
-
-        var renderer = _renderer;
-        if (renderer == null || !IsVisible || !_bridge.IsFrontBufferAvailable) return;
-
+        // The renderer turns the car by itself a little further every tick: it has to keep drawing for that
         var cameraMoving = StepCamera(dt);
-
-        var now = DateTime.Now;
-        if (renderer.IsDirty && _animateUntil < now + SettleWindow)
-        {
-            _animateUntil = now + SettleWindow;
-        }
-
-        var animating = cameraMoving || renderer.AutoRotate || now < _animateUntil;
-        if (!animating && _bridge.BoundTarget != IntPtr.Zero) return;
-
-        try
-        {
-            renderer.Draw();
-            _bridge.Present(renderer.GetRenderTarget());
-
-            if (!IsReady)
-            {
-                IsReady = true;
-                if (FadeInOnReady)
-                {
-                    _image.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, FadeInDuration));
-                }
-                else
-                {
-                    _image.Opacity = 1;
-                }
-                Ready?.Invoke(this, EventArgs.Empty);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.Error(ex, "3D viewport render loop failed");
-            Fail();
-        }
+        return cameraMoving || renderer.AutoRotate;
     }
 
-    private (int Width, int Height) GetPixelSize()
+    protected override void OnFirstFrame()
     {
-        var dpi = VisualTreeHelper.GetDpi(this);
-        var width = Math.Max(16, (int)Math.Round(ActualWidth * dpi.DpiScaleX));
-        var height = Math.Max(16, (int)Math.Round(ActualHeight * dpi.DpiScaleY));
-        return (width, height);
+        if (FadeInOnReady) FadeIn();
+        else ShowPicture();
     }
 
-    private void UpdateRendererSize()
+    protected override void OnRendererDisposed()
     {
-        if (_renderer == null) return;
-
-        var (width, height) = GetPixelSize();
-        _renderer.Width = width;
-        _renderer.Height = height;
-        _renderer.IsDirty = true;
-    }
-
-    private void DisposeRenderer()
-    {
-        CompositionTarget.Rendering -= OnRendering;
-        _rock = null;
-
-        // The target belongs to the renderer: let go of it before the renderer goes
-        _bridge.ReleaseSurface();
-
-        _renderer?.Dispose();
-        _renderer = null;
         _loadedCarDirectory = null;
-
-        _bridge.Dispose();
-
-        IsReady = false;
         HasCar = false;
         HasDoors = false;
-        _image.BeginAnimation(OpacityProperty, null);
-        _image.Opacity = 0;
-    }
-
-    private void Fail()
-    {
-        _failed = true;
-        DisposeRenderer();
-        HasFailed = true;
-        Failed?.Invoke(this, EventArgs.Empty);
     }
 
     #endregion
@@ -1160,7 +910,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonDown(e);
-        if (_renderer == null) return;
+        if (Renderer == null) return;
 
         _isDragging = true;
         _lastMouse = _pressedAt = e.GetPosition(this);
@@ -1182,7 +932,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
     {
         base.OnMouseMove(e);
 
-        var orbit = _renderer?.CameraOrbit;
+        var orbit = Renderer?.CameraOrbit;
         if (orbit == null) return;
 
         var position = e.GetPosition(this);
@@ -1199,24 +949,25 @@ public class CarViewport3D : System.Windows.Controls.Grid
         _lastMouse = position;
 
         if ((position - _pressedAt).Length > ClickSlack) ShowPartLabel(null, default);
-        _renderer!.IsDirty = true;
+        Invalidate();
     }
 
     protected override void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
     {
         base.OnMouseLeave(e);
-        if (_renderer != null) _renderer.HoveredPart = null;
+        if (Renderer != null) Renderer.HoveredPart = null;
+        InvalidateIfDirty();
         ShowPartLabel(null, default);
     }
 
     private PartHit? PickAt(System.Windows.Point position) =>
-        _renderer == null || ActualWidth <= 0 || ActualHeight <= 0
+        Renderer == null || ActualWidth <= 0 || ActualHeight <= 0
             ? null
-            : _renderer.Pick((float)(position.X / ActualWidth), (float)(position.Y / ActualHeight));
+            : Renderer.Pick((float)(position.X / ActualWidth), (float)(position.Y / ActualHeight));
 
     private void UpdateHover(System.Windows.Point position)
     {
-        if (_renderer is not { HasProp: true } || !PartsVisible) return;
+        if (Renderer is not { HasProp: true } || !PartsVisible) return;
 
         // Picking tests triangles on the CPU; the pointer moves more often than it needs to be asked
         var now = DateTime.Now;
@@ -1224,13 +975,14 @@ public class CarViewport3D : System.Windows.Controls.Grid
         _lastHoverPick = now;
 
         var hit = PickAt(position);
-        _renderer.HoveredPart = hit;
+        Renderer.HoveredPart = hit;
+        InvalidateIfDirty();
         ShowPartLabel(hit == null ? null : DefinitionOf(hit.Value), position);
     }
 
     private void OnClick(System.Windows.Point position)
     {
-        if (_renderer is not { HasProp: true } || !PartsVisible) return;
+        if (Renderer is not { HasProp: true } || !PartsVisible) return;
 
         var hit = PickAt(position);
         if (hit is { Layer: PartLayer.Candidate } candidate && candidate.Node < _candidateNodes.Count)
@@ -1250,30 +1002,20 @@ public class CarViewport3D : System.Windows.Controls.Grid
         _ => null
     };
 
-    private void ShowPartLabel(PartDefinition? part, System.Windows.Point position)
-    {
-        if (part == null)
-        {
-            _partLabel.Visibility = Visibility.Collapsed;
-            return;
-        }
-
-        _partLabelText.Text = part.DisplayName ?? part.Name;
-        _partLabel.Margin = new Thickness(position.X + 18, position.Y + 14, 0, 0);
-        _partLabel.Visibility = Visibility.Visible;
-    }
+    private void ShowPartLabel(PartDefinition? part, System.Windows.Point position) =>
+        ShowLabel(part == null ? null : part.DisplayName ?? part.Name, position);
 
     protected override void OnMouseWheel(MouseWheelEventArgs e)
     {
         base.OnMouseWheel(e);
 
-        var orbit = _renderer?.CameraOrbit;
+        var orbit = Renderer?.CameraOrbit;
         if (orbit == null) return;
 
-        var minRadius = _renderer!.HasProp ? PartsMinRadius : MinRadius;
+        var minRadius = Renderer!.HasProp ? PartsMinRadius : MinRadius;
         orbit.Radius = Math.Clamp(orbit.Radius - e.Delta * 0.002f, minRadius, MaxRadius);
         _radiusGoal = orbit.Radius;
-        _renderer!.IsDirty = true;
+        Invalidate();
         e.Handled = true;
     }
 

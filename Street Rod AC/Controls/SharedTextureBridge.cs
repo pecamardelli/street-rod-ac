@@ -15,7 +15,7 @@ namespace Street_Rod_AC.Controls;
 ///
 /// One of these belongs to one viewport, and the viewport disposes it when it is unloaded.
 /// </summary>
-public sealed class SharedTextureBridge : IDisposable
+public sealed partial class SharedTextureBridge : IDisposable
 {
     private readonly D3DImage _image = new();
 
@@ -58,7 +58,9 @@ public sealed class SharedTextureBridge : IDisposable
     {
         if (_device != null) return;
 
-        _d3d9 = D3D9.D3D9.Direct3DCreate9Ex();
+        // Into locals first: a device that cannot be made (a remote session, a driver in the middle of a reset) must
+        // not leave half of itself behind for the next try to overwrite
+        var d3d9 = D3D9.D3D9.Direct3DCreate9Ex();
         var parameters = new D3D9.PresentParameters
         {
             Windowed = true,
@@ -69,9 +71,20 @@ public sealed class SharedTextureBridge : IDisposable
             BackBufferHeight = 1
         };
 
-        _device = _d3d9.CreateDeviceEx(0, D3D9.DeviceType.Hardware, IntPtr.Zero,
-            D3D9.CreateFlags.HardwareVertexProcessing | D3D9.CreateFlags.Multithreaded | D3D9.CreateFlags.FpuPreserve,
-            parameters);
+        try
+        {
+            _device = d3d9.CreateDeviceEx(0, D3D9.DeviceType.Hardware, IntPtr.Zero,
+                D3D9.CreateFlags.HardwareVertexProcessing | D3D9.CreateFlags.Multithreaded | D3D9.CreateFlags.FpuPreserve,
+                parameters);
+        }
+        catch
+        {
+            d3d9.Dispose();
+            throw;
+        }
+
+        _d3d9?.Dispose();
+        _d3d9 = d3d9;
     }
 
     /// <summary>
@@ -85,9 +98,16 @@ public sealed class SharedTextureBridge : IDisposable
             Bind(renderTarget);
         }
 
+        // Unlocked whatever happens: an image left locked never updates again
         _image.Lock();
-        _image.AddDirtyRect(new Int32Rect(0, 0, _image.PixelWidth, _image.PixelHeight));
-        _image.Unlock();
+        try
+        {
+            _image.AddDirtyRect(new Int32Rect(0, 0, _image.PixelWidth, _image.PixelHeight));
+        }
+        finally
+        {
+            _image.Unlock();
+        }
     }
 
     /// <summary>
@@ -115,8 +135,14 @@ public sealed class SharedTextureBridge : IDisposable
         _surface = _texture.GetSurfaceLevel(0);
 
         _image.Lock();
-        _image.SetBackBuffer(D3DResourceType.IDirect3DSurface9, _surface.NativePointer);
-        _image.Unlock();
+        try
+        {
+            _image.SetBackBuffer(D3DResourceType.IDirect3DSurface9, _surface.NativePointer);
+        }
+        finally
+        {
+            _image.Unlock();
+        }
 
         _boundTarget = renderTarget;
     }
@@ -130,8 +156,14 @@ public sealed class SharedTextureBridge : IDisposable
         if (_boundTarget != IntPtr.Zero)
         {
             _image.Lock();
-            _image.SetBackBuffer(D3DResourceType.IDirect3DSurface9, IntPtr.Zero);
-            _image.Unlock();
+            try
+            {
+                _image.SetBackBuffer(D3DResourceType.IDirect3DSurface9, IntPtr.Zero);
+            }
+            finally
+            {
+                _image.Unlock();
+            }
         }
 
         _surface?.Dispose();
@@ -151,6 +183,6 @@ public sealed class SharedTextureBridge : IDisposable
         _d3d9 = null;
     }
 
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetDesktopWindow();
+    [LibraryImport("user32.dll")]
+    private static partial IntPtr GetDesktopWindow();
 }

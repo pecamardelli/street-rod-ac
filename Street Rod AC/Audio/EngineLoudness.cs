@@ -87,6 +87,10 @@ public static class EngineLoudness
     private static readonly object Gate = new();
 
     private static IntPtr _system;
+    private static bool _shutDown;
+
+    // The AC folder the meter could not be started from: not tried again from there, a new folder is
+    private static string? _failedFolder;
 
     /// <summary>
     /// The level of an engine; null when it makes no sound to measure. Takes a fraction of a second per bank, so it
@@ -119,8 +123,8 @@ public static class EngineLoudness
             }
             finally
             {
-                FMOD_Studio_Bank_Unload(bank);
-                FMOD_Studio_System_Update(_system);
+                Warn(FMOD_Studio_Bank_Unload(bank), "unload measured bank");
+                Warn(FMOD_Studio_System_Update(_system), "update meter");
             }
         }
     }
@@ -172,6 +176,10 @@ public static class EngineLoudness
             _cache = File.Exists(CachePath)
                 ? System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, EngineLevel>>(File.ReadAllText(CachePath)) ?? new()
                 : new();
+
+            // A figure that is not a whole grid of numbers (a hand-edited file, one written halfway) is measured
+            // again: played from, it would throw every frame
+            foreach (var key in _cache.Where(e => !IsWholeGrid(e.Value)).Select(e => e.Key).ToList()) _cache.Remove(key);
         }
         catch
         {
@@ -181,6 +189,9 @@ public static class EngineLoudness
 
         return _cache;
     }
+
+    internal static bool IsWholeGrid(EngineLevel? level) =>
+        level?.Grid is { } grid && grid.Length == RpmGrid.Length * ThrottleGrid.Length && grid.All(double.IsFinite);
 
     private static void SaveCache(Dictionary<string, EngineLevel> cache)
     {
@@ -202,9 +213,9 @@ public static class EngineLoudness
         Check(FMOD_Studio_EventDescription_CreateInstance(description, out var instance), "create engine");
         try
         {
-            FMOD_Studio_EventInstance_SetParameterValue(instance, Utf8("rpms"), rpm);
-            FMOD_Studio_EventInstance_SetParameterValue(instance, Utf8("throttle"), throttle * ThrottleMax(description));
-            FMOD_Studio_EventInstance_Start(instance);
+            Warn(FMOD_Studio_EventInstance_SetParameterValue(instance, RpmsName, rpm), "set measured rpms");
+            Warn(FMOD_Studio_EventInstance_SetParameterValue(instance, ThrottleName, throttle * ThrottleMax(description)), "set measured throttle");
+            Warn(FMOD_Studio_EventInstance_Start(instance), "start measured engine");
             FmodPlugins.ClearMeter();
 
             // Each update mixes one block; the samples load on the way in, and a loop takes a moment to settle
@@ -218,9 +229,9 @@ public static class EngineLoudness
         }
         finally
         {
-            FMOD_Studio_EventInstance_Stop(instance, StopImmediate);
-            FMOD_Studio_EventInstance_Release(instance);
-            FMOD_Studio_System_Update(_system);
+            Warn(FMOD_Studio_EventInstance_Stop(instance, StopImmediate), "stop measured engine");
+            Warn(FMOD_Studio_EventInstance_Release(instance), "release measured engine");
+            Warn(FMOD_Studio_System_Update(_system), "update meter");
         }
     }
 
@@ -247,39 +258,73 @@ public static class EngineLoudness
         for (var i = 0; i < updates; i++) FMOD_Studio_System_Update(_system);
     }
 
-    private static float MaxRpm(IntPtr description) => Parameter(description, "rpms") ?? 10000f;
+    private static float MaxRpm(IntPtr description) => ParameterMaximum(description, "rpms") ?? DefaultMaxRpm;
 
-    private static float ThrottleMax(IntPtr description) => Parameter(description, "throttle") ?? 1f;
-
-    private static float? Parameter(IntPtr description, string name)
-    {
-        if (FMOD_Studio_EventDescription_GetParameterCount(description, out var count) != ResultOk) return null;
-        for (var i = 0; i < count; i++)
-        {
-            if (FMOD_Studio_EventDescription_GetParameterByIndex(description, i, out var parameter) != ResultOk) continue;
-            if (string.Equals(System.Runtime.InteropServices.Marshal.PtrToStringUTF8(parameter.Name), name, StringComparison.OrdinalIgnoreCase))
-                return parameter.Maximum;
-        }
-
-        return null;
-    }
+    private static float ThrottleMax(IntPtr description) => ParameterMaximum(description, "throttle") ?? DefaultMaxThrottle;
 
     private static void EnsureSystem()
     {
         if (_system != IntPtr.Zero) return;
+        if (_shutDown) throw new InvalidOperationException("FMOD has been shut down");
 
-        Check(FMOD_Studio_System_Create(out var system, HeaderVersion), "create");
-        Check(FMOD_Studio_System_GetLowLevelSystem(system, out var core), "core system");
-        Check(FMOD_System_SetOutput(core, OutputNoSoundNrt), "silent output");
-        Check(FMOD_Studio_System_Initialize(system, 64, StudioInitSynchronousUpdate, InitNormal, IntPtr.Zero), "initialise");
-        FmodPlugins.Register(system);
+        // Every bank would otherwise make, and leak, a system of its own trying again
+        var folder = Configuration.AppSettings.Instance.AssettoCorsaPath;
+        if (string.Equals(_failedFolder, folder, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("the loudness meter could not be started from " + folder);
 
-        var common = Path.Combine(Configuration.AppSettings.Instance.AssettoCorsaPath, "content", "sfx", "common.bank");
-        Check(FMOD_Studio_System_LoadBankFile(system, Utf8(common), LoadBankNormal, out _), "load common.bank");
+        var system = IntPtr.Zero;
+        try
+        {
+            Check(FMOD_Studio_System_Create(out system, HeaderVersion), "create");
+            Check(FMOD_Studio_System_GetLowLevelSystem(system, out var core), "core system");
+            Check(FMOD_System_SetOutput(core, OutputNoSoundNrt), "silent output");
+            Check(FMOD_Studio_System_Initialize(system, 64, StudioInitSynchronousUpdate, InitNormal, IntPtr.Zero), "initialise");
+            FmodPlugins.Register(system);
 
-        Check(FMOD_System_GetMasterChannelGroup(core, out var master), "master bus");
-        Check(FMOD_ChannelGroup_AddDSP(master, DspHead, FmodPlugins.CreateMeter(core)), "meter");
+            var common = Path.Combine(folder, "content", "sfx", "common.bank");
+            Check(FMOD_Studio_System_LoadBankFile(system, Utf8(common), LoadBankNormal, out _), "load common.bank");
 
-        _system = system;
+            Check(FMOD_System_GetMasterChannelGroup(core, out var master), "master bus");
+            Check(FMOD_ChannelGroup_AddDSP(master, DspHead, FmodPlugins.CreateMeter(core)), "meter");
+
+            _system = system;
+            _failedFolder = null;
+        }
+        catch
+        {
+            // Half a system is still threads and memory (and the meter's DSP): it goes
+            if (system != IntPtr.Zero) FMOD_Studio_System_Release(system);
+            _failedFolder = folder;
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Releases the measuring system for good, at exit (<see cref="FmodLifetime"/>). Never throws; a measurement in
+    /// progress is given a moment to finish.
+    /// </summary>
+    internal static void Shutdown()
+    {
+        var entered = false;
+        try
+        {
+            Monitor.TryEnter(Gate, TimeSpan.FromSeconds(2), ref entered);
+            _shutDown = true;
+
+            // Nothing plays between measurements and each bank is unloaded after its own: releasing the system takes
+            // common.bank and the meter with it
+            var system = _system;
+            _system = IntPtr.Zero;
+            if (system != IntPtr.Zero) Warn(FMOD_Studio_System_Release(system), "release meter");
+        }
+        catch
+        {
+            // On the way out: nothing to be done about it
+        }
+        finally
+        {
+            if (entered) Monitor.Exit(Gate);
+        }
     }
 }
+
