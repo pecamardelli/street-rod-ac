@@ -3,6 +3,7 @@ using System.Data;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Markup;
+using System.Windows.Threading;
 using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Dialogs;
 using Street_Rod_AC.Logging;
@@ -62,8 +63,29 @@ namespace Street_Rod_AC
         public ICareerProgressService CareerProgressService { get; private set; }
         public ITalkService TalkService { get; private set; }
 
-        // Current game state (set when a game is loaded or created)
-        public Models.GameState.GameState? CurrentGameState { get; set; }
+        private Models.GameState.GameState? _currentGameState;
+
+        /// <summary>
+        /// Current game state (set when a game is loaded or created). A newly set game gets the results of a race it
+        /// ran but never heard back from (the app closed during it): only now is there a save to apply them to.
+        /// </summary>
+        public Models.GameState.GameState? CurrentGameState
+        {
+            get => _currentGameState;
+            set
+            {
+                var loaded = value != null && !ReferenceEquals(value, _currentGameState);
+                _currentGameState = value;
+                if (loaded) _ = ProcessOrphanedResultsAsync();
+            }
+        }
+
+        // The crash path runs once, whichever handler gets there first
+        private int _fatalPathRan;
+
+        // Recoverable UI exceptions lately: a handler failing over and over (a render callback) is not recoverable
+        private readonly Queue<DateTime> _recentUiErrors = new();
+        private bool _closeAfterRace;
 
         /// <summary>
         /// Spends game time for an action. Handles day transitions and scheduled tasks.
@@ -115,12 +137,20 @@ namespace Street_Rod_AC
             // Initialize logging FIRST
             AppLoggerFactory.Initialize();
 
+            // Then the last line of defence: an exception nobody catches (14 of the async void handlers let them
+            // through) must not end the app with the AC install still changed for a race and the game unsaved
+            DispatcherUnhandledException += OnDispatcherUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += OnDomainUnhandledException;
+            TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+
             InitializeComponent();
+
+            // The settings before anything that reads the install: they name the AC folder
+            GameSettingsService = new GameSettingsService();
 
             ContentService = new AssettoCorsaContentService();
             IniModificationService = new IniModificationService();
             DialogService = new DialogService();
-            GameSettingsService = new GameSettingsService();
             CatalogRepository = new ContentCatalogRepository();
             CarImportService = new CarImportService(CatalogRepository);
             ProfileRepository = new CarProfileRepository();
@@ -132,18 +162,20 @@ namespace Street_Rod_AC
 
             // Scheduler and Time Service
             Scheduler = new GameTimeScheduler();
-            Scheduler.RegisterTask(new Services.Scheduler.Tasks.RaceSimulatorTask(new Services.Simulation.RaceSimulatorService()));
+            Scheduler.RegisterTask(new Services.Scheduler.Tasks.RaceSimulatorTask(new Services.Simulation.RaceSimulatorService(MarketService)));
             // Note: EventGenerationTask, and after it the market and parts ads tasks, are registered once RaceEventService is created
             GameTimeService = new GameTimeService(Scheduler);
 
             // Opponent services (must be initialized before GameStateRepository)
             OpponentRepository = new OpponentRepository();
             OpponentInitializationService = new OpponentInitializationService(OpponentRepository, CatalogRepository, ProfileRepository);
-            OpponentChallengeService = new OpponentChallengeService(CatalogRepository, ProfileRepository);
+            OpponentChallengeService = new OpponentChallengeService(CatalogRepository, ProfileRepository, CarPartsService);
 
-            // Game state repository (depends on opponent initialization service)
-            GameStateRepository = new GameStateRepository(OpponentInitializationService);
-            PurchaseService = new CarPurchaseService(GameStateRepository);
+            // Game state repository (depends on opponent initialization service). The save in use stays open in
+            // one place, shared with the race sessions, so a race's result and the state it changes are one write
+            var saveDatabase = new Services.Storage.SaveDatabase();
+            GameStateRepository = new GameStateRepository(OpponentInitializationService, saveDatabase);
+            PurchaseService = new CarPurchaseService(GameStateRepository, CarPartsService, GameTimeService);
 
             // Career services
             CarFilterService = new CarFilterService();
@@ -157,7 +189,7 @@ namespace Street_Rod_AC
                 carDefId => CatalogRepository.GetCar(carDefId)
             );
             EventOpponentService = new EventOpponentService(CarFilterService, CatalogRepository);
-            CareerProgressService = new CareerProgressService(MilestoneService, VictoryConditionService, DialogService);
+            CareerProgressService = new CareerProgressService(MilestoneService, VictoryConditionService);
 
             // Talk service for opponent dialogue
             TalkService = new StaticTalkService();
@@ -172,37 +204,31 @@ namespace Street_Rod_AC
 
             // Race result services
             var raceResultValidator = new Services.Race.Validation.RaceResultValidator();
-            var sessionRepository = new Services.Race.RaceSessionRepository();
+            var sessionRepository = new Services.Race.RaceSessionRepository(saveDatabase);
             var sessionDeduplicator = new Services.Race.Validation.SessionDeduplicator(sessionRepository);
-            var raceResultProcessor = new Services.Race.RaceResultProcessor(GameStateRepository, sessionRepository, CareerProgressService);
+            var raceResultProcessor = new Services.Race.RaceResultProcessor(GameStateRepository, sessionRepository, CareerProgressService, RaceEventService);
             RaceResultIngestionService = new Services.Race.RaceResultIngestionService(
                 raceResultValidator,
                 sessionDeduplicator,
                 raceResultProcessor,
-                sessionRepository);
+                sessionRepository,
+                () => CurrentGameState);
 
             // The cars' data for a race: what their parts make of them, put into the install and taken out again
             CarDataOverlay = new CarDataOverlay();
-            RaceCarDataService = new Services.Race.RaceCarDataService(CarPartsService);
+            RaceCarDataService = new Services.Race.RaceCarDataService(CarPartsService, CarDataOverlay);
 
             // Pass race result service to launcher
             Launcher = new AssettoCorsaLauncher(IniModificationService, RaceResultIngestionService, CarDataOverlay);
 
             // NavigationService (must be created after all its dependencies)
             NavigationService = new NavigationService(
-                DialogService,
-                CatalogRepository,
-                ProfileRepository,
-                Launcher,
-                ContentService,
-                OpponentChallengeService,
-                GameStateRepository,
-                MarketService,
-                GameSettingsService,
-                ProfileService,
-                TalkService,
-                DealerCatalog,
-                PurchaseService);
+                DialogService, CatalogRepository, ProfileRepository, Launcher, ContentService, OpponentChallengeService,
+                GameStateRepository, MarketService, GameSettingsService, ProfileService, TalkService, DealerCatalog,
+                PurchaseService,
+                GameTimeService, CarPartsService, PartsShopService, RaceCarDataService, RaceEventService, CarFilterService,
+                EventOpponentService, VictoryConditionService, MilestoneService,
+                game => CurrentGameState = game);
         }
 
         protected override async void OnStartup(StartupEventArgs e)
@@ -212,6 +238,30 @@ namespace Street_Rod_AC
             var logger = AppLoggerFactory.CreateLogger(LogCategory.Startup);
             logger.Information("Application starting");
 
+            // async void: whatever throws in here would otherwise end the app with nothing in the log
+            try
+            {
+                await StartAsync(logger);
+            }
+            catch (Exception ex)
+            {
+                logger.Critical(ex, "Start-up failed");
+                try
+                {
+                    System.Windows.MessageBox.Show($"Street Rod AC could not start:\n{ex.Message}\n\nThe details are in the log.",
+                        "Street Rod AC", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                catch (Exception)
+                {
+                    // No window to show it in either; the log has it
+                }
+
+                Shutdown();
+            }
+        }
+
+        private async Task StartAsync(IAppLogger logger)
+        {
             // Validate AC installation
             if (!AppSettings.Instance.IsValidInstallation())
             {
@@ -228,15 +278,23 @@ namespace Street_Rod_AC
                 return;
             }
 
-            // A race that ended badly (a crash, the power) may have left cars with changed data
-            try
+            // A race that ended badly (a crash, the power) may have left cars with changed data and race.ini
+            // rewritten. Not while the game still runs, though (the app was restarted during a race): it is reading
+            // that data, so it goes back once the game has closed.
+            var acStillRunning = AcProcesses.AnyRunning()
+                && (CarDataOverlay.Applied.Count > 0 || IniModificationService.HasPendingRestore);
+            if (acStillRunning)
             {
-                var restored = CarDataOverlay.RestoreAll();
-                if (restored > 0) logger.Warning("Data of {Count} car(s) put back from an earlier race", restored);
+                logger.Warning("Assetto Corsa is running: what an earlier race changed in it goes back once it closes");
+                _ = RestoreWhenAcExitsAsync(logger);
             }
-            catch (Exception ex)
+            else if (AcProcesses.AnyRunning())
             {
-                logger.Error(ex, "Could not put the cars' data back");
+                logger.Information("Assetto Corsa is running, and nothing of an earlier race is waiting to go back");
+            }
+            else
+            {
+                RestoreInstall(logger);
             }
 
             logger.Information("Assetto Corsa installation validated at {ACPath}",
@@ -290,22 +348,316 @@ namespace Street_Rod_AC
                 return;
             }
 
-            // Process orphaned race results
+            // Orphaned race results are processed once a game is loaded (see CurrentGameState): a result can only
+            // be applied to the save whose race it is
+
+            // Navigate to initial screen
+            logger.Information("Navigating to initial screen");
+            NavigationService.NavigateToInit();
+
+            // Closing the window during a race asks first: the race is stopped and the install put back before the app goes
+            if (MainWindow != null) MainWindow.Closing += OnMainWindowClosing;
+
+            if (acStillRunning)
+            {
+                DialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(
+                    DialogService,
+                    "Assetto Corsa is still running from an earlier session.\n\n" +
+                    "The cars' data and race settings it was started with go back once it closes; races can start after that.",
+                    "Assetto Corsa Is Running"));
+            }
+        }
+
+        // ===== THE AC INSTALL: PUT BACK =====
+
+        /// <summary>
+        /// Car data, race copies and cfg INI files back as they were before a race. Each part on its own (one that
+        /// fails does not stop the other), logged, never throws. Only call it when no AC process runs.
+        /// </summary>
+        private void RestoreInstall(IAppLogger logger)
+        {
             try
             {
-                logger.Information("Processing orphaned race result files");
+                var restored = CarDataOverlay?.RestoreAll() ?? 0;
+                if (restored > 0) logger.Warning("Data of {Count} car(s) put back from an earlier race", restored);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Could not put the cars' data back");
+            }
+
+            try
+            {
+                var restored = IniModificationService?.RestoreAll() ?? 0;
+                if (restored > 0) logger.Warning("{Count} AC cfg file(s) put back from an earlier race", restored);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Could not put the AC cfg files back");
+            }
+        }
+
+        /// <summary>The restore of an earlier race, once a game that was still running has closed; logged, never throws</summary>
+        private async Task RestoreWhenAcExitsAsync(IAppLogger logger)
+        {
+            try
+            {
+                var restored = await Launcher.RestoreWhenAcExitsAsync();
+                logger.Information("Assetto Corsa closed: {Count} car(s) and file(s) put back from an earlier race", restored);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Could not put back what an earlier race changed once Assetto Corsa closed");
+            }
+        }
+
+        /// <summary>True when the race or showroom runs, the one the launcher started or any other; never throws</summary>
+        private bool IsAssettoCorsaRunning()
+        {
+            try
+            {
+                if (Launcher?.IsAssettoCorsaRunning == true) return true;
+            }
+            catch (Exception)
+            {
+                return true;
+            }
+
+            return AcProcesses.AnyRunning();
+        }
+
+        /// <summary>Orphaned race results for the game just loaded; logged, never throws</summary>
+        private async Task ProcessOrphanedResultsAsync()
+        {
+            var logger = AppLoggerFactory.CreateLogger(LogCategory.RaceIngestion);
+            try
+            {
+                logger.Information("Processing orphaned race result files for {SaveName}", _currentGameState?.SaveName);
                 var orphanedResult = await RaceResultIngestionService.ProcessOrphanedResultsAsync();
                 logger.Information("Orphaned results processed: {Processed} files, {Errors} errors",
                     orphanedResult.FilesProcessed, orphanedResult.Errors.Count);
             }
             catch (Exception ex)
             {
-                logger.Warning(ex, "Failed to process orphaned race results - continuing startup");
+                logger.Warning(ex, "Failed to process orphaned race results");
+            }
+        }
+
+        /// <summary>
+        /// The window closes during a race only after asking: yes stops the race (the launcher kills AC, puts the
+        /// install back in its finally) and the app closes once that is done
+        /// </summary>
+        private void OnMainWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (_closeAfterRace || Launcher == null || !Launcher.IsExecutionLocked) return;
+
+            e.Cancel = true;
+            DialogService.ShowDialog(new Dialogs.Confirmation.ConfirmationDialogViewModel(
+                DialogService,
+                "Assetto Corsa is still running.\n\nStop it and quit? A race stopped before the finish counts as a loss when something is at stake.",
+                "Quit During a Race",
+                stop =>
+                {
+                    if (!stop) return;
+                    _closeAfterRace = true;
+                    _ = StopRaceAndCloseAsync();
+                }));
+        }
+
+        private async Task StopRaceAndCloseAsync()
+        {
+            var logger = AppLoggerFactory.CreateLogger(LogCategory.App);
+            try
+            {
+                Launcher.CancelRace();
+
+                // The launcher's finally puts the install back; the app waits for it (it gives up on a game that
+                // will not die after a while, and the next start puts things back then)
+                var waited = TimeSpan.Zero;
+                while (Launcher.IsExecutionLocked && waited < TimeSpan.FromSeconds(30))
+                {
+                    await Task.Delay(250);
+                    waited += TimeSpan.FromMilliseconds(250);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Stopping the race on the way out failed");
             }
 
-            // Navigate to initial screen
-            logger.Information("Navigating to initial screen");
-            NavigationService.NavigateToInit();
+            Shutdown();
+        }
+
+        // ===== EXCEPTIONS NOBODY CAUGHT =====
+
+        private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            var logger = AppLoggerFactory.CreateLogger(LogCategory.App);
+            logger.Critical(e.Exception, "Unhandled exception on the UI thread");
+
+            if (IsRecoverable(e.Exception))
+            {
+                e.Handled = true;
+                try
+                {
+                    // One dialog at a time: an open one belongs to a flow that is waiting on it, and the log has this
+                    if (DialogService != null && !DialogService.IsDialogOpen)
+                    {
+                        DialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(
+                            DialogService,
+                            $"Something went wrong:\n{e.Exception.Message}\n\nThe game carries on; the details are in the log.",
+                            "Error"));
+                    }
+                }
+                catch (Exception dialogError)
+                {
+                    logger.Error(dialogError, "Could not show the error dialog");
+                }
+
+                return;
+            }
+
+            // Not recoverable: the app ends. What must happen before it does happens now.
+            RunFatalPath(e.Exception);
+        }
+
+        private void OnDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            try
+            {
+                AppLoggerFactory.CreateLogger(LogCategory.App)
+                    .Critical(e.ExceptionObject as Exception ?? new Exception(e.ExceptionObject?.ToString()), "Unhandled exception (terminating: {Terminating})", e.IsTerminating);
+            }
+            catch (Exception)
+            {
+                // Logging is not there (a crash before it started); the fatal path still runs
+            }
+
+            RunFatalPath(e.ExceptionObject as Exception);
+        }
+
+        private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+        {
+            try
+            {
+                AppLoggerFactory.CreateLogger(LogCategory.App).Error(e.Exception, "A background task failed and nobody awaited it");
+            }
+            catch (Exception)
+            {
+                // Nothing more to do about it
+            }
+
+            e.SetObserved();
+        }
+
+        /// <summary>
+        /// Whether the app can carry on after an exception on the UI thread. Not after the runtime is in trouble
+        /// (memory, corrupt state, a type that failed to load), and not when handlers fail over and over (the same
+        /// error from a render or timer callback: the dialog would come back forever).
+        /// </summary>
+        private bool IsRecoverable(Exception exception)
+        {
+            var root = exception;
+            while (root is System.Reflection.TargetInvocationException { InnerException: { } inner }) root = inner;
+
+            if (root is OutOfMemoryException or InsufficientExecutionStackException or AccessViolationException
+                or System.Runtime.InteropServices.SEHException or InvalidProgramException or BadImageFormatException
+                or TypeInitializationException or TypeLoadException)
+                return false;
+
+            var now = DateTime.UtcNow;
+            _recentUiErrors.Enqueue(now);
+            while (_recentUiErrors.Count > 0 && now - _recentUiErrors.Peek() > TimeSpan.FromSeconds(30)) _recentUiErrors.Dequeue();
+            return _recentUiErrors.Count <= 10;
+        }
+
+        /// <summary>
+        /// What must happen before the process dies: the game saved, the AC install put back (only when no game
+        /// runs), FMOD released, the save's database closed, the log flushed. Once, whichever handler gets here
+        /// first; every step on its own, and it never throws.
+        /// </summary>
+        private void RunFatalPath(Exception? exception)
+        {
+            if (Interlocked.Exchange(ref _fatalPathRan, 1) == 1) return;
+
+            IAppLogger? logger = null;
+            try
+            {
+                logger = AppLoggerFactory.CreateLogger(LogCategory.App);
+                logger.Critical(exception ?? new Exception("(no exception object)"), "Fatal error: saving the game and putting Assetto Corsa back before the app ends");
+            }
+            catch (Exception)
+            {
+                // Logging never started: the steps still run
+            }
+
+            ShutDownCleanly(logger);
+        }
+
+        /// <summary>
+        /// The way out, normal or not: save, restore, FMOD, the database, the log. Every step guarded.
+        /// </summary>
+        private void ShutDownCleanly(IAppLogger? logger)
+        {
+            // Save current game state if one is loaded
+            var state = _currentGameState;
+            if (state != null && !string.IsNullOrEmpty(state.SaveName) && GameStateRepository != null)
+            {
+                try
+                {
+                    logger?.Information("Saving game state on exit: {SaveName}", state.SaveName);
+                    GameStateRepository.Save(state, state.SaveName);
+                    logger?.Information("Game state saved successfully");
+                }
+                catch (Exception ex)
+                {
+                    logger?.Error(ex, "Failed to save game state on exit");
+                }
+            }
+
+            // The install goes back unless the game still runs on it; then the next start does it
+            try
+            {
+                if (IsAssettoCorsaRunning())
+                {
+                    logger?.Warning("Assetto Corsa is still running: what the race changed in it goes back at the next start");
+                }
+                else if (logger != null)
+                {
+                    RestoreInstall(logger);
+                }
+                else
+                {
+                    CarDataOverlay?.RestoreAll();
+                    IniModificationService?.RestoreAll();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.Error(ex, "Could not put Assetto Corsa back on exit");
+            }
+
+            // FMOD's threads call back into this assembly: they stop before the runtime goes
+            try
+            {
+                Audio.FmodLifetime.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                logger?.Error(ex, "FMOD did not shut down cleanly");
+            }
+
+            // After the final save: the save's database closes
+            try
+            {
+                (GameStateRepository as IDisposable)?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                logger?.Error(ex, "The save's database did not close cleanly");
+            }
+
+            AppLoggerFactory.Shutdown();
         }
 
         /// <summary>
@@ -339,25 +691,20 @@ namespace Street_Rod_AC
 
         protected override void OnExit(ExitEventArgs e)
         {
-            var logger = AppLoggerFactory.CreateLogger(LogCategory.App);
-            logger.Information("Application shutting down");
-
-            // Save current game state if one is loaded
-            if (CurrentGameState != null && !string.IsNullOrEmpty(CurrentGameState.SaveName))
+            IAppLogger? logger = null;
+            try
             {
-                try
-                {
-                    logger.Information("Saving game state on exit: {SaveName}", CurrentGameState.SaveName);
-                    GameStateRepository.Save(CurrentGameState, CurrentGameState.SaveName);
-                    logger.Information("Game state saved successfully");
-                }
-                catch (Exception ex)
-                {
-                    logger.Error(ex, "Failed to save game state on exit");
-                }
+                logger = AppLoggerFactory.CreateLogger(LogCategory.App);
+                logger.Information("Application shutting down");
+            }
+            catch (Exception)
+            {
+                // The way out goes ahead without a log
             }
 
-            AppLoggerFactory.Shutdown();
+            // The crash path did all of this already if it ran
+            if (Interlocked.Exchange(ref _fatalPathRan, 1) == 0) ShutDownCleanly(logger);
+
             base.OnExit(e);
         }
     }

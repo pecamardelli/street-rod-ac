@@ -22,11 +22,22 @@ namespace Street_Rod_AC.Services.Configuration
         bool ApplyIntent(ModificationIntent intent);
 
         /// <summary>
+        /// Puts back every cfg file an intent changed, as it was before the first change: call it once AC has
+        /// exited (the launcher's finally, start-up, exit, a crash). Idempotent; a file that cannot go back stays
+        /// kept for the next call and is logged, the others go back anyway.
+        /// </summary>
+        /// <returns>How many files went back</returns>
+        int RestoreAll();
+
+        /// <summary>Whether a changed cfg file is waiting to go back</summary>
+        bool HasPendingRestore { get; }
+
+        /// <summary>
         /// Read an INI file (for inspection, not modification)
         /// </summary>
         /// <param name="fileName">File name (relative to cfg directory)</param>
-        /// <returns>Parsed INI file or null if not found</returns>
-        IniFile? ReadIniFile(string fileName);
+        /// <returns>The file's text or null if not found</returns>
+        Street_Rod_AC.Parts.Export.IniText? ReadIniFile(string fileName);
 
         /// <summary>
         /// Check if a specific INI file exists

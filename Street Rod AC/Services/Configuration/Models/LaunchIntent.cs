@@ -196,7 +196,10 @@ namespace Street_Rod_AC.Services.Configuration.Models
                 TrackConfig = this.TrackConfig,
                 OpponentAILevel = this.OpponentAILevel,
                 OpponentAIAggression = this.OpponentAIAggression,
-                RaceType = this.RaceType
+                RaceType = this.RaceType,
+                ContextId = Metadata.TryGetValue("RaceContext", out var context) && context is RaceContext raceContext
+                    ? raceContext.ContextId
+                    : null
             };
         }
     }

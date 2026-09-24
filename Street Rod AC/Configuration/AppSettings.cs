@@ -28,16 +28,30 @@ public class AppSettings
         }
     }
 
+    /// <summary>Where the game looks for Assetto Corsa when the settings name no folder</summary>
+    public const string DefaultAssettoCorsaPath = @"C:\GAMES\Street Rod AC";
+
     private AppSettings()
     {
-        // For now, hardcode the AC path as specified
-        AssettoCorsaPath = @"C:\GAMES\Street Rod AC";
+        AssettoCorsaPath = DefaultAssettoCorsaPath;
     }
 
     /// <summary>
-    /// Path to the Assetto Corsa installation directory
+    /// Path to the Assetto Corsa installation directory. Set from the settings when they load (see
+    /// <c>GameSettingsService</c>), before anything reads the install; a change takes effect at the next start,
+    /// since the car-data overlay and the catalog are built on the folder they started with.
     /// </summary>
     public string AssettoCorsaPath { get; set; }
+
+    /// <summary>The game's own folder under %AppData%: settings, logs, the catalog, what a race changed in AC</summary>
+    public static string AppDataPath =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StreetRodAC");
+
+    /// <summary>
+    /// Where the originals of whatever a race changes in AC wait until they go back: car data and sound
+    /// (<c>CarDataOverlay</c>, a folder per car) and the cfg INI files (<c>AcConfigBackup</c>)
+    /// </summary>
+    public static string AcRestorePath => Path.Combine(AppDataPath, "AcRestore");
 
     /// <summary>
     /// Path to the cars content folder

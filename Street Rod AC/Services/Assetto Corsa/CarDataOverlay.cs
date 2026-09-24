@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Newtonsoft.Json;
 using Street_Rod_AC.Configuration;
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Parts.Export;
 
@@ -36,8 +37,7 @@ namespace Street_Rod_AC.Services
         // race left behind, not this one's
         private readonly HashSet<string> _appliedNow = new(StringComparer.OrdinalIgnoreCase);
 
-        public CarDataOverlay() : this(AppSettings.Instance.CarsPath,
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StreetRodAC", "AcRestore"))
+        public CarDataOverlay() : this(AppSettings.Instance.CarsPath, AppSettings.AcRestorePath)
         {
         }
 
@@ -55,6 +55,12 @@ namespace Street_Rod_AC.Services
             public string CarId { get; set; } = string.Empty;
             public DateTime Applied { get; set; }
 
+            /// <summary>
+            /// The absolute car folder that was changed: the one that goes back, even when the AC folder in the
+            /// settings has changed since. Empty in manifests written before it was recorded.
+            /// </summary>
+            public string CarFolder { get; set; } = string.Empty;
+
             /// <summary>The data folder was made from data.acd for the race and goes away with the restore</summary>
             public bool CreatedDataFolder { get; set; }
 
@@ -69,6 +75,9 @@ namespace Street_Rod_AC.Services
 
                 /// <summary>Whether the car had the file: put back from the kept copy, or deleted</summary>
                 public bool Existed { get; set; }
+
+                /// <summary>The car's file was read-only: the flag is cleared for the race and set again after it</summary>
+                public bool ReadOnly { get; set; }
             }
 
             public sealed class SfxEntry
@@ -89,10 +98,72 @@ namespace Street_Rod_AC.Services
         /// <summary>Cars whose data is changed right now</summary>
         public IReadOnlyList<string> Applied =>
             Directory.Exists(_keepPath)
-                ? Directory.GetDirectories(_keepPath).Where(d => File.Exists(Path.Combine(d, ManifestFile))).Select(Path.GetFileName).ToList()!
+                ? Directory.GetDirectories(_keepPath)
+                    .Where(d => File.Exists(Path.Combine(d, ManifestFile)))
+                    .Select(d => Path.GetFileName(d)!)
+                    .Where(PathNames.IsSafeSegment)
+                    .ToList()
                 : Array.Empty<string>();
 
-        public bool IsApplied(string carId) => File.Exists(Path.Combine(_keepPath, carId, ManifestFile));
+        public bool IsApplied(string carId) =>
+            PathNames.IsSafeSegment(carId) && File.Exists(Path.Combine(_keepPath, carId, ManifestFile));
+
+        /// <summary>
+        /// A car whose data an earlier race left changed (its restore failed, or the app died during the race) is put
+        /// back now, so what is read from its folder is the car's own. Nothing happens while AC runs (the game may be
+        /// on that data) or when the car is changed for the race being prepared right now. True when it was put
+        /// back; throws when it could not be.
+        /// </summary>
+        public bool RestoreIfLeftover(string carId)
+        {
+            if (!IsApplied(carId) || _appliedNow.Contains(carId)) return false;
+            if (AcProcesses.AnyRunning())
+            {
+                _logger.Warning("{Car} still has data from an earlier race, but Assetto Corsa is running: it goes back once the game has closed", carId);
+                return false;
+            }
+
+            _logger.Warning("{Car} still had changed data from an earlier race: putting it back before it is read", carId);
+            return Restore(carId);
+        }
+
+        /// <summary>
+        /// The car's folder under content\cars, for an id that is one folder name; anything else (empty, ".", "..",
+        /// a path) is refused before it can reach a recursive delete
+        /// </summary>
+        private string CarDirectory(string carId)
+        {
+            if (!PathNames.IsSafeSegment(carId)) throw new ArgumentException($"'{carId}' is not a car folder name", nameof(carId));
+            return PathNames.CombineUnder(_carsPath, carId);
+        }
+
+        /// <summary>Where a car's originals wait, checked the same way: never the AcRestore root itself</summary>
+        private string KeepDirectory(string carId)
+        {
+            if (!PathNames.IsSafeSegment(carId)) throw new ArgumentException($"'{carId}' is not a car folder name", nameof(carId));
+            return PathNames.CombineUnder(_keepPath, carId);
+        }
+
+        /// <summary>
+        /// The folder a manifest says it changed, when it is plausibly that car's folder in an AC install (named after
+        /// the car, inside a "cars" folder); else the car's folder in the install the game runs on now
+        /// </summary>
+        private string ChangedCarDirectory(string carId, Manifest manifest)
+        {
+            var recorded = manifest.CarFolder;
+            if (!string.IsNullOrWhiteSpace(recorded) && Path.IsPathFullyQualified(recorded))
+            {
+                var folder = Path.TrimEndingDirectorySeparator(Path.GetFullPath(recorded));
+                var parent = Path.GetDirectoryName(folder);
+                if (string.Equals(Path.GetFileName(folder), carId, StringComparison.OrdinalIgnoreCase)
+                    && parent != null && string.Equals(Path.GetFileName(parent), "cars", StringComparison.OrdinalIgnoreCase))
+                    return folder;
+
+                _logger.Warning("{Car}: the manifest names {Folder}, which is not that car's folder; putting back {Current} instead", carId, recorded, CarDirectory(carId));
+            }
+
+            return CarDirectory(carId);
+        }
 
         /// <summary>
         /// Writes the files into the car's data and the sound into its sfx folder, keeping the originals. False when
@@ -110,17 +181,17 @@ namespace Street_Rod_AC.Services
                 return false;
             }
 
+            var carDirectory = CarDirectory(carId);
+            var keep = KeepDirectory(carId);
             RestoreLeftover(carId);
 
-            var carDirectory = Path.Combine(_carsPath, carId);
             var dataDirectory = Path.Combine(carDirectory, AcCarData.DataFolder);
             var sfxDirectory = Path.Combine(carDirectory, AcCarSound.SfxFolder);
-            var keep = Path.Combine(_keepPath, carId);
             var keepFiles = Path.Combine(keep, FilesFolder);
             if (Directory.Exists(keep)) Directory.Delete(keep, true);
             Directory.CreateDirectory(keepFiles);
 
-            var manifest = new Manifest { CarId = carId, Applied = DateTime.Now };
+            var manifest = new Manifest { CarId = carId, Applied = DateTime.Now, CarFolder = Path.GetFullPath(carDirectory) };
 
             // The originals first, then the manifest that names them, then the change: a crash at any
             // point leaves either nothing changed or everything needed to change it back
@@ -136,10 +207,18 @@ namespace Street_Rod_AC.Services
                 {
                     foreach (var name in files.Keys)
                     {
-                        var original = Path.Combine(dataDirectory, name);
+                        var original = DataFile(dataDirectory, name);
                         var existed = File.Exists(original);
-                        if (existed) File.Copy(original, Path.Combine(keepFiles, name), true);
-                        manifest.Files.Add(new Manifest.Entry { Name = name, Existed = existed });
+                        var readOnly = existed && File.GetAttributes(original).HasFlag(FileAttributes.ReadOnly);
+                        if (existed)
+                        {
+                            // The kept copy is ours to delete after the restore: it must not carry the flag along
+                            var kept = Path.Combine(keepFiles, name);
+                            File.Copy(original, kept, true);
+                            ClearReadOnly(kept);
+                        }
+
+                        manifest.Files.Add(new Manifest.Entry { Name = name, Existed = existed, ReadOnly = readOnly });
                     }
                 }
             }
@@ -158,7 +237,9 @@ namespace Street_Rod_AC.Services
                 };
             }
 
-            File.WriteAllText(Path.Combine(keep, ManifestFile), JsonConvert.SerializeObject(manifest, Formatting.Indented));
+            // Flushed to the disk and renamed into place: a power cut right after leaves a whole manifest, never an
+            // empty one next to changed data
+            WriteManifest(keep, manifest);
             _appliedNow.Add(carId);
 
             if (manifest.CreatedDataFolder)
@@ -167,7 +248,12 @@ namespace Street_Rod_AC.Services
                 _logger.Information("{Car}: data unpacked from {Acd} for the race", carId, AcdFile.FileName);
             }
 
-            foreach (var (name, content) in files) File.WriteAllText(Path.Combine(dataDirectory, name), content, Encoding.Latin1);
+            foreach (var (name, content) in files)
+            {
+                var target = DataFile(dataDirectory, name);
+                if (File.Exists(target)) ClearReadOnly(target);
+                File.WriteAllText(target, content, Encoding.Latin1);
+            }
             if (files.Count > 0)
                 _logger.Information("{Car}: {Count} data file(s) changed for the race: {Files}", carId, files.Count, string.Join(", ", files.Keys));
 
@@ -237,40 +323,141 @@ namespace Street_Rod_AC.Services
             Restore(carId);
         }
 
-        /// <summary>Puts a car's data back as it was. True when there was something to put back.</summary>
+        /// <summary>
+        /// Puts a car's data back as it was. True when there was something to put back. Every step is tried, whatever
+        /// the others do: the data files one by one, then the sound. The kept originals are deleted only when all of
+        /// them went back; what failed stays in the manifest for the next try, and this throws to say so. A manifest
+        /// that reads as nothing (0 bytes after a power cut, "null") throws too and deletes nothing.
+        /// </summary>
         public bool Restore(string carId)
         {
-            var keep = Path.Combine(_keepPath, carId);
+            var keep = KeepDirectory(carId);
             var manifestPath = Path.Combine(keep, ManifestFile);
             if (!File.Exists(manifestPath)) return false;
 
-            var manifest = JsonConvert.DeserializeObject<Manifest>(File.ReadAllText(manifestPath)) ?? new Manifest { CarId = carId };
-            var carDirectory = Path.Combine(_carsPath, carId);
+            Manifest? manifest;
+            try
+            {
+                manifest = JsonConvert.DeserializeObject<Manifest>(File.ReadAllText(manifestPath));
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidDataException($"The manifest of {carId} cannot be read; its originals are left under {keep}", ex);
+            }
+
+            if (manifest == null)
+                throw new InvalidDataException($"The manifest of {carId} is empty; its originals are left under {keep}");
+
+            var carDirectory = ChangedCarDirectory(carId, manifest);
             var dataDirectory = Path.Combine(carDirectory, AcCarData.DataFolder);
+            var failures = new List<Exception>();
 
             if (manifest.CreatedDataFolder)
             {
-                if (Directory.Exists(dataDirectory)) Directory.Delete(dataDirectory, true);
-                _logger.Information("{Car}: the unpacked data folder is gone again", carId);
+                try
+                {
+                    if (Directory.Exists(dataDirectory)) Directory.Delete(dataDirectory, true);
+                    _logger.Information("{Car}: the unpacked data folder is gone again", carId);
+                    manifest.CreatedDataFolder = false;
+                }
+                catch (Exception ex)
+                {
+                    failures.Add(ex);
+                    _logger.Error(ex, "{Car}: the unpacked data folder {Folder} could not be deleted", carId, dataDirectory);
+                }
             }
             else if (manifest.Files.Count > 0)
             {
+                var left = new List<Manifest.Entry>();
                 foreach (var entry in manifest.Files)
                 {
-                    var target = Path.Combine(dataDirectory, entry.Name);
-                    if (entry.Existed) File.Copy(Path.Combine(keep, FilesFolder, entry.Name), target, true);
-                    else if (File.Exists(target)) File.Delete(target);
+                    try
+                    {
+                        RestoreFile(carId, keep, dataDirectory, entry);
+                    }
+                    catch (Exception ex)
+                    {
+                        failures.Add(ex);
+                        left.Add(entry);
+                        _logger.Error(ex, "{Car}: {File} could not be put back; its original stays under {Keep}", carId, entry.Name, keep);
+                    }
                 }
 
-                _logger.Information("{Car}: {Count} data file(s) put back", carId, manifest.Files.Count);
+                _logger.Information("{Car}: {Count} of {Total} data file(s) put back", carId, manifest.Files.Count - left.Count, manifest.Files.Count);
+                manifest.Files = left;
             }
 
-            if (manifest.Sfx != null) RestoreSound(carId, Path.Combine(carDirectory, AcCarSound.SfxFolder), manifest.Sfx);
+            if (manifest.Sfx != null)
+            {
+                try
+                {
+                    RestoreSound(carId, Path.Combine(carDirectory, AcCarSound.SfxFolder), manifest.Sfx);
+                    manifest.Sfx = null;
+                }
+                catch (Exception ex)
+                {
+                    failures.Add(ex);
+                    _logger.Error(ex, "{Car}: its own sound could not be put back", carId);
+                }
+            }
+
+            if (failures.Count > 0)
+            {
+                // What went back is off the list; what did not is tried again next time, from the same originals
+                WriteManifest(keep, manifest);
+                throw new AggregateException($"{carId}: {failures.Count} step(s) of the restore failed; the next start tries again", failures);
+            }
 
             Directory.Delete(keep, true);
             _appliedNow.Remove(carId);
             return true;
         }
+
+        /// <summary>
+        /// One data file back from its kept copy (or deleted, when the car did not have it), with its read-only flag as
+        /// it was. A kept copy that is gone cannot ever go back: that is logged as lost and not retried forever.
+        /// </summary>
+        private void RestoreFile(string carId, string keep, string dataDirectory, Manifest.Entry entry)
+        {
+            var target = DataFile(dataDirectory, entry.Name);
+            if (!entry.Existed)
+            {
+                if (File.Exists(target))
+                {
+                    ClearReadOnly(target);
+                    File.Delete(target);
+                }
+
+                return;
+            }
+
+            var kept = Path.Combine(keep, FilesFolder, entry.Name);
+            if (!File.Exists(kept))
+            {
+                _logger.Error("{Car}: the kept original of {File} is gone (deleted outside the game?); the race version stays in {Target}", carId, entry.Name, target);
+                return;
+            }
+
+            if (File.Exists(target)) ClearReadOnly(target);
+            File.Copy(kept, target, true);
+            if (entry.ReadOnly) File.SetAttributes(target, File.GetAttributes(target) | FileAttributes.ReadOnly);
+        }
+
+        /// <summary>A data file's path, for a name that is one file name inside the data folder</summary>
+        private static string DataFile(string dataDirectory, string name)
+        {
+            if (!PathNames.IsSafeSegment(name)) throw new InvalidDataException($"'{name}' is not a data file name");
+            return Path.Combine(dataDirectory, name);
+        }
+
+        private static void ClearReadOnly(string file)
+        {
+            var attributes = File.GetAttributes(file);
+            if (attributes.HasFlag(FileAttributes.ReadOnly)) File.SetAttributes(file, attributes & ~FileAttributes.ReadOnly);
+        }
+
+        private static void WriteManifest(string keep, Manifest manifest) =>
+            SafeFile.WriteAllText(Path.Combine(keep, ManifestFile), JsonConvert.SerializeObject(manifest, Formatting.Indented));
 
         /// <summary>
         /// The link goes, the originals come back out of the keep folder. Every step checks what is there, so a
@@ -329,8 +516,9 @@ namespace Street_Rod_AC.Services
         /// </summary>
         public void CreateClone(string carId, string cloneId, IReadOnlyDictionary<string, string> files, CarSound? sound, string? masterGuidsPath = null)
         {
-            var source = Path.Combine(_carsPath, carId);
-            var target = Path.Combine(_carsPath, cloneId);
+            var source = CarDirectory(carId);
+            if (!IsCloneId(cloneId)) throw new ArgumentException($"'{cloneId}' is not a name for a copy (it must end with {AcCarFolder.CloneSuffix})", nameof(cloneId));
+            var target = CarDirectory(cloneId);
             if (!Directory.Exists(source)) throw new DirectoryNotFoundException($"{carId} is not installed");
             if (_appliedNow.Contains(carId)) throw new InvalidOperationException($"{carId} is already changed for this race: its copy is made before that");
             RestoreLeftover(carId);
@@ -396,11 +584,17 @@ namespace Street_Rod_AC.Services
                 cloneId, carId, linked, copied, files.Count, sound?.DonorId ?? "none");
         }
 
-        /// <summary>Deletes a copy made for a race; a folder without the marker is never touched</summary>
+        /// <summary>
+        /// Deletes a copy made for a race. Only a folder that is ours on every count is touched: its name ends with
+        /// <see cref="AcCarFolder.CloneSuffix"/>, it sits right in the install's content\cars, and it has the marker.
+        /// A user's own car that happens to contain a marker file (a copy kept as a car, a mod shipping the file) is
+        /// left alone.
+        /// </summary>
         public bool RemoveClone(string cloneId)
         {
-            var folder = Path.Combine(_carsPath, cloneId);
-            if (!Directory.Exists(folder) || !AcCarFolder.IsClone(folder)) return false;
+            if (!IsCloneId(cloneId)) return false;
+            var folder = CarDirectory(cloneId);
+            if (!Directory.Exists(folder) || !IsOurClone(folder)) return false;
 
             // Deleting a link leaves the car's own file where it is. The marker goes last, after every file and folder,
             // so a delete cut short leaves a folder still known to be ours, and the next start finishes it.
@@ -423,7 +617,7 @@ namespace Street_Rod_AC.Services
             if (!Directory.Exists(_carsPath)) return 0;
 
             var removed = 0;
-            foreach (var folder in Directory.GetDirectories(_carsPath).Where(AcCarFolder.IsClone))
+            foreach (var folder in Directory.GetDirectories(_carsPath).Where(IsOurClone))
             {
                 try
                 {
@@ -436,6 +630,21 @@ namespace Street_Rod_AC.Services
             }
 
             return removed;
+        }
+
+        private static bool IsCloneId(string? id) =>
+            PathNames.IsSafeSegment(id) && id!.EndsWith(AcCarFolder.CloneSuffix, StringComparison.OrdinalIgnoreCase)
+            && id.Length > AcCarFolder.CloneSuffix.Length;
+
+        /// <summary>A copy of ours: named as one, directly in content\cars, with the marker</summary>
+        private bool IsOurClone(string folder)
+        {
+            var full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(folder));
+            var parent = Path.GetDirectoryName(full);
+            return IsCloneId(Path.GetFileName(full))
+                && parent != null
+                && string.Equals(parent, Path.TrimEndingDirectorySeparator(Path.GetFullPath(_carsPath)), StringComparison.OrdinalIgnoreCase)
+                && AcCarFolder.IsClone(full);
         }
 
         private static bool IsUnder(string file, string folder) =>
