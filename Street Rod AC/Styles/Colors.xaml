@@ -24,4 +24,74 @@
     <!-- License Input Colors -->
     <Color x:Key="LicenseBrown">#2C1810</Color>
 
+    <!-- Panel and neutral greys. GrayNN is #NNNNNN, so the name says the exact shade -->
+    <Color x:Key="BgPanel">#1A1A1A</Color>
+    <Color x:Key="Gray26">#262626</Color>
+    <Color x:Key="Gray30">#303030</Color>
+    <Color x:Key="Gray33">#333333</Color>
+    <Color x:Key="Gray50">#505050</Color>
+    <Color x:Key="Gray70">#707070</Color>
+    <Color x:Key="Gray80">#808080</Color>
+    <Color x:Key="GrayA0">#A0A0A0</Color>
+    <Color x:Key="White">#FFFFFF</Color>
+
+    <!-- Translucent panels over the background art. The suffix is the alpha byte (BgPanelCC = #CC1A1A1A) -->
+    <Color x:Key="BgPanelAA">#AA1A1A1A</Color>
+    <Color x:Key="BgPanelCC">#CC1A1A1A</Color>
+    <Color x:Key="BgPanelF2">#F21A1A1A</Color>
+    <Color x:Key="BgDarkDF">#DF1B1B1B</Color>
+    <Color x:Key="Glass12C0">#C0121212</Color>
+    <Color x:Key="Glass12D0">#D0121212</Color>
+    <Color x:Key="Glass14D0">#D0141414</Color>
+    <Color x:Key="Glass14E0">#E0141414</Color>
+    <Color x:Key="Glass15E8">#E8151515</Color>
+
+    <!-- Black and white veils (suffix = alpha byte). BlackTransparent is not WPF's Transparent (#00FFFFFF):
+         a gradient that fades to it stays black instead of greying through white -->
+    <Color x:Key="Overlay">#99000000</Color>
+    <Color x:Key="BlackTransparent">#00000000</Color>
+    <Color x:Key="BlackHitTest">#01000000</Color>
+    <Color x:Key="Black77">#77000000</Color>
+    <Color x:Key="BlackB0">#B0000000</Color>
+    <Color x:Key="BlackCC">#CC000000</Color>
+    <Color x:Key="BlackE6">#E6000000</Color>
+    <Color x:Key="White20">#20FFFFFF</Color>
+    <Color x:Key="White30">#30FFFFFF</Color>
+    <Color x:Key="WhiteB0">#B0FFFFFF</Color>
+
+    <!-- Status Colors -->
+    <Color x:Key="Gold">#FFD700</Color>
+    <Color x:Key="GoldCC">#CCFFD700</Color>
+    <Color x:Key="Gold33">#33FFD700</Color>
+    <Color x:Key="Amber">#FFC107</Color>
+    <Color x:Key="Warning">#FFA500</Color>
+    <Color x:Key="WarningStrong">#FF8C00</Color>
+    <Color x:Key="WarningBg">#3D2F1F</Color>
+    <Color x:Key="Danger">#FF6B6B</Color>
+    <Color x:Key="DangerStrong">#CC0000</Color>
+    <Color x:Key="DangerBg">#3D1F1F</Color>
+    <Color x:Key="Salmon">#FF8C6B</Color>
+    <Color x:Key="SuccessStrong">#00AA00</Color>
+    <Color x:Key="SuccessHover">#7CCD7C</Color>
+    <Color x:Key="Fit">#59FF73</Color>
+    <Color x:Key="Fit30">#3059FF73</Color>
+    <Color x:Key="PaleYellow">#FFE8A0</Color>
+    <Color x:Key="Info">#4A90D9</Color>
+    <Color x:Key="InfoBg">#1A2A3A</Color>
+    <Color x:Key="SuccessBg">#2A3A2A</Color>
+    <Color x:Key="GoldBg">#3A3A2A</Color>
+    <Color x:Key="RoyalBlue">#4169E1</Color>
+    <Color x:Key="SpinnerOrange">#FF6B00</Color>
+    <Color x:Key="RedZone">#60C02020</Color>
+
+    <!-- Dealer map and lot: the old-paper look -->
+    <Color x:Key="Cream">#F5E6C8</Color>
+    <Color x:Key="Cream50">#50F5E6C8</Color>
+    <Color x:Key="Cream60">#60F5E6C8</Color>
+    <Color x:Key="Cream70">#70F5E6C8</Color>
+    <Color x:Key="MapSepia">#6B4A1E</Color>
+    <Color x:Key="MapDotFar">#6E6A60</Color>
+    <Color x:Key="MapDotFarBorder">#A09A8C</Color>
+    <Color x:Key="MapFarText">#E8A15A</Color>
+
 </ResourceDictionary>

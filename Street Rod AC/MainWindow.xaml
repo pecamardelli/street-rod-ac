@@ -17,7 +17,7 @@
 
         <!-- Dialog Host Overlay -->
         <Grid x:Name="DialogHost"
-              Background="#99000000"
+              Background="{StaticResource OverlayBrush}"
               Visibility="{Binding DialogService.IsDialogOpen, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Border Background="{StaticResource BgMediumBrush}"
                     BorderBrush="{StaticResource BorderLightBrush}"
