@@ -84,6 +84,10 @@ namespace Street_Rod_AC.Services
 
                 _logger.Information("Configuration prepared successfully");
 
+                // The garage's engines go quiet and let go of their banks: the game is about to sound its own, and a bank
+                // that is open cannot be moved aside for the sound a car races with
+                await Audio.EngineAudio.Shared.UnloadAllAsync();
+
                 // PHASE 2.5: THE CARS' OWN DATA AND SOUND
                 // What the parts make of each car goes into the install now and comes out in the finally below,
                 // whatever happens in between. A second car of a model already in the race races in a copy of the

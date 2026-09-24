@@ -12,6 +12,7 @@ using Street_Rod_AC.Screens.UsedCarMarket;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Dealers;
 using Street_Rod_AC.Services.Market;
+using Street_Rod_AC.Services.Parts;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.ViewModels;
 
@@ -34,6 +35,7 @@ namespace Street_Rod_AC.Screens.DealerLot
         private readonly ICarProfileRepository _profileRepo;
         private readonly IGameStateRepository _gameStateRepo;
         private readonly ICarPurchaseService _purchaseService;
+        private readonly ICarPartsService _partsService;
         private readonly IAppLogger _logger;
         private readonly DealerDefinition? _dealer;
 
@@ -72,7 +74,8 @@ namespace Street_Rod_AC.Screens.DealerLot
             IContentCatalogRepository catalogRepo,
             ICarProfileRepository profileRepo,
             IGameStateRepository gameStateRepo,
-            ICarPurchaseService purchaseService)
+            ICarPurchaseService purchaseService,
+            ICarPartsService partsService)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
@@ -83,6 +86,7 @@ namespace Street_Rod_AC.Screens.DealerLot
             _profileRepo = profileRepo;
             _gameStateRepo = gameStateRepo;
             _purchaseService = purchaseService;
+            _partsService = partsService;
             _logger = AppLoggerFactory.CreateLogger("DealerLot");
             _dealer = dealerCatalog.Get(dealerId);
 
@@ -107,7 +111,35 @@ namespace Street_Rod_AC.Screens.DealerLot
                 OnPropertyChanged(nameof(SelectedIndex));
                 OnPropertyChanged(nameof(SelectedCar));
                 OnPropertyChanged(nameof(HasSelection));
+                RefreshEngine();
             }
+        }
+
+        private Audio.EngineSpec? _selectedEngine;
+        private int _engineVersion;
+
+        /// <summary>The engine of the car being looked at, as it is sold, to start and rev on the lot</summary>
+        public Audio.EngineSpec? SelectedEngine
+        {
+            get => _selectedEngine;
+            private set
+            {
+                _selectedEngine = value;
+                OnPropertyChanged(nameof(SelectedEngine));
+            }
+        }
+
+        private async void RefreshEngine()
+        {
+            var version = ++_engineVersion;
+            var car = SelectedCar;
+
+            // Off at once: the car the camera leaves must not keep running
+            SelectedEngine = null;
+            if (car == null) return;
+
+            var spec = await EngineSpecs.ForSaleAsync(_partsService, car.Listing, car.DisplayName);
+            if (version == _engineVersion) SelectedEngine = spec;
         }
 
         /// <summary>The car being looked at, or null on the lot view</summary>

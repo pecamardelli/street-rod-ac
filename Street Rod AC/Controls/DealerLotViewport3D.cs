@@ -225,6 +225,17 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         set => SetValue(SelectedIndexProperty, value);
     }
 
+    public static readonly DependencyProperty RunningEngineProperty = DependencyProperty.Register(
+        nameof(RunningEngine), typeof(Audio.EngineRunner), typeof(DealerLotViewport3D),
+        new PropertyMetadata(null, (d, e) => ((DealerLotViewport3D)d).OnRunningEngineChanged((Audio.EngineRunner?)e.OldValue, (Audio.EngineRunner?)e.NewValue)));
+
+    /// <summary>The engine of the car the camera is on, started where it stands: that car's body rocks with it</summary>
+    public Audio.EngineRunner? RunningEngine
+    {
+        get => (Audio.EngineRunner?)GetValue(RunningEngineProperty);
+        set => SetValue(RunningEngineProperty, value);
+    }
+
     private static readonly DependencyPropertyKey IsReadyPropertyKey = DependencyProperty.RegisterReadOnly(
         nameof(IsReady), typeof(bool), typeof(DealerLotViewport3D), new PropertyMetadata(false));
 
@@ -433,6 +444,9 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
     {
         var renderer = _renderer;
         if (renderer == null) return;
+
+        // A bay is about to be told where it stands again: the car in it cannot be leaning when it is
+        ReleaseRock();
 
         var previous = _loaded;
         _loaded = cars;
@@ -686,6 +700,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
     private void OnSelectionChanged()
     {
+        ReleaseRock();
         if (_renderer == null) return;
 
         var index = SelectedIndex;
@@ -976,6 +991,61 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
     #endregion
 
+    #region Body rock
+
+    private CarBodyRock? _rock;
+
+    private void OnRunningEngineChanged(Audio.EngineRunner? before, Audio.EngineRunner? after)
+    {
+        if (before != null) before.PoseChanged -= OnPoseChanged;
+        if (after != null) after.PoseChanged += OnPoseChanged;
+        OnPoseChanged();
+    }
+
+    /// <summary>The engine of the car being looked at moved its body</summary>
+    private void OnPoseChanged()
+    {
+        var renderer = _renderer;
+        var index = SelectedIndex;
+        var carNode = renderer != null && index >= 0 && index < _slots.Count && index < _standing.Count && _standing[index] != null
+            ? _slots[index]?.CarNode
+            : null;
+        var pose = RunningEngine?.Pose ?? Audio.BodyPose.Rest;
+
+        if (renderer == null || carNode == null || (pose.IsRest && RunningEngine?.IsActive != true))
+        {
+            ReleaseRock();
+            return;
+        }
+
+        if (_rock == null || !ReferenceEquals(_rock.Car, carNode))
+        {
+            ReleaseRock();
+            _rock = new CarBodyRock(carNode);
+        }
+
+        if (!_rock.Apply(pose)) return;
+
+        renderer.RefreshShadows();
+        renderer.IsDirty = true;
+        _animateUntil = DateTime.Now + SettleWindow;
+    }
+
+    private void ReleaseRock()
+    {
+        if (_rock == null) return;
+
+        _rock.Release();
+        _rock = null;
+        if (_renderer != null)
+        {
+            _renderer.RefreshShadows();
+            _renderer.IsDirty = true;
+        }
+    }
+
+    #endregion
+
     #region Rendering
 
     private void OnRendering(object? sender, EventArgs e)
@@ -1047,6 +1117,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
     private void DisposeRenderer()
     {
         CompositionTarget.Rendering -= OnRendering;
+        _rock = null;
 
         // The target belongs to the renderer: let go of it before the renderer goes
         _bridge.ReleaseSurface();

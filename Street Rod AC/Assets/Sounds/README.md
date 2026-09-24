@@ -60,3 +60,11 @@ the block goes back to the matcher.
 does not play right.
 
 `EngineBench <parts folder> sounds <AC cars folder>` prints the library and the choice for every engine build.
+
+## Loudness in the garage
+
+Banks are mixed to their authors' taste, so the garage and the dealer lots even them out when they start an engine:
+each bank is played once through a silent FMOD mixer and measured (K-weighted) over a grid of rpm and throttle, and
+at every point the engine is turned up or down to the median of all 65 banks of the install
+(`Audio/EngineLoudness.cs`). The figures are kept per bank in `%AppData%\StreetRodAC\engine_levels.json`; delete it
+to have everything measured again. Races play the banks as they are.

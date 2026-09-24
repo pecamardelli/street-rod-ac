@@ -16,7 +16,7 @@
                                       Cars="{Binding LotCars}"
                                       SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
                                       LotRadius="{Binding LotRadius}"
-/>
+                                      RunningEngine="{Binding Runner, ElementName=EnginePanel}"/>
 
         <!-- The lot is covered until every car is standing in it, then the cover fades and the viewport
              fades up underneath. Watching an empty room fill a car at a time is not worth showing. -->
@@ -186,6 +186,11 @@
                            Foreground="{StaticResource TextSecondaryBrush}"
                            Margin="0,8,0,0"
                            Visibility="{Binding EngineDisplay, Converter={StaticResource StringToVisibilityConverter}}"/>
+
+                <!-- Start it up before you buy it -->
+                <controls:EnginePanel x:Name="EnginePanel"
+                                      Margin="0,16,0,0"
+                                      Engine="{Binding DataContext.SelectedEngine, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
 
                 <Button Content="BUY IT"
                         Margin="0,20,0,0"

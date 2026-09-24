@@ -286,6 +286,17 @@ public class CarViewport3D : System.Windows.Controls.Grid
         set => SetValue(SelectedPartProperty, value);
     }
 
+    public static readonly DependencyProperty RunningEngineProperty = DependencyProperty.Register(
+        nameof(RunningEngine), typeof(Audio.EngineRunner), typeof(CarViewport3D),
+        new PropertyMetadata(null, (d, e) => ((CarViewport3D)d).OnRunningEngineChanged((Audio.EngineRunner?)e.OldValue, (Audio.EngineRunner?)e.NewValue)));
+
+    /// <summary>The car's engine, started where it stands: the body rocks with it</summary>
+    public Audio.EngineRunner? RunningEngine
+    {
+        get => (Audio.EngineRunner?)GetValue(RunningEngineProperty);
+        set => SetValue(RunningEngineProperty, value);
+    }
+
     private static readonly DependencyPropertyKey IsReadyPropertyKey = DependencyProperty.RegisterReadOnly(
         nameof(IsReady), typeof(bool), typeof(CarViewport3D), new PropertyMetadata(false));
 
@@ -440,6 +451,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
         }
         else
         {
+            ReleaseRock();
             await _renderer.MainSlot.SetCarAsync(car, skinId ?? Kn5RenderableCar.DefaultSkin);
             ResetCamera();
         }
@@ -988,6 +1000,60 @@ public class CarViewport3D : System.Windows.Controls.Grid
 
     #endregion
 
+    #region Body rock
+
+    private CarBodyRock? _rock;
+
+    private void OnRunningEngineChanged(Audio.EngineRunner? before, Audio.EngineRunner? after)
+    {
+        if (before != null) before.PoseChanged -= OnPoseChanged;
+        if (after != null) after.PoseChanged += OnPoseChanged;
+        OnPoseChanged();
+    }
+
+    /// <summary>The engine moved the body: the car leans, and the parts in it with it</summary>
+    private void OnPoseChanged()
+    {
+        var renderer = _renderer;
+        var carNode = renderer?.CarNode;
+        var pose = RunningEngine?.Pose ?? Audio.BodyPose.Rest;
+        if (renderer == null || carNode == null)
+        {
+            _rock = null;
+            return;
+        }
+
+        if (pose.IsRest && RunningEngine?.IsActive != true)
+        {
+            ReleaseRock();
+            return;
+        }
+
+        if (_rock == null || !ReferenceEquals(_rock.Car, carNode)) _rock = new CarBodyRock(carNode);
+        if (!_rock.Apply(pose)) return;
+
+        renderer.BodyLean = _rock.WorldLean;
+        renderer.RefreshShadows();
+        renderer.IsDirty = true;
+        _animateUntil = DateTime.Now + SettleWindow;
+    }
+
+    private void ReleaseRock()
+    {
+        if (_rock == null) return;
+
+        _rock.Release();
+        _rock = null;
+        if (_renderer != null)
+        {
+            _renderer.BodyLean = SlimDX.Matrix.Identity;
+            _renderer.RefreshShadows();
+            _renderer.IsDirty = true;
+        }
+    }
+
+    #endregion
+
     #region Rendering
 
     private void OnRendering(object? sender, EventArgs e)
@@ -1061,6 +1127,7 @@ public class CarViewport3D : System.Windows.Controls.Grid
     private void DisposeRenderer()
     {
         CompositionTarget.Rendering -= OnRendering;
+        _rock = null;
 
         // The target belongs to the renderer: let go of it before the renderer goes
         _bridge.ReleaseSurface();
