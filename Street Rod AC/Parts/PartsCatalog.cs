@@ -1,5 +1,7 @@
+using System.Collections.Concurrent;
 using System.IO;
 using Newtonsoft.Json;
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Parts.Scripting;
 
 namespace Street_Rod_AC.Parts;
@@ -18,6 +20,11 @@ public sealed class PartsCatalog
     private readonly Dictionary<string, string> _aliases = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly Lazy<MatingIndex> _mating;
+
+    // A slot and those it stands in for: the graph does not change once loaded, and CanMate asks in nested loops
+    private readonly ConcurrentDictionary<(PartDefinition Part, PartSlot Slot), List<(PartDefinition Part, PartSlot Slot)>> _equivalents = new();
+
+    private readonly List<string> _problems = new();
 
     private PartsCatalog(string root)
     {
@@ -43,37 +50,90 @@ public sealed class PartsCatalog
     /// <summary>A catalog without parts, for when the parts under the folder cannot be read</summary>
     public static PartsCatalog Empty(string root) => new(root);
 
+    /// <summary>What could not be read, or was left out and why: one line each, for the log</summary>
+    public IReadOnlyList<string> Problems => _problems;
+
+    /// <remarks>
+    /// A pack that does not read is a pack that is not there, and a part without an id is no part: each is one line
+    /// in <see cref="Problems"/>, and the rest of the catalog stands (one bad pack.json used to cost every car its parts).
+    /// </remarks>
     public static PartsCatalog Load(string root)
     {
         var catalog = new PartsCatalog(root);
         if (!Directory.Exists(root)) return catalog;
 
+        // Which pack each part came from, to tell when a later one has it too
+        var owners = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var file in Directory.EnumerateFiles(root, PartPack.FileName, SearchOption.AllDirectories))
         {
-            var pack = JsonConvert.DeserializeObject<PartPack>(File.ReadAllText(file));
-            if (pack == null) continue;
+            var packName = Path.GetRelativePath(root, file);
+            PartPack? pack;
+            try
+            {
+                pack = JsonConvert.DeserializeObject<PartPack>(File.ReadAllText(file));
+            }
+            catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+            {
+                catalog._problems.Add($"{packName}: {ex.Message}; its parts are left out");
+                continue;
+            }
+
+            if (pack?.Parts == null) continue;
 
             foreach (var part in pack.Parts)
             {
+                if (part == null || string.IsNullOrWhiteSpace(part.Id))
+                {
+                    catalog._problems.Add($"{packName}: a part without an id is left out");
+                    continue;
+                }
+
+                if (owners.TryGetValue(part.Id, out var earlier))
+                    catalog._problems.Add($"{part.Id} is in {earlier} and in {packName}: the one in {packName} is used");
+
+                owners[part.Id] = packName;
                 catalog._parts[part.Id] = part;
             }
         }
 
         var aliasesFile = Path.Combine(root, PartPack.AliasesFileName);
-        if (File.Exists(aliasesFile))
+        try
         {
-            foreach (var (gone, current) in JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(aliasesFile)) ?? new())
+            if (File.Exists(aliasesFile))
             {
-                catalog._aliases[gone] = current;
+                foreach (var (gone, current) in JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(aliasesFile)) ?? new())
+                {
+                    // An alias to nothing would leave a saved part with no id at all
+                    if (string.IsNullOrWhiteSpace(current))
+                    {
+                        catalog._problems.Add($"{PartPack.AliasesFileName}: {gone} leads nowhere; left out");
+                        continue;
+                    }
+
+                    catalog._aliases[gone] = current;
+                }
             }
+        }
+        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+        {
+            catalog._problems.Add($"{PartPack.AliasesFileName}: {ex.Message}; parts that changed ids are not found by their old ones");
         }
 
         var buildsFile = Path.Combine(root, EngineBuild.FileName);
-        if (File.Exists(buildsFile))
-            catalog.EngineBuilds = JsonConvert.DeserializeObject<List<EngineBuild>>(File.ReadAllText(buildsFile)) ?? new List<EngineBuild>();
+        try
+        {
+            if (File.Exists(buildsFile))
+                catalog.EngineBuilds = (JsonConvert.DeserializeObject<List<EngineBuild>>(File.ReadAllText(buildsFile)) ?? new List<EngineBuild>())
+                    .Where(b => b != null).ToList();
+        }
+        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+        {
+            catalog._problems.Add($"{EngineBuild.FileName}: {ex.Message}; no engine builds");
+        }
 
         // Slots nudged into place in the garage since the last conversion
         catalog.Shifts = SlotShifts.Load(root);
+        if (catalog.Shifts.Problem != null) catalog._problems.Add(catalog.Shifts.Problem);
         catalog.Shifts.ApplyTo(catalog._parts);
 
         return catalog;
@@ -223,7 +283,10 @@ public sealed class PartsCatalog
     }
 
     /// <summary>The slot itself and every slot it stands in for, directly or through another stand-in</summary>
-    private List<(PartDefinition Part, PartSlot Slot)> Equivalents(PartDefinition part, PartSlot slot)
+    private List<(PartDefinition Part, PartSlot Slot)> Equivalents(PartDefinition part, PartSlot slot) =>
+        _equivalents.GetOrAdd((part, slot), key => FindEquivalents(key.Part, key.Slot));
+
+    private List<(PartDefinition Part, PartSlot Slot)> FindEquivalents(PartDefinition part, PartSlot slot)
     {
         var result = new List<(PartDefinition Part, PartSlot Slot)> { (part, slot) };
         for (var i = 0; i < result.Count && result.Count < MaxEquivalents; i++)
@@ -241,11 +304,18 @@ public sealed class PartsCatalog
     }
 
     /// <summary>Full path of the part's model, null if it has none</summary>
+    /// <remarks>
+    /// The id and the model name are pack.json content: an id with no pack in it has no folder to look in, and a
+    /// path that leads out of the parts folder is no model
+    /// </remarks>
     public string? GetModelPath(PartDefinition part)
     {
         if (part.Model == null) return null;
 
-        var packId = part.Id[..part.Id.LastIndexOf('/')];
-        return Path.Combine(_root, packId.Replace('/', Path.DirectorySeparatorChar), part.Model);
+        var packEnd = part.Id.LastIndexOf('/');
+        if (packEnd <= 0) return null;
+
+        var relative = Path.Combine(part.Id[..packEnd].Replace('/', Path.DirectorySeparatorChar), part.Model);
+        return PathNames.TryCombineUnder(_root, relative, out var path) ? path : null;
     }
 }

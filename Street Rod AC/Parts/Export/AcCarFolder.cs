@@ -1,4 +1,5 @@
 using System.IO;
+using Street_Rod_AC.Helpers;
 
 namespace Street_Rod_AC.Parts.Export;
 
@@ -22,4 +23,30 @@ public static class AcCarFolder
     /// <param name="carsFolder">The install's content\cars</param>
     public static IEnumerable<string> InstalledCars(string carsFolder) =>
         Directory.Exists(carsFolder) ? Directory.EnumerateDirectories(carsFolder).Where(f => !IsClone(f)) : Enumerable.Empty<string>();
+
+    public const string DefaultSkin = "default";
+    private const string PreviewFile = "preview.jpg";
+
+    /// <summary>
+    /// The picture to show for a car in a skin: the skin's preview, else the car's own preview, else the one in its
+    /// ui folder; null when there is none. No skin (null or empty) is the "default" skin.
+    /// </summary>
+    /// <param name="carsPath">The install's content\cars</param>
+    /// <remarks>
+    /// The ids come from the save and the catalog: a car id that is not one folder name has no picture, and a skin id
+    /// that is not one folder name is no skin (the car's own pictures still count).
+    /// </remarks>
+    public static string? PreviewImage(string carsPath, string carId, string? skinId)
+    {
+        if (!PathNames.IsSafeSegment(carId)) return null;
+
+        var carFolder = Path.Combine(carsPath, carId);
+        var skin = string.IsNullOrEmpty(skinId) ? DefaultSkin : skinId;
+        var candidates = new List<string>(3);
+        if (PathNames.IsSafeSegment(skin)) candidates.Add(Path.Combine(carFolder, "skins", skin, PreviewFile));
+        candidates.Add(Path.Combine(carFolder, PreviewFile));
+        candidates.Add(Path.Combine(carFolder, "ui", PreviewFile));
+
+        return candidates.FirstOrDefault(File.Exists);
+    }
 }

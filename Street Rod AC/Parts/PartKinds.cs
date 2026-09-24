@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Street_Rod_AC.Parts;
 
 /// <summary>
@@ -58,8 +60,14 @@ public static class PartKinds
         return string.Empty;
     }
 
+    // A part's class chain does not change once it is loaded, and shops, the workbench and the engine factory ask
+    // for its group per candidate in their loops: worked out once per part
+    private static readonly ConditionalWeakTable<PartDefinition, string> GroupCache = new();
+
     /// <summary>Label of the shelf the part is found on in a shop</summary>
-    public static string GroupOf(PartDefinition part)
+    public static string GroupOf(PartDefinition part) => GroupCache.GetValue(part, FindGroup);
+
+    private static string FindGroup(PartDefinition part)
     {
         var kind = FrameworkClass(part);
         foreach (var (suffix, group) in Groups)

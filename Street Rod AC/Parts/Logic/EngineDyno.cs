@@ -104,13 +104,19 @@ public static class EngineDyno
 
         var curve = new List<(double, double)>();
         var maxRpm = inputs.MaxRpm > 0 ? inputs.MaxRpm : inputs.RpmLimit * 1.25;
-        if (displacement <= 0 || inputs.Cylinders <= 0 || compression <= 1.5 || maxRpm <= 0 || maxRpm > 30_000)
-            return new DynoResult(Math.Max(0, displacement), compression, curve);
+        // The inputs are script figures: NaN fails every comparison, so it is ruled out by name
+        if (!double.IsFinite(displacement) || !double.IsFinite(compression) || !double.IsFinite(maxRpm)
+            || displacement <= 0 || inputs.Cylinders <= 0 || compression <= 1.5 || maxRpm <= 0 || maxRpm > 30_000)
+            return new DynoResult(double.IsFinite(displacement) ? Math.Max(0, displacement) : 0, double.IsFinite(compression) ? compression : 1, curve);
 
         for (var rpm = RpmStep; rpm <= maxRpm + 1; rpm += RpmStep)
-            curve.Add((rpm, Math.Max(0, Torque(inputs, rpm, displacement, compression))));
+        {
+            // A point the model cannot work out (a figure of the parts that is not a number) makes no torque
+            var torque = Torque(inputs, rpm, displacement, compression);
+            curve.Add((rpm, double.IsFinite(torque) ? Math.Max(0, torque) : 0));
+        }
 
-        return new DynoResult(displacement, compression, curve, inputs.RpmLimit > 0 ? inputs.RpmLimit : double.MaxValue);
+        return new DynoResult(displacement, compression, curve, inputs.RpmLimit > 0 && double.IsFinite(inputs.RpmLimit) ? inputs.RpmLimit : double.MaxValue);
     }
 
     private static double Torque(DynoInputs inputs, double rpm, double displacement, double compression)

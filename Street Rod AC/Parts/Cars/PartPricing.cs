@@ -13,6 +13,9 @@ public static class PartPricing
 
     private const double WearFloor = 0.3;
 
+    // More than anything in the game costs, well inside what a decimal holds
+    private const double MaxPrice = 1e12;
+
     /// <summary>What a shop asks for a used part, against the same part new in the same shape</summary>
     public const double UsedShopFactor = 0.6;
 
@@ -27,8 +30,9 @@ public static class PartPricing
 
     public static double NewPrice(PartDefinition part)
     {
+        // pack.json may hold "NaN", "Infinity" or 1e400 (which Newtonsoft reads as infinity): no price is the default one
         var value = part.Number("value");
-        return (value > 0 ? value : ValueWithoutScript) * Scale;
+        return (value > 0 && double.IsFinite(value) ? value : ValueWithoutScript) * Scale;
     }
 
     /// <summary>Worth of one part in its condition, nothing mounted on it counted</summary>
@@ -39,5 +43,10 @@ public static class PartPricing
     public static double WorthOfAssembly(PartsCatalog catalog, PartInstance root) =>
         root.SelfAndDescendants().Sum(p => catalog.Get(p.DefinitionId) is { } definition ? Worth(definition, p) : 0);
 
-    public static decimal Round(double price) => price < 20 ? Math.Max(1, Math.Round((decimal)price)) : Math.Round((decimal)price / 5) * 5;
+    public static decimal Round(double price)
+    {
+        // A decimal holds up to 7.9e28 and nothing that is not a number: the cast would throw
+        price = double.IsFinite(price) ? Math.Clamp(price, 0, MaxPrice) : 0;
+        return price < 20 ? Math.Max(1, Math.Round((decimal)price)) : Math.Round((decimal)price / 5) * 5;
+    }
 }

@@ -16,11 +16,18 @@ public sealed class ScriptVm
 {
     private const int MaxDepth = 24;
     private const int MaxSteps = 500_000;
+
+    // Text a script builds by adding strings together: a label or a message is a few dozen characters, and
+    // s = s + s in a loop would double past any memory well inside the step budget
+    private const int MaxTextLength = 64 * 1024;
     private const string Constructor = "<init>";
     private const string PartConstructorSignature = "(I)";
 
     private readonly IScriptHost _host;
     private readonly Dictionary<ScriptClass, ScriptObject> _statics = new();
+
+    // What one Run works with, handed on from run to run: runs nest (a call inside a call), so one set per level
+    private readonly Stack<RunScratch> _scratch = new();
     private int _steps;
 
     public ScriptVm(ScriptClassLoader loader, IScriptHost host)
@@ -32,6 +39,12 @@ public sealed class ScriptVm
     public ScriptClassLoader Loader { get; }
 
     public List<ScriptSlotRule> Rules { get; } = new();
+
+    /// <summary>
+    /// A call ran out of steps since this VM was made: what it returned stopped half way (a script that loops
+    /// for ever, or one far bigger than any part needs). It stays set, so a caller can tell after the fact.
+    /// </summary>
+    public bool BudgetExhausted { get; private set; }
 
     /// <summary>
     /// For reading parts out of scripts with no game around: lists of parts are often filled inside branches nobody
@@ -71,7 +84,7 @@ public sealed class ScriptVm
 
             InitializeFields(instance, i, false, depth);
 
-            var constructors = chain[i].Methods.Where(m => m.Name == Constructor).ToList();
+            var constructors = chain[i].MethodsNamed(Constructor);
             var constructor = i == 0 ? constructors.FirstOrDefault(m => m.ParameterCount == arguments.Length) : null;
             constructor ??= constructors.FirstOrDefault(m => m.Signature == PartConstructorSignature)
                             ?? constructors.FirstOrDefault(m => m.ParameterCount == 0)
@@ -111,12 +124,18 @@ public sealed class ScriptVm
     /// Stand-in object for the static side of a class. It is known before its initializers run, so a class
     /// that constructs itself in one of them (static Foo instance = new Foo()) finds it instead of starting over.
     /// </summary>
+    /// <remarks>
+    /// A static initializer that reads a static of another class runs that class's initializers first, and so on
+    /// down a chain of classes: each one is a level deeper, as a call is. Past the depth limit the class's statics
+    /// are unknown for now and not remembered, so a read from higher up later still gets them right.
+    /// </remarks>
     private ScriptObject Statics(IReadOnlyList<ScriptClass> chain, int depth)
     {
         if (_statics.TryGetValue(chain[0], out var holder)) return holder;
+        if (depth > MaxDepth) return new ScriptObject(chain);
 
         _statics[chain[0]] = holder = new ScriptObject(chain);
-        for (var i = chain.Count - 1; i >= 0; i--) InitializeFields(holder, i, true, depth);
+        for (var i = chain.Count - 1; i >= 0; i--) InitializeFields(holder, i, true, depth + 1);
         return holder;
     }
 
@@ -131,7 +150,7 @@ public sealed class ScriptVm
 
         for (var i = fromClass; i < target.Chain.Count; i++)
         {
-            var method = target.Chain[i].Methods.FirstOrDefault(m => m.Name == name && m.ParameterCount == arguments.Length);
+            var method = target.Chain[i].FindMethod(name, arguments.Length);
             if (method == null) continue;
             if (method.IsNative || method.Tree < 0 || method.Tree >= target.Chain[i].Trees.Count) break;
 
@@ -148,7 +167,8 @@ public sealed class ScriptVm
 
         // A float parameter handed an int is a float from there on, as is what a float method returns
         var types = method.ParameterTypes;
-        var passed = arguments.Select((a, i) => i < types.Count ? ScriptTypes.Convert(a, types[i]) : a).ToArray();
+        var passed = new ScriptValue[arguments.Length];
+        for (var i = 0; i < arguments.Length; i++) passed[i] = i < types.Count ? ScriptTypes.Convert(arguments[i], types[i]) : arguments[i];
 
         var result = Run(target, classIndex, type.Trees[method.Tree], passed, !method.IsStatic, uncertain, depth + 1) ?? ScriptValue.Unknown;
         return ScriptTypes.Convert(result, method.ReturnType);
@@ -192,6 +212,22 @@ public sealed class ScriptVm
         public Dictionary<int, string> Types { get; } = new();
     }
 
+    /// <summary>The collections of one Run, emptied and kept for the next</summary>
+    private sealed class RunScratch
+    {
+        public List<ScriptValue> Stack { get; } = new();
+        public Locals Locals { get; } = new();
+        public HashSet<int> KeptJumps { get; } = new();
+
+        public void Clear()
+        {
+            Stack.Clear();
+            Locals.Clear();
+            Locals.Types.Clear();
+            KeptJumps.Clear();
+        }
+    }
+
     #endregion
 
     /// <summary>
@@ -200,9 +236,24 @@ public sealed class ScriptVm
     /// </summary>
     private ScriptValue? Run(ScriptObject self, int classIndex, ScriptInstruction[] tree, ScriptValue[] arguments, bool hasThis, bool uncertain, int depth)
     {
+        var scratch = _scratch.Count > 0 ? _scratch.Pop() : new RunScratch();
+        try
+        {
+            return Run(self, classIndex, tree, arguments, hasThis, uncertain, depth, scratch);
+        }
+        finally
+        {
+            scratch.Clear();
+            _scratch.Push(scratch);
+        }
+    }
+
+    private ScriptValue? Run(ScriptObject self, int classIndex, ScriptInstruction[] tree, ScriptValue[] arguments, bool hasThis, bool uncertain, int depth,
+        RunScratch scratch)
+    {
         var type = self.Chain[classIndex];
-        var stack = new List<ScriptValue>();
-        var locals = new Locals();
+        var stack = scratch.Stack;
+        var locals = scratch.Locals;
 
         // Parameters are numbered from the last one back; local 0 is "this" when there is one
         for (var i = 0; i < arguments.Length; i++) locals[arguments.Length - 1 - i + (hasThis ? 1 : 0)] = arguments[i];
@@ -213,14 +264,18 @@ public sealed class ScriptVm
         var declaredLocal = -1;
         var uncertainFrom = uncertain ? 0 : -1;
         var uncertainUntil = uncertain ? int.MaxValue : -1;
-        var keptJumps = new HashSet<int>();
+        var keptJumps = scratch.KeptJumps;
         int? regionSlot = null;
         var regionSlotUntil = -1;
         ScriptValue? possibleReturn = null;
 
         for (var index = 0; index < tree.Length; index++)
         {
-            if (++_steps > MaxSteps) return null;
+            if (++_steps > MaxSteps)
+            {
+                BudgetExhausted = true;
+                return null;
+            }
 
             var instruction = tree[index];
             var unsure = index >= uncertainFrom && index < uncertainUntil;
@@ -255,7 +310,7 @@ public sealed class ScriptVm
 
                     var first = stack.Count > 0 ? Truth(Resolve(stack[^1], locals)) : null;
                     var settled = instruction.Op == 0x04 ? first == false : first == true;
-                    index += settled ? tree[index + 1].Operand : 1;
+                    index = settled ? Land(index + 1L + tree[index + 1].Operand, tree.Length) : index + 1;
                     break;
                 }
 
@@ -389,12 +444,13 @@ public sealed class ScriptVm
 
                     if (condition == false)
                     {
-                        if (instruction.Operand > 0) index += instruction.Operand - 1;
+                        if (instruction.Operand > 0) index = Land((long)index + instruction.Operand, tree.Length);
                     }
                     else if (condition == null && instruction.Operand > 0)
                     {
-                        // Both branches get walked, neither takes effect
-                        var target = index + instruction.Operand;
+                        // Both branches get walked, neither takes effect. A target past the end is the end (one
+                        // past it, so that the last instruction is not taken for the jump over an else)
+                        var target = (int)Math.Min((long)index + instruction.Operand, tree.Length + 1L);
                         if (unsure)
                         {
                             uncertainUntil = Math.Max(uncertainUntil, target);
@@ -413,7 +469,7 @@ public sealed class ScriptVm
                             && tree[elseJump - 1].Op is not (0x04 or 0x05))
                         {
                             keptJumps.Add(elseJump);
-                            uncertainUntil = Math.Max(uncertainUntil, elseJump + tree[elseJump].Operand);
+                            uncertainUntil = Math.Max(uncertainUntil, (int)Math.Min((long)elseJump + tree[elseJump].Operand, tree.Length + 1L));
                         }
                     }
                     break;
@@ -424,13 +480,13 @@ public sealed class ScriptVm
                     if (keptJumps.Contains(index) || instruction.Operand <= 0 && unsure) break;
 
                     // Back to before an uncertain region: the next round meets its if afresh
-                    if (index + instruction.Operand < uncertainFrom && uncertainUntil != int.MaxValue)
+                    if ((long)index + instruction.Operand < uncertainFrom && uncertainUntil != int.MaxValue)
                     {
                         (uncertainFrom, uncertainUntil) = (-1, -1);
                         keptJumps.Clear();
                     }
 
-                    index += instruction.Operand - 1;
+                    index = Land((long)index + instruction.Operand, tree.Length);
                     break;
 
                 case 0x16:
@@ -478,6 +534,13 @@ public sealed class ScriptVm
     }
 
     #region Stack helpers
+
+    /// <summary>
+    /// The loop index that makes <paramref name="next"/> the instruction to run next. Jump offsets come from the
+    /// class file: one that lands before the start or past the end of the tree (a broken or hostile file) ends
+    /// the tree, as running off its end does.
+    /// </summary>
+    private static int Land(long next, int length) => next >= 0 && next <= length ? (int)next - 1 : length - 1;
 
     private static ScriptValue Pop(List<ScriptValue> stack)
     {
@@ -552,8 +615,10 @@ public sealed class ScriptVm
         if (stack.Count == 0 || stack[^1] is not ArgumentCount count) return Array.Empty<ScriptValue>();
 
         stack.RemoveAt(stack.Count - 1);
-        var taken = Math.Min(count.Count, stack.Count);
-        var arguments = stack.Skip(stack.Count - taken).Select(v => Resolve(v, locals)).ToArray();
+        // The count comes from the class file: never more than the stack holds, never below none
+        var taken = Math.Clamp(count.Count, 0, stack.Count);
+        var arguments = new ScriptValue[taken];
+        for (var i = 0; i < taken; i++) arguments[i] = Resolve(stack[stack.Count - taken + i], locals);
         stack.RemoveRange(stack.Count - taken, taken);
         return arguments;
     }
@@ -742,7 +807,9 @@ public sealed class ScriptVm
         }
 
         if (kind == 16 && (left is ScriptText || right is ScriptText))
-            return Display(left) is { } a && Display(right) is { } b ? new ScriptText(a + b) : ScriptValue.Unknown;
+            return Display(left) is { } a && Display(right) is { } b && (long)a.Length + b.Length <= MaxTextLength
+                ? new ScriptText(a + b)
+                : ScriptValue.Unknown;
 
         if (left is not ScriptNumber x || right is not ScriptNumber y) return ScriptValue.Unknown;
 

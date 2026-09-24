@@ -38,7 +38,12 @@ public static class SavedParts
         {
             // Joints that still hold keep their slots; the others take what is free after that, on the same part
             // or one up (an air cleaner that sat on a set of carburettors sits over the manifold's row of them now)
-            foreach (var child in children.Where(child => !Holds(catalog, definition, part, child)).ToList())
+            // Two saved parts on one slot (an edit or a migration gone wrong): the first keeps it, the second is
+            // seated again like a part whose joint no longer holds, or comes off
+            var taken = new HashSet<int>();
+            var off = children.Where(child => !Holds(catalog, definition, part, child)
+                                              || catalog.Get(child.DefinitionId) != null && !taken.Add(child.ParentSlot)).ToList();
+            foreach (var child in off)
             {
                 changed = true;
                 part.Children.Remove(child);

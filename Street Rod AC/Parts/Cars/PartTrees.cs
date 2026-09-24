@@ -5,7 +5,8 @@ namespace Street_Rod_AC.Parts.Cars;
 
 /// <summary>
 /// A saved part tree brought together with the catalog, and the way back from each part to its saved self.
-/// Saved parts the catalog no longer has (a pack was removed) are left out, with what is on them.
+/// Saved parts the catalog no longer has (a pack was removed), and a second part on a slot that is taken, are left
+/// out, with what is on them.
 /// </summary>
 public sealed class LiveTree
 {
@@ -50,6 +51,11 @@ public static class PartTrees
             foreach (var child in instance.Children)
             {
                 if (catalog.Get(child.DefinitionId) is not { } definition) continue;
+
+                // A second part saved on a slot that is taken would push the first out of the tree while the save
+                // still has both: it is left out here, as a part the catalog does not know is, and the save's
+                // own check (SavedParts) seats it elsewhere or takes it off
+                if (parent.Children.ContainsKey(child.ParentSlot)) continue;
 
                 var installed = Create(definition, child);
                 parent.Mount(child.ParentSlot, installed, child.OwnSlot);

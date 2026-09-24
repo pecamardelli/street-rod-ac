@@ -1,4 +1,5 @@
-using System.IO;
+using System.Globalization;
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Parts.Scripting;
 
 namespace Street_Rod_AC.Parts.Logic;
@@ -26,24 +27,41 @@ public sealed class PartScriptRuntime
         var loader = catalog.Scripts;
         _vm = new ScriptVm(loader, new Host(this));
 
-        Chassis = loader.Chain(ChassisClass) is { } chassisChain ? _vm.Instantiate(chassisChain, ScriptValue.Of(0)) : null;
+        try
+        {
+            Chassis = loader.Chain(ChassisClass) is { } chassisChain ? _vm.Instantiate(chassisChain, ScriptValue.Of(0)) : null;
+        }
+        catch (Exception ex)
+        {
+            Faults.Add($"the car's chassis script failed ({ex.GetType().Name}: {ex.Message})");
+        }
 
         foreach (var part in root.SelfAndDescendants())
         {
             if (part.Definition.SourceScript == null) continue;
 
-            var script = loader.Load(Path.Combine(loader.Root, part.Definition.SourceScript));
+            // The script's path is pack.json content: it has to stay among the converted scripts
+            var script = PathNames.TryCombineUnder(loader.Root, part.Definition.SourceScript, out var scriptFile) ? loader.Load(scriptFile) : null;
             if (script == null)
             {
                 MissingScripts.Add(part);
                 continue;
             }
 
-            var instance = _vm.Instantiate(loader.Chain(script), ScriptValue.Of(0));
-            instance.Tag = part;
-            _objects[part] = instance;
+            // A script that faults is a part that does nothing: the others go on without it, and the fault is told
+            try
+            {
+                var instance = _vm.Instantiate(loader.Chain(script), ScriptValue.Of(0));
+                instance.Tag = part;
+                _objects[part] = instance;
 
-            foreach (var (field, value) in part.Tuning) Tune(instance, field, value);
+                foreach (var (field, value) in part.Tuning) Tune(instance, field, value);
+            }
+            catch (Exception ex)
+            {
+                _objects.Remove(part);
+                Fault(part, ex);
+            }
         }
     }
 
@@ -55,15 +73,52 @@ public sealed class PartScriptRuntime
     /// <summary>Parts that have a script which is not among the converted classes; to the other parts they are not there</summary>
     public List<InstalledPart> MissingScripts { get; } = new();
 
+    /// <summary>Parts whose script threw: they are left out, as if their script were missing</summary>
+    public List<InstalledPart> FaultedScripts { get; } = new();
+
+    /// <summary>What went wrong running the scripts, one line each, for the engine's problem and the log</summary>
+    public List<string> Faults { get; } = new();
+
+    /// <summary>A script ran out of steps: what it left behind is half done</summary>
+    public bool BudgetExhausted => _vm.BudgetExhausted;
+
     public ScriptObject? ObjectOf(InstalledPart part) => _objects.GetValueOrDefault(part);
 
-    public ScriptValue Call(InstalledPart part, string method, params ScriptValue[] arguments) =>
-        _objects.TryGetValue(part, out var instance) ? _vm.Call(instance, method, arguments) : ScriptValue.Unknown;
+    /// <summary>Calls a method of a part's script; unknown when the part has no script or the call faults</summary>
+    public ScriptValue Call(InstalledPart part, string method, params ScriptValue[] arguments)
+    {
+        if (!_objects.TryGetValue(part, out var instance)) return ScriptValue.Unknown;
+
+        try
+        {
+            return _vm.Call(instance, method, arguments);
+        }
+        catch (Exception ex)
+        {
+            Fault(part, ex);
+            return ScriptValue.Unknown;
+        }
+    }
 
     /// <summary>The car's own update: finds the engine, lets it collect its numbers from its parts and runs the dyno</summary>
     public void UpdateCar()
     {
-        if (Chassis != null) _vm.Call(Chassis, "updatevariables");
+        if (Chassis == null) return;
+
+        try
+        {
+            _vm.Call(Chassis, "updatevariables");
+        }
+        catch (Exception ex)
+        {
+            Faults.Add($"updating the car failed ({ex.GetType().Name}: {ex.Message})");
+        }
+    }
+
+    private void Fault(InstalledPart part, Exception ex)
+    {
+        if (!FaultedScripts.Contains(part)) FaultedScripts.Add(part);
+        Faults.Add($"the script of {part.Definition.Id} failed ({ex.GetType().Name}: {ex.Message})");
     }
 
     /// <summary>Result of the last dyno run on the DynoData object of a block</summary>
@@ -78,7 +133,7 @@ public sealed class PartScriptRuntime
             instance.Fields[field] = new ScriptNumber(value, isInteger);
         }
         else if (instance.Fields.GetValueOrDefault(field[..bracket]) is ScriptArray array
-                 && int.TryParse(field[(bracket + 1)..].TrimEnd(']'), out var index))
+                 && int.TryParse(field[(bracket + 1)..].TrimEnd(']'), NumberStyles.Integer, CultureInfo.InvariantCulture, out var index))
         {
             array.Items[index] = new ScriptNumber(value, false);
         }

@@ -49,7 +49,16 @@ namespace Street_Rod_AC.Services.Parts
             {
                 // A copy of the list: the offer is not the place to keep a factory engine made up to listen to
                 car.Parts = new List<PartInstance>();
-                await parts.EnsurePartsAsync(car);
+                try
+                {
+                    await parts.EnsurePartsAsync(car);
+                }
+                catch (Exception ex)
+                {
+                    // A lot's engine that cannot be put together is one that does not start: the lot goes on
+                    Logger.Warning("{Car}: no factory engine to start on the lot: {Error}", car.DefinitionId, ex.Message);
+                    return null;
+                }
             }
 
             return await ForAsync(parts, car, name);

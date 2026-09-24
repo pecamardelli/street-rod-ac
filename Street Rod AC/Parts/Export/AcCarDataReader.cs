@@ -57,6 +57,27 @@ public static class AcCarDataReader
         return data.ReadText;
     }
 
+    /// <summary>
+    /// One data file of a car, the same one <see cref="ForCar"/> would give, without decoding the rest of a
+    /// data.acd: for readers after a single figure of many cars (the sound harvest's rev limiters)
+    /// </summary>
+    /// <returns>Text of the file, null when the car has no such file</returns>
+    /// <exception cref="FileNotFoundException">The car has neither a data folder nor data.acd</exception>
+    public static string? ReadFile(string carDirectory, string name)
+    {
+        var folder = Path.Combine(carDirectory, AcCarData.DataFolder);
+        if (Directory.Exists(folder))
+        {
+            var path = Path.Combine(folder, name);
+            return File.Exists(path) ? Encoding.Latin1.GetString(File.ReadAllBytes(path)) : null;
+        }
+
+        var acd = Path.Combine(carDirectory, AcdFile.FileName);
+        if (!File.Exists(acd)) throw new FileNotFoundException($"{carDirectory} has neither a data folder nor {AcdFile.FileName}", acd);
+
+        return AcdFile.ReadEntry(acd, name) is { } bytes ? Encoding.Latin1.GetString(bytes) : null;
+    }
+
     /// <summary>A data folder on disk (the bench's way in)</summary>
     public static Func<string, string?> ForFolder(string dataDirectory) =>
         name => File.Exists(Path.Combine(dataDirectory, name)) ? File.ReadAllText(Path.Combine(dataDirectory, name), Encoding.Latin1) : null;

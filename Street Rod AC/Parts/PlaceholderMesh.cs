@@ -76,7 +76,7 @@ internal static class PlaceholderMesh
             index++;
         }
 
-        var texture = SolidBitmap(0x9A, 0x9A, 0x9A);
+        var texture = Kn5Bitmap.Solid(0x9A, 0x9A, 0x9A);
         kn5.Textures[TextureName] = new Kn5Texture { Name = TextureName, Active = true, Length = texture.Length };
         kn5.TexturesData[TextureName] = texture;
 
@@ -98,37 +98,5 @@ internal static class PlaceholderMesh
         };
 
         return (uint)(kn5.Materials.Count - 1);
-    }
-
-    /// <summary>Smallest BMP the texture loader accepts: 2x2 pixels, 24 bpp, rows padded to 4 bytes</summary>
-    private static byte[] SolidBitmap(byte r, byte g, byte b)
-    {
-        const int headerSize = 54;
-        const int rowSize = 8;
-
-        var data = new byte[headerSize + rowSize * 2];
-        data[0] = (byte)'B';
-        data[1] = (byte)'M';
-        BitConverter.GetBytes(data.Length).CopyTo(data, 2);
-        BitConverter.GetBytes(headerSize).CopyTo(data, 10);
-        BitConverter.GetBytes(40).CopyTo(data, 14);
-        BitConverter.GetBytes(2).CopyTo(data, 18);
-        BitConverter.GetBytes(2).CopyTo(data, 22);
-        BitConverter.GetBytes((short)1).CopyTo(data, 26);
-        BitConverter.GetBytes((short)24).CopyTo(data, 28);
-        BitConverter.GetBytes(rowSize * 2).CopyTo(data, 34);
-
-        for (var row = 0; row < 2; row++)
-        {
-            for (var pixel = 0; pixel < 2; pixel++)
-            {
-                var offset = headerSize + row * rowSize + pixel * 3;
-                data[offset] = b;
-                data[offset + 1] = g;
-                data[offset + 2] = r;
-            }
-        }
-
-        return data;
     }
 }
