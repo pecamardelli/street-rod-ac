@@ -4,8 +4,22 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:bottomBar="clr-namespace:Street_Rod_AC.Components.BottomBar"
+             xmlns:converters="clr-namespace:Street_Rod_AC.Converters"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <!-- How tough an opponent is, as the colour of their card and reputation -->
+        <converters:DifficultyToBrushConverter x:Key="DifficultyTextBrushConverter"
+                                               Easy="{StaticResource AccentSuccessBrush}"
+                                               Matched="{StaticResource GoldBrush}"
+                                               Hard="{StaticResource DangerBrush}"
+                                               Other="{StaticResource WhiteBrush}"/>
+        <converters:DifficultyToBrushConverter x:Key="DifficultyBorderBrushConverter"
+                                               Easy="{StaticResource SuccessStrongBrush}"
+                                               Matched="{StaticResource WarningBrush}"
+                                               Hard="{StaticResource DangerStrongBrush}"
+                                               Other="{StaticResource BorderLightBrush}"/>
+    </UserControl.Resources>
     <Grid Background="{StaticResource DinerBackgroundBrush}"
           Opacity="0">
         <Grid.RowDefinitions>
@@ -62,8 +76,8 @@
 
             <!-- Opponent List -->
             <Border Grid.Column="0"
-                   Background="#DF1B1B1B"
-                   BorderBrush="#404040"
+                   Background="{StaticResource BgDarkDFBrush}"
+                   BorderBrush="{StaticResource BorderLightBrush}"
                    BorderThickness="2"
                    CornerRadius="5"
                    Margin="0,0,10,0">
@@ -75,12 +89,12 @@
 
                     <!-- Header -->
                     <Border Grid.Row="0"
-                           Background="#1A1A1A"
-                           BorderBrush="#404040"
+                           Background="{StaticResource BgPanelBrush}"
+                           BorderBrush="{StaticResource BorderLightBrush}"
                            BorderThickness="0,0,0,1"
                            Padding="15">
                         <TextBlock Text="OPPONENTS AT THE DINER"
-                                  FontSize="16"
+                                  FontSize="{StaticResource FontSizeSubheading}"
                                   FontWeight="Bold"
                                   Foreground="{StaticResource TextPrimaryBrush}"/>
                     </Border>
@@ -91,13 +105,13 @@
                            Padding="20">
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <TextBlock Text="No racers here right now"
-                                      FontSize="14"
+                                      FontSize="{StaticResource FontSizeBody}"
                                       Foreground="{StaticResource TextSecondaryBrush}"
                                       HorizontalAlignment="Center"
                                       TextWrapping="Wrap"/>
                             <TextBlock Text="Check back tomorrow"
-                                      FontSize="12"
-                                      Foreground="#606060"
+                                      FontSize="{StaticResource FontSizeSmall}"
+                                      Foreground="{StaticResource TextDisabledBrush}"
                                       HorizontalAlignment="Center"
                                       Margin="0,5,0,0"/>
                         </StackPanel>
@@ -126,13 +140,11 @@
                                                     <Setter.Value>
                                                         <ControlTemplate TargetType="Button">
                                                             <Border x:Name="CardBorder"
-                                                                   Background="#1A1A1A"
+                                                                   BorderBrush="{Binding Difficulty, Converter={StaticResource DifficultyBorderBrushConverter}}"
+                                                                   Background="{StaticResource BgPanelBrush}"
                                                                    BorderThickness="2"
                                                                    CornerRadius="5"
                                                                    Padding="10">
-                                                                <Border.BorderBrush>
-                                                                    <SolidColorBrush Color="{Binding DifficultyBorderColor}"/>
-                                                                </Border.BorderBrush>
 
                                                                 <Grid>
                                                                     <Grid.ColumnDefinitions>
@@ -144,8 +156,8 @@
                                                                     <Border Grid.Column="0"
                                                                            Width="70"
                                                                            Height="70"
-                                                                           Background="#2A2A2A"
-                                                                           BorderBrush="#404040"
+                                                                           Background="{StaticResource BgMediumBrush}"
+                                                                           BorderBrush="{StaticResource BorderLightBrush}"
                                                                            BorderThickness="1"
                                                                            CornerRadius="5"
                                                                            Margin="0,0,10,0">
@@ -155,9 +167,9 @@
                                                                                   Visibility="{Binding HasPortrait, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                                                                             <TextBlock Text="?"
-                                                                                      FontSize="32"
+                                                                                      FontSize="{StaticResource FontSizeScreenTitle}"
                                                                                       FontWeight="Bold"
-                                                                                      Foreground="#404040"
+                                                                                      Foreground="{StaticResource BorderLightBrush}"
                                                                                       HorizontalAlignment="Center"
                                                                                       VerticalAlignment="Center"
                                                                                       Visibility="{Binding HasPortrait, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
@@ -168,15 +180,15 @@
                                                                     <StackPanel Grid.Column="1"
                                                                                VerticalAlignment="Center">
                                                                         <!-- Name -->
-                                                                        <TextBlock FontSize="16"
+                                                                        <TextBlock FontSize="{StaticResource FontSizeSubheading}"
                                                                                   FontWeight="Bold"
                                                                                   Foreground="{StaticResource TextPrimaryBrush}">
                                                                             <Run Text="{Binding Name, Mode=OneWay}"/>
                                                                         </TextBlock>
 
                                                                         <!-- Nickname -->
-                                                                        <TextBlock FontSize="12"
-                                                                                  Foreground="#FFD700"
+                                                                        <TextBlock FontSize="{StaticResource FontSizeSmall}"
+                                                                                  Foreground="{StaticResource GoldBrush}"
                                                                                   Margin="0,2,0,5">
                                                                             <Run Text="&quot;"/>
                                                                             <Run Text="{Binding Nickname, Mode=OneWay}"/>
@@ -187,13 +199,11 @@
                                                                         <StackPanel Orientation="Horizontal"
                                                                                    Margin="0,0,0,2">
                                                                             <TextBlock Text="Reputation: "
-                                                                                      FontSize="11"
+                                                                                      FontSize="{StaticResource FontSizeCaption}"
                                                                                       Foreground="{StaticResource TextSecondaryBrush}"/>
-                                                                            <TextBlock FontSize="11"
+                                                                            <TextBlock Foreground="{Binding Difficulty, Converter={StaticResource DifficultyTextBrushConverter}}"
+                                                                                       FontSize="{StaticResource FontSizeCaption}"
                                                                                       FontWeight="Bold">
-                                                                                <TextBlock.Foreground>
-                                                                                    <SolidColorBrush Color="{Binding DifficultyColor}"/>
-                                                                                </TextBlock.Foreground>
                                                                                 <Run Text="{Binding ReputationTier, Mode=OneWay}"/>
                                                                                 <Run Text=" ("/>
                                                                                 <Run Text="{Binding Reputation, Mode=OneWay}"/>
@@ -203,14 +213,14 @@
 
                                                                         <!-- Record -->
                                                                         <TextBlock Text="{Binding RecordDisplay}"
-                                                                                  FontSize="10"
+                                                                                  FontSize="{StaticResource FontSizeTiny}"
                                                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
                                                                     </StackPanel>
                                                                 </Grid>
                                                             </Border>
                                                             <ControlTemplate.Triggers>
                                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter TargetName="CardBorder" Property="Background" Value="#2A2A2A"/>
+                                                                    <Setter TargetName="CardBorder" Property="Background" Value="{StaticResource BgMediumBrush}"/>
                                                                 </Trigger>
                                                             </ControlTemplate.Triggers>
                                                         </ControlTemplate>
@@ -228,8 +238,8 @@
 
             <!-- Opponent Detail Panel -->
             <Border Grid.Column="1"
-                   Background="#DF1B1B1B"
-                   BorderBrush="#404040"
+                   Background="{StaticResource BgDarkDFBrush}"
+                   BorderBrush="{StaticResource BorderLightBrush}"
                    BorderThickness="2"
                    CornerRadius="5"
                    Margin="10,0,0,0"
@@ -263,8 +273,8 @@
                                 <Border Grid.Column="0"
                                        Width="150"
                                        Height="150"
-                                       Background="#1A1A1A"
-                                       BorderBrush="#404040"
+                                       Background="{StaticResource BgPanelBrush}"
+                                       BorderBrush="{StaticResource BorderLightBrush}"
                                        BorderThickness="2"
                                        CornerRadius="5">
                                     <Grid>
@@ -273,9 +283,9 @@
                                               Visibility="{Binding SelectedOpponent.HasPortrait, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                                         <TextBlock Text="?"
-                                                  FontSize="72"
+                                                  FontSize="{StaticResource FontSizeHero}"
                                                   FontWeight="Bold"
-                                                  Foreground="#404040"
+                                                  Foreground="{StaticResource BorderLightBrush}"
                                                   HorizontalAlignment="Center"
                                                   VerticalAlignment="Center"
                                                   Visibility="{Binding SelectedOpponent.HasPortrait, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
@@ -308,21 +318,21 @@
 
                                     <!-- Triangle pointer pointing left -->
                                     <Path Data="M 10,0 L 0,12 L 10,24 Z"
-                                         Fill="#2A2A2A"
+                                         Fill="{StaticResource BgMediumBrush}"
                                          HorizontalAlignment="Left"
                                          VerticalAlignment="Center"
                                          Margin="0,0,0,0"/>
 
                                     <!-- Bubble content -->
-                                    <Border Background="#2A2A2A"
-                                           BorderBrush="#505050"
+                                    <Border Background="{StaticResource BgMediumBrush}"
+                                           BorderBrush="{StaticResource Gray50Brush}"
                                            BorderThickness="1"
                                            CornerRadius="8"
                                            Padding="12,10"
                                            Margin="10,0,0,0"
                                            Width="300">
                                         <TextBlock Text="{Binding OpponentMessage}"
-                                                  FontSize="13"
+                                                  FontSize="{StaticResource FontSizeCompact}"
                                                   FontStyle="Italic"
                                                   Foreground="{StaticResource TextPrimaryBrush}"
                                                   TextWrapping="Wrap"/>
@@ -332,14 +342,14 @@
 
                             <!-- Name -->
                             <TextBlock Text="{Binding SelectedOpponent.Name}"
-                                      FontSize="22"
+                                      FontSize="{StaticResource FontSizeSubtitle}"
                                       FontWeight="Bold"
                                       Foreground="{StaticResource TextPrimaryBrush}"
                                       Margin="0,0,0,3"/>
 
                             <!-- Nickname -->
-                            <TextBlock FontSize="14"
-                                      Foreground="#FFD700"
+                            <TextBlock FontSize="{StaticResource FontSizeBody}"
+                                      Foreground="{StaticResource GoldBrush}"
                                       Margin="0,0,0,8">
                                 <Run Text="&quot;"/>
                                 <Run Text="{Binding SelectedOpponent.Nickname, Mode=OneWay}"/>
@@ -347,19 +357,15 @@
                             </TextBlock>
 
                             <!-- Reputation Badge -->
-                            <Border Background="#1A1A1A"
+                            <Border Background="{StaticResource BgPanelBrush}"
+                                   BorderBrush="{Binding SelectedOpponent.Difficulty, Converter={StaticResource DifficultyBorderBrushConverter}}"
                                    BorderThickness="2"
                                    CornerRadius="5"
                                    Padding="10,5"
                                    HorizontalAlignment="Left">
-                                <Border.BorderBrush>
-                                    <SolidColorBrush Color="{Binding SelectedOpponent.DifficultyBorderColor}"/>
-                                </Border.BorderBrush>
-                                <TextBlock FontSize="13"
+                                <TextBlock Foreground="{Binding SelectedOpponent.Difficulty, Converter={StaticResource DifficultyTextBrushConverter}}"
+                                          FontSize="{StaticResource FontSizeCompact}"
                                           FontWeight="Bold">
-                                    <TextBlock.Foreground>
-                                        <SolidColorBrush Color="{Binding SelectedOpponent.DifficultyColor}"/>
-                                    </TextBlock.Foreground>
                                     <Run Text="{Binding SelectedOpponent.ReputationTier, Mode=OneWay}"/>
                                     <Run Text=" ("/>
                                     <Run Text="{Binding SelectedOpponent.Reputation, Mode=OneWay}"/>
@@ -377,8 +383,8 @@
 
                             <!-- Record Card -->
                             <Border Grid.Column="0"
-                                   Background="#1A1A1A"
-                                   BorderBrush="#404040"
+                                   Background="{StaticResource BgPanelBrush}"
+                                   BorderBrush="{StaticResource BorderLightBrush}"
                                    BorderThickness="1"
                                    CornerRadius="5"
                                    Padding="12"
@@ -386,14 +392,14 @@
                                    Margin="0,0,10,0">
                                 <StackPanel>
                                     <TextBlock Text="RECORD"
-                                              FontSize="11"
+                                              FontSize="{StaticResource FontSizeCaption}"
                                               FontWeight="Bold"
                                               Foreground="{StaticResource TextSecondaryBrush}"
                                               Margin="0,0,0,8"/>
 
                                     <!-- Overall Record -->
                                     <TextBlock Text="{Binding SelectedOpponent.RecordDisplay}"
-                                              FontSize="18"
+                                              FontSize="{StaticResource FontSizeHeading}"
                                               FontWeight="Bold"
                                               Foreground="{StaticResource TextPrimaryBrush}"
                                               Margin="0,0,0,8"/>
@@ -401,11 +407,11 @@
                                     <!-- Drag Race Record -->
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                         <TextBlock Text="DRAG"
-                                                  FontSize="9"
-                                                  Foreground="#FFA500"
+                                                  FontSize="{StaticResource FontSizeMicro}"
+                                                  Foreground="{StaticResource WarningBrush}"
                                                   Width="28"/>
                                         <TextBlock Text="{Binding SelectedOpponent.DragRecordDisplay}"
-                                                  FontSize="9"
+                                                  FontSize="{StaticResource FontSizeMicro}"
                                                   FontWeight="Bold"
                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
                                     </StackPanel>
@@ -413,11 +419,11 @@
                                     <!-- Road Race Record -->
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                         <TextBlock Text="ROAD"
-                                                  FontSize="9"
-                                                  Foreground="#4169E1"
+                                                  FontSize="{StaticResource FontSizeMicro}"
+                                                  Foreground="{StaticResource RoyalBlueBrush}"
                                                   Width="28"/>
                                         <TextBlock Text="{Binding SelectedOpponent.RoadRecordDisplay}"
-                                                  FontSize="9"
+                                                  FontSize="{StaticResource FontSizeMicro}"
                                                   FontWeight="Bold"
                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
                                     </StackPanel>
@@ -425,11 +431,11 @@
                                     <!-- Pink Slips -->
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="PINK SLIPS"
-                                                  FontSize="10"
-                                                  Foreground="#FFD700"
+                                                  FontSize="{StaticResource FontSizeTiny}"
+                                                  Foreground="{StaticResource GoldBrush}"
                                                   Margin="0,0,5,0"/>
                                         <TextBlock Text="{Binding SelectedOpponent.PinkSlipsDisplay}"
-                                                  FontSize="10"
+                                                  FontSize="{StaticResource FontSizeTiny}"
                                                   FontWeight="Bold"
                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
                                     </StackPanel>
@@ -438,8 +444,8 @@
 
                             <!-- Current Car Card -->
                             <Border Grid.Column="1"
-                                   Background="#1A1A1A"
-                                   BorderBrush="#404040"
+                                   Background="{StaticResource BgPanelBrush}"
+                                   BorderBrush="{StaticResource BorderLightBrush}"
                                    BorderThickness="1"
                                    CornerRadius="5"
                                    Padding="12"
@@ -447,52 +453,52 @@
                                    Margin="10,0,0,0">
                                 <StackPanel>
                                     <TextBlock Text="CURRENT CAR"
-                                              FontSize="11"
+                                              FontSize="{StaticResource FontSizeCaption}"
                                               FontWeight="Bold"
                                               Foreground="{StaticResource TextSecondaryBrush}"
                                               Margin="0,0,0,8"/>
 
                                     <!-- Car Brand & Name -->
                                     <TextBlock Text="{Binding SelectedOpponent.CarBrand}"
-                                              FontSize="14"
+                                              FontSize="{StaticResource FontSizeBody}"
                                               FontWeight="Bold"
                                               Foreground="{StaticResource TextPrimaryBrush}"/>
                                     <TextBlock Text="{Binding SelectedOpponent.CarName}"
-                                              FontSize="12"
+                                              FontSize="{StaticResource FontSizeSmall}"
                                               Foreground="{StaticResource TextPrimaryBrush}"
                                               Margin="0,0,0,6"/>
 
                                     <!-- Car Year -->
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                                         <TextBlock Text="YEAR"
-                                                  FontSize="10"
+                                                  FontSize="{StaticResource FontSizeTiny}"
                                                   Foreground="{StaticResource TextSecondaryBrush}"
                                                   Width="50"/>
                                         <TextBlock Text="{Binding SelectedOpponent.CarYear}"
-                                                  FontSize="10"
+                                                  FontSize="{StaticResource FontSizeTiny}"
                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
                                     </StackPanel>
 
                                     <!-- Car Power -->
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                         <TextBlock Text="POWER"
-                                                  FontSize="10"
+                                                  FontSize="{StaticResource FontSizeTiny}"
                                                   Foreground="{StaticResource TextSecondaryBrush}"
                                                   Width="50"/>
                                         <TextBlock Text="{Binding SelectedOpponent.CarPower}"
-                                                  FontSize="10"
-                                                  Foreground="#90EE90"
+                                                  FontSize="{StaticResource FontSizeTiny}"
+                                                  Foreground="{StaticResource AccentSuccessBrush}"
                                                   FontWeight="Bold"/>
                                     </StackPanel>
 
                                     <!-- Car Weight -->
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                         <TextBlock Text="WEIGHT"
-                                                  FontSize="10"
+                                                  FontSize="{StaticResource FontSizeTiny}"
                                                   Foreground="{StaticResource TextSecondaryBrush}"
                                                   Width="50"/>
                                         <TextBlock Text="{Binding SelectedOpponent.CarWeight}"
-                                                  FontSize="10"
+                                                  FontSize="{StaticResource FontSizeTiny}"
                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
                                      </StackPanel>
                                 </StackPanel>
@@ -507,14 +513,14 @@
                                  Margin="0,20,0,0">
                         <StackPanel>
                             <!-- No Tracks Available Message -->
-                            <Border Background="#1A1A1A"
-                                   BorderBrush="#404040"
+                            <Border Background="{StaticResource BgPanelBrush}"
+                                   BorderBrush="{StaticResource BorderLightBrush}"
                                    BorderThickness="1"
                                    CornerRadius="5"
                                    Padding="20"
                                    Visibility="{Binding HasAnyTracks, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                                 <TextBlock Text="No tracks available. Check your Assetto Corsa installation."
-                                          FontSize="13"
+                                          FontSize="{StaticResource FontSizeCompact}"
                                           Foreground="{StaticResource TextSecondaryBrush}"
                                           HorizontalAlignment="Center"
                                           TextWrapping="Wrap"/>
@@ -529,8 +535,8 @@
 
                                 <!-- Drag Race Tracks -->
                                 <Border Grid.Column="0"
-                                       Background="#1A1A1A"
-                                       BorderBrush="#404040"
+                                       Background="{StaticResource BgPanelBrush}"
+                                       BorderBrush="{StaticResource BorderLightBrush}"
                                        BorderThickness="1"
                                        CornerRadius="5"
                                        Padding="10"
@@ -538,7 +544,7 @@
                                        Visibility="{Binding HasDragTracks, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <StackPanel>
                                         <TextBlock Text="DRAG RACE"
-                                                  FontSize="14"
+                                                  FontSize="{StaticResource FontSizeBody}"
                                                   FontWeight="Bold"
                                                   Foreground="{StaticResource TextPrimaryBrush}"
                                                   Margin="0,0,0,10"/>
@@ -567,11 +573,11 @@
                                                                     <Border x:Name="TrackBorder"
                                                                            Width="110"
                                                                            Height="90"
-                                                                           Background="#2A2A2A"
+                                                                           Background="{StaticResource BgMediumBrush}"
                                                                            BorderThickness="2"
                                                                            CornerRadius="5">
                                                                         <Border.BorderBrush>
-                                                                            <SolidColorBrush x:Name="BorderColor" Color="#404040"/>
+                                                                            <SolidColorBrush x:Name="BorderColor" Color="{StaticResource BorderLight}"/>
                                                                         </Border.BorderBrush>
                                                                         <Grid>
                                                                             <!-- Preview Image -->
@@ -581,29 +587,29 @@
                                                                                   Visibility="{Binding HasPreview, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                                                                             <!-- Placeholder when no preview -->
-                                                                            <Border Background="#3A3A3A"
+                                                                            <Border Background="{StaticResource BgLightBrush}"
                                                                                    Visibility="{Binding HasPreview, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                                                                                 <TextBlock Text="DRAG"
-                                                                                          FontSize="16"
+                                                                                          FontSize="{StaticResource FontSizeSubheading}"
                                                                                           FontWeight="Bold"
-                                                                                          Foreground="#505050"
+                                                                                          Foreground="{StaticResource Gray50Brush}"
                                                                                           HorizontalAlignment="Center"
                                                                                           VerticalAlignment="Center"/>
                                                                             </Border>
 
                                                                             <!-- Track Name Overlay -->
-                                                                            <Border Background="#CC000000"
+                                                                            <Border Background="{StaticResource BlackCCBrush}"
                                                                                    VerticalAlignment="Bottom"
                                                                                    Padding="5,3">
                                                                                 <TextBlock Text="{Binding DisplayName}"
-                                                                                          FontSize="10"
+                                                                                          FontSize="{StaticResource FontSizeTiny}"
                                                                                           Foreground="White"
                                                                                           TextWrapping="NoWrap"
                                                                                           TextTrimming="CharacterEllipsis"/>
                                                                             </Border>
 
                                                                             <!-- Selection Indicator -->
-                                                                            <Border Background="#CCFFD700"
+                                                                            <Border Background="{StaticResource GoldCCBrush}"
                                                                                    Width="20"
                                                                                    Height="20"
                                                                                    CornerRadius="10"
@@ -612,9 +618,9 @@
                                                                                    Margin="5"
                                                                                    Visibility="{Binding IsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                                                 <TextBlock Text="*"
-                                                                                          FontSize="14"
+                                                                                          FontSize="{StaticResource FontSizeBody}"
                                                                                           FontWeight="Bold"
-                                                                                          Foreground="#1A1A1A"
+                                                                                          Foreground="{StaticResource BgPanelBrush}"
                                                                                           HorizontalAlignment="Center"
                                                                                           VerticalAlignment="Center"/>
                                                                             </Border>
@@ -622,10 +628,10 @@
                                                                     </Border>
                                                                     <ControlTemplate.Triggers>
                                                                         <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                            <Setter TargetName="TrackBorder" Property="BorderBrush" Value="#FFD700"/>
+                                                                            <Setter TargetName="TrackBorder" Property="BorderBrush" Value="{StaticResource GoldBrush}"/>
                                                                         </DataTrigger>
                                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                                            <Setter TargetName="TrackBorder" Property="Background" Value="#3A3A3A"/>
+                                                                            <Setter TargetName="TrackBorder" Property="Background" Value="{StaticResource BgLightBrush}"/>
                                                                         </Trigger>
                                                                     </ControlTemplate.Triggers>
                                                                 </ControlTemplate>
@@ -640,8 +646,8 @@
 
                                 <!-- Road Race Tracks -->
                                 <Border Grid.Column="1"
-                                       Background="#1A1A1A"
-                                       BorderBrush="#404040"
+                                       Background="{StaticResource BgPanelBrush}"
+                                       BorderBrush="{StaticResource BorderLightBrush}"
                                        BorderThickness="1"
                                        CornerRadius="5"
                                        Padding="10"
@@ -649,7 +655,7 @@
                                        Visibility="{Binding HasRoadTracks, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <StackPanel>
                                         <TextBlock Text="ROAD RACE"
-                                                  FontSize="14"
+                                                  FontSize="{StaticResource FontSizeBody}"
                                                   FontWeight="Bold"
                                                   Foreground="{StaticResource TextPrimaryBrush}"
                                                   Margin="0,0,0,10"/>
@@ -678,11 +684,11 @@
                                                                     <Border x:Name="TrackBorder"
                                                                            Width="110"
                                                                            Height="90"
-                                                                           Background="#2A2A2A"
+                                                                           Background="{StaticResource BgMediumBrush}"
                                                                            BorderThickness="2"
                                                                            CornerRadius="5">
                                                                         <Border.BorderBrush>
-                                                                            <SolidColorBrush x:Name="BorderColor" Color="#404040"/>
+                                                                            <SolidColorBrush x:Name="BorderColor" Color="{StaticResource BorderLight}"/>
                                                                         </Border.BorderBrush>
                                                                         <Grid>
                                                                             <!-- Preview Image -->
@@ -692,29 +698,29 @@
                                                                                   Visibility="{Binding HasPreview, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                                                                             <!-- Placeholder when no preview -->
-                                                                            <Border Background="#3A3A3A"
+                                                                            <Border Background="{StaticResource BgLightBrush}"
                                                                                    Visibility="{Binding HasPreview, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                                                                                 <TextBlock Text="ROAD"
-                                                                                          FontSize="16"
+                                                                                          FontSize="{StaticResource FontSizeSubheading}"
                                                                                           FontWeight="Bold"
-                                                                                          Foreground="#505050"
+                                                                                          Foreground="{StaticResource Gray50Brush}"
                                                                                           HorizontalAlignment="Center"
                                                                                           VerticalAlignment="Center"/>
                                                                             </Border>
 
                                                                             <!-- Track Name Overlay -->
-                                                                            <Border Background="#CC000000"
+                                                                            <Border Background="{StaticResource BlackCCBrush}"
                                                                                    VerticalAlignment="Bottom"
                                                                                    Padding="5,3">
                                                                                 <TextBlock Text="{Binding DisplayName}"
-                                                                                          FontSize="10"
+                                                                                          FontSize="{StaticResource FontSizeTiny}"
                                                                                           Foreground="White"
                                                                                           TextWrapping="NoWrap"
                                                                                           TextTrimming="CharacterEllipsis"/>
                                                                             </Border>
 
                                                                             <!-- Selection Indicator -->
-                                                                            <Border Background="#CCFFD700"
+                                                                            <Border Background="{StaticResource GoldCCBrush}"
                                                                                    Width="20"
                                                                                    Height="20"
                                                                                    CornerRadius="10"
@@ -723,9 +729,9 @@
                                                                                    Margin="5"
                                                                                    Visibility="{Binding IsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                                                 <TextBlock Text="*"
-                                                                                          FontSize="14"
+                                                                                          FontSize="{StaticResource FontSizeBody}"
                                                                                           FontWeight="Bold"
-                                                                                          Foreground="#1A1A1A"
+                                                                                          Foreground="{StaticResource BgPanelBrush}"
                                                                                           HorizontalAlignment="Center"
                                                                                           VerticalAlignment="Center"/>
                                                                             </Border>
@@ -733,10 +739,10 @@
                                                                     </Border>
                                                                     <ControlTemplate.Triggers>
                                                                         <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                            <Setter TargetName="TrackBorder" Property="BorderBrush" Value="#FFD700"/>
+                                                                            <Setter TargetName="TrackBorder" Property="BorderBrush" Value="{StaticResource GoldBrush}"/>
                                                                         </DataTrigger>
                                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                                            <Setter TargetName="TrackBorder" Property="Background" Value="#3A3A3A"/>
+                                                                            <Setter TargetName="TrackBorder" Property="Background" Value="{StaticResource BgLightBrush}"/>
                                                                         </Trigger>
                                                                     </ControlTemplate.Triggers>
                                                                 </ControlTemplate>
@@ -751,8 +757,8 @@
                             </Grid>
 
                             <!-- Matchup Stats -->
-                            <Border Background="#1A1A1A"
-                                   BorderBrush="#404040"
+                            <Border Background="{StaticResource BgPanelBrush}"
+                                   BorderBrush="{StaticResource BorderLightBrush}"
                                    BorderThickness="1"
                                    CornerRadius="5"
                                    Padding="15"
@@ -760,7 +766,7 @@
                                    Visibility="{Binding HasMatchupStats, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <StackPanel>
                                     <TextBlock Text="MATCHUP"
-                                              FontSize="14"
+                                              FontSize="{StaticResource FontSizeBody}"
                                               FontWeight="Bold"
                                               Foreground="{StaticResource TextPrimaryBrush}"
                                               Margin="0,0,0,12"/>
@@ -776,13 +782,13 @@
 
                                         <TextBlock Grid.Column="0"
                                                   Text="YOU"
-                                                  FontSize="12"
+                                                  FontSize="{StaticResource FontSizeSmall}"
                                                   FontWeight="Bold"
                                                   Foreground="{StaticResource TextSecondaryBrush}"
                                                   HorizontalAlignment="Center"/>
                                         <TextBlock Grid.Column="2"
                                                   Text="THEM"
-                                                  FontSize="12"
+                                                  FontSize="{StaticResource FontSizeSmall}"
                                                   FontWeight="Bold"
                                                   Foreground="{StaticResource TextSecondaryBrush}"
                                                   HorizontalAlignment="Center"/>
@@ -803,14 +809,14 @@
                                                     <!-- Player Value -->
                                                     <TextBlock Grid.Column="0"
                                                               Text="{Binding PlayerValue}"
-                                                              FontSize="13"
+                                                              FontSize="{StaticResource FontSizeCompact}"
                                                               Foreground="{StaticResource TextPrimaryBrush}"
                                                               HorizontalAlignment="Center"/>
 
                                                     <!-- Label -->
                                                     <TextBlock Grid.Column="1"
                                                               Text="{Binding Label}"
-                                                              FontSize="11"
+                                                              FontSize="{StaticResource FontSizeCaption}"
                                                               Foreground="{StaticResource TextSecondaryBrush}"
                                                               HorizontalAlignment="Center"
                                                               VerticalAlignment="Center"/>
@@ -818,19 +824,30 @@
                                                     <!-- Opponent Value -->
                                                     <TextBlock Grid.Column="2"
                                                               Text="{Binding OpponentValue}"
-                                                              FontSize="13"
+                                                              FontSize="{StaticResource FontSizeCompact}"
                                                               Foreground="{StaticResource TextPrimaryBrush}"
                                                               HorizontalAlignment="Center"/>
 
                                                     <!-- Advantage Indicator -->
                                                     <TextBlock Grid.Column="3"
                                                               Text="{Binding AdvantageIndicator}"
-                                                              FontSize="12"
+                                                              FontSize="{StaticResource FontSizeSmall}"
                                                               FontWeight="Bold"
                                                               HorizontalAlignment="Center">
-                                                        <TextBlock.Foreground>
-                                                            <SolidColorBrush Color="{Binding AdvantageColor}"/>
-                                                        </TextBlock.Foreground>
+                                                        <!-- Green when the player has the edge, red when the opponent has, grey when even -->
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="{StaticResource Gray80Brush}"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Advantage}" Value="1">
+                                                                        <Setter Property="Foreground" Value="{StaticResource AccentSuccessBrush}"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Advantage}" Value="-1">
+                                                                        <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
                                                     </TextBlock>
                                                 </Grid>
                                             </DataTemplate>
@@ -840,15 +857,15 @@
                             </Border>
 
                             <!-- Bet Options Section -->
-                            <Border Background="#1A1A1A"
-                                   BorderBrush="#404040"
+                            <Border Background="{StaticResource BgPanelBrush}"
+                                   BorderBrush="{StaticResource BorderLightBrush}"
                                    BorderThickness="1"
                                    CornerRadius="5"
                                    Padding="15"
                                    Margin="0,15,0,0">
                                 <StackPanel>
                                     <TextBlock Text="BET TYPE"
-                                              FontSize="14"
+                                              FontSize="{StaticResource FontSizeBody}"
                                               FontWeight="Bold"
                                               Foreground="{StaticResource TextPrimaryBrush}"
                                               Margin="0,0,0,12"/>
@@ -862,7 +879,7 @@
                                         <!-- Cash Wager Option -->
                                         <Border Grid.Column="0"
                                                x:Name="CashBetBorder"
-                                               Background="#2A2A2A"
+                                               Background="{StaticResource BgMediumBrush}"
                                                BorderThickness="2"
                                                CornerRadius="5"
                                                Padding="12"
@@ -871,10 +888,10 @@
                                                MouseLeftButtonUp="CashBetBorder_MouseLeftButtonUp">
                                             <Border.Style>
                                                 <Style TargetType="Border">
-                                                    <Setter Property="BorderBrush" Value="#404040"/>
+                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderLightBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsCashBet}" Value="True">
-                                                            <Setter Property="BorderBrush" Value="#FFD700"/>
+                                                            <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -892,7 +909,7 @@
                                                                 Visibility="{Binding IsCashBet, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                                     </Border>
                                                     <TextBlock Text="CASH WAGER"
-                                                              FontSize="13"
+                                                              FontSize="{StaticResource FontSizeCompact}"
                                                               FontWeight="Bold"
                                                               Foreground="{StaticResource TextPrimaryBrush}"/>
                                                 </StackPanel>
@@ -900,9 +917,9 @@
                                                 <!-- Wager amount display and slider -->
                                                 <StackPanel Visibility="{Binding IsCashBet, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                     <TextBlock Text="{Binding WagerAmountDisplay}"
-                                                              FontSize="20"
+                                                              FontSize="{StaticResource FontSizeHeadingLarge}"
                                                               FontWeight="Bold"
-                                                              Foreground="#90EE90"
+                                                              Foreground="{StaticResource AccentSuccessBrush}"
                                                               HorizontalAlignment="Center"
                                                               Margin="0,5,0,8"/>
 
@@ -914,15 +931,15 @@
                                                            Margin="0,0,0,5"/>
 
                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                        <TextBlock FontSize="10"
+                                                        <TextBlock FontSize="{StaticResource FontSizeTiny}"
                                                                   Foreground="{StaticResource TextSecondaryBrush}">
                                                             <Run Text="$"/>
                                                             <Run Text="{Binding MinWager, StringFormat='{}{0:N0}', Mode=OneWay}"/>
                                                         </TextBlock>
                                                         <TextBlock Text=" - "
-                                                                  FontSize="10"
+                                                                  FontSize="{StaticResource FontSizeTiny}"
                                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
-                                                        <TextBlock FontSize="10"
+                                                        <TextBlock FontSize="{StaticResource FontSizeTiny}"
                                                                   Foreground="{StaticResource TextSecondaryBrush}">
                                                             <Run Text="$"/>
                                                             <Run Text="{Binding MaxWager, StringFormat='{}{0:N0}', Mode=OneWay}"/>
@@ -932,7 +949,7 @@
 
                                                 <!-- Placeholder when not selected -->
                                                 <TextBlock Text="Wager cash on the race"
-                                                          FontSize="11"
+                                                          FontSize="{StaticResource FontSizeCaption}"
                                                           Foreground="{StaticResource TextSecondaryBrush}"
                                                           Visibility="{Binding IsCashBet, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
                                             </StackPanel>
@@ -941,7 +958,7 @@
                                         <!-- Pink Slip Option -->
                                         <Border Grid.Column="1"
                                                x:Name="PinkSlipBorder"
-                                               Background="#2A2A2A"
+                                               Background="{StaticResource BgMediumBrush}"
                                                BorderThickness="2"
                                                CornerRadius="5"
                                                Padding="12"
@@ -950,10 +967,10 @@
                                                MouseLeftButtonUp="PinkSlipBorder_MouseLeftButtonUp">
                                             <Border.Style>
                                                 <Style TargetType="Border">
-                                                    <Setter Property="BorderBrush" Value="#404040"/>
+                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderLightBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsPinkSlipBet}" Value="True">
-                                                            <Setter Property="BorderBrush" Value="#FF6B6B"/>
+                                                            <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -962,35 +979,35 @@
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                                     <!-- Radio indicator -->
                                                     <Border Width="18" Height="18"
-                                                           BorderBrush="#FF6B6B"
+                                                           BorderBrush="{StaticResource DangerBrush}"
                                                            BorderThickness="2"
                                                            CornerRadius="9"
                                                            Margin="0,0,10,0">
                                                         <Ellipse Width="8" Height="8"
-                                                                Fill="#FF6B6B"
+                                                                Fill="{StaticResource DangerBrush}"
                                                                 Visibility="{Binding IsPinkSlipBet, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                                     </Border>
                                                     <TextBlock Text="PINK SLIPS"
-                                                              FontSize="13"
+                                                              FontSize="{StaticResource FontSizeCompact}"
                                                               FontWeight="Bold"
-                                                              Foreground="#FF6B6B"/>
+                                                              Foreground="{StaticResource DangerBrush}"/>
                                                 </StackPanel>
 
                                                 <TextBlock Text="Winner takes the loser's car!"
-                                                          FontSize="11"
+                                                          FontSize="{StaticResource FontSizeCaption}"
                                                           Foreground="{StaticResource TextSecondaryBrush}"
                                                           TextWrapping="Wrap"/>
 
                                                 <!-- Warning when selected -->
-                                                <Border Background="#3D1F1F"
+                                                <Border Background="{StaticResource DangerBgBrush}"
                                                        CornerRadius="3"
                                                        Padding="8,5"
                                                        Margin="0,8,0,0"
                                                        Visibility="{Binding IsPinkSlipBet, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                     <TextBlock Text="HIGH STAKES!"
-                                                              FontSize="10"
+                                                              FontSize="{StaticResource FontSizeTiny}"
                                                               FontWeight="Bold"
-                                                              Foreground="#FF6B6B"
+                                                              Foreground="{StaticResource DangerBrush}"
                                                               HorizontalAlignment="Center"/>
                                                 </Border>
                                             </StackPanel>
@@ -998,8 +1015,8 @@
                                     </Grid>
 
                                     <!-- Insufficient Funds Warning -->
-                                    <Border Background="#3D2F1F"
-                                           BorderBrush="#FFA500"
+                                    <Border Background="{StaticResource WarningBgBrush}"
+                                           BorderBrush="{StaticResource WarningBrush}"
                                            BorderThickness="1"
                                            CornerRadius="5"
                                            Padding="10"
@@ -1007,12 +1024,12 @@
                                            Visibility="{Binding CanAffordMinBet, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                             <TextBlock Text="!"
-                                                      FontSize="14"
+                                                      FontSize="{StaticResource FontSizeBody}"
                                                       FontWeight="Bold"
-                                                      Foreground="#FFA500"
+                                                      Foreground="{StaticResource WarningBrush}"
                                                       Margin="0,0,8,0"/>
                                             <TextBlock Text="{Binding InsufficientFundsMessage, Mode=OneWay}"
-                                                      FontSize="12"
+                                                      FontSize="{StaticResource FontSizeSmall}"
                                                       Foreground="{StaticResource TextPrimaryBrush}"
                                                       VerticalAlignment="Center"/>
                                         </StackPanel>
@@ -1026,10 +1043,10 @@
                     <Button Grid.Row="2"
                            Content="CHALLENGE TO A RACE"
                            Command="{Binding ChallengeCommand}"
-                           FontSize="18"
+                           FontSize="{StaticResource FontSizeHeading}"
                            FontWeight="Bold"
-                           Foreground="#1A1A1A"
-                           Background="#FFD700"
+                           Foreground="{StaticResource BgPanelBrush}"
+                           Background="{StaticResource GoldBrush}"
                            BorderThickness="0"
                            Padding="20,15"
                            Cursor="Hand"
@@ -1050,14 +1067,14 @@
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="ButtonBorder" Property="Background" Value="#FFA500"/>
+                                                    <Setter TargetName="ButtonBorder" Property="Background" Value="{StaticResource WarningBrush}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsPressed" Value="True">
-                                                    <Setter TargetName="ButtonBorder" Property="Background" Value="#FF8C00"/>
+                                                    <Setter TargetName="ButtonBorder" Property="Background" Value="{StaticResource WarningStrongBrush}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsEnabled" Value="False">
-                                                    <Setter TargetName="ButtonBorder" Property="Background" Value="#404040"/>
-                                                    <Setter Property="Foreground" Value="#808080"/>
+                                                    <Setter TargetName="ButtonBorder" Property="Background" Value="{StaticResource BorderLightBrush}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource Gray80Brush}"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -1071,14 +1088,14 @@
 
             <!-- No Opponent Selected Message -->
             <Border Grid.Column="1"
-                   Background="#DF1B1B1B"
-                   BorderBrush="#404040"
+                   Background="{StaticResource BgDarkDFBrush}"
+                   BorderBrush="{StaticResource BorderLightBrush}"
                    BorderThickness="2"
                    CornerRadius="5"
                    Margin="10,0,0,0"
                    Visibility="{Binding HasSelectedOpponent, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                 <TextBlock Text="Select an opponent from the list"
-                          FontSize="18"
+                          FontSize="{StaticResource FontSizeHeading}"
                           Foreground="{StaticResource TextSecondaryBrush}"
                           HorizontalAlignment="Center"
                           VerticalAlignment="Center"/>

@@ -11,6 +11,7 @@ namespace Street_Rod_AC.Logging
     public static class AppLoggerFactory
     {
         private static bool _isInitialized = false;
+        private static bool _isShutDown = false;
         private static readonly object _lock = new();
 
         /// <summary>
@@ -79,12 +80,27 @@ namespace Street_Rod_AC.Logging
 
         /// <summary>
         /// Flushes and closes the logging infrastructure.
-        /// Should be called at application shutdown.
+        /// Should be called at application shutdown. Called from the crash path too, so it runs once whoever calls
+        /// it first, and never throws: a log that cannot be flushed must not hide the crash that is being written.
         /// </summary>
         public static void Shutdown()
         {
-            Log.Information("Shutting down logging system");
-            Log.CloseAndFlush();
+            lock (_lock)
+            {
+                if (!_isInitialized || _isShutDown)
+                    return;
+                _isShutDown = true;
+            }
+
+            try
+            {
+                Log.Information("Shutting down logging system");
+                Log.CloseAndFlush();
+            }
+            catch (Exception)
+            {
+                // Nowhere left to report it
+            }
         }
     }
 

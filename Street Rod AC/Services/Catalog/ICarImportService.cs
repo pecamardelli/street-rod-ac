@@ -8,13 +8,14 @@ namespace Street_Rod_AC.Services.Catalog
     public interface ICarImportService
     {
         /// <summary>
-        /// Performs a full import of all cars from AC installation
+        /// Performs a full import of all cars from AC installation, on a worker thread. Cars no longer installed
+        /// are marked Legacy, but only after a scan of an existing cars folder that worked.
         /// </summary>
         /// <param name="progress">Optional progress callback (current, total, carName)</param>
         Task<ImportResult> ImportCarsAsync(IProgress<ImportProgress>? progress = null);
 
         /// <summary>
-        /// Performs an incremental update, only importing changed content
+        /// The same as <see cref="ImportCarsAsync"/>: every import only writes what changed and retires what is gone
         /// </summary>
         Task<ImportResult> IncrementalUpdateAsync(IProgress<ImportProgress>? progress = null);
     }

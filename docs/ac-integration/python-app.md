@@ -1,6 +1,6 @@
 # AC Python Race App
 
-> **Legacy**: This app was migrated to the CSP Lua app in `apps/lua/sr_race_manager`. The launcher now ingests results from `Documents/Assetto Corsa/out/sr_race_manager/`. This document is kept for reference.
+> **Removed** (2026-09-24): this app was replaced by the CSP Lua app in `apps/lua/sr_race_manager` (see [CSP Lua Scripts](csp-lua-scripts.md)), and its folder `apps/python/StreetRodRaceApp` has been deleted from the repo; git history before that date still has it. Nothing in the game referenced it. The launcher ingests results only from `Documents/Assetto Corsa/out/sr_race_manager/`. This page describes the old app for reference; the Lua app's result schema has moved on since (see the Lua page).
 
 ## Purpose
 Lightweight telemetry observer inside AC. Enforces Street Rod crash consequences. Outputs session results.
@@ -86,5 +86,5 @@ Message: "You crashed hard. The race is over."
 4. Delete processed file
 
 ## Files
-- `apps/python/streetrod_race_app/streetrod_race_app.py`
-- `Services/Race/RaceResultProcessor.cs` (ingestion)
+- `apps/python/StreetRodRaceApp/StreetRodRaceApp.py` (removed; in git history only)
+- `Services/Race/RaceResultProcessor.cs` (ingestion, now of the Lua app's files)

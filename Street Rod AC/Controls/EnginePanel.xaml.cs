@@ -5,6 +5,7 @@ using System.Windows.Input;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 using Street_Rod_AC.Audio;
+using Street_Rod_AC.Logging;
 
 namespace Street_Rod_AC.Controls;
 
@@ -16,6 +17,7 @@ namespace Street_Rod_AC.Controls;
 /// </summary>
 public partial class EnginePanel : System.Windows.Controls.UserControl
 {
+    private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("EngineAudio");
     private Window? _window;
 
     public EnginePanel()
@@ -51,7 +53,7 @@ public partial class EnginePanel : System.Windows.Controls.UserControl
 
     private void OnEngineChanged()
     {
-        if (IsLoaded) _ = Runner.SetEngineAsync(Engine);
+        if (IsLoaded) Forget(Runner.SetEngineAsync(Engine), "putting the engine under the pedal");
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -64,7 +66,7 @@ public partial class EnginePanel : System.Windows.Controls.UserControl
             _window.Deactivated += OnWindowDeactivated;
         }
 
-        _ = Runner.SetEngineAsync(Engine);
+        Forget(Runner.SetEngineAsync(Engine), "putting the engine under the pedal");
         UpdateTach();
     }
 
@@ -80,7 +82,20 @@ public partial class EnginePanel : System.Windows.Controls.UserControl
 
         // The screen is going: silence, and let go of the bank so a race can move it
         Runner.Detach();
-        _ = EngineAudio.Shared.UnloadAllAsync();
+        Forget(EngineAudio.Shared.UnloadAllAsync(), "letting go of the engine sound");
+    }
+
+    /// <summary>Work nobody waits for: whatever goes wrong in it is logged rather than lost</summary>
+    private async void Forget(Task task, string what)
+    {
+        try
+        {
+            await task;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Engine panel: {What} failed", what);
+        }
     }
 
     private void OnRunnerChanged(object? sender, PropertyChangedEventArgs e)

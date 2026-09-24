@@ -2,6 +2,7 @@ using System.IO;
 using System.Numerics;
 using AcTools.Kn5File;
 using AcTools.Numerics;
+using Street_Rod_AC.Parts;
 
 namespace Street_Rod_AC.Slrr;
 
@@ -95,15 +96,46 @@ public static class SlrrKn5Builder
 
     private static Kn5Material.ShaderProperty Property(string name, float value) => new() { Name = name, ValueA = value };
 
+    /// <summary>
+    /// Textures go by their file name (readable, and what every model converted so far has). Two different pictures
+    /// of the same name in different folders, drawn by one part, would collapse into the first: the second then goes
+    /// by its name with a hash of its content, which is the same on every machine and every run.
+    /// </summary>
     private static string AddTextureFile(IKn5 kn5, string filename, string prefix)
     {
-        var key = prefix + Path.GetFileName(filename).ToLowerInvariant();
-        if (!kn5.TexturesData.ContainsKey(key))
+        // A file this model already took goes by the key it got then: every material drawing it would otherwise
+        // read it again to compare
+        var added = TextureKeys.GetOrCreateValue(kn5);
+        var fullPath = Path.GetFullPath(filename);
+        if (added.TryGetValue(fullPath, out var known)) return known;
+
+        return added[fullPath] = NewTextureKey(kn5, filename, prefix);
+    }
+
+    private static string NewTextureKey(IKn5 kn5, string filename, string prefix)
+    {
+        var name = Path.GetFileName(filename).ToLowerInvariant();
+        var key = prefix + name;
+        if (kn5.TexturesData.TryGetValue(key, out var existing))
         {
-            AddTexture(kn5, key, File.ReadAllBytes(filename));
+            // Already there by name: the same picture from another folder, or another one of that name
+            var data = File.ReadAllBytes(filename);
+            if (existing.AsSpan().SequenceEqual(data)) return key;
+
+            key = $"{prefix}{ContentHash(data)}_{name}";
+            if (!kn5.TexturesData.ContainsKey(key)) AddTexture(kn5, key, data);
+            return key;
         }
+
+        AddTexture(kn5, key, File.ReadAllBytes(filename));
         return key;
     }
+
+    /// <summary>The key each texture file got, per model being built (dropped with the model)</summary>
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IKn5, Dictionary<string, string>> TextureKeys = new();
+
+    private static string ContentHash(byte[] data) =>
+        System.Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(data), 0, 4).ToLowerInvariant();
 
     private static string AddColorTexture(IKn5 kn5, Vector3 color)
     {
@@ -114,7 +146,7 @@ public static class SlrrKn5Builder
         var key = $"color_{r:x2}{g:x2}{b:x2}.bmp";
         if (!kn5.TexturesData.ContainsKey(key))
         {
-            AddTexture(kn5, key, CreateSolidBitmap(r, g, b));
+            AddTexture(kn5, key, Kn5Bitmap.Solid(r, g, b));
         }
         return key;
     }
@@ -123,38 +155,6 @@ public static class SlrrKn5Builder
     {
         kn5.Textures[key] = new Kn5Texture { Name = key, Active = true, Length = data.Length };
         kn5.TexturesData[key] = data;
-    }
-
-    /// <summary>Smallest BMP the texture loader accepts: 2x2 pixels, 24 bpp, rows padded to 4 bytes</summary>
-    private static byte[] CreateSolidBitmap(byte r, byte g, byte b)
-    {
-        const int headerSize = 54;
-        const int rowSize = 8;
-
-        var data = new byte[headerSize + rowSize * 2];
-        data[0] = (byte)'B';
-        data[1] = (byte)'M';
-        BitConverter.GetBytes(data.Length).CopyTo(data, 2);
-        BitConverter.GetBytes(headerSize).CopyTo(data, 10);
-        BitConverter.GetBytes(40).CopyTo(data, 14);
-        BitConverter.GetBytes(2).CopyTo(data, 18);
-        BitConverter.GetBytes(2).CopyTo(data, 22);
-        BitConverter.GetBytes((short)1).CopyTo(data, 26);
-        BitConverter.GetBytes((short)24).CopyTo(data, 28);
-        BitConverter.GetBytes(rowSize * 2).CopyTo(data, 34);
-
-        for (var row = 0; row < 2; row++)
-        {
-            for (var pixel = 0; pixel < 2; pixel++)
-            {
-                var offset = headerSize + row * rowSize + pixel * 3;
-                data[offset] = b;
-                data[offset + 1] = g;
-                data[offset + 2] = r;
-            }
-        }
-
-        return data;
     }
 
     /// <summary>

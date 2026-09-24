@@ -1,3 +1,4 @@
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 namespace Street_Rod_AC.Parts;
@@ -185,6 +186,22 @@ public class PartSlot
     public bool ShouldSerializeFits() => Fits.Count > 0;
 
     public bool ShouldSerializeTakes() => Takes.Count > 0;
+
+    /// <summary>
+    /// Position and rotation are read as [0], [1], [2] everywhere (the assembler, the layout, slot shifts): a
+    /// pack.json that has fewer, more or none gets exactly three, the missing ones zero
+    /// </summary>
+    [OnDeserialized]
+    internal void OnDeserialized(StreamingContext context)
+    {
+        Position = ThreeOf(Position);
+        Rotation = ThreeOf(Rotation);
+
+        static float[] ThreeOf(float[]? values) =>
+            values is { Length: 3 } ? values : new[] { At(values, 0), At(values, 1), At(values, 2) };
+
+        static float At(float[]? values, int index) => values != null && index < values.Length ? values[index] : 0;
+    }
 }
 
 public class PartStockReference

@@ -50,6 +50,12 @@ public sealed class EngineReport
     public double Value { get; init; }
 
     public IReadOnlyList<PartDefinition> Unplaced { get; init; } = Array.Empty<PartDefinition>();
+
+    /// <summary>
+    /// What went wrong running the part scripts (a script that threw, one that ran out of steps), one line each,
+    /// for the log; empty when they ran clean. Any of it makes the engine's <see cref="Problem"/>.
+    /// </summary>
+    public IReadOnlyList<string> ScriptFaults { get; init; } = Array.Empty<string>();
 }
 
 /// <summary>Runs an engine build through the part scripts and the dyno</summary>
@@ -58,7 +64,25 @@ public static class EngineEvaluator
     private const int ReverseGearIndex = 7;
     private const int MaxForwardGears = 6;
 
+    /// <remarks>
+    /// Never throws for what the content does: a part script that faults is a part left out, and the engine's
+    /// problem says so (the scripts are third-party code, one bad class must not take every build down with it).
+    /// </remarks>
     public static EngineReport Evaluate(PartsCatalog catalog, PartTree tree)
+    {
+        try
+        {
+            return Run(catalog, tree);
+        }
+        catch (Exception ex)
+        {
+            // Past the runtime's own containment (the figures themselves, a malformed tree): the engine does not run
+            var fault = $"evaluating {tree.Root.Definition.Id} failed ({ex.GetType().Name}: {ex.Message})";
+            return new EngineReport { Problem = "the engine could not be evaluated: " + fault, ScriptFaults = new[] { fault }, Unplaced = tree.Unplaced };
+        }
+    }
+
+    private static EngineReport Run(PartsCatalog catalog, PartTree tree)
     {
         var runtime = new PartScriptRuntime(catalog, tree.Root);
         runtime.UpdateCar();
@@ -73,6 +97,14 @@ public static class EngineEvaluator
         var problem = runtime.MissingScripts.Count > 0
             ? $"the script of {runtime.MissingScripts[0].Definition.Id} is missing ({runtime.MissingScripts.Count} in all): the parts need converting again."
             : runtime.Call(tree.Root, "isDynoable").AsText;
+
+        // A script that threw or ran out of steps left figures half made: whatever they come to is not the engine
+        var faults = runtime.Faults.ToList();
+        if (runtime.BudgetExhausted)
+            faults.Add($"a part script ran out of steps in {runtime.BudgetExhaustedIn ?? "an unknown method"} (it loops, or does far more than a part should)");
+        if (faults.Count > 0 && runtime.MissingScripts.Count == 0)
+            problem = $"a part script failed: {faults[0]}{(faults.Count > 1 ? $" ({faults.Count} faults in all)" : "")}.";
+
         if (problem == null && dyno == null) problem = "the engine could not be evaluated.";
 
         // The scripts hold the compression against what the fuel system allows. With no carburettor or injection
@@ -81,9 +113,11 @@ public static class EngineEvaluator
         if (problem != null && inputs is { MaxFuelFlow: <= 0, MaxAirFlow: <= 0 } && problem.Contains("compression", StringComparison.OrdinalIgnoreCase))
             problem = "nothing feeds the engine: there is no carburettor or injection on the intake.";
 
-        var gears = (int)(chassis?.Number("gears") ?? 0);
+        // Figures come out of script math (a square root of a negative, a float overflow) and pack.json: what is not
+        // a number is no figure, so nothing that is not one ever reaches the car's data
+        var gears = (int)Finite(chassis?.Number("gears"));
         var ratios = chassis?.Fields.GetValueOrDefault("ratio") as ScriptArray;
-        double Ratio(int index) => ratios != null && ratios.Items.GetValueOrDefault(index) is ScriptNumber ratio ? ratio.Amount : 0;
+        double Ratio(int index) => ratios != null && ratios.Items.GetValueOrDefault(index) is ScriptNumber ratio ? Finite(ratio.Amount) : 0;
 
         var parts = tree.Root.SelfAndDescendants().ToList();
         var clutch = parts.FirstOrDefault(p => p.Is("Clutch"));
@@ -92,20 +126,24 @@ public static class EngineEvaluator
             Problem = problem,
             Inputs = inputs,
             Dyno = dyno,
-            IdleRpm = block?.Number("rpm_idle") ?? 0,
-            LimiterRpm = block?.Number("RPM_limit") ?? 0,
-            Inertia = block?.Number("inertia") ?? 0,
+            IdleRpm = Finite(block?.Number("rpm_idle")),
+            LimiterRpm = Finite(block?.Number("RPM_limit")),
+            Inertia = Finite(block?.Number("inertia")),
             GearRatios = Enumerable.Range(1, Math.Clamp(gears, 0, MaxForwardGears)).Select(Ratio).Where(r => r > 0).ToList(),
             ReverseRatio = Math.Abs(Ratio(ReverseGearIndex)),
-            FinalRatio = chassis?.Number("rearend_ratio") ?? 0,
-            DriveType = gears > 0 ? (int)(chassis?.Number("drive_type") ?? 0) : 0,
-            DiffLock = chassis?.Number("diff_lock") ?? 0,
-            Friction = chassis?.Number("engine_friction_fwd") ?? 0,
-            ClutchCapacity = clutch == null ? 0 : runtime.ObjectOf(clutch)?.Number("maxF") ?? clutch.Definition.Number("maxF"),
+            FinalRatio = Finite(chassis?.Number("rearend_ratio")),
+            DriveType = gears > 0 ? (int)Finite(chassis?.Number("drive_type")) : 0,
+            DiffLock = Finite(chassis?.Number("diff_lock")),
+            Friction = Finite(chassis?.Number("engine_friction_fwd")),
+            ClutchCapacity = clutch == null ? 0 : Finite(runtime.ObjectOf(clutch)?.Number("maxF") ?? clutch.Definition.Number("maxF")),
             Turbocharged = parts.Any(p => p.Is("TurboCharger")),
-            Mass = parts.Sum(p => (double)p.Definition.Mass),
-            Value = parts.Sum(p => p.Definition.Number("value")),
+            Mass = Finite(parts.Sum(p => (double)p.Definition.Mass)),
+            Value = Finite(parts.Sum(p => p.Definition.Number("value"))),
+            ScriptFaults = faults,
             Unplaced = tree.Unplaced
         };
     }
+
+    /// <summary>A figure as the report may carry it: missing, NaN and infinities are 0 (no figure)</summary>
+    private static double Finite(double? value) => value is { } number && double.IsFinite(number) ? number : 0;
 }

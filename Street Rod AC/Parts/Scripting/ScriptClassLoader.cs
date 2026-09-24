@@ -1,4 +1,5 @@
 using System.IO;
+using Street_Rod_AC.Helpers;
 
 namespace Street_Rod_AC.Parts.Scripting;
 
@@ -66,18 +67,21 @@ public sealed class ScriptClassLoader
 
     private ScriptClass? FindLocked(string className, string? nearFolder)
     {
-        if (nearFolder != null)
+        // Class names come from the constant pools of the class files: every piece that becomes a folder or a file
+        // name has to be one ("java.game.C:\x" is a rooted path, and Path.Combine would drop the scripts folder for it)
+        var simpleName = className[(className.LastIndexOf('.') + 1)..];
+        if (nearFolder != null && PathNames.IsSafeSegment(simpleName))
         {
-            var sibling = Load(Path.Combine(nearFolder, className[(className.LastIndexOf('.') + 1)..] + ".class"));
+            var sibling = Load(Path.Combine(nearFolder, simpleName + ".class"));
             if (sibling?.ClassName == className) return sibling;
         }
 
         if (_classes.TryGetValue(className, out var cached)) return cached;
 
         ScriptClass? result = null;
-        if (className.StartsWith(ClassPrefix, StringComparison.Ordinal))
+        if (className.StartsWith(ClassPrefix, StringComparison.Ordinal)
+            && className[ClassPrefix.Length..].Split('.') is var segments && segments.All(PathNames.IsSafeSegment))
         {
-            var segments = className[ClassPrefix.Length..].Split('.');
             var package = segments[..^1];
             var file = segments[^1] + ".class";
 

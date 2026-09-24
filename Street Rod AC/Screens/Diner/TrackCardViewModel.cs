@@ -1,14 +1,13 @@
+using Street_Rod_AC.ViewModels;
 using Street_Rod_AC.Models.AC;
 using Street_Rod_AC.Models.Race;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace Street_Rod_AC.Screens.Diner
 {
     /// <summary>
     /// View model for displaying a track card in the diner screen
     /// </summary>
-    public class TrackCardViewModel : INotifyPropertyChanged
+    public class TrackCardViewModel : ObservableObject
     {
         public TrackInfo Track { get; set; } = new();
         public TrackConfiguration? Configuration { get; set; }
@@ -58,13 +57,6 @@ namespace Street_Rod_AC.Screens.Diner
                     OnPropertyChanged();
                 }
             }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+using Street_Rod_AC.ViewModels;
 using Street_Rod_AC.Models.Career.Victory;
 using Street_Rod_AC.Models.GameState;
 
@@ -7,10 +7,8 @@ namespace Street_Rod_AC.Screens.Career
     /// <summary>
     /// View model for displaying a victory condition in the career screen
     /// </summary>
-    public class VictoryDisplayViewModel : INotifyPropertyChanged
+    public class VictoryDisplayViewModel : ObservableObject
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         public string VictoryType { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
@@ -29,11 +27,7 @@ namespace Street_Rod_AC.Screens.Career
         // Visual properties
         public string StatusIcon => IsAchieved ? "✓" : IsActive ? "★" : IsUnlocked ? "○" : "🔒";
 
-        public string StatusColor => IsAchieved ? "#90EE90" : IsActive ? "#FFD700" : IsUnlocked ? "#FFFFFF" : "#808080";
-
-        public string BorderColor => IsAchieved ? "#00AA00" : IsActive ? "#FFA500" : IsUnlocked ? "#505050" : "#303030";
-
-        public string BackgroundColor => IsActive ? "#3A3A2A" : "#2A2A2A";
+        // The colours are the view's: it paints the card from IsUnlocked, IsActive and IsAchieved, in that order
 
         public double Opacity => IsUnlocked ? 1.0 : 0.6;
 
@@ -62,11 +56,6 @@ namespace Street_Rod_AC.Screens.Career
                 CompletedSteps = progress.CompletedSteps,
                 RemainingSteps = progress.RemainingSteps
             };
-        }
-
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

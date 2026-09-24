@@ -1,5 +1,34 @@
 namespace Street_Rod_AC.Services.Configuration.Models
 {
+    /// <summary>What came of a race launch, for the screen that tells the player</summary>
+    public enum RaceOutcome
+    {
+        /// <summary>A showroom or a free run: nothing to ingest</summary>
+        NotARace,
+
+        /// <summary>The result was read and applied</summary>
+        Processed,
+
+        /// <summary>AC closed without a result (the player quit or stopped the race); a wager race is forfeited</summary>
+        NoResult,
+
+        /// <summary>A result was written but could not be used; it is kept in quarantine and nothing was applied</summary>
+        Quarantined,
+
+        /// <summary>The launch failed (AC did not start or closed at once); nothing was raced and nothing is at stake any more</summary>
+        Failed,
+
+        /// <summary>
+        /// The race ran, but its result could not be settled yet: the file is there but could not be read or moved
+        /// right now, or Assetto Corsa has not closed. Nothing is forfeited; the race stays pending in the save and
+        /// is settled by a later pass (once AC closes, the next time the save loads, or before the next race).
+        /// </summary>
+        ResultPending,
+
+        /// <summary>The player stopped the race before Assetto Corsa started: nothing was raced, nothing is lost</summary>
+        Cancelled
+    }
+
     /// <summary>
     /// Result of a launch operation
     /// </summary>
@@ -39,6 +68,12 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// Any additional diagnostic information
         /// </summary>
         public Dictionary<string, object> Diagnostics { get; set; } = new();
+
+        /// <summary>What came of the race; <see cref="RaceOutcome.NotARace"/> for a showroom or a free run</summary>
+        public RaceOutcome Outcome { get; set; }
+
+        /// <summary>What the player should be told about the race, one dialog each, in order</summary>
+        public List<Street_Rod_AC.Models.Race.PlayerMessage> PlayerMessages { get; } = new();
 
         /// <summary>
         /// Create a successful result

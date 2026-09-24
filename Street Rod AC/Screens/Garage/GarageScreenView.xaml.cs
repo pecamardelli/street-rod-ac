@@ -51,6 +51,7 @@ namespace Street_Rod_AC.Screens.Garage
             if (DataContext is GarageScreenViewModel viewModel)
             {
                 viewModel.ExitTransition = FadeOutAsync;
+                viewModel.ExitCancelled = CancelFadeOut;
             }
 
             _window = Window.GetWindow(this);
@@ -175,6 +176,14 @@ namespace Street_Rod_AC.Screens.Garage
             RootGrid.BeginAnimation(OpacityProperty, fadeOut);
 
             return completion.Task;
+        }
+
+        /// <summary>The garage stays after all (the next screen would not open): back in full view and clickable</summary>
+        private void CancelFadeOut()
+        {
+            RootGrid.BeginAnimation(OpacityProperty, null);
+            RootGrid.Opacity = 1.0;
+            RootGrid.IsHitTestVisible = true;
         }
     }
 }

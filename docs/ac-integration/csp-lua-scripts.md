@@ -4,6 +4,8 @@
 Custom Shaders Patch (CSP) Lua scripts extend Assetto Corsa's functionality. These scripts run inside AC and are located in `C:\GAMES\Street Rod AC\extension\lua\`.
 
 **Important**: These scripts are in the AC installation, NOT the C# project. They communicate with the launcher via file signals or CSP APIs.
+The one exception is the SR Race Manager app, which lives in the repo (`apps/lua/sr_race_manager/`) and writes the race
+results the launcher reads (see "Integration with C# Launcher").
 
 ## Street Rod Custom Scripts
 
@@ -150,6 +152,50 @@ The `sr_race` mode handles auto-start and auto-quit internally using CSP APIs. T
 | `ac.endSession()` | Working | Clean exit, returns to AC menu then AC closes |
 | Signal files | Removed | Was in Python app, didn't work reliably |
 | `ac.ext_quitAC()` | Untested | CSP extension, may not exist in all versions |
+| race.ini `[STREET_ROD] CONTEXT_ID` | Working | Launcher to Lua app: which race this is (see below) |
+| Result JSON | Working | Lua app to launcher, one file per race |
+
+### SR Race Manager app (`apps/lua/sr_race_manager/sr_race_manager.lua`)
+Auto-starts the race, tracks every car (G-force crash detection, finish, win/lose), writes the result file and quits
+AC (`ac.shutdownAssettoCorsa()`). Script version 2.2.0, result schema 1.1.
+- **Written once**: ending the session latches (`sessionEnded`); after that the update loop does nothing, so no
+  second session and no second result file start in the seconds before AC quits.
+- **AC always quits**: the write runs under `pcall`; a failed write is logged and AC still quits, since the launcher
+  waits for it (the launcher then sees no result).
+- **A hitch is not distance**: one tick accounts for at most 1 s (`MAX_TICK_SECONDS`).
+
+### Race Result File (SR Race Manager)
+The app writes one file per race to `Documents\Assetto Corsa\out\sr_race_manager\<session_id>.json`: AC's own
+Documents folder (`ac.getFolder(ac.FolderID.ACDocuments)`), which is the known Documents folder the launcher reads even
+where Documents is redirected (OneDrive). The file is written as `<name>.tmp` and then renamed, so a file under the
+final name is always whole; the launcher ignores names that are not a UUID.
+
+Schema 1.1 added three fields to what 1.0 had (the launcher still reads 1.0 files, without them):
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `session.context_id` | string, may be absent | The race's `RaceContext.ContextId`, copied from race.ini `[STREET_ROD] CONTEXT_ID` (read with `ac.INIConfig.raceConfig()`); absent when race.ini had none |
+| `participants[].car_index` | int | AC's index of the car; 0 is the player's |
+| `participants[].is_player` | bool | True for the player's car (car index 0 in AC) |
+
+```json
+{
+  "metadata": { "schema_version": "1.1", "script_version": "...", "source": "sr_race_manager", "generated_at": "ISO8601" },
+  "session": { "session_id": "UUID", "context_id": "UUID of the race context", "track_id": "...", "duration_seconds": 12.3 },
+  "participants": [
+    { "driver_name": "...", "car_name": "...", "car_index": 0, "is_player": true, "performance": { }, "crash": { } }
+  ]
+}
+```
+
+How the launcher uses them (`RaceResultIngestionService`, `RaceResultProcessor`):
+- The player is the participant with `is_player`, never "the first in the list" (the list's order is not defined).
+- A file whose `context_id` does not match the race in hand is never applied with that race's context.
+- The race about to be driven is saved as `GameState.PendingRace` before AC starts. A result left over from a race
+  that ended badly is applied when a save is loaded, only if its `context_id` is that save's `PendingRace.ContextId`
+  (or it has no `context_id` and the save has a pending race); anything else is quarantined with the reason, never
+  applied to the wrong save. Processing a result, or the forfeit of a wager or pink-slip race that left no result,
+  clears `PendingRace`.
 
 ### Enabling SR Race Mode
 

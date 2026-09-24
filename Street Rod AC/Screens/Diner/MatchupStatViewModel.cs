@@ -35,14 +35,7 @@ namespace Street_Rod_AC.Screens.Diner
             _ => "(=)"
         };
 
-        /// <summary>
-        /// Color for advantage indicator
-        /// </summary>
-        public string AdvantageColor => Advantage switch
-        {
-            1 => "#90EE90",   // Green - player advantage
-            -1 => "#FF6B6B", // Red - opponent advantage
-            _ => "#808080"   // Gray - equal
-        };
+        // The indicator's colour follows Advantage in the view (DataTriggers in DinerScreenView.xaml),
+        // so the colours stay in Styles/ and the view model only says who has the edge.
     }
 }

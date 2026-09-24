@@ -122,7 +122,9 @@ public static class AcRunningGearData
     private static PartDefinition? Definition(PartsCatalog catalog, PartInstance? part) => part == null ? null : catalog.Get(part.DefinitionId);
 
     /// <summary>Mounted over factory; a part without a figure, or none at all, counts as the factory part</summary>
-    private static double Ratio(double mounted, double factory) => mounted > 0 && factory > 0 ? mounted / factory : 1;
+    // Figures from pack.json may be anything Newtonsoft reads, "Infinity" and 1e400 among them: no figure is no change
+    private static double Ratio(double mounted, double factory) =>
+        mounted > 0 && factory > 0 && double.IsFinite(mounted / factory) ? mounted / factory : 1;
 
     private static IniText Tyres(IniText ini, AxleChange front, AxleChange rear)
     {

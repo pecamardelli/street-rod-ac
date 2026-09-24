@@ -51,7 +51,7 @@ public sealed class SlrrEngineBuilds
         var carsRoot = Path.Combine(_game.Root, CarsFolder);
         if (!Directory.Exists(carsRoot)) return builds;
 
-        foreach (var file in Directory.EnumerateFiles(carsRoot, "*.rpk").OrderBy(f => f))
+        foreach (var file in Directory.EnumerateFiles(carsRoot, "*.rpk").OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
         {
             var rpk = _game.GetRpk(Path.GetRelativePath(_game.Root, file));
             if (rpk == null) continue;
@@ -62,8 +62,8 @@ public sealed class SlrrEngineBuilds
                 var scriptPath = entry.FirstValue("script");
                 if (string.IsNullOrEmpty(scriptPath)) continue;
 
-                var scriptFile = Path.Combine(_game.Root, scriptPath);
-                if (!File.Exists(scriptFile) || !scripts.Extends(scriptFile, ChassisClass)) continue;
+                var scriptFile = _game.ContentFile(scriptPath);
+                if (scriptFile == null || !scripts.Extends(scriptFile, ChassisClass)) continue;
 
                 var script = scripts.Evaluate(scriptFile);
                 if (script == null) continue;
@@ -112,8 +112,8 @@ public sealed class SlrrEngineBuilds
                 var scriptPath = entry.FirstValue("script");
                 if (string.IsNullOrEmpty(scriptPath)) continue;
 
-                var scriptFile = Path.Combine(_game.Root, scriptPath);
-                if (!File.Exists(scriptFile) || !scripts.Extends(scriptFile, SetClass)) continue;
+                var scriptFile = _game.ContentFile(scriptPath);
+                if (scriptFile == null || !scripts.Extends(scriptFile, SetClass)) continue;
 
                 var kit = scripts.Kit(scriptFile);
                 if (kit == null || kit.Parts.Count < MinBuildParts) continue;
@@ -142,7 +142,7 @@ public sealed class SlrrEngineBuilds
     public List<EngineBuild> FromNotes(string folder)
     {
         var builds = new List<EngineBuild>();
-        foreach (var file in Directory.EnumerateFiles(folder, "*.txt").OrderBy(f => f))
+        foreach (var file in Directory.EnumerateFiles(folder, "*.txt").OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
         {
             var fileId = Slug(Path.GetFileNameWithoutExtension(file));
             string? title = null;

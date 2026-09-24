@@ -60,6 +60,14 @@ namespace Street_Rod_AC.Models.Race
 
         [JsonProperty("track_layout")]
         public string? TrackLayout { get; set; }
+
+        /// <summary>
+        /// The <see cref="RaceContext.ContextId"/> the launcher wrote into race.ini ([STREET_ROD] CONTEXT_ID),
+        /// echoed back by the Lua app. Ties the file to the race it came from; absent in files written before
+        /// schema 1.1 or when race.ini had no id.
+        /// </summary>
+        [JsonProperty("context_id")]
+        public string? ContextId { get; set; }
     }
 
     /// <summary>
@@ -73,6 +81,14 @@ namespace Street_Rod_AC.Models.Race
 
         [JsonProperty("car_name")]
         public string CarName { get; set; } = string.Empty;
+
+        /// <summary>AC's index of the car (0 is the player's); null in files written before schema 1.1</summary>
+        [JsonProperty("car_index")]
+        public int? CarIndex { get; set; }
+
+        /// <summary>True for the player's car; null in files written before schema 1.1</summary>
+        [JsonProperty("is_player")]
+        public bool? IsPlayer { get; set; }
 
         [JsonProperty("performance")]
         public ParticipantPerformance Performance { get; set; } = new();

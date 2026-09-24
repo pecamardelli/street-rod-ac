@@ -114,6 +114,40 @@ public sealed class ScriptClass
         return _fieldSignatures.GetValueOrDefault(name);
     }
 
+    // Method lookups of the VM, made once: a class is complete when it is loaded (or derived) and never changes
+    // after, and every virtual call and construction asks. Built on first use, from any thread.
+    private volatile MethodIndex? _methodIndex;
+
+    private sealed class MethodIndex
+    {
+        public readonly Dictionary<(string Name, int ParameterCount), ScriptMethod> ByNameAndCount = new();
+        public readonly Dictionary<string, List<ScriptMethod>> ByName = new(StringComparer.Ordinal);
+    }
+
+    private MethodIndex GetMethodIndex()
+    {
+        if (_methodIndex is { } built) return built;
+
+        var index = new MethodIndex();
+        foreach (var method in Methods)
+        {
+            // The first one declared wins, as a search of the list in order would find it
+            index.ByNameAndCount.TryAdd((method.Name, method.ParameterCount), method);
+            if (!index.ByName.TryGetValue(method.Name, out var named)) index.ByName[method.Name] = named = new List<ScriptMethod>();
+            named.Add(method);
+        }
+
+        return _methodIndex = index;
+    }
+
+    /// <summary>The first method of this class with the name and number of parameters; null when there is none</summary>
+    public ScriptMethod? FindMethod(string name, int parameterCount) =>
+        GetMethodIndex().ByNameAndCount.GetValueOrDefault((name, parameterCount));
+
+    /// <summary>Methods of this class by name ("&lt;init&gt;": the constructors), in the order they are declared</summary>
+    public IReadOnlyList<ScriptMethod> MethodsNamed(string name) =>
+        GetMethodIndex().ByName.TryGetValue(name, out var named) ? named : Array.Empty<ScriptMethod>();
+
     /// <summary>Class name behind a type operand, which is a signature string: "Ljava.game.parts.Part;"</summary>
     public string? TypeName(int index)
     {
@@ -158,16 +192,29 @@ public sealed class ScriptClass
         var derived = new ScriptClass { Folder = Folder, CopiedFrom = ClassName };
         derived.Pool.AddRange(Pool.Select(c => c.Text == null ? c : c with { Text = Swap(c.Text) }));
         derived.Fields.AddRange(Fields.Select(f => f with { Signature = Swap(f.Signature) }));
-        derived.Methods.AddRange(Methods.Where(m => !dropped.Contains(m.Name)).Select(m => m with { Signature = Swap(m.Signature) }));
+        // A new method, not a copy "with" another signature: the parameter types are worked out from the
+        // signature when a method is made, and a copy would keep the old class names in them
+        derived.Methods.AddRange(Methods.Where(m => !dropped.Contains(m.Name)).Select(m => new ScriptMethod(m.Flags, m.Name, Swap(m.Signature), m.Tree)));
         derived.Trees.AddRange(Trees);
         return derived;
 
         string Swap(string text) => Regex.Replace(Regex.Replace(text, oldName, className), oldBase, baseClass);
     }
 
+    /// <summary>The class in a file; null when the file cannot be read or is not a class file</summary>
     public static ScriptClass? Load(string filename)
     {
-        var data = File.ReadAllBytes(filename);
+        byte[] data;
+        try
+        {
+            data = File.ReadAllBytes(filename);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            // Locked, unreadable or not a usable path: to the scripts, a class that is not there
+            return null;
+        }
+
         if (data.Length < HeaderSize + 8 || Encoding.ASCII.GetString(data, 0, 4) != "TUFA") return null;
 
         var result = new ScriptClass { Folder = Path.GetDirectoryName(filename) ?? string.Empty };

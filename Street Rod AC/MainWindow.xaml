@@ -17,19 +17,24 @@
 
         <!-- Dialog Host Overlay -->
         <Grid x:Name="DialogHost"
-              Background="#99000000"
+              Background="{StaticResource OverlayBrush}"
               Visibility="{Binding DialogService.IsDialogOpen, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Border Background="{StaticResource BgMediumBrush}"
                     BorderBrush="{StaticResource BorderLightBrush}"
                     BorderThickness="2"
                     CornerRadius="8"
                     MaxWidth="750"
-                    MaxHeight="400"
+                    Margin="40"
                     Padding="0"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Effect="{StaticResource DropShadowEffect}">
-                <ContentControl Content="{Binding DialogService.CurrentDialog, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                <!-- As tall as the window allows, and scrolling beyond that: a long message or the event entry's
+                     car list is never cut off on a small or high-DPI screen -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <ContentControl Content="{Binding DialogService.CurrentDialog, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                </ScrollViewer>
             </Border>
         </Grid>
     </Grid>

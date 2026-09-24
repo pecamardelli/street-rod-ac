@@ -18,15 +18,20 @@ namespace Street_Rod_AC.Services.Race.Validation
         }
 
         /// <summary>
-        /// Check if a session ID has already been processed
+        /// Check if a session ID has already been processed in the save
         /// </summary>
+        /// <param name="saveName">The save the result would be applied to</param>
         /// <param name="sessionId">Session UUID from race result</param>
         /// <returns>True if already processed, false if new</returns>
-        public async Task<bool> IsProcessedAsync(string sessionId)
+        /// <exception cref="Exception">
+        /// The save could not be read. Taking that for "not processed" would apply a result twice; the caller
+        /// leaves the file where it is and tries again later.
+        /// </exception>
+        public async Task<bool> IsProcessedAsync(string saveName, string sessionId)
         {
             try
             {
-                var exists = await _sessionRepository.IsProcessedAsync(sessionId);
+                var exists = await _sessionRepository.IsProcessedAsync(saveName, sessionId);
 
                 if (exists)
                 {
@@ -38,8 +43,7 @@ namespace Street_Rod_AC.Services.Race.Validation
             catch (Exception ex)
             {
                 _logger.Error(ex, "Error checking if session {SessionId} is processed", sessionId);
-                // On error, assume not processed to avoid data loss
-                return false;
+                throw;
             }
         }
     }

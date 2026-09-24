@@ -11,7 +11,7 @@ Stored in save file, evolves over time.
 
 | Property | Range | Purpose |
 |----------|-------|---------|
-| Skill | 80-100 | Overall driving ability |
+| Skill | 90-100 | Overall driving ability (the floor of 90 is deliberate, commit 61ca613: below it AC's AI drives too badly to make a race. Generation, evolution clamping and the adapter all keep to it; never lower it) |
 | Aggression | 0-100 | Risk appetite |
 | Age, Gender | - | Personality modifiers |
 | Name, Portrait | - | Identity |
@@ -21,7 +21,7 @@ Generated fresh for each race, never persisted.
 
 | Input | Output |
 |-------|--------|
-| Skill → | AC AI_LEVEL |
+| Skill → | AC AI_LEVEL (clamped to 90-100) |
 | Aggression → | AC AI_AGGRESSION |
 
 ## Generation Modifiers
@@ -54,9 +54,22 @@ Age affects aggression:
 | OpponentEvolutionService | Apply race outcome changes |
 | OpponentAIAdapter | Convert to AC parameters (static) |
 
+## Challenges (`OpponentChallengeService`)
+An opponent can turn a challenge down (`ChallengeResponse.DeclineReason`):
+- **Cash wager**: no money or not enough (`InsufficientFunds`), a stake over half their bankroll unless they are
+  aggressive (`BetTooHigh`), a rookie challenger (`ReputationTooLow`, by chance), or plain not interested.
+- **Pink slip**: both cars valued by `CarValuation` (with their engines when the parts service is there). A car worth
+  nothing, or a player's car worth less than 60% of theirs, is `CarValueMismatch`. Otherwise the chance to accept
+  starts at 50% and moves with reputation, aggression, age, skill, their pink-slip record and the value ratio, clamped
+  to 5-95%.
+- `AlwaysAccept` (default off) accepts everything, for testing races; it never ships on.
+
+The Diner asks before it prepares the cars' data, so a refusal costs nothing.
+
 ## Race Workflow
 1. Load `Opponent` from save
-2. Convert via `OpponentAIAdapter.ToAssettoCorsaAI(opponent)`
+2. Convert via `OpponentAIAdapter.ToAssettoCorsaAI(opponent)` (Diner and Newspaper events both go through it, via
+   `RaceSetupBuilder`)
 3. Pass AI params to launch intent
 4. After race, call evolution service
 5. Save updated opponent
@@ -66,3 +79,4 @@ Age affects aggression:
 - `Services/Opponents/OpponentGenerationService.cs`
 - `Services/Opponents/OpponentEvolutionService.cs`
 - `Services/Opponents/OpponentAIAdapter.cs`
+- `Services/Opponents/OpponentChallengeService.cs`

@@ -1,7 +1,7 @@
 using System.IO;
 using System.Security.Cryptography;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Parts.Export;
 
@@ -173,7 +173,24 @@ public sealed class SoundLibrary
         var factsPath = Path.Combine(folder, SoundJson);
         var facts = File.Exists(factsPath) ? JsonConvert.DeserializeObject<SoundFacts>(File.ReadAllText(factsPath)) ?? new SoundFacts() : new SoundFacts();
 
-        var bank = facts.Bank != null ? Path.Combine(folder, facts.Bank) : Directory.GetFiles(folder, "*.bank").OrderBy(f => f).FirstOrDefault();
+        // The bank a sound.json names is copied into a car's sfx folder for a race: it has to be a bank of this
+        // sound's own folder, not any file a path in the json leads to
+        string? bank;
+        if (facts.Bank != null)
+        {
+            if (!PathNames.TryCombineUnder(folder, facts.Bank, out var named) || !named.EndsWith(".bank", StringComparison.OrdinalIgnoreCase))
+            {
+                _problems.Add($"{id}: {SoundJson} names '{facts.Bank}' as its bank, which is no .bank file in the sound's folder; not a sound");
+                return null;
+            }
+
+            bank = named;
+        }
+        else
+        {
+            bank = Directory.GetFiles(folder, "*.bank").OrderBy(f => f).FirstOrDefault();
+        }
+
         var guids = Path.Combine(folder, AcCarSound.GuidsFileName);
         if (bank == null || !File.Exists(bank) || !File.Exists(guids))
         {
@@ -319,29 +336,21 @@ public sealed class SoundLibrary
         // While a race has the car on another sound, its own bank is the kept one
         var bank = AcCarSound.OwnBank(sound.BankPath)!;
 
+        // A ui_car.json that is not there or does not parse says nothing; the car id will do for a name
         string brand = "", name = id;
         double? bhp = null;
-        var uiPath = Path.Combine(folder, "ui", "ui_car.json");
-        if (File.Exists(uiPath))
+        if (AcCarUi.TryRead(folder, out _) is { } ui)
         {
-            try
-            {
-                var ui = JObject.Parse(File.ReadAllText(uiPath));
-                brand = (string?)ui["brand"] ?? "";
-                name = (string?)ui["name"] ?? id;
-                bhp = StockEngineMatcher.ParsePower((string?)ui["specs"]?["bhp"]);
-            }
-            catch (Exception)
-            {
-                // A ui_car.json that does not parse says nothing; the car id will do for a name
-            }
+            brand = AcCarUi.GetString(ui, "brand") ?? "";
+            name = AcCarUi.GetString(ui, "name") ?? id;
+            bhp = AcSpecs.ParsePower(AcCarUi.GetString(AcCarUi.GetObject(ui, "specs"), "bhp"));
         }
 
+        // Only the limiter is wanted: engine.ini alone, not the whole data.acd decoded
         double? limiter = null;
         try
         {
-            var readFile = AcCarDataReader.ForCar(folder);
-            limiter = new IniText(readFile("engine.ini")).GetNumber("ENGINE_DATA", "LIMITER");
+            limiter = new IniText(AcCarDataReader.ReadFile(folder, "engine.ini")).GetNumber("ENGINE_DATA", "LIMITER");
         }
         catch (Exception)
         {

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+using Street_Rod_AC.ViewModels;
 using Street_Rod_AC.Models.Career.Milestones;
 using Street_Rod_AC.Models.GameState;
 
@@ -7,10 +7,8 @@ namespace Street_Rod_AC.Screens.Career
     /// <summary>
     /// View model for displaying a milestone in the career screen
     /// </summary>
-    public class MilestoneDisplayViewModel : INotifyPropertyChanged
+    public class MilestoneDisplayViewModel : ObservableObject
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
@@ -30,13 +28,8 @@ namespace Street_Rod_AC.Screens.Career
             : $"{Name}\n{Description}\n\nProgress: {CurrentValue}/{TargetValue}";
 
         // Visual properties
+        // The colours are the view's: it paints a completed badge from IsCompleted
         public string StatusIcon => IsCompleted ? "✓" : "○";
-
-        public string StatusColor => IsCompleted ? "#90EE90" : "#FFFFFF";
-
-        public string BackgroundColor => IsCompleted ? "#2A3A2A" : "#2A2A2A";
-
-        public string BorderColor => IsCompleted ? "#00AA00" : "#404040";
 
         public double Opacity => IsCompleted ? 1.0 : 0.8;
 
@@ -63,11 +56,6 @@ namespace Street_Rod_AC.Screens.Career
                     ? Math.Min(100f, (currentValue / (float)milestone.TargetValue) * 100f)
                     : 0f
             };
-        }
-
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

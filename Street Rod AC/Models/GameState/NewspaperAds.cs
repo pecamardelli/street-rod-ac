@@ -18,6 +18,7 @@ namespace Street_Rod_AC.Models.GameState
         public Car Car { get; set; }
         public decimal AskingPrice { get; set; }
         public string SellerName { get; set; }
+        /// <summary>Game time; set by whoever places the ad</summary>
         public DateTime PostedDate { get; set; }
         public int DaysActive { get; set; }
 
@@ -27,7 +28,6 @@ namespace Street_Rod_AC.Models.GameState
             Car = new Car();
             AskingPrice = 0m;
             SellerName = "Unknown";
-            PostedDate = DateTime.Now;
             DaysActive = 0;
         }
 
@@ -45,6 +45,7 @@ namespace Street_Rod_AC.Models.GameState
         public PartInstance Part { get; set; }
         public decimal AskingPrice { get; set; }
         public string SellerName { get; set; }
+        /// <summary>Game time; set by whoever places the ad</summary>
         public DateTime PostedDate { get; set; }
         public int DaysActive { get; set; }
 
@@ -54,7 +55,6 @@ namespace Street_Rod_AC.Models.GameState
             Part = new PartInstance();
             AskingPrice = 0m;
             SellerName = "Unknown";
-            PostedDate = DateTime.Now;
             DaysActive = 0;
         }
 

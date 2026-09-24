@@ -25,17 +25,23 @@ public sealed class EngineBuildIndex
     /// <summary>Builds that run, in the order of the catalog</summary>
     public IReadOnlyList<RatedBuild> Runnable { get; private set; } = Array.Empty<RatedBuild>();
 
+    /// <summary>Builds whose part scripts faulted while they were rated, one line each, for the log</summary>
+    public IReadOnlyList<string> ScriptFaults { get; private set; } = Array.Empty<string>();
+
     public RatedBuild? Get(string? buildId) => buildId == null ? null : _byId.GetValueOrDefault(buildId);
 
     public static EngineBuildIndex Create(PartsCatalog catalog)
     {
         var evaluated = new List<(EngineBuild Build, string BlockId, EngineReport Report)>();
+        var faults = new List<string>();
         foreach (var build in catalog.EngineBuilds)
         {
             var tree = PartTreeBuilder.BuildEngine(catalog, build);
             if (tree == null) continue;
 
+            // A build whose scripts fault does not run; the others are rated all the same
             var report = EngineEvaluator.Evaluate(catalog, tree);
+            faults.AddRange(report.ScriptFaults.Select(fault => $"{build.Id}: {fault}"));
             if (report.Runs) evaluated.Add((build, tree.Root.Definition.Id, report));
         }
 
@@ -59,6 +65,7 @@ public sealed class EngineBuildIndex
         }
 
         index.Runnable = runnable;
+        index.ScriptFaults = faults;
         return index;
     }
 }

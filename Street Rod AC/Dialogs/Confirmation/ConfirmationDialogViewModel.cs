@@ -22,6 +22,9 @@ namespace Street_Rod_AC.Dialogs.Confirmation
             set => SetProperty(ref _message, value);
         }
 
+        /// <summary>The same question, word for word, is only asked once at a time</summary>
+        public override string? DuplicateKey => $"{Title}\n{Message}";
+
         public RelayCommand YesCommand { get; }
         public RelayCommand NoCommand { get; }
 
@@ -40,16 +43,18 @@ namespace Street_Rod_AC.Dialogs.Confirmation
             NoCommand = new RelayCommand(OnNo);
         }
 
+        // Closed before the callback runs: whatever the callback shows (an error, the next question) must
+        // come up after this dialog has gone, not be closed along with it
         private void OnYes()
         {
-            _resultCallback(true);
             _dialogService.CloseDialog();
+            _resultCallback(true);
         }
 
         private void OnNo()
         {
-            _resultCallback(false);
             _dialogService.CloseDialog();
+            _resultCallback(false);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.IO;
 using Newtonsoft.Json;
+using Street_Rod_AC.Helpers;
 
 namespace Street_Rod_AC.Parts;
 
@@ -20,21 +21,42 @@ public sealed class SlotShifts
 
     public bool IsEmpty => _shifts.Count == 0;
 
+    /// <summary>
+    /// Why the file could not be read; null when it read (or is not there). The file is somebody's work in progress:
+    /// while it does not read, it is never written over (<see cref="Save"/> refuses), so fixing it by hand loses nothing.
+    /// </summary>
+    public string? Problem { get; private set; }
+
     public IEnumerable<(string PartId, int SlotId, float[] Offset)> All =>
         _shifts.SelectMany(p => p.Value.Select(s => (p.Key, s.Key, s.Value)));
 
+    /// <remarks>
+    /// Never throws for what is in the file: one that does not read is no shifts, with the reason in
+    /// <see cref="Problem"/>; an entry that is not three numbers is skipped.
+    /// </remarks>
     public static SlotShifts Load(string folder)
     {
         var path = System.IO.Path.Combine(folder, FileName);
-        var shifts = new SlotShifts { Path = path };
-        if (!File.Exists(path)) return shifts;
+        if (!File.Exists(path)) return new SlotShifts { Path = path };
 
-        var read = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<int, float[]>>>(File.ReadAllText(path)) ?? new();
-        foreach (var (partId, slots) in read)
+        Dictionary<string, Dictionary<int, float[]?>?>? read;
+        try
         {
+            read = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<int, float[]?>?>>(File.ReadAllText(path));
+        }
+        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+        {
+            return new SlotShifts { Path = path, Problem = $"{FileName} could not be read ({ex.Message}); no slot shifts, and the file is left as it is" };
+        }
+
+        var shifts = new SlotShifts { Path = path };
+        foreach (var (partId, slots) in read ?? new())
+        {
+            if (slots == null) continue;
+
             foreach (var (slotId, offset) in slots)
             {
-                if (offset.Length == 3) shifts.Add(partId, slotId, offset, save: false);
+                if (offset is { Length: 3 } && offset.All(float.IsFinite)) shifts.Add(partId, slotId, offset, save: false);
             }
         }
 
@@ -80,10 +102,35 @@ public sealed class SlotShifts
         return applied;
     }
 
+    /// <summary>
+    /// Reads the file again after it failed to read: the shifts made since were added onto nothing, so the file's
+    /// own offsets are added onto them. False while it still does not read.
+    /// </summary>
+    private bool Recover()
+    {
+        var folder = System.IO.Path.GetDirectoryName(Path);
+        if (folder == null) return false;
+
+        var reread = Load(folder);
+        if (reread.Problem != null)
+        {
+            Problem = reread.Problem;
+            return false;
+        }
+
+        foreach (var (partId, slotId, offset) in reread.All) Add(partId, slotId, offset, save: false);
+        Problem = null;
+        return true;
+    }
+
     /// <returns>False when the file could not be written (a read-only content folder, the file open elsewhere)</returns>
     public bool Save()
     {
         if (Path == null) return true;
+
+        // What is in a file that did not read is not in memory: writing would throw it away. Unless it reads now
+        // (fixed by hand while the game runs): then what it holds joins what was shifted since, and saving resumes.
+        if (Problem != null && !Recover()) return false;
 
         try
         {
@@ -93,7 +140,8 @@ public sealed class SlotShifts
                 return true;
             }
 
-            File.WriteAllText(Path, JsonConvert.SerializeObject(_shifts, Formatting.Indented));
+            // A crash half way must not leave half a file: the new one takes the old one's place in one go
+            SafeFile.WriteAllText(Path, JsonConvert.SerializeObject(_shifts, Formatting.Indented));
             return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

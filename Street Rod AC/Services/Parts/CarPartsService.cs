@@ -32,10 +32,24 @@ namespace Street_Rod_AC.Services.Parts
         private readonly object _assignLock = new();
         private readonly ConcurrentDictionary<string, AcCarSpecs?> _specs = new();
 
-        public CarPartsService(IContentCatalogRepository catalogRepo, ICarProfileRepository profileRepo)
+        // Whether a race has the car's data changed right now (CarDataOverlay): what is read then is not the car's own
+        private readonly Func<string, bool> _isCarDataApplied;
+
+        // Script faults are told once each per car: the same engine is evaluated again on every screen that shows
+        // it, and the same faulting part on another car is another car to name
+        private readonly ConcurrentDictionary<(string Car, string Fault), byte> _toldFaults = new();
+
+        /// <param name="isCarDataApplied">
+        /// Whether a car's data is changed for a race right now; by default what <see cref="CarDataOverlay.IsApplied"/>
+        /// finds on disk
+        /// </param>
+        public CarPartsService(IContentCatalogRepository catalogRepo, ICarProfileRepository profileRepo, Func<string, bool>? isCarDataApplied = null)
         {
             _catalogRepo = catalogRepo;
             _profileRepo = profileRepo;
+            // A new overlay per ask: it reads the AC and restore paths from the settings when it is made, and those
+            // may have changed since this service was
+            _isCarDataApplied = isCarDataApplied ?? (id => new CarDataOverlay().IsApplied(id));
             PartPricing.Scale = AppSettings.Instance.PartsPriceScale;
             _catalog = new Lazy<PartsCatalog>(LoadCatalog);
             _builds = new Lazy<EngineBuildIndex>(CreateIndex);
@@ -101,7 +115,36 @@ namespace Street_Rod_AC.Services.Parts
             return Assign(car, engine, gear);
         }
 
-        public EngineReport? Evaluate(Car car) => IsAvailable && car.Engine is { } engine ? EngineFactory.Evaluate(Catalog, engine) : null;
+        /// <remarks>
+        /// Never throws for what the content does: a part script that faults, or anything else the parts hold, is an
+        /// engine that does not run, with the reason as its problem and in the log
+        /// </remarks>
+        public EngineReport? Evaluate(Car car)
+        {
+            if (!IsAvailable || car.Engine is not { } engine) return null;
+
+            EngineReport? report;
+            try
+            {
+                report = EngineFactory.Evaluate(Catalog, engine);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "{Car}: its engine {Block} could not be evaluated", car.DefinitionId, engine.DefinitionId);
+                return new EngineReport { Problem = "the engine could not be evaluated: " + ex.Message };
+            }
+
+            if (report != null) TellFaults(car.DefinitionId, report.ScriptFaults);
+            return report;
+        }
+
+        private void TellFaults(string carId, IReadOnlyList<string> faults)
+        {
+            foreach (var fault in faults)
+            {
+                if (_toldFaults.TryAdd((carId, fault), 0)) _logger.Warning("{Car}: a part script faulted: {Fault}", carId, fault);
+            }
+        }
 
         public SoundLibrary Sounds => _sounds.Value;
 
@@ -126,7 +169,23 @@ namespace Street_Rod_AC.Services.Parts
             return definition == null ? null : GetStockBuild(definition)?.MassKg;
         }
 
-        public AcCarSpecs? Specs(string carDefinitionId) => _specs.GetOrAdd(carDefinitionId, id =>
+        /// <remarks>
+        /// Kept for the session, except what is read while a race has the car's data changed: that is the race's
+        /// data, not the car's, and kept it would be scaled again by the next race
+        /// </remarks>
+        public AcCarSpecs? Specs(string carDefinitionId)
+        {
+            if (_specs.TryGetValue(carDefinitionId, out var cached)) return cached;
+
+            var appliedBefore = IsCarDataApplied(carDefinitionId);
+            var specs = ReadSpecs(carDefinitionId);
+            if (!appliedBefore && !IsCarDataApplied(carDefinitionId)) return _specs.GetOrAdd(carDefinitionId, specs);
+
+            _logger.Information("{Car}: its data is changed for a race right now; its specs are read, not kept", carDefinitionId);
+            return specs;
+        }
+
+        private AcCarSpecs? ReadSpecs(string id)
         {
             try
             {
@@ -137,7 +196,21 @@ namespace Street_Rod_AC.Services.Parts
                 _logger.Warning("Could not read the data of {Car}: {Error}", id, ex.Message);
                 return null;
             }
-        });
+        }
+
+        private bool IsCarDataApplied(string carId)
+        {
+            try
+            {
+                return _isCarDataApplied(carId);
+            }
+            catch (Exception ex)
+            {
+                // Not knowing is not keeping: the next ask reads again
+                _logger.Warning("Could not tell whether {Car} is changed for a race: {Error}", carId, ex.Message);
+                return true;
+            }
+        }
 
         public (RunningGearFactory.AxleParts Front, RunningGearFactory.AxleParts Rear)? FactoryRunningGear(Car car) =>
             IsAvailable && Specs(car.DefinitionId) is { } specs ? RunningGearFactory.Choose(Catalog, specs) : null;
@@ -297,6 +370,7 @@ namespace Street_Rod_AC.Services.Parts
                 var catalog = PartsCatalog.Load(AppSettings.Instance.PartsPath);
                 _logger.Information("Parts catalog: {Parts} parts, {Builds} engine builds in {Ms} ms", catalog.Parts.Count,
                     catalog.EngineBuilds.Count, (int)(DateTime.Now - started).TotalMilliseconds);
+                foreach (var problem in catalog.Problems) _logger.Warning("Parts catalog: {Problem}", problem);
                 return catalog;
             }
             catch (Exception ex)
@@ -336,6 +410,7 @@ namespace Street_Rod_AC.Services.Parts
                 var index = EngineBuildIndex.Create(Catalog);
                 _logger.Information("{Count} engine builds run, put on the dyno in {Ms} ms", index.Runnable.Count,
                     (int)(DateTime.Now - started).TotalMilliseconds);
+                foreach (var fault in index.ScriptFaults) _logger.Warning("Engine builds: a part script faulted and was left out: {Fault}", fault);
                 return index;
             }
             catch (Exception ex)

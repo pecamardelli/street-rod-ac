@@ -107,7 +107,7 @@ git grep -nEi '(api[_-]?key|secret|password|token)\s*[:=]' -- ':!*.md'
 
 ## AC Python app (legacy, `apps/python`)
 
-Superseded; audit only if it changed in the diff window. Flag if anything still launches or depends on it.
+Removed 2026-09-24: no unit exists. If an `apps/python` folder reappears, flag it (nothing should launch or depend on it) and audit it only if it changed in the diff window.
 
 ## Build/ops scripts (`tools/*.ps1`)
 

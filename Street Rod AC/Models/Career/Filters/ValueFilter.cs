@@ -5,7 +5,8 @@ namespace Street_Rod_AC.Models.Career.Filters
 {
     /// <summary>
     /// Filter that matches cars by value/price range.
-    /// Requires a car instance to check actual purchase price.
+    /// Requires a car instance. The car is valued by the valuation the filter service passes in (what the
+    /// car is worth now, the same figure the market uses); without one, by what was paid for it.
     /// Example: "Budget builds under $5000", "High-roller specials"
     /// </summary>
     public class ValueFilter : ICarFilter
@@ -44,13 +45,15 @@ namespace Street_Rod_AC.Models.Career.Filters
             MaxValue = maxValue;
         }
 
-        public bool Matches(CarDefinition car, Car? instance = null)
+        public bool Matches(CarDefinition car, Car? instance = null) => Matches(car, instance, null);
+
+        public bool Matches(CarDefinition car, Car? instance, Func<Car, decimal>? valueOf)
         {
-            // Value filter requires an instance to check purchase price
+            // Value filter requires an instance to value
             if (instance == null)
                 return false;
 
-            var value = instance.PurchasePrice;
+            var value = valueOf?.Invoke(instance) ?? instance.PurchasePrice;
 
             if (MinValue.HasValue && value < MinValue.Value)
                 return false;

@@ -1,31 +1,31 @@
-using Street_Rod_AC.Dialogs;
-using Street_Rod_AC.Dialogs.Information;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Career.Milestones;
 using Street_Rod_AC.Models.Career.Victory;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Models.Race;
 
 namespace Street_Rod_AC.Services.Career
 {
     /// <summary>
-    /// Service for checking career progress after races and showing notifications
-    /// for newly completed milestones, unlocked victories, and game victories.
+    /// Service for checking career progress after races and putting what the player should hear about newly
+    /// completed milestones, unlocked victories and game victories into words. It opens no dialogs: the texts
+    /// go back as <see cref="PlayerMessage"/>s on the result, and the screen that ran the race shows them.
     /// </summary>
     public class CareerProgressService : ICareerProgressService
     {
+        /// <summary>Prefix of a milestone unlock that opens a victory path, e.g. "victory:King"</summary>
+        private const string VictoryUnlockPrefix = "victory:";
+
         private readonly IMilestoneService _milestoneService;
         private readonly IVictoryConditionService _victoryService;
-        private readonly DialogService _dialogService;
         private readonly IAppLogger _logger;
 
         public CareerProgressService(
             IMilestoneService milestoneService,
-            IVictoryConditionService victoryService,
-            DialogService dialogService)
+            IVictoryConditionService victoryService)
         {
             _milestoneService = milestoneService;
             _victoryService = victoryService;
-            _dialogService = dialogService;
             _logger = AppLoggerFactory.CreateLogger(LogCategory.App);
         }
 
@@ -69,17 +69,21 @@ namespace Street_Rod_AC.Services.Career
                 }
             }
 
-            // Show notifications (priority: victory > milestones > unlocks)
-            ShowNotifications(newMilestones, newVictoryUnlocks, result.AchievedVictory != null ? _victoryService.GetVictoryCondition(result.AchievedVictory) : null);
+            // What to tell the player (priority: victory > milestones > unlocks)
+            if (ComposeMessage(newMilestones, newVictoryUnlocks,
+                    result.AchievedVictory != null ? _victoryService.GetVictoryCondition(result.AchievedVictory) : null) is { } message)
+            {
+                result.PlayerMessages.Add(message);
+            }
 
             return result;
         }
 
         /// <summary>
-        /// Show notifications for career progress, with priority:
-        /// Victory > Milestones > Victory Unlocks
+        /// The one message about career progress, with priority:
+        /// Victory > Milestones > Victory Unlocks. Null when there is nothing to tell.
         /// </summary>
-        private void ShowNotifications(
+        private PlayerMessage? ComposeMessage(
             List<MilestoneDefinition> newMilestones,
             List<IVictoryCondition> newVictoryUnlocks,
             IVictoryCondition? achievedVictory)
@@ -87,28 +91,23 @@ namespace Street_Rod_AC.Services.Career
             // Priority 1: Game Victory
             if (achievedVictory != null)
             {
-                ShowVictoryDialog(achievedVictory, newMilestones, newVictoryUnlocks);
-                return;
+                return VictoryMessage(achievedVictory, newMilestones, newVictoryUnlocks);
             }
 
             // Priority 2: Milestones (with optional unlock info)
             if (newMilestones.Count > 0)
             {
-                ShowMilestoneDialog(newMilestones, newVictoryUnlocks);
-                return;
+                return MilestoneMessage(newMilestones, newVictoryUnlocks);
             }
 
             // Priority 3: Victory Unlocks only
-            if (newVictoryUnlocks.Count > 0)
-            {
-                ShowUnlockDialog(newVictoryUnlocks);
-            }
+            return newVictoryUnlocks.Count > 0 ? UnlockMessage(newVictoryUnlocks) : null;
         }
 
         /// <summary>
-        /// Show dialog for game victory achievement
+        /// The message for a game victory
         /// </summary>
-        private void ShowVictoryDialog(
+        private static PlayerMessage VictoryMessage(
             IVictoryCondition achievedVictory,
             List<MilestoneDefinition> newMilestones,
             List<IVictoryCondition> newVictoryUnlocks)
@@ -135,18 +134,13 @@ namespace Street_Rod_AC.Services.Career
                 }
             }
 
-            var dialog = new InformationDialogViewModel(
-                _dialogService,
-                message,
-                "VICTORY!"
-            );
-            _dialogService.ShowDialog(dialog);
+            return new PlayerMessage("VICTORY!", message);
         }
 
         /// <summary>
-        /// Show dialog for completed milestones
+        /// The message for completed milestones
         /// </summary>
-        private void ShowMilestoneDialog(
+        private PlayerMessage MilestoneMessage(
             List<MilestoneDefinition> milestones,
             List<IVictoryCondition> newVictoryUnlocks)
         {
@@ -190,18 +184,13 @@ namespace Street_Rod_AC.Services.Career
                 }
             }
 
-            var dialog = new InformationDialogViewModel(
-                _dialogService,
-                message,
-                "Milestone Complete"
-            );
-            _dialogService.ShowDialog(dialog);
+            return new PlayerMessage("Milestone Complete", message);
         }
 
         /// <summary>
-        /// Show dialog for unlocked victory conditions (when no milestones were completed)
+        /// The message for unlocked victory conditions (when no milestones were completed)
         /// </summary>
-        private void ShowUnlockDialog(List<IVictoryCondition> newVictoryUnlocks)
+        private static PlayerMessage UnlockMessage(List<IVictoryCondition> newVictoryUnlocks)
         {
             string message;
 
@@ -219,16 +208,12 @@ namespace Street_Rod_AC.Services.Career
                 }
             }
 
-            var dialog = new InformationDialogViewModel(
-                _dialogService,
-                message,
-                "Path Unlocked"
-            );
-            _dialogService.ShowDialog(dialog);
+            return new PlayerMessage("Path Unlocked", message);
         }
 
         /// <summary>
-        /// Get human-readable descriptions for milestone unlocks
+        /// Get human-readable descriptions for milestone unlocks. Unlock ids carry their kind as a prefix
+        /// ("victory:King"); one that names nothing the game knows is left out rather than shown raw.
         /// </summary>
         private List<string> GetUnlockDescriptions(
             List<string> unlockIds,
@@ -236,10 +221,18 @@ namespace Street_Rod_AC.Services.Career
         {
             var descriptions = new List<string>();
 
-            foreach (var unlockId in unlockIds)
+            foreach (var rawId in unlockIds)
             {
+                if (!rawId.StartsWith(VictoryUnlockPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.Warning("Milestone unlock {Unlock} names nothing the game knows; not shown", rawId);
+                    continue;
+                }
+
+                var unlockId = rawId[VictoryUnlockPrefix.Length..];
+
                 // Check if it's a victory unlock
-                var victory = newVictoryUnlocks.FirstOrDefault(v => v.VictoryType == unlockId);
+                var victory = newVictoryUnlocks.FirstOrDefault(v => string.Equals(v.VictoryType, unlockId, StringComparison.OrdinalIgnoreCase));
                 if (victory != null)
                 {
                     descriptions.Add($"{victory.Name} victory path");
@@ -254,8 +247,7 @@ namespace Street_Rod_AC.Services.Career
                     continue;
                 }
 
-                // Unknown unlock type - just show the ID
-                descriptions.Add(unlockId);
+                _logger.Warning("Milestone unlock {Unlock} names no victory path; not shown", rawId);
             }
 
             return descriptions;

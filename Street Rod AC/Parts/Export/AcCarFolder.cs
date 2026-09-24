@@ -1,4 +1,5 @@
 using System.IO;
+using Street_Rod_AC.Helpers;
 
 namespace Street_Rod_AC.Parts.Export;
 
@@ -20,6 +21,65 @@ public static class AcCarFolder
 
     /// <summary>The car folders of the install, without the copies made for a race: what every reader of the cars goes through</summary>
     /// <param name="carsFolder">The install's content\cars</param>
+    /// <remarks>
+    /// A missing folder lists as empty here, the same as a folder with no cars in it. Whoever must not take the one for
+    /// the other (a misconfigured path or an unplugged drive is not "nothing installed") uses
+    /// <see cref="TryListInstalledCars"/>.
+    /// </remarks>
     public static IEnumerable<string> InstalledCars(string carsFolder) =>
         Directory.Exists(carsFolder) ? Directory.EnumerateDirectories(carsFolder).Where(f => !IsClone(f)) : Enumerable.Empty<string>();
+
+    /// <summary>
+    /// The car folders of the install, race copies left out, read in full now. False, with <paramref name="error"/>
+    /// saying why, when the folder is missing or cannot be read: that is not an install with no cars.
+    /// </summary>
+    /// <param name="carsFolder">The install's content\cars</param>
+    public static bool TryListInstalledCars(string carsFolder, out List<string> folders, out string? error)
+    {
+        folders = [];
+        error = null;
+
+        if (string.IsNullOrWhiteSpace(carsFolder) || !Directory.Exists(carsFolder))
+        {
+            error = "the folder does not exist";
+            return false;
+        }
+
+        try
+        {
+            folders = [.. Directory.EnumerateDirectories(carsFolder).Where(f => !IsClone(f))];
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            error = $"{ex.GetType().Name}: {ex.Message}";
+            return false;
+        }
+    }
+
+    public const string DefaultSkin = "default";
+    private const string PreviewFile = "preview.jpg";
+
+    /// <summary>
+    /// The picture to show for a car in a skin: the skin's preview, else the car's own preview, else the one in its
+    /// ui folder; null when there is none. No skin (null or empty) is the "default" skin.
+    /// </summary>
+    /// <param name="carsPath">The install's content\cars</param>
+    /// <remarks>
+    /// The ids come from the save and the catalog: a car id that is not one folder name has no picture, and a skin id
+    /// that is not one folder name is no skin (the car's own pictures still count).
+    /// </remarks>
+    public static string? PreviewImage(string carsPath, string carId, string? skinId)
+    {
+        if (!PathNames.IsSafeSegment(carId)) return null;
+
+        var carFolder = Path.Combine(carsPath, carId);
+        var skin = string.IsNullOrEmpty(skinId) ? DefaultSkin : skinId;
+        var candidates = new List<string>(3);
+        if (PathNames.IsSafeSegment(skin)) candidates.Add(Path.Combine(carFolder, "skins", skin, PreviewFile));
+        candidates.Add(Path.Combine(carFolder, PreviewFile));
+        candidates.Add(Path.Combine(carFolder, "ui", PreviewFile));
+
+        return candidates.FirstOrDefault(File.Exists);
+    }
 }

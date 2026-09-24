@@ -1,8 +1,11 @@
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Newtonsoft.Json.Linq;
 using Street_Rod_AC.Configuration;
+using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.AC;
+using Street_Rod_AC.Parts.Export;
 
 namespace Street_Rod_AC.Services;
 
@@ -14,6 +17,7 @@ public class AssettoCorsaContentService : IAssettoCorsaContentService
     private readonly AppSettings _settings;
     private readonly List<CarInfo> _cars = [];
     private readonly List<TrackInfo> _tracks = [];
+    private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger(LogCategory.Import);
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -34,46 +38,97 @@ public class AssettoCorsaContentService : IAssettoCorsaContentService
         if (!Directory.Exists(_settings.CarsPath))
         {
             var error = $"Cars directory not found: {_settings.CarsPath}";
-            Console.WriteLine(error);
+            _logger.Error("Cars directory not found: {CarsPath}", _settings.CarsPath);
             throw new DirectoryNotFoundException(error);
         }
 
-        // Every car folder's ui\ui_car.json; the copies made for a race are not cars of the install
-        var uiCarFiles = Street_Rod_AC.Parts.Export.AcCarFolder.InstalledCars(_settings.CarsPath)
-            .Select(folder => Path.Combine(folder, "ui", "ui_car.json"))
-            .Where(File.Exists)
+        // Every car folder with a ui\ui_car.json; the copies made for a race are not cars of the install
+        var carFolders = AcCarFolder.InstalledCars(_settings.CarsPath)
+            .Where(folder => File.Exists(AcCarUi.PathIn(folder)))
             .ToList();
-        Console.WriteLine($"Found {uiCarFiles.Count} ui_car.json files in {_settings.CarsPath}");
+        _logger.Information("Found {Count} ui_car.json files in {CarsPath}", carFolders.Count, _settings.CarsPath);
 
-        foreach (var uiJsonPath in uiCarFiles)
+        var cars = await Task.Run(() =>
         {
-            try
+            var loaded = new List<CarInfo>();
+            foreach (var carFolder in carFolders)
             {
-                // Find the car root folder (parent of the ui folder)
-                var carFolder = Path.GetDirectoryName(Path.GetDirectoryName(uiJsonPath))!;
-
-                // Use the folder name as car ID
-                var carId = Path.GetFileName(carFolder);
-
-                var jsonContent = await File.ReadAllTextAsync(uiJsonPath);
-                var carInfo = JsonSerializer.Deserialize<CarInfo>(jsonContent, JsonOptions);
-
-                if (carInfo != null)
+                try
                 {
-                    carInfo.CarId = carId;
+                    // Read the one lenient way every reader of ui_car.json reads it; the folder name is the car ID
+                    var ui = AcCarUi.TryRead(carFolder, out var error);
+                    if (ui == null)
+                    {
+                        _logger.Warning("Car {Folder} skipped: {Error}", carFolder, error);
+                        continue;
+                    }
+
+                    var carInfo = ToCarInfo(ui);
+                    carInfo.CarId = Path.GetFileName(carFolder);
                     carInfo.FolderPath = carFolder;
-                    _cars.Add(carInfo);
-                    Console.WriteLine($"Loaded car: {carInfo.Name} ({carId}) from {carFolder}");
+                    loaded.Add(carInfo);
+                    _logger.Debug("Loaded car: {Name} ({CarId}) from {Folder}", carInfo.Name, carInfo.CarId, carFolder);
+                }
+                catch (Exception ex)
+                {
+                    // Log and continue - don't fail entire load for one bad car
+                    _logger.Warning(ex, "Error loading car from {Folder}", carFolder);
                 }
             }
-            catch (Exception ex)
+
+            return loaded;
+        });
+
+        _cars.AddRange(cars);
+        return _cars;
+    }
+
+    /// <summary>The fields of a ui_car.json the game shows, each read as leniently as mods write them</summary>
+    private static CarInfo ToCarInfo(JObject ui)
+    {
+        var specs = AcCarUi.GetObject(ui, "specs");
+        return new CarInfo
+        {
+            Name = AcCarUi.GetString(ui, "name") ?? string.Empty,
+            Brand = AcCarUi.GetString(ui, "brand") ?? string.Empty,
+            Description = AcCarUi.GetString(ui, "description") ?? string.Empty,
+            Tags = AcCarUi.GetStrings(ui, "tags").ToList(),
+            Class = AcCarUi.GetString(ui, "class") ?? string.Empty,
+            Specs = specs == null ? null : new CarSpecs
             {
-                // Log and continue - don't fail entire load for one bad car
-                Console.WriteLine($"Error loading car from {uiJsonPath}: {ex.Message}");
-            }
+                Bhp = AcCarUi.GetString(specs, "bhp"),
+                Torque = AcCarUi.GetString(specs, "torque"),
+                Weight = AcCarUi.GetString(specs, "weight"),
+                TopSpeed = AcCarUi.GetString(specs, "topspeed"),
+                Acceleration = AcCarUi.GetString(specs, "acceleration"),
+                PwRatio = AcCarUi.GetString(specs, "pwratio")
+            },
+            TorqueCurve = Curve(ui["torqueCurve"]),
+            PowerCurve = Curve(ui["powerCurve"]),
+            Country = AcCarUi.GetString(ui, "country"),
+            Author = AcCarUi.GetString(ui, "author"),
+            Year = AcCarUi.GetInt(ui, "year"),
+            Version = AcCarUi.GetString(ui, "version"),
+            Url = AcCarUi.GetString(ui, "url")
+        };
+    }
+
+    /// <summary>A curve as [[rpm, value], ...]; points that are not pairs of numbers are left out; null when there is none</summary>
+    private static List<List<double>>? Curve(JToken? token)
+    {
+        if (token is not JArray points) return null;
+
+        var curve = new List<List<double>>();
+        foreach (var point in points.OfType<JArray>())
+        {
+            var values = point.OfType<JValue>()
+                .Where(v => v.Type is JTokenType.Integer or JTokenType.Float)
+                .Select(v => Convert.ToDouble(v.Value, System.Globalization.CultureInfo.InvariantCulture))
+                .ToList();
+            if (values.Count >= 2) curve.Add(values);
         }
 
-        return _cars;
+        return curve;
     }
 
     public async Task<List<TrackInfo>> LoadTracksAsync()
@@ -83,13 +138,13 @@ public class AssettoCorsaContentService : IAssettoCorsaContentService
         if (!Directory.Exists(_settings.TracksPath))
         {
             var error = $"Tracks directory not found: {_settings.TracksPath}";
-            Console.WriteLine(error);
+            _logger.Error("Tracks directory not found: {TracksPath}", _settings.TracksPath);
             throw new DirectoryNotFoundException(error);
         }
 
         // Recursively find all ui_track.json files
         var uiTrackFiles = Directory.GetFiles(_settings.TracksPath, "ui_track.json", SearchOption.AllDirectories);
-        Console.WriteLine($"Found {uiTrackFiles.Length} ui_track.json files in {_settings.TracksPath}");
+        _logger.Information("Found {Count} ui_track.json files in {TracksPath}", uiTrackFiles.Length, _settings.TracksPath);
 
         // Group files by track root folder to avoid loading variants as separate tracks
         var trackGroups = uiTrackFiles
@@ -130,13 +185,13 @@ public class AssettoCorsaContentService : IAssettoCorsaContentService
                     LoadTrackConfigurations(trackInfo, trackFolder);
 
                     _tracks.Add(trackInfo);
-                    Console.WriteLine($"Loaded track: {trackInfo.Name} ({trackId}) from {trackFolder}");
+                    _logger.Debug("Loaded track: {Name} ({TrackId}) from {Folder}", trackInfo.Name, trackId, trackFolder);
                 }
             }
             catch (Exception ex)
             {
                 // Log and continue - don't fail entire load for one bad track
-                Console.WriteLine($"Error loading track from {trackGroup.Key}: {ex.Message}");
+                _logger.Warning(ex, "Error loading track from {Folder}", trackGroup.Key);
             }
         }
 

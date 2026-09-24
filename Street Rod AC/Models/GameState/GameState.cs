@@ -22,9 +22,6 @@ namespace Street_Rod_AC.Models.GameState
 
         // Time System - Game world time (starts in 1963)
         public DateTime Date { get; set; }
-        public int LastHour { get; set; }
-        public int LastDay { get; set; }
-        public int LastWeek { get; set; }
 
         // Player
         public Player Player { get; set; }
@@ -47,6 +44,13 @@ namespace Street_Rod_AC.Models.GameState
         // Career Progression
         public CareerState Career { get; set; }
 
+        /// <summary>
+        /// The race the player went off to and has not come back from yet: set just before AC starts and saved
+        /// with the game, cleared once its result (or the lack of one) has been dealt with. A result file left
+        /// over from a crash is only ever applied to the save that holds its race.
+        /// </summary>
+        public Models.Race.RaceContext? PendingRace { get; set; }
+
         // Metadata
         public int CatalogVersion { get; set; }
         public DateTime CreatedDate { get; set; }
@@ -63,9 +67,6 @@ namespace Street_Rod_AC.Models.GameState
 
             // Game world time (1963)
             Date = gameStart;
-            LastHour = gameStart.Hour;
-            LastDay = gameStart.DayOfYear;
-            LastWeek = GetWeekOfYear(gameStart);
 
             Player = new Player("Player");
             Racers = new RacerCollection();
@@ -100,21 +101,9 @@ namespace Street_Rod_AC.Models.GameState
             return state;
         }
 
-        private static int GetWeekOfYear(DateTime date)
-        {
-            var culture = System.Globalization.CultureInfo.CurrentCulture;
-            var calendar = culture.Calendar;
-            var weekRule = culture.DateTimeFormat.CalendarWeekRule;
-            var firstDayOfWeek = culture.DateTimeFormat.FirstDayOfWeek;
-            return calendar.GetWeekOfYear(date, weekRule, firstDayOfWeek);
-        }
-
         public void UpdateTime(DateTime newDate)
         {
             Date = newDate;
-            LastHour = newDate.Hour;
-            LastDay = newDate.DayOfYear;
-            LastWeek = GetWeekOfYear(newDate);
             LastPlayedDate = DateTime.Now;
         }
     }

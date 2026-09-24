@@ -1,4 +1,5 @@
 using System.IO;
+using Street_Rod_AC.Helpers;
 
 namespace Street_Rod_AC.Slrr;
 
@@ -17,6 +18,9 @@ public sealed class SlrrGame
     };
 
     private readonly Dictionary<string, SlrrRpk?> _rpks = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<string> _unreadable = new();
+    private readonly HashSet<string> _unreadablePaths = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _outside = new(StringComparer.OrdinalIgnoreCase);
 
     public SlrrGame(string root)
     {
@@ -25,12 +29,63 @@ public sealed class SlrrGame
 
     public string Root { get; }
 
+    /// <summary>Rpks that are there but could not be read, with why: they count as missing, and the run reports them</summary>
+    public IReadOnlyList<string> UnreadableRpks => _unreadable;
+
+    /// <summary>
+    /// Whether the rpk at a path relative to the install (as a pack's source or a reference names it) is there but
+    /// could not be read. Not the same as gone: what was converted from it before is kept, not taken for stale
+    /// </summary>
+    public bool IsUnreadable(string relativePath) => _unreadablePaths.Contains(NormalPath(relativePath));
+
+    private static string NormalPath(string relativePath) => relativePath.Trim().Replace('/', '\\');
+
+    /// <summary>
+    /// The rpk at a path relative to the install, loaded once; null when it is missing, lies outside the install, or
+    /// cannot be read (a truncated or damaged mod rpk is reported and left out, not the end of the run)
+    /// </summary>
     public SlrrRpk? GetRpk(string relativePath)
     {
         if (_rpks.TryGetValue(relativePath, out var cached)) return cached;
 
-        var fullPath = Path.Combine(Root, relativePath);
-        return _rpks[relativePath] = File.Exists(fullPath) ? SlrrRpk.Load(fullPath, relativePath) : null;
+        SlrrRpk? rpk = null;
+        var fullPath = ContentFile(relativePath);
+        if (fullPath != null)
+        {
+            try
+            {
+                rpk = SlrrRpk.Load(fullPath, relativePath);
+            }
+            catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                _unreadable.Add($"{relativePath}: {ex.Message}");
+                _unreadablePaths.Add(NormalPath(relativePath));
+                Console.WriteLine($"  Skipped {relativePath}: {ex.Message}");
+            }
+        }
+
+        return _rpks[relativePath] = rpk;
+    }
+
+    /// <summary>
+    /// Full path of a file that content names by a path relative to the install (an rpk's sourcefile, a native part
+    /// cfg, a script, an external rpk); null when the file is missing. A path that leads outside the install (rooted,
+    /// another drive, "..") counts as missing and is reported once: a mod must not get files from elsewhere on the
+    /// machine embedded into the models and scripts the repo ships.
+    /// </summary>
+    public string? ContentFile(string? relative)
+    {
+        if (string.IsNullOrWhiteSpace(relative)) return null;
+
+        if (!PathNames.TryCombineUnder(Root, relative, out _))
+        {
+            if (_outside.Add(relative)) Console.WriteLine($"    {relative}: outside the SLRR folder, taken as missing");
+            return null;
+        }
+
+        // The path as content spells it under the root: what the converter always used (script and mesh caches key on it)
+        var fullPath = Path.Combine(Root, relative);
+        return File.Exists(fullPath) ? fullPath : null;
     }
 
     /// <summary>Follows an id to its entry, hopping to an external rpk when the high word says so</summary>
@@ -79,11 +134,7 @@ public sealed class SlrrGame
     public string? SourceFile(SlrrRpk rpk, int id)
     {
         var (_, entry) = Resolve(rpk, id);
-        var relative = entry?.FirstValue("sourcefile");
-        if (relative == null) return null;
-
-        var fullPath = Path.Combine(Root, relative);
-        return File.Exists(fullPath) ? fullPath : null;
+        return ContentFile(entry?.FirstValue("sourcefile"));
     }
 
     /// <summary>Names of the types above an entry, nearest first, e.g. blocks, Main, engine</summary>

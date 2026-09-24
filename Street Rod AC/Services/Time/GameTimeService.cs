@@ -12,6 +12,14 @@ namespace Street_Rod_AC.Services.Time
         private readonly IGameTimeScheduler _scheduler;
         private readonly IAppLogger _logger;
 
+        /// <summary>
+        /// One spend at a time. The clock moves first and the day's tasks run after it with awaits in between
+        /// (the market's engines are put together on a worker thread), so a second spend started meanwhile -
+        /// a quick second click, a screen spending as it closes - would run the scheduler twice over the same
+        /// lists. A second spend waits for the first and then adds its time on top.
+        /// </summary>
+        private readonly SemaphoreSlim _advancing = new(1, 1);
+
         public int DayStartHour => 8;  // 8:00 AM
         public int DayEndHour => 22;   // 10:00 PM
 
@@ -29,6 +37,19 @@ namespace Street_Rod_AC.Services.Time
         }
 
         public async Task<TimeSpendResult> SpendTimeAsync(GameState gameState, int minutes)
+        {
+            await _advancing.WaitAsync();
+            try
+            {
+                return await SpendTimeCoreAsync(gameState, minutes);
+            }
+            finally
+            {
+                _advancing.Release();
+            }
+        }
+
+        private async Task<TimeSpendResult> SpendTimeCoreAsync(GameState gameState, int minutes)
         {
             var previousTime = gameState.Date;
             var previousDay = previousTime.Date;
@@ -62,12 +83,20 @@ namespace Street_Rod_AC.Services.Time
 
         public async Task<TimeSpendResult> EndDayAsync(GameState gameState)
         {
-            var previousTime = gameState.Date;
-            var remainingMinutes = GetRemainingMinutesToday(gameState);
+            await _advancing.WaitAsync();
+            try
+            {
+                var previousTime = gameState.Date;
+                var remainingMinutes = GetRemainingMinutesToday(gameState);
 
-            _logger.Information("Ending day early with {Remaining} minutes remaining", remainingMinutes);
+                _logger.Information("Ending day early with {Remaining} minutes remaining", remainingMinutes);
 
-            return await AdvanceToNextMorningAsync(gameState, previousTime, previousTime, remainingMinutes);
+                return await AdvanceToNextMorningAsync(gameState, previousTime, previousTime, remainingMinutes);
+            }
+            finally
+            {
+                _advancing.Release();
+            }
         }
 
         public double GetRemainingHoursToday(GameState gameState)
@@ -131,10 +160,16 @@ namespace Street_Rod_AC.Services.Time
 
             // Run scheduled tasks for each day that passed
             var schedulerDate = previousTime.Date;
+            var failed = new List<string>();
             for (int i = 0; i < daysPassed; i++)
             {
                 schedulerDate = schedulerDate.AddDays(1);
-                await _scheduler.OnTimeAdvancedAsync(gameState, schedulerDate.AddDays(-1), schedulerDate);
+                failed.AddRange(await _scheduler.OnTimeAdvancedAsync(gameState, schedulerDate.AddDays(-1), schedulerDate));
+            }
+
+            if (failed.Count > 0)
+            {
+                _logger.Warning("Scheduled task(s) failed while the day turned over: {Tasks}", string.Join(", ", failed.Distinct()));
             }
 
             return new TimeSpendResult
@@ -143,7 +178,8 @@ namespace Street_Rod_AC.Services.Time
                 DaysPassed = daysPassed,
                 PreviousTime = previousTime,
                 NewTime = nextMorning,
-                MinutesSpent = minutesSpent
+                MinutesSpent = minutesSpent,
+                FailedTaskIds = [.. failed.Distinct()]
             };
         }
     }

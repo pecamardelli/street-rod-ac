@@ -1,4 +1,3 @@
-using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Dialogs;
 using Street_Rod_AC.Dialogs.Information;
 using Street_Rod_AC.Logging;
@@ -7,10 +6,11 @@ using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Models.Race;
 using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Screens.Shared;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
-using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.Services.Opponents;
+using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Talk;
 using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
@@ -26,9 +26,11 @@ namespace Street_Rod_AC.Screens.Diner
         private readonly Models.GameState.GameState _gameState;
         private readonly IContentCatalogRepository _catalogRepository;
         private readonly IOpponentChallengeService _challengeService;
-        private readonly IAssettoCorsaLauncher _launcher;
         private readonly IAssettoCorsaContentService _contentService;
         private readonly ITalkService _talkService;
+        private readonly IGameTimeService _timeService;
+        private readonly IGameStateRepository _gameStateRepo;
+        private readonly RaceSetupBuilder _raceSetup;
         private readonly IAppLogger _logger;
 
         public RelayCommand GarageCommand { get; }
@@ -192,9 +194,7 @@ namespace Street_Rod_AC.Screens.Diner
             get
             {
                 if (!IsCashBet) return true; // Pink slip doesn't require cash
-                var isDrag = SelectedTrack?.RaceType == RaceType.DragRace;
-                var baseMin = isDrag ? 10m : 25m;
-                return _gameState.Player.Money >= baseMin;
+                return _gameState.Player.Money >= MatchupCalculator.MinimumWager(SelectedTrack?.RaceType);
             }
         }
 
@@ -202,8 +202,7 @@ namespace Street_Rod_AC.Screens.Diner
         {
             get
             {
-                var isDrag = SelectedTrack?.RaceType == RaceType.DragRace;
-                var baseMin = isDrag ? 10m : 25m;
+                var baseMin = MatchupCalculator.MinimumWager(SelectedTrack?.RaceType);
                 return $"You need at least ${baseMin:N0} to place a cash wager.";
             }
         }
@@ -244,18 +243,22 @@ namespace Street_Rod_AC.Screens.Diner
             Models.GameState.GameState gameState,
             IContentCatalogRepository catalogRepository,
             IOpponentChallengeService challengeService,
-            IAssettoCorsaLauncher launcher,
             IAssettoCorsaContentService contentService,
-            ITalkService talkService)
+            ITalkService talkService,
+            IGameTimeService timeService,
+            IGameStateRepository gameStateRepo,
+            RaceSetupBuilder raceSetup)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
             _gameState = gameState;
             _catalogRepository = catalogRepository;
             _challengeService = challengeService;
-            _launcher = launcher;
             _contentService = contentService;
             _talkService = talkService;
+            _timeService = timeService;
+            _gameStateRepo = gameStateRepo;
+            _raceSetup = raceSetup;
             _logger = AppLoggerFactory.CreateLogger("Diner");
 
             GarageCommand = new RelayCommand(OnGarage);
@@ -266,12 +269,14 @@ namespace Street_Rod_AC.Screens.Diner
 
             _opponents = new ObservableCollection<OpponentDisplayViewModel>();
 
-            LoadTracks();
-            LoadOpponents();
+            // Tracks and opponents are loaded in Enter, once: the screen is always entered right after it is made
         }
 
         private void LoadOpponents()
         {
+            // A new day can bring other racers to the tables: whoever was picked before stays picked only if
+            // they are still here, so the player can never challenge someone who has left
+            var previous = SelectedOpponent?.Opponent;
             Opponents.Clear();
 
             // Get opponents from the ReadyToRace collection
@@ -280,13 +285,9 @@ namespace Street_Rod_AC.Screens.Diner
                 .ToList();
 
             if (readyOpponents.Count == 0)
-            {
                 _logger.Information("No opponents available at diner");
-                OnPropertyChanged(nameof(BankrollDisplay));
-                return;
-            }
-
-            _logger.Information("Loading {Count} opponents", readyOpponents.Count);
+            else
+                _logger.Information("Loading {Count} opponents", readyOpponents.Count);
 
             foreach (var opponent in readyOpponents)
             {
@@ -340,27 +341,26 @@ namespace Street_Rod_AC.Screens.Diner
             // Notify UI about opponents availability
             OnPropertyChanged(nameof(HasOpponents));
 
-            // Auto-select first opponent if available
-            if (Opponents.Count > 0)
+            // Keep the one picked before if they are still here, else the first; with nobody here, nobody
+            var keep = Opponents.FirstOrDefault(o => ReferenceEquals(o.Opponent, previous));
+            if (keep != null || Opponents.Count > 0)
             {
-                OnSelectOpponent(Opponents[0]);
+                OnSelectOpponent(keep ?? Opponents[0]);
             }
+            else
+            {
+                SelectedOpponent = null;
+                OpponentMessage = "";
+                UpdateWagerLimits();
+            }
+            RelayCommand.RaiseCanExecuteChanged();
 
             // Update bankroll display
             OnPropertyChanged(nameof(BankrollDisplay));
         }
 
-        private OpponentDifficulty CalculateDifficulty(Opponent opponent)
-        {
-            var reputationDiff = opponent.Stats.Reputation - _gameState.Player.Stats.Reputation;
-
-            if (reputationDiff < -15)
-                return OpponentDifficulty.Easy;
-            else if (reputationDiff > 15)
-                return OpponentDifficulty.Hard;
-            else
-                return OpponentDifficulty.Matched;
-        }
+        private OpponentDifficulty CalculateDifficulty(Opponent opponent) =>
+            MatchupCalculator.DifficultyOf(opponent.Stats.Reputation, _gameState.Player.Stats.Reputation);
 
         private void OnSelectOpponent(OpponentDisplayViewModel? opponentVm)
         {
@@ -524,41 +524,9 @@ namespace Street_Rod_AC.Screens.Diner
                 return;
             }
 
-            var opponentCarDef = SelectedOpponent.CarDefinition;
-
-            // Parse specs from strings (AC stores these as strings like "320bhp", "1250kg")
-            var playerPower = ParseNumericValue(playerCarDef.Specs?.Bhp);
-            var opponentPower = ParseNumericValue(opponentCarDef.Specs?.Bhp);
-            var playerWeight = ParseNumericValue(playerCarDef.Specs?.Weight);
-            var opponentWeight = ParseNumericValue(opponentCarDef.Specs?.Weight);
-
-            // Horsepower - higher is better
-            if (playerPower > 0 || opponentPower > 0)
+            foreach (var stat in MatchupCalculator.Compare(playerCarDef, SelectedOpponent.CarDefinition))
             {
-                AddMatchupStat("Horsepower",
-                    $"{playerPower:N0} HP",
-                    $"{opponentPower:N0} HP",
-                    playerPower, opponentPower, higherIsBetter: true);
-            }
-
-            // Weight - lower is better
-            if (playerWeight > 0 || opponentWeight > 0)
-            {
-                AddMatchupStat("Weight",
-                    $"{playerWeight:N0} kg",
-                    $"{opponentWeight:N0} kg",
-                    playerWeight, opponentWeight, higherIsBetter: false);
-            }
-
-            // Power-to-weight ratio - higher is better
-            if (playerWeight > 0 && opponentWeight > 0 && (playerPower > 0 || opponentPower > 0))
-            {
-                var playerPWR = playerWeight > 0 ? playerPower / (playerWeight / 1000.0) : 0;
-                var opponentPWR = opponentWeight > 0 ? opponentPower / (opponentWeight / 1000.0) : 0;
-                AddMatchupStat("HP/Ton",
-                    $"{playerPWR:N1}",
-                    $"{opponentPWR:N1}",
-                    playerPWR, opponentPWR, higherIsBetter: true);
+                MatchupStats.Add(stat);
             }
 
             OnPropertyChanged(nameof(HasMatchupStats));
@@ -568,31 +536,15 @@ namespace Street_Rod_AC.Screens.Diner
         {
             if (IsCashBet)
             {
-                // Wager limits vary by race type
-                // Drag: $10-$100, Road: $25-$250
-                var isDrag = SelectedTrack?.RaceType == RaceType.DragRace;
-                var baseMin = isDrag ? 10m : 25m;
-                var baseMax = isDrag ? 100m : 250m;
+                // Wager limits vary by race type (drag $10-$100, road $25-$250), capped by both racers' money
+                var (min, max) = MatchupCalculator.WagerLimits(
+                    SelectedTrack?.RaceType,
+                    _gameState.Player.Money,
+                    SelectedOpponent?.Opponent.Money ?? 0m);
 
-                MinWager = baseMin;
-
-                // Max is capped by both racers' money
-                var playerMoney = _gameState.Player.Money;
-                var opponentMoney = SelectedOpponent?.Opponent.Money ?? 0m;
-                var maxAvailable = Math.Min(playerMoney, opponentMoney);
-                MaxWager = Math.Min(baseMax, maxAvailable);
-
-                // Ensure min doesn't exceed max
-                if (MinWager > MaxWager)
-                {
-                    MinWager = MaxWager;
-                }
-
-                // Clamp wager amount to valid range
-                if (WagerAmount < MinWager)
-                    WagerAmount = MinWager;
-                else if (WagerAmount > MaxWager)
-                    WagerAmount = MaxWager;
+                MinWager = min;
+                MaxWager = max;
+                WagerAmount = MatchupCalculator.ClampWager(WagerAmount, MinWager, MaxWager);
             }
             else
             {
@@ -607,42 +559,6 @@ namespace Street_Rod_AC.Screens.Diner
             OnPropertyChanged(nameof(InsufficientFundsMessage));
         }
 
-        private void AddMatchupStat(string label, string playerDisplay, string opponentDisplay,
-            double playerValue, double opponentValue, bool higherIsBetter)
-        {
-            var diff = playerValue - opponentValue;
-            var advantage = Math.Abs(diff) < 0.01 ? 0 : (diff > 0 ? 1 : -1);
-
-            // If lower is better, flip the advantage
-            if (!higherIsBetter)
-                advantage = -advantage;
-
-            MatchupStats.Add(new MatchupStatViewModel
-            {
-                Label = label,
-                PlayerValue = playerDisplay,
-                OpponentValue = opponentDisplay,
-                Advantage = advantage
-            });
-        }
-
-        /// <summary>
-        /// Parse numeric value from AC spec strings like "320bhp", "1250kg", "320 bhp"
-        /// </summary>
-        private static double ParseNumericValue(string? specString)
-        {
-            if (string.IsNullOrWhiteSpace(specString))
-                return 0;
-
-            // Extract just the digits and decimal point
-            var numericPart = new string(specString.Where(c => char.IsDigit(c) || c == '.').ToArray());
-
-            if (double.TryParse(numericPart, out var result))
-                return result;
-
-            return 0;
-        }
-
         private bool CanChallenge()
         {
             return SelectedOpponent != null &&
@@ -651,7 +567,24 @@ namespace Street_Rod_AC.Screens.Diner
                    _gameState.Player.SelectedCarInstanceId != null;
         }
 
+        /// <summary>Everything in here reads the catalog and the save: whatever throws is the player's to hear about, not the end of the game</summary>
         private async Task OnChallenge()
+        {
+            try
+            {
+                await ChallengeAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "The challenge could not be set up");
+                _dialogService.ShowDialog(new InformationDialogViewModel(
+                    _dialogService,
+                    $"The race could not be set up:\n\n{ex.Message}",
+                    "Race Not Started"));
+            }
+        }
+
+        private async Task ChallengeAsync()
         {
             if (SelectedOpponent == null)
             {
@@ -679,58 +612,36 @@ namespace Street_Rod_AC.Screens.Diner
                 return;
             }
 
-            // Get player car definition
-            var playerCarDef = _catalogRepository.GetCar(playerCar.DefinitionId);
-            if (playerCarDef == null)
+            if (_catalogRepository.GetCar(playerCar.DefinitionId) == null)
             {
                 _logger.Error("Player car definition not found");
                 return;
             }
 
-            // The car races on what its parts make of it; a car that will not go stays home
-            var app = (App)System.Windows.Application.Current;
-            var playerData = await PrepareCarData(app, playerCar);
-            if (playerData is { CanDrive: false })
-            {
-                _dialogService.ShowDialog(new InformationDialogViewModel(
-                    _dialogService,
-                    $"Your car is not going anywhere: {playerData.Problem}.\n\nSort it out in the garage first.",
-                    "Car Won't Run"));
-                return;
-            }
-
             // Get opponent's car
-            var opponentCar = SelectedOpponent.Opponent.Cars.FirstOrDefault();
+            var opponent = SelectedOpponent.Opponent;
+            var opponentCar = opponent.Cars.FirstOrDefault();
             if (opponentCar == null)
             {
                 _logger.Error("Opponent has no cars");
                 return;
             }
 
-            // Build challenge setup directly from diner selections
-            var setup = new ChallengeSetup
-            {
-                Opponent = SelectedOpponent.Opponent,
-                PlayerCar = playerCar,
-                OpponentCar = opponentCar,
-                IsPinkSlip = IsPinkSlipBet,
-                CashWager = IsCashBet ? WagerAmount : 0m,
-                TrackId = SelectedTrack.TrackId,
-                TrackConfig = SelectedTrack.ConfigurationId,
-                RaceType = SelectedTrack.RaceType
-            };
+            var isPinkSlip = IsPinkSlipBet;
+            var cashWager = IsCashBet ? WagerAmount : 0m;
+            var track = SelectedTrack;
 
             _logger.Information("Challenge setup: Track={TrackId}, Config={Config}, IsPinkSlip={PinkSlip}, Wager={Wager}",
-                setup.TrackId, setup.TrackConfig ?? "(none)", setup.IsPinkSlip, setup.CashWager);
+                track.TrackId, track.ConfigurationId ?? "(none)", isPinkSlip, cashWager);
 
-            // Evaluate whether opponent accepts
+            // Whether the opponent takes it on, before any work goes into the cars
             var response = _challengeService.EvaluateChallenge(
-                setup.Opponent,
+                opponent,
                 _gameState.Player,
-                setup.PlayerCar,
-                setup.OpponentCar,
-                setup.IsPinkSlip,
-                setup.CashWager);
+                playerCar,
+                opponentCar,
+                isPinkSlip,
+                cashWager);
 
             if (!response.Accepted)
             {
@@ -740,101 +651,45 @@ namespace Street_Rod_AC.Screens.Diner
                 return;
             }
 
-            // Opponent accepted - launch race directly
             _logger.Information("Opponent accepted challenge - launching race");
 
-            var opponentCarDef = SelectedOpponent.CarDefinition;
-
-            // The opponent's car races on its own parts too; one that does not run is left as its author made it.
-            // An opponent in the player's model races in a copy of the car folder under its own id, so each car
-            // has its own data and its own sound.
-            var opponentData = await PrepareCarData(app, opponentCar);
-            if (opponentData is { CanDrive: false })
-            {
-                _logger.Warning("{Opponent}'s car would not run ({Problem}): it races as its author made it", setup.Opponent.Name, opponentData.Problem);
-                opponentData = null;
-            }
-
-            var opponentRacesAs = opponentCarDef.Id;
-            if (opponentCar.DefinitionId == playerCar.DefinitionId)
-            {
-                opponentRacesAs = Street_Rod_AC.Parts.Export.AcCarFolder.CloneIdFor(opponentCarDef.Id);
-                opponentData = opponentData == null
-                    ? Street_Rod_AC.Services.Race.RaceCarData.AsAuthored(opponentCarDef.Id, opponentRacesAs)
-                    : new Street_Rod_AC.Services.Race.RaceCarData(opponentData.CarId, opponentData.Build) { CloneId = opponentRacesAs };
-                _logger.Information("{Opponent} drives the same model as the player: it races in a copy, {Clone}", setup.Opponent.Name, opponentRacesAs);
-            }
-
-            // Launch the race immediately
-            await LaunchRace(setup, playerCarDef, opponentCarDef, opponentRacesAs, new[] { playerData, opponentData }.Where(d => d != null).ToList()!);
-        }
-
-        /// <summary>The car's data as its parts make it, put together off the UI thread; null when it races as it is</summary>
-        private async Task<Street_Rod_AC.Services.Race.RaceCarData?> PrepareCarData(App app, Car car)
-        {
-            try
-            {
-                await app.CarPartsService.EnsurePartsAsync(car);
-                return await Task.Run(() => app.RaceCarDataService.Prepare(car));
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Could not prepare the data of {Car}: it races as it is", car.DefinitionId);
-                return null;
-            }
-        }
-
-        /// <param name="opponentRacesAs">The folder the opponent's car races in: its own, or a copy of it</param>
-        private Task LaunchRace(ChallengeSetup setup, CarDefinition playerCarDef, CarDefinition opponentCarDef, string opponentRacesAs,
-            List<Street_Rod_AC.Services.Race.RaceCarData> carData)
-        {
-            _logger.Information("LaunchRace called - Player: {PlayerCar}, Opponent: {OpponentName} in {OpponentCar}, RaceType: {RaceType}",
-                playerCarDef.Id, setup.Opponent.Name, opponentCarDef.Id, setup.RaceType);
-
-            // Create drag race launch intent
-            _logger.Debug("Creating DragRaceLaunchIntent with Track: {TrackId}, Config: {TrackConfig}",
-                setup.TrackId, setup.TrackConfig ?? "(none)");
-            var dragRaceIntent = new DragRaceLaunchIntent
-            {
-                PlayerCarId = playerCarDef.Id,
-                PlayerSkin = setup.PlayerCar.SkinId,
-                PlayerName = _gameState.Player.Name,
-                OpponentCarId = opponentRacesAs,
-                OpponentSkin = setup.OpponentCar.SkinId,
-                OpponentName = setup.Opponent.Name,
-                TrackId = setup.TrackId,
-                TrackConfig = setup.TrackConfig,
-                PlayerCarInstanceId = setup.PlayerCar.InstanceId,
-                OpponentCarInstanceId = setup.OpponentCar.InstanceId,
-                CashWager = setup.CashWager,
-                IsPinkSlip = setup.IsPinkSlip,
-                OpponentAILevel = setup.Opponent.Skill,
-                OpponentAIAggression = setup.Opponent.Aggression,
-                RaceType = setup.RaceType,
-                CarData = carData
-            };
-
-            // Create race context and store in metadata
-            var raceContext = new Street_Rod_AC.Models.Race.RaceContext
+            // Both cars race on what their parts make of them, the same way an event does; a player's car that
+            // will not go stays home
+            var setup = await _raceSetup.BuildAsync(new RaceEntry
             {
                 PlayerName = _gameState.Player.Name,
-                OpponentName = setup.Opponent.Name,
-                PlayerCarInstanceId = setup.PlayerCar.InstanceId,
-                OpponentCarInstanceId = setup.OpponentCar.InstanceId,
-                CashWager = setup.CashWager,
-                IsPinkSlip = setup.IsPinkSlip,
-                TrackId = setup.TrackId,
-                TrackConfig = setup.TrackConfig,
-                RaceType = setup.RaceType
-            };
+                PlayerCar = playerCar,
+                OpponentName = opponent.Name,
+                OpponentCarId = SelectedOpponent.CarDefinition.Id,
+                OpponentSkin = opponentCar.SkinId,
+                OpponentCar = opponentCar,
+                OpponentAI = OpponentAIAdapter.ToAssettoCorsaAI(opponent),
+                TrackId = track.TrackId,
+                TrackConfig = track.ConfigurationId,
+                RaceType = track.RaceType,
+                CashWager = cashWager,
+                IsPinkSlip = isPinkSlip
+            });
 
-            dragRaceIntent.Metadata["RaceContext"] = raceContext;
+            // Setting the cars up takes a moment: a player who walked out meanwhile has called it off
+            if (!ReferenceEquals(_navigationService.CurrentScreen, this))
+            {
+                _logger.Information("The player left the diner while the challenge was set up; no race");
+                return;
+            }
 
-            // Navigate to loading screen (it will launch the race and return when done)
+            if (setup.Intent == null)
+            {
+                _dialogService.ShowDialog(new InformationDialogViewModel(
+                    _dialogService,
+                    $"Your car is not going anywhere: {setup.PlayerCarProblem}.\n\nSort it out in the garage first.",
+                    "Car Won't Run"));
+                return;
+            }
+
+            // The loading screen launches the race, spends its time and comes back when AC is closed
             _logger.Information("Navigating to race loading screen");
-            _navigationService.NavigateToRaceLoading(_gameState, dragRaceIntent);
-
-            return Task.CompletedTask;
+            _navigationService.NavigateToRaceLoading(_gameState, setup.Intent);
         }
 
         private void OnGarage()
@@ -843,157 +698,50 @@ namespace Street_Rod_AC.Screens.Diner
             _navigationService.NavigateToGarage(_gameState);
         }
 
-        private void OnRaceCompleted(object? sender, EventArgs e)
-        {
-            _logger.Information("Race completed - refreshing diner display");
-
-            // Spend time for the drag race (30 min)
-            // TODO: Support road races (1 hour) when implemented
-            _ = ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.DragRace);
-
-            LoadOpponents();
-        }
-
-        public override void Enter()
+        public override async void Enter()
         {
             base.Enter();
             _logger.Information("Entered diner screen");
 
-            // Spend time for visiting the diner (30 min)
-            _ = ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.VisitDiner);
+            // Each on its own: a track folder that can't be read still leaves the racers at their tables
+            try
+            {
+                LoadTracks();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not list the tracks at the diner");
+            }
 
-            // Subscribe to race completion events when screen becomes active
-            _launcher.RaceCompleted += OnRaceCompleted;
+            try
+            {
+                LoadOpponents();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not list the racers at the diner");
+            }
 
-            // Refresh the diner view (in case state changed while screen was inactive)
-            LoadOpponents();
+            try
+            {
+                // Spend time for visiting the diner (30 min). Late in the evening that is the next morning, when
+                // the racers at the tables have changed: the room is shown again, and the new day is saved.
+                var spent = await _timeService.SpendTimeAsync(_gameState, GameAction.VisitDiner);
+                if (spent.NewDayStarted) LoadOpponents();
+                OnPropertyChanged(nameof(BankrollDisplay));
+
+                if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not spend and save the time for the diner");
+            }
         }
 
         public override void Exit()
         {
             base.Exit();
             _logger.Information("Exited diner screen");
-
-            // Unsubscribe from race completion events when screen becomes inactive
-            _launcher.RaceCompleted -= OnRaceCompleted;
         }
-    }
-
-    /// <summary>
-    /// View model for displaying an opponent in the list
-    /// </summary>
-    public class OpponentDisplayViewModel
-    {
-        public Opponent Opponent { get; set; } = new();
-        public CarDefinition CarDefinition { get; set; } = new();
-        public string? PortraitPath { get; set; }
-        public OpponentDifficulty Difficulty { get; set; }
-
-        public string Name => Opponent.Name;
-        public string Nickname => Opponent.Nickname;
-        public string CarDisplay => $"{CarDefinition.Brand} {CarDefinition.Name}";
-        public string CarBrand => CarDefinition.Brand;
-        public string CarName => CarDefinition.Name;
-        public int Reputation => Opponent.Stats.Reputation;
-        public string ReputationTier => Opponent.Stats.GetReputationTier();
-        public string RecordDisplay => $"{Opponent.Stats.Wins}W - {Opponent.Stats.Losses}L";
-
-        // Drag race record display
-        public string DragRecordDisplay => Opponent.Stats.DragRaces > 0
-            ? $"{Opponent.Stats.DragWins}W - {Opponent.Stats.DragLosses}L"
-            : "No races";
-
-        // Road race record display
-        public string RoadRecordDisplay => Opponent.Stats.RoadRaces > 0
-            ? $"{Opponent.Stats.RoadWins}W - {Opponent.Stats.RoadLosses}L"
-            : "No races";
-
-        public bool HasPortrait => !string.IsNullOrEmpty(PortraitPath);
-
-        // Additional record stats
-        public string WinRateDisplay
-        {
-            get
-            {
-                var winRate = Opponent.Stats.Races > 0
-                    ? (Opponent.Stats.Wins * 100.0 / Opponent.Stats.Races)
-                    : 0.0;
-                return $"{winRate:F0}%";
-            }
-        }
-
-        public string PinkSlipsDisplay
-        {
-            get
-            {
-                var won = Opponent.Stats.PinkSlipsWon;
-                var lost = Opponent.Stats.PinkSlipsLost;
-                return $"{won}W - {lost}L";
-            }
-        }
-
-        // Car stats
-        public string CarYear => CarDefinition.Year.HasValue ? CarDefinition.Year.Value.ToString() : "";
-
-        public string CarPower
-        {
-            get
-            {
-                var power = ParseNumericValue(CarDefinition.Specs?.Bhp);
-                return power > 0 ? $"{power:N0} HP" : "";
-            }
-        }
-
-        public string CarWeight
-        {
-            get
-            {
-                var weight = ParseNumericValue(CarDefinition.Specs?.Weight);
-                return weight > 0 ? $"{weight:N0} kg" : "";
-            }
-        }
-
-        public string CarDrivetrain => CarDefinition.Specs?.Drivetrain ?? "";
-
-        /// <summary>
-        /// Parse numeric value from AC spec strings like "320bhp", "1250kg", "320 bhp"
-        /// </summary>
-        private static double ParseNumericValue(string? specString)
-        {
-            if (string.IsNullOrWhiteSpace(specString))
-                return 0;
-
-            // Extract just the digits and decimal point
-            var numericPart = new string(specString.Where(c => char.IsDigit(c) || c == '.').ToArray());
-
-            if (double.TryParse(numericPart, out var result))
-                return result;
-
-            return 0;
-        }
-
-        // Difficulty color
-        public string DifficultyColor => Difficulty switch
-        {
-            OpponentDifficulty.Easy => "#90EE90",    // Light green
-            OpponentDifficulty.Matched => "#FFD700", // Gold
-            OpponentDifficulty.Hard => "#FF6B6B",    // Light red
-            _ => "#FFFFFF"
-        };
-
-        public string DifficultyBorderColor => Difficulty switch
-        {
-            OpponentDifficulty.Easy => "#00AA00",    // Green
-            OpponentDifficulty.Matched => "#FFA500", // Orange
-            OpponentDifficulty.Hard => "#CC0000",    // Red
-            _ => "#404040"
-        };
-    }
-
-    public enum OpponentDifficulty
-    {
-        Easy,
-        Matched,
-        Hard
     }
 }

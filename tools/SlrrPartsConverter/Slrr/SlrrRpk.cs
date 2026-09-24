@@ -57,7 +57,12 @@ public sealed class SlrrRpk
         var rpk = new SlrrRpk { RelativePath = relativePath };
         var latin1 = Encoding.Latin1;
 
+        // The externals table and the entry table's 16-byte header must both be in the file: a truncated or damaged
+        // rpk is an error about that rpk, not an index past the end of the data
         var externalCount = BitConverter.ToInt32(data, 8);
+        if (externalCount < 0 || 16 + (long)externalCount * ExternalRecordSize + 16 > data.Length)
+            throw new InvalidDataException($"RPK externals table of {externalCount} records does not fit the file: {filename}");
+
         var position = 16;
         for (var i = 0; i < externalCount; i++, position += ExternalRecordSize)
         {

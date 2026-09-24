@@ -39,6 +39,14 @@ Street Rod-style career mode for Assetto Corsa. External WPF manager handles all
 - Storage: LiteDB
 - Target: Windows x64
 
+## Build Dependencies
+The game and the parts converter reference AcTools (`AcTools.dll`, `AcTools.Render.dll`) and SlimDX from a sibling
+checkout of [gro-ove/actools](https://github.com/gro-ove/actools), not from a package: `..\actools\Output\x64\Debug`
+next to this repo. The DLLs are not versioned here, so a build is only reproducible with the same actools commit,
+built in Debug x64. Known good: actools `effa0e131a44ced7bbce24d8953cfc7db09faef7` (2025-10-02, "Update SimuCube.cs").
+A different commit may change the KN5 reader or the renderer under the game without a line of this repo changing;
+check the commit (`git -C ..\actools rev-parse HEAD`) first when a build or a render differs between machines.
+
 ## Non-Goals
 - No AC binary patching
 - No hot-reloading physics

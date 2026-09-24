@@ -31,15 +31,15 @@
                  with the pins -->
             <Rectangle Opacity="0.30">
                 <Rectangle.Fill>
-                    <SolidColorBrush Color="#6B4A1E"/>
+                    <SolidColorBrush Color="{StaticResource MapSepia}"/>
                 </Rectangle.Fill>
             </Rectangle>
             <Rectangle>
                 <Rectangle.Fill>
                     <!-- Darker at the edges so the pins over the city read against the print -->
                     <RadialGradientBrush GradientOrigin="0.42,0.5" Center="0.42,0.5" RadiusX="0.8" RadiusY="0.85">
-                        <GradientStop Color="#00000000" Offset="0.45"/>
-                        <GradientStop Color="#77000000" Offset="1.0"/>
+                        <GradientStop Color="{StaticResource BlackTransparent}" Offset="0.45"/>
+                        <GradientStop Color="{StaticResource Black77}" Offset="1.0"/>
                     </RadialGradientBrush>
                 </Rectangle.Fill>
             </Rectangle>
@@ -75,7 +75,7 @@
                                                 Width="18" Height="18"
                                                 CornerRadius="9"
                                                 Background="{StaticResource AccentPrimaryBrush}"
-                                                BorderBrush="#F5E6C8"
+                                                BorderBrush="{StaticResource CreamBrush}"
                                                 BorderThickness="2"
                                                 HorizontalAlignment="Center">
                                             <Border.Effect>
@@ -84,19 +84,19 @@
                                         </Border>
                                         <Border x:Name="Plate"
                                                 Margin="0,5,0,0"
-                                                Background="#D0121212"
-                                                BorderBrush="#70F5E6C8"
+                                                Background="{StaticResource Glass12D0Brush}"
+                                                BorderBrush="{StaticResource Cream70Brush}"
                                                 BorderThickness="1"
                                                 CornerRadius="3"
                                                 Padding="8,3,8,3">
                                             <StackPanel>
                                                 <TextBlock Text="{Binding Name}"
-                                                           FontSize="13"
+                                                           FontSize="{StaticResource FontSizeCompact}"
                                                            FontWeight="SemiBold"
                                                            Foreground="{StaticResource TextPrimaryBrush}"
                                                            HorizontalAlignment="Center"/>
                                                 <TextBlock Text="{Binding StockDisplay}"
-                                                           FontSize="11"
+                                                           FontSize="{StaticResource FontSizeCaption}"
                                                            Foreground="{StaticResource TextSecondaryBrush}"
                                                            HorizontalAlignment="Center"/>
                                             </StackPanel>
@@ -106,8 +106,8 @@
                                         <!-- Too far to get back from today: still there to be clicked, but greyed so the
                                              cost is visible before the click, not sprung by the dialog after it -->
                                         <DataTrigger Binding="{Binding FitsToday}" Value="False">
-                                            <Setter TargetName="Dot" Property="Background" Value="#6E6A60"/>
-                                            <Setter TargetName="Dot" Property="BorderBrush" Value="#A09A8C"/>
+                                            <Setter TargetName="Dot" Property="Background" Value="{StaticResource MapDotFarBrush}"/>
+                                            <Setter TargetName="Dot" Property="BorderBrush" Value="{StaticResource MapDotFarBorderBrush}"/>
                                             <Setter TargetName="Root" Property="Opacity" Value="0.62"/>
                                         </DataTrigger>
                                         <Trigger Property="IsMouseOver" Value="True">
@@ -122,31 +122,31 @@
                                 </ControlTemplate>
                             </Button.Template>
                             <Button.ToolTip>
-                                <ToolTip Background="#F21A1A1A" BorderBrush="#60F5E6C8" BorderThickness="1" Padding="12">
+                                <ToolTip Background="{StaticResource BgPanelF2Brush}" BorderBrush="{StaticResource Cream60Brush}" BorderThickness="1" Padding="12">
                                     <StackPanel MaxWidth="260">
                                         <TextBlock Text="{Binding Name}"
-                                                   FontSize="16"
+                                                   FontSize="{StaticResource FontSizeSubheading}"
                                                    FontWeight="Bold"
                                                    Foreground="{StaticResource TextPrimaryBrush}"/>
                                         <TextBlock Text="{Binding Region}"
-                                                   FontSize="12"
+                                                   FontSize="{StaticResource FontSizeSmall}"
                                                    Foreground="{StaticResource TextSecondaryBrush}"
                                                    Margin="0,0,0,6"/>
                                         <TextBlock Text="{Binding Blurb}"
-                                                   FontSize="12"
+                                                   FontSize="{StaticResource FontSizeSmall}"
                                                    TextWrapping="Wrap"
                                                    FontStyle="Italic"
                                                    Foreground="{StaticResource TextSecondaryBrush}"
                                                    Margin="0,0,0,8"/>
                                         <TextBlock Text="{Binding PriceDisplay}"
-                                                   FontSize="13"
+                                                   FontSize="{StaticResource FontSizeCompact}"
                                                    Foreground="{StaticResource AccentSuccessBrush}"/>
                                         <TextBlock Text="{Binding TravelDisplay}"
-                                                   FontSize="11"
+                                                   FontSize="{StaticResource FontSizeCaption}"
                                                    Foreground="{StaticResource TextSecondaryBrush}"
                                                    Margin="0,4,0,0"/>
                                         <TextBlock Text="{Binding DayCostDisplay}"
-                                                   FontSize="11"
+                                                   FontSize="{StaticResource FontSizeCaption}"
                                                    FontStyle="Italic"
                                                    Margin="0,2,0,0">
                                             <TextBlock.Style>
@@ -154,7 +154,7 @@
                                                     <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding FitsToday}" Value="False">
-                                                            <Setter Property="Foreground" Value="#E8A15A"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource MapFarTextBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -174,8 +174,8 @@
         <Rectangle VerticalAlignment="Top" Height="150" IsHitTestVisible="False">
             <Rectangle.Fill>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#B0000000" Offset="0.0"/>
-                    <GradientStop Color="#00000000" Offset="1.0"/>
+                    <GradientStop Color="{StaticResource BlackB0}" Offset="0.0"/>
+                    <GradientStop Color="{StaticResource BlackTransparent}" Offset="1.0"/>
                 </LinearGradientBrush>
             </Rectangle.Fill>
         </Rectangle>
@@ -185,7 +185,7 @@
                     VerticalAlignment="Top"
                     Margin="0,28,0,0">
             <TextBlock Text="WHERE TO LOOK"
-                       FontSize="30"
+                       FontSize="{StaticResource FontSizeTitleLarge}"
                        FontWeight="Bold"
                        Foreground="{StaticResource TextPrimaryBrush}"
                        HorizontalAlignment="Center">
@@ -194,7 +194,7 @@
                 </TextBlock.Effect>
             </TextBlock>
             <TextBlock Text="Pick a lot and drive out to see what they have"
-                       FontSize="13"
+                       FontSize="{StaticResource FontSizeCompact}"
                        Foreground="{StaticResource TextSecondaryBrush}"
                        HorizontalAlignment="Center"
                        Margin="0,4,0,0">
@@ -216,24 +216,24 @@
         <Border HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 Margin="0,20,20,0"
-                Background="#C0121212"
-                BorderBrush="#50F5E6C8"
+                Background="{StaticResource Glass12C0Brush}"
+                BorderBrush="{StaticResource Cream50Brush}"
                 BorderThickness="1"
                 CornerRadius="3"
                 Padding="14,8,14,10">
             <StackPanel>
                 <TextBlock Text="{Binding BankrollDisplay}"
-                           FontSize="18"
+                           FontSize="{StaticResource FontSizeHeading}"
                            FontWeight="Bold"
                            HorizontalAlignment="Right"
                            Foreground="{StaticResource AccentSuccessBrush}"/>
                 <TextBlock Text="{Binding TimeDisplay}"
-                           FontSize="14"
+                           FontSize="{StaticResource FontSizeBody}"
                            HorizontalAlignment="Right"
                            Margin="0,4,0,0"
                            Foreground="{StaticResource TextPrimaryBrush}"/>
                 <TextBlock Text="{Binding DateDisplay}"
-                           FontSize="11"
+                           FontSize="{StaticResource FontSizeCaption}"
                            HorizontalAlignment="Right"
                            Foreground="{StaticResource TextSecondaryBrush}"/>
             </StackPanel>
@@ -242,7 +242,7 @@
         <!-- Nothing to show: the definitions file did not load. Drawn under the loading overlay, so the
              first market of a game does not read as an empty map on the way past -->
         <TextBlock Text="No dealers could be found on the map."
-                   FontSize="16"
+                   FontSize="{StaticResource FontSizeSubheading}"
                    Foreground="{StaticResource TextSecondaryBrush}"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
@@ -250,9 +250,9 @@
 
         <!-- The first market of a game takes a few seconds to put together -->
         <Border Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
-                Background="#B0000000">
+                Background="{StaticResource BlackB0Brush}">
             <TextBlock Text="The dealers are putting their cars out..."
-                       FontSize="18"
+                       FontSize="{StaticResource FontSizeHeading}"
                        Foreground="{StaticResource TextPrimaryBrush}"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>

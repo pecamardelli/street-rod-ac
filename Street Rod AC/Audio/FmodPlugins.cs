@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -243,23 +244,53 @@ internal static unsafe class FmodPlugins
     // FMOD_ERR_INVALID_PARAM
     private const int InvalidParam = 31;
 
+    // FMOD_ERR_MEMORY, FMOD_ERR_INTERNAL
+    private const int OutOfMemory = 38;
+    private const int Internal = 28;
+
+    // An exception must never leave an [UnmanagedCallersOnly] method: the process is failed on the spot. The ones
+    // that allocate or build strings catch everything and answer FMOD with an error code instead; the Read callbacks
+    // on the mixer thread do neither and stay as lean as they are.
+
     [UnmanagedCallersOnly]
     private static int GainCreate(IntPtr dspState)
     {
-        var state = (GainState*)NativeMemory.AllocZeroed((nuint)sizeof(GainState));
-        state->Current = 1f;
-        *(void**)((byte*)dspState + PluginDataOffset) = state;
-        return Ok;
+        try
+        {
+            var state = (GainState*)NativeMemory.AllocZeroed((nuint)sizeof(GainState));
+            state->Current = 1f;
+            *(void**)((byte*)dspState + PluginDataOffset) = state;
+            return Ok;
+        }
+        catch (OutOfMemoryException)
+        {
+            return OutOfMemory;
+        }
+        catch
+        {
+            return Internal;
+        }
     }
 
     [UnmanagedCallersOnly]
     private static int FilterCreate(IntPtr dspState)
     {
-        var state = (FilterState*)NativeMemory.AllocZeroed((nuint)sizeof(FilterState));
-        state->MaxDistance = 100f;
-        state->Frequency = 2000f;
-        *(void**)((byte*)dspState + PluginDataOffset) = state;
-        return Ok;
+        try
+        {
+            var state = (FilterState*)NativeMemory.AllocZeroed((nuint)sizeof(FilterState));
+            state->MaxDistance = 100f;
+            state->Frequency = 2000f;
+            *(void**)((byte*)dspState + PluginDataOffset) = state;
+            return Ok;
+        }
+        catch (OutOfMemoryException)
+        {
+            return OutOfMemory;
+        }
+        catch
+        {
+            return Internal;
+        }
     }
 
     [UnmanagedCallersOnly]
@@ -379,20 +410,34 @@ internal static unsafe class FmodPlugins
     private static int GainGetFloat(IntPtr dspState, int index, float* value, byte* valueString)
     {
         if (index != 0) return InvalidParam;
-        var gain = StateOf<GainState>(dspState)->GainDb;
-        if (value != null) *value = gain;
-        WriteValue(valueString, $"{gain:0.0} dB");
-        return Ok;
+        try
+        {
+            var gain = StateOf<GainState>(dspState)->GainDb;
+            if (value != null) *value = gain;
+            WriteValue(valueString, string.Create(CultureInfo.InvariantCulture, $"{gain:0.0} dB"));
+            return Ok;
+        }
+        catch
+        {
+            return Internal;
+        }
     }
 
     [UnmanagedCallersOnly]
     private static int GainGetBool(IntPtr dspState, int index, int* value, byte* valueString)
     {
         if (index != 1) return InvalidParam;
-        var invert = StateOf<GainState>(dspState)->Invert;
-        if (value != null) *value = invert;
-        WriteValue(valueString, invert != 0 ? "Inverted" : "Off");
-        return Ok;
+        try
+        {
+            var invert = StateOf<GainState>(dspState)->Invert;
+            if (value != null) *value = invert;
+            WriteValue(valueString, invert != 0 ? "Inverted" : "Off");
+            return Ok;
+        }
+        catch
+        {
+            return Internal;
+        }
     }
 
     [UnmanagedCallersOnly]
@@ -410,17 +455,24 @@ internal static unsafe class FmodPlugins
     [UnmanagedCallersOnly]
     private static int FilterGetFloat(IntPtr dspState, int index, float* value, byte* valueString)
     {
-        var state = StateOf<FilterState>(dspState);
-        float result;
-        switch (index)
+        try
         {
-            case 0: result = state->MaxDistance; WriteValue(valueString, $"{result:0.0}"); break;
-            case 1: result = state->Frequency; WriteValue(valueString, $"{result:0.0} Hz"); break;
-            default: return InvalidParam;
-        }
+            var state = StateOf<FilterState>(dspState);
+            float result;
+            switch (index)
+            {
+                case 0: result = state->MaxDistance; WriteValue(valueString, string.Create(CultureInfo.InvariantCulture, $"{result:0.0}")); break;
+                case 1: result = state->Frequency; WriteValue(valueString, string.Create(CultureInfo.InvariantCulture, $"{result:0.0} Hz")); break;
+                default: return InvalidParam;
+            }
 
-        if (value != null) *value = result;
-        return Ok;
+            if (value != null) *value = result;
+            return Ok;
+        }
+        catch
+        {
+            return Internal;
+        }
     }
 
     [UnmanagedCallersOnly]
@@ -436,11 +488,18 @@ internal static unsafe class FmodPlugins
     private static int FilterGetData(IntPtr dspState, int index, void** data, uint* length, byte* valueString)
     {
         if (index != 2) return InvalidParam;
-        var state = StateOf<FilterState>(dspState);
-        if (data != null) *data = state->Attributes;
-        if (length != null) *length = Attributes3DSize;
-        WriteValue(valueString, "");
-        return Ok;
+        try
+        {
+            var state = StateOf<FilterState>(dspState);
+            if (data != null) *data = state->Attributes;
+            if (length != null) *length = Attributes3DSize;
+            WriteValue(valueString, "");
+            return Ok;
+        }
+        catch
+        {
+            return Internal;
+        }
     }
 
     #endregion

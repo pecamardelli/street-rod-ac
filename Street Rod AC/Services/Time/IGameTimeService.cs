@@ -93,5 +93,12 @@ namespace Street_Rod_AC.Services.Time
         /// Minutes that were spent
         /// </summary>
         public int MinutesSpent { get; init; }
+
+        /// <summary>
+        /// Ids of the day's scheduled tasks that failed while the time passed (the market, the ads, the other
+        /// racers' day...). Empty when all went well. A failed task is tried again on the next day, so a
+        /// screen that shows what the day brought may be showing yesterday's for that part.
+        /// </summary>
+        public IReadOnlyList<string> FailedTaskIds { get; init; } = [];
     }
 }

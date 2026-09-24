@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Name="Root">
     <!-- Start the car where it stands and rev it: the key, the tach, the pedal -->
-    <Border Background="#CC1A1A1A"
-            BorderBrush="#404040"
+    <Border Background="{StaticResource BgPanelCCBrush}"
+            BorderBrush="{StaticResource BorderLightBrush}"
             BorderThickness="1"
             CornerRadius="5"
             Padding="10,8">
@@ -28,13 +28,13 @@
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border"
-                                Background="#2A2A2A"
-                                BorderBrush="#606060"
+                                Background="{StaticResource BgMediumBrush}"
+                                BorderBrush="{StaticResource TextDisabledBrush}"
                                 BorderThickness="1"
                                 CornerRadius="23">
                             <TextBlock x:Name="label"
                                        Text="START"
-                                       FontSize="13"
+                                       FontSize="{StaticResource FontSizeCompact}"
                                        FontWeight="Bold"
                                        Foreground="{StaticResource TextPrimaryBrush}"
                                        HorizontalAlignment="Center"
@@ -42,7 +42,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="BorderBrush" Value="#A0A0A0"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource GrayA0Brush}"/>
                             </Trigger>
                             <DataTrigger Binding="{Binding IsRunning}" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{StaticResource AccentPrimaryBrush}"/>
@@ -61,20 +61,20 @@
             <StackPanel Grid.Column="1" VerticalAlignment="Center" MinWidth="150">
                 <Grid>
                     <TextBlock Text="{Binding RpmDisplay}"
-                               FontSize="18"
+                               FontSize="{StaticResource FontSizeHeading}"
                                FontWeight="Bold"
                                FontFamily="Consolas"
                                Foreground="{StaticResource TextPrimaryBrush}"/>
                     <TextBlock Text="RPM"
-                               FontSize="11"
+                               FontSize="{StaticResource FontSizeCaption}"
                                Foreground="{StaticResource TextSecondaryBrush}"
                                HorizontalAlignment="Right"
                                VerticalAlignment="Bottom"
                                Margin="0,0,0,3"/>
                 </Grid>
                 <Grid x:Name="TachTrack" Height="8" Margin="0,3,0,4" ClipToBounds="True">
-                    <Border Background="#303030" CornerRadius="2"/>
-                    <Rectangle x:Name="RedZone" Fill="#60C02020" HorizontalAlignment="Right"/>
+                    <Border Background="{StaticResource Gray30Brush}" CornerRadius="2"/>
+                    <Rectangle x:Name="RedZone" Fill="{StaticResource RedZoneBrush}" HorizontalAlignment="Right"/>
                     <Rectangle x:Name="Needle" Fill="{StaticResource AccentPrimaryBrush}" HorizontalAlignment="Left" RenderTransformOrigin="0,0.5">
                         <Rectangle.RenderTransform>
                             <ScaleTransform ScaleX="{Binding RpmFraction}"/>
@@ -83,7 +83,7 @@
                 </Grid>
                 <TextBlock x:Name="StatusLine"
                            Text="{Binding StatusText}"
-                           FontSize="11"
+                           FontSize="{StaticResource FontSizeCaption}"
                            TextTrimming="CharacterEllipsis"
                            Foreground="{StaticResource TextSecondaryBrush}"/>
             </StackPanel>
@@ -94,8 +94,8 @@
                     Width="30"
                     Height="52"
                     Margin="12,0,0,0"
-                    Background="#262626"
-                    BorderBrush="#606060"
+                    Background="{StaticResource Gray26Brush}"
+                    BorderBrush="{StaticResource TextDisabledBrush}"
                     BorderThickness="1"
                     CornerRadius="4"
                     Cursor="Hand"
@@ -111,9 +111,9 @@
                         </Rectangle.RenderTransform>
                     </Rectangle>
                     <StackPanel VerticalAlignment="Center" IsHitTestVisible="False">
-                        <Rectangle Height="2" Margin="6,2" Fill="#707070"/>
-                        <Rectangle Height="2" Margin="6,2" Fill="#707070"/>
-                        <Rectangle Height="2" Margin="6,2" Fill="#707070"/>
+                        <Rectangle Height="2" Margin="6,2" Fill="{StaticResource Gray70Brush}"/>
+                        <Rectangle Height="2" Margin="6,2" Fill="{StaticResource Gray70Brush}"/>
+                        <Rectangle Height="2" Margin="6,2" Fill="{StaticResource Gray70Brush}"/>
                     </StackPanel>
                 </Grid>
             </Border>

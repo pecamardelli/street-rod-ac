@@ -1,6 +1,12 @@
 using Street_Rod_AC.Dialogs;
 using Street_Rod_AC.Dialogs.Confirmation;
+using Street_Rod_AC.Dialogs.Information;
+using Street_Rod_AC.Helpers;
+using Street_Rod_AC.Logging;
+using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Services.Career;
+using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.ViewModels;
 
 namespace Street_Rod_AC.Screens.NewGame
@@ -9,6 +15,10 @@ namespace Street_Rod_AC.Screens.NewGame
     {
         private readonly NavigationService _navigationService;
         private readonly DialogService _dialogService;
+        private readonly IGameStateRepository _repository;
+        private readonly IRaceEventService _raceEventService;
+        private readonly Action<GameState?> _setCurrentGame;
+        private readonly IAppLogger _logger;
         private string _playerName = string.Empty;
         private string _errorMessage = string.Empty;
 
@@ -33,10 +43,23 @@ namespace Street_Rod_AC.Screens.NewGame
         public RelayCommand StartGameCommand { get; }
         public RelayCommand BackCommand { get; }
 
-        public NewGameScreenViewModel(NavigationService navigationService, DialogService dialogService)
+        /// <summary>A save name the catalog uses for itself; a player with that name gets a different file</summary>
+        private const string ReservedSaveName = "catalog";
+
+        /// <param name="setCurrentGame">Makes the new game the one the app saves on exit and races with</param>
+        public NewGameScreenViewModel(
+            NavigationService navigationService,
+            DialogService dialogService,
+            IGameStateRepository repository,
+            IRaceEventService raceEventService,
+            Action<GameState?> setCurrentGame)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
+            _repository = repository;
+            _raceEventService = raceEventService;
+            _setCurrentGame = setCurrentGame;
+            _logger = AppLoggerFactory.CreateLogger(LogCategory.Save);
 
             StartGameCommand = new RelayCommand(OnStartGame);
             BackCommand = new RelayCommand(OnBack);
@@ -64,68 +87,86 @@ namespace Street_Rod_AC.Screens.NewGame
 
         private void CreateNewGame(string playerName)
         {
-            var app = (App)System.Windows.Application.Current;
-            var repository = app.GameStateRepository;
-
             // Use player name as save file name (sanitize for filename)
-            var saveName = SanitizeSaveName(playerName);
+            var saveName = SaveNameFor(playerName);
 
-            // Check if save already exists
-            if (repository.Exists(saveName))
+            bool exists;
+            try
             {
-                // Show confirmation dialog
-                var confirmDialog = new ConfirmationDialogViewModel(
-                    _dialogService,
-                    $"A save file with the name '{saveName}' already exists. Do you want to overwrite it?",
-                    "Overwrite Save?",
-                    confirmed =>
-                    {
-                        if (confirmed)
-                        {
-                            // Create new save, overwriting the existing one
-                            var gameState = repository.CreateNew(saveName, playerName);
-
-                            // Generate initial race events
-                            var theApp = (App)System.Windows.Application.Current;
-                            theApp.RaceEventService.GenerateEvents(gameState.Career, gameState.Date);
-
-                            // Store current game state in App for saving on exit
-                            theApp.CurrentGameState = gameState;
-
-                            // Navigate to game screen
-                            _navigationService.NavigateToGarage(gameState);
-                        }
-                    });
-
-                _dialogService.ShowDialog(confirmDialog);
+                exists = _repository.Exists(saveName);
             }
-            else
+            catch (Exception ex)
             {
-                // Create new save
-                var gameState = repository.CreateNew(saveName, playerName);
-
-                // Generate initial race events
-                app.RaceEventService.GenerateEvents(gameState.Career, gameState.Date);
-
-                // Store current game state in App for saving on exit
-                app.CurrentGameState = gameState;
-
-                // Navigate to game screen
-                _navigationService.NavigateToGarage(gameState);
+                ReportFailure(ex, saveName);
+                return;
             }
+
+            if (!exists)
+            {
+                StartGame(saveName, playerName);
+                return;
+            }
+
+            // Show confirmation dialog
+            var confirmDialog = new ConfirmationDialogViewModel(
+                _dialogService,
+                $"A save file with the name '{saveName}' already exists. Do you want to overwrite it?",
+                "Overwrite Save?",
+                confirmed =>
+                {
+                    // Create new save, overwriting the existing one
+                    if (confirmed) StartGame(saveName, playerName);
+                });
+
+            _dialogService.ShowDialog(confirmDialog);
         }
 
-        private string SanitizeSaveName(string playerName)
+        /// <summary>
+        /// Creates the save, its first race events, and goes to the garage. The save is a file write: a locked
+        /// or read-only saves folder is told to the player, and they stay on this screen.
+        /// </summary>
+        private void StartGame(string saveName, string playerName)
         {
-            // Remove invalid filename characters
-            var invalidChars = System.IO.Path.GetInvalidFileNameChars();
-            var sanitized = string.Join("_", playerName.Split(invalidChars));
+            GameState gameState;
+            try
+            {
+                gameState = _repository.CreateNew(saveName, playerName);
 
-            // Limit length and trim
-            if (sanitized.Length > 50)
-                sanitized = sanitized.Substring(0, 50);
+                // Generate initial race events
+                _raceEventService.GenerateEvents(gameState.Career, gameState.Date);
+            }
+            catch (Exception ex)
+            {
+                ReportFailure(ex, saveName);
+                return;
+            }
 
-            return sanitized.Trim();
+            // Store current game state in App for saving on exit
+            _setCurrentGame(gameState);
+
+            // Navigate to game screen
+            _navigationService.NavigateToGarage(gameState);
+        }
+
+        private void ReportFailure(Exception ex, string saveName)
+        {
+            _logger.Error(ex, "Could not create save {SaveName}", saveName);
+            _dialogService.ShowDialog(new InformationDialogViewModel(
+                _dialogService,
+                $"The new game could not be set up:\n\n{ex.Message}",
+                "New Game Failed"));
+        }
+
+        /// <summary>
+        /// The player's name as a save file name: one safe file name (<see cref="PathNames.Sanitize"/>), never the
+        /// name the catalog database uses.
+        /// </summary>
+        public static string SaveNameFor(string playerName)
+        {
+            var saveName = PathNames.Sanitize(playerName, maxLength: 50, fallback: "player");
+            return string.Equals(saveName, ReservedSaveName, StringComparison.OrdinalIgnoreCase)
+                ? saveName + "_player"
+                : saveName;
         }
 
         private void OnBack()

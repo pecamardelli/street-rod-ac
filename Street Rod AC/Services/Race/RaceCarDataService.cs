@@ -46,17 +46,32 @@ namespace Street_Rod_AC.Services.Race
     public class RaceCarDataService
     {
         private readonly ICarPartsService _parts;
+        private readonly CarDataOverlay _overlay;
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("CarData");
 
-        public RaceCarDataService(ICarPartsService parts)
+        public RaceCarDataService(ICarPartsService parts, CarDataOverlay overlay)
         {
             _parts = parts;
+            _overlay = overlay;
         }
 
         /// <returns>The files to race with; null when the car has no parts to speak of and races as it is</returns>
         public RaceCarData? Prepare(Car car)
         {
             if (!_parts.IsAvailable || !car.HasPartsAssigned) return null;
+
+            // The race files are built from the car's own data. If an earlier race left it changed (a restore
+            // that failed), building on that would scale the running gear twice: put it back first.
+            try
+            {
+                _overlay.RestoreIfLeftover(car.DefinitionId);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("{Car}: data left changed by an earlier race could not be put back, racing as it is: {Error}",
+                    car.DefinitionId, ex.Message);
+                return null;
+            }
 
             var catalog = _parts.Catalog;
             var carDirectory = Path.Combine(AppSettings.Instance.CarsPath, car.DefinitionId);

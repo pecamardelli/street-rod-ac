@@ -17,6 +17,7 @@ namespace Street_Rod_AC.Dialogs.EventEntry
 
         public RelayCommand ConfirmCommand { get; }
         public RelayCommand CancelCommand { get; }
+        public RelayCommand<EligibleCarViewModel> SelectCarCommand { get; }
 
         // Event info
         public string EventName { get; }
@@ -32,16 +33,26 @@ namespace Street_Rod_AC.Dialogs.EventEntry
         public string OpponentCarDisplay { get; }
         public bool IsPoolOpponent { get; }
 
-        // Car selection
+        /// <summary>
+        /// The cars that may enter: copies of the invitation's, so what is picked here is this dialog's alone
+        /// and a cancelled pick does not show up highlighted the next time the invitation is opened
+        /// </summary>
         public List<EligibleCarViewModel> EligibleCars { get; }
 
         private EligibleCarViewModel? _selectedCar;
+
+        /// <summary>The car that enters. Setting it moves the highlight: exactly the selected car shows as picked</summary>
         public EligibleCarViewModel? SelectedCar
         {
             get => _selectedCar;
             set
             {
+                if (ReferenceEquals(_selectedCar, value)) return;
+
+                if (_selectedCar != null) _selectedCar.IsSelected = false;
                 _selectedCar = value;
+                if (_selectedCar != null) _selectedCar.IsSelected = true;
+
                 OnPropertyChanged(nameof(SelectedCar));
                 OnPropertyChanged(nameof(CanConfirm));
                 OnPropertyChanged(nameof(SelectedCarDisplay));
@@ -85,7 +96,7 @@ namespace Street_Rod_AC.Dialogs.EventEntry
             IsPoolOpponent = opponent.IsPoolOpponent;
 
             // Car selection
-            EligibleCars = eventVm.EligibleCars;
+            EligibleCars = eventVm.EligibleCars.Select(c => c.Copy()).ToList();
             if (EligibleCars.Count > 0)
             {
                 SelectedCar = EligibleCars[0];
@@ -93,6 +104,10 @@ namespace Street_Rod_AC.Dialogs.EventEntry
 
             ConfirmCommand = new RelayCommand(OnConfirm, () => CanConfirm);
             CancelCommand = new RelayCommand(OnCancel);
+            SelectCarCommand = new RelayCommand<EligibleCarViewModel>(car =>
+            {
+                if (car != null) SelectedCar = car;
+            });
         }
 
         private void OnConfirm()
@@ -110,14 +125,15 @@ namespace Street_Rod_AC.Dialogs.EventEntry
                 IsPinkSlip = IsPinkSlip
             };
 
-            _callback?.Invoke(result);
+            // Closed before the callback: it goes on to the race, and anything it shows must not close with this
             _dialogService.CloseDialog();
+            _callback?.Invoke(result);
         }
 
         private void OnCancel()
         {
-            _callback?.Invoke(null);
             _dialogService.CloseDialog();
+            _callback?.Invoke(null);
         }
     }
 

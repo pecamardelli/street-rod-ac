@@ -368,3 +368,6 @@ tmpclaude-*
 
 # Third-party garage showroom (Rob Taylor, no redistribution licence) - local only until we build our own
 Street Rod AC/Assets/Garages/garage/
+
+# The converter builds its output here and swaps it in only when a run completes
+**/.Parts.converting/

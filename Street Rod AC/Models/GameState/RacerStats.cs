@@ -104,7 +104,7 @@ namespace Street_Rod_AC.Models.GameState
             reputation += EventReputationBonus;
 
             // Clamp to valid range
-            return Math.Max(0, Math.Min(100, reputation));
+            return Math.Clamp(reputation, 0, 100);
         }
 
         /// <summary>

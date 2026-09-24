@@ -161,7 +161,7 @@ namespace Street_Rod_AC.Services.Configuration.Models
         public bool IsPinkSlip { get; set; }
 
         /// <summary>
-        /// Opponent AI skill level (80-100)
+        /// Opponent AI skill level (90-100)
         /// Derived from Opponent model at runtime
         /// </summary>
         public int OpponentAILevel { get; set; } = 90;
@@ -196,7 +196,10 @@ namespace Street_Rod_AC.Services.Configuration.Models
                 TrackConfig = this.TrackConfig,
                 OpponentAILevel = this.OpponentAILevel,
                 OpponentAIAggression = this.OpponentAIAggression,
-                RaceType = this.RaceType
+                RaceType = this.RaceType,
+                ContextId = Metadata.TryGetValue("RaceContext", out var context) && context is RaceContext raceContext
+                    ? raceContext.ContextId
+                    : null
             };
         }
     }

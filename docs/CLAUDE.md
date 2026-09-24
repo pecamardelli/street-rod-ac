@@ -11,13 +11,15 @@ Street Rod-style career mode manager for Assetto Corsa. WPF app manages game log
 ## Architecture Layers
 1. **Meta-Game Layer** - Player progression, economy, car ownership, saves
 2. **AC Integration Layer** - Launch via acs.exe, INI modification, result ingestion
-3. **Data Layer** - Dual-database: catalog.db (static) + saves/*.db (dynamic)
+3. **Data Layer** - Dual-database: catalog.db (static) + saves/*.db (dynamic), both under `%AppData%\StreetRodAC` (`Catalog\catalog.db`, `Saves\{name}.db`, next to `settings.json`; see `docs/architecture/data-storage.md`)
 
 ## Key Architectural Rules
-- **Navigation**: Single `NavigationService` with typed factory methods. Screens never instantiate other screens.
-- **Dialogs**: Modal overlays, never nested. One dialog at a time.
-- **INI Files**: Declare intent, apply minimally, always restore after AC exits.
-- **AC Content**: Import to catalog, never modify AC installation. The one exception is a race: a car's data files and engine sound, as its parts make them, go in through `CarDataOverlay` (originals kept with a manifest, put back in the launcher's `finally` and at start-up), and an opponent in the player's model races in a marked copy of the car folder that the same cleanup deletes. Anything that scans `content\cars` skips folders with the copy marker (`AcCarFolder.IsClone`).
+- **Navigation**: Single `NavigationService` with typed factory methods. Screens never instantiate other screens. Screens get their services through NavigationService (constructor parameters), never from `(App)Application.Current`.
+- **Dialogs**: Modal overlays, never nested. One dialog at a time: one requested while another is open is queued and shows after it, never replacing it. A dialog closes before it runs its callback.
+- **INI Files**: Declare intent, apply minimally, always restore after AC exits. Every cfg INI write goes through `IniModificationService` (`IniText`, line- and encoding-preserving, written atomically by `SafeFile`); the original is kept first under `%AppData%\StreetRodAC\AcRestore\~cfg` (`AcConfigBackup`) and put back in the launcher's `finally`, at start-up, on exit and on the fatal path, never while an AC process runs.
+- **Saves**: One open save database at a time (`SaveDatabase`), shared by the game state and race session repositories; the Load screen lists saves by header without switching it.
+- **Errors**: Global handlers (dispatcher, AppDomain, unobserved tasks) in `App.xaml.cs`. A recoverable UI exception is logged and shown in a dialog; a fatal one runs the fatal path once (save the game, restore the AC install if AC is not running, shut FMOD down, close the save database, flush the log). Screens guard their own `async` paths; `AsyncRelayCommand` logs what escapes.
+- **AC Content**: Import to catalog, never modify AC installation. The one exception is a race: a car's data files and engine sound, as its parts make them, go in through `CarDataOverlay` (originals kept with a manifest, put back in the launcher's `finally` and at start-up, once no AC process runs), and an opponent in the player's model races in a marked copy of the car folder that the same cleanup deletes. Anything that scans `content\cars` skips folders with the copy marker (`AcCarFolder.IsClone`).
 - **Logging**: Structured, via `IAppLogger`. Categories: App, Import, Market, Navigation, etc.
 
 ## Data Models
@@ -37,10 +39,10 @@ Street Rod-style career mode manager for Assetto Corsa. WPF app manages game log
 | System | Service | Purpose |
 |--------|---------|---------|
 | Catalog | ContentCatalogRepository, CarProfileService | Car import, profiles |
-| Market | UsedCarMarketService | Spawn listings, refresh, purchases |
+| Market | UsedCarMarketService, CarValuation | Spawn listings, refresh, purchases; one formula for what a car is worth |
 | Opponents | OpponentGenerationService, OpponentEvolutionService | Create/evolve racers |
 | Time | GameTimeScheduler, IScheduledTask | Time-based task execution |
-| Race | AssettoCorsaLauncher, IniModificationService | Launch AC, modify configs |
+| Race | AssettoCorsaLauncher, IniModificationService, RaceResultIngestionService | Launch AC, modify and restore configs, stop a race, read results (`LaunchResult.Outcome`, `PlayerMessages`) |
 | Dialogs | DialogService | Modal overlays |
 | Parts | PartsCatalog, PartScriptRuntime, EngineDyno, AcEngineData, AcRunningGearData | SLRR parts: run their scripts on the player's build, dyno, AC data (see `docs/systems/parts-system.md`) |
 | Cars' parts | CarPartsService, PartsShopService, Workbench, EngineFactory, RunningGearFactory | Factory engine and running gear per car, part trees on cars, plausibly tuned used cars, garage workbench (parts picked in 3D), parts shop |
@@ -61,14 +63,15 @@ Street Rod AC/
 
 ## Screen Navigation Pattern
 ```
-NavigationService.NavigateTo[ScreenName](dependencies)
-  → Creates ScreenViewModel with injected services
+NavigationService.NavigateTo[ScreenName](dependencies) : bool
+  → SafeNavigate: creates ScreenViewModel with the services from NavigationService's fields
   → Calls NavigateTo(screen) internally
-  → Screen.Enter() lifecycle hook
+  → Screen.Enter() lifecycle hook (loading happens here, not in the constructor)
+  → A constructor or Enter() that throws: logged, dialog shown, previous screen kept, returns false
 ```
 
 ## Opponent System (AC-Agnostic)
-- `Opponent` model stores Skill (80-100) and Aggression (0-100)
+- `Opponent` model stores Skill (90-100; the floor of 90 is deliberate, commit 61ca613: below it AC's AI drives too badly to make a race. Never lower it) and Aggression (0-100)
 - `OpponentAIAdapter` converts to AC AI parameters at runtime (never persisted)
 - Evolution happens after races via `OpponentEvolutionService`
 
@@ -85,7 +88,7 @@ NavigationService.NavigateTo[ScreenName](dependencies)
 | Crash Penalty Mode | `C:\GAMES\Street Rod AC\extension\lua\new-modes\crash-penalty-tournament\` | Penalty tracking (unused) |
 | FFB Limiter | `C:\GAMES\Street Rod AC\extension\lua\ffb-postprocess\upper-limit\` | Direct drive protection |
 | SR Race Manager (Lua app) | `apps\lua\sr_race_manager\` | Auto-start, crash detection, race results JSON, auto-quit |
-| Python Race App (legacy) | `apps\python\StreetRodRaceApp\` | Superseded by SR Race Manager, kept for reference |
+| Python Race App (removed) | was `apps\python\StreetRodRaceApp\` | Superseded by SR Race Manager; deleted 2026-09-24, in git history only |
 
 **Key Integration Points**:
 - Races launch with the `sr_race` CSP new-mode (set by `IniModificationService`)
@@ -97,7 +100,7 @@ NavigationService.NavigateTo[ScreenName](dependencies)
 **New Screen:**
 1. Create `Screens/[Name]/[Name]ScreenViewModel.cs` (inherit BaseScreenViewModel)
 2. Create `Screens/[Name]/[Name]ScreenView.xaml` + `.xaml.cs`
-3. Add `NavigateTo[Name]()` method in NavigationService
+3. Add `bool NavigateTo[Name]()` in NavigationService through `SafeNavigate`, passing services from its fields (add a constructor parameter for a new one)
 4. Add DataTemplate in App.xaml
 
 **New Scheduled Task:**
@@ -108,7 +111,7 @@ NavigationService.NavigateTo[ScreenName](dependencies)
 1. Create ViewModel in `Dialogs/[Name]/`
 2. Create View XAML
 3. Add DataTemplate in App.xaml
-4. Show via `DialogService.ShowDialog(viewModel)`
+4. Show via `DialogService.ShowDialog(viewModel)` (queued if another dialog is open)
 
 ## Documentation Index
 - [Architecture Overview](architecture/overview.md)
@@ -120,5 +123,5 @@ NavigationService.NavigateTo[ScreenName](dependencies)
 - [Parts System](systems/parts-system.md)
 - [AC Launcher](ac-integration/launcher.md)
 - [CSP Lua Scripts](ac-integration/csp-lua-scripts.md)
-- [Python Race App (legacy)](ac-integration/python-app.md)
+- [Python Race App (removed, for reference)](ac-integration/python-app.md)
 - [Screens Index](screens/index.md)

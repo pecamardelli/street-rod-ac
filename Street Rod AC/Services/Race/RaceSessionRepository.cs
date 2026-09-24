@@ -1,57 +1,38 @@
 using LiteDB;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Race;
+using Street_Rod_AC.Services.Storage;
 using System.IO;
 
 namespace Street_Rod_AC.Services.Race
 {
     /// <summary>
     /// Repository for managing processed race sessions in LiteDB
-    /// Stores sessions in the current save's database file
+    /// Stores sessions in the save's database file, through the same open instance as the game state
+    /// (<see cref="SaveDatabase"/>): the two never open the file at once, and a race's record can be written
+    /// in the same transaction as the state it changed.
     /// Collection: "ProcessedRaceSessions"
     /// </summary>
     public class RaceSessionRepository : IRaceSessionRepository
     {
-        private readonly string _savesDirectory;
+        private const string Collection = "ProcessedRaceSessions";
+
+        private readonly SaveDatabase _database;
         private readonly IAppLogger _logger;
 
-        public RaceSessionRepository()
+        public RaceSessionRepository(SaveDatabase database)
         {
-            // Same saves directory as GameStateRepository
-            _savesDirectory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "StreetRodAC",
-                "Saves");
-
-            Directory.CreateDirectory(_savesDirectory);
-
+            _database = database;
             _logger = AppLoggerFactory.CreateLogger(LogCategory.RaceIngestion);
         }
 
-        public async Task SaveAsync(ProcessedRaceSession session)
+        public async Task SaveAsync(string saveName, ProcessedRaceSession session)
         {
             await Task.Run(() =>
             {
-                var dbPath = GetDatabasePath();
-
-                if (string.IsNullOrEmpty(dbPath))
-                {
-                    _logger.Warning("Cannot save session: no active game state");
-                    throw new InvalidOperationException("No active game state - cannot save session");
-                }
-
                 try
                 {
-                    using var db = new LiteDatabase(dbPath);
-                    var collection = db.GetCollection<ProcessedRaceSession>("ProcessedRaceSessions");
-
-                    // Ensure session_id index exists
-                    collection.EnsureIndex(x => x.SessionId, unique: true);
-
-                    // Upsert (insert or update)
-                    collection.Upsert(session);
-
-                    _logger.Debug("Saved processed session {SessionId} to database", session.SessionId);
+                    _database.Use(saveName, db => Save(db, session));
                 }
                 catch (Exception ex)
                 {
@@ -61,98 +42,56 @@ namespace Street_Rod_AC.Services.Race
             });
         }
 
-        public async Task<ProcessedRaceSession?> GetBySessionIdAsync(string sessionId)
+        public void Save(LiteDatabase database, ProcessedRaceSession session)
         {
-            return await Task.Run(() =>
-            {
-                var dbPath = GetDatabasePath();
-
-                if (string.IsNullOrEmpty(dbPath) || !File.Exists(dbPath))
-                    return null;
-
-                try
-                {
-                    using var db = new LiteDatabase(dbPath);
-                    var collection = db.GetCollection<ProcessedRaceSession>("ProcessedRaceSessions");
-                    return collection.FindById(sessionId);
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error(ex, "Error querying session {SessionId}", sessionId);
-                    return null;
-                }
-            });
+            // SessionId is the document's _id: the upsert is keyed on it
+            database.GetCollection<ProcessedRaceSession>(Collection).Upsert(session);
+            _logger.Debug("Saved processed session {SessionId} to database", session.SessionId);
         }
 
-        public async Task<bool> IsProcessedAsync(string sessionId)
-        {
-            var session = await GetBySessionIdAsync(sessionId);
-            return session != null;
-        }
+        public Task<ProcessedRaceSession?> GetBySessionIdAsync(string saveName, string sessionId) =>
+            Task.Run(() => Read(saveName, db => db.GetCollection<ProcessedRaceSession>(Collection).FindById(sessionId)));
 
-        public async Task<List<ProcessedRaceSession>> GetAllAsync()
+        public async Task<bool> IsProcessedAsync(string saveName, string sessionId) =>
+            await GetBySessionIdAsync(saveName, sessionId) != null;
+
+        public Task<bool> IsContextSettledAsync(string saveName, Guid contextId) =>
+            Task.Run(() => Read(saveName, db =>
+                db.GetCollection<ProcessedRaceSession>(Collection).Exists(Query.EQ(nameof(ProcessedRaceSession.RaceContextId), contextId))));
+
+        public async Task<List<ProcessedRaceSession>> GetAllAsync(string saveName)
         {
-            return await Task.Run(() =>
+            try
             {
-                var dbPath = GetDatabasePath();
-
-                if (string.IsNullOrEmpty(dbPath) || !File.Exists(dbPath))
-                    return new List<ProcessedRaceSession>();
-
-                try
-                {
-                    using var db = new LiteDatabase(dbPath);
-                    var collection = db.GetCollection<ProcessedRaceSession>("ProcessedRaceSessions");
-                    return collection.FindAll().ToList();
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error(ex, "Error retrieving all sessions");
-                    return new List<ProcessedRaceSession>();
-                }
-            });
-        }
-
-        public async Task<int> GetCountAsync()
-        {
-            return await Task.Run(() =>
-            {
-                var dbPath = GetDatabasePath();
-
-                if (string.IsNullOrEmpty(dbPath) || !File.Exists(dbPath))
-                    return 0;
-
-                try
-                {
-                    using var db = new LiteDatabase(dbPath);
-                    var collection = db.GetCollection<ProcessedRaceSession>("ProcessedRaceSessions");
-                    return collection.Count();
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error(ex, "Error getting session count");
-                    return 0;
-                }
-            });
-        }
-
-        /// <summary>
-        /// Get the database path for the current save
-        /// </summary>
-        private string? GetDatabasePath()
-        {
-            // Get current game state from application
-            var app = System.Windows.Application.Current as App;
-            var currentGameState = app?.CurrentGameState;
-
-            if (currentGameState == null || string.IsNullOrEmpty(currentGameState.SaveName))
-            {
-                _logger.Warning("No active game state - cannot determine database path");
-                return null;
+                return await Task.Run(() =>
+                    Read(saveName, db => db.GetCollection<ProcessedRaceSession>(Collection).FindAll().ToList()) ?? new List<ProcessedRaceSession>());
             }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error retrieving all sessions");
+                return new List<ProcessedRaceSession>();
+            }
+        }
 
-            var dbPath = Path.Combine(_savesDirectory, $"{currentGameState.SaveName}.db");
-            return dbPath;
+        public async Task<int> GetCountAsync(string saveName)
+        {
+            try
+            {
+                return await Task.Run(() => Read(saveName, db => db.GetCollection<ProcessedRaceSession>(Collection).Count()));
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting session count");
+                return 0;
+            }
+        }
+
+        /// <summary>A read of a save that has no file yet finds nothing, and does not create it</summary>
+        private T? Read<T>(string saveName, Func<LiteDatabase, T> read)
+        {
+            if (!File.Exists(_database.PathOf(saveName)))
+                return default;
+            return _database.Use(saveName, read);
         }
     }
 }

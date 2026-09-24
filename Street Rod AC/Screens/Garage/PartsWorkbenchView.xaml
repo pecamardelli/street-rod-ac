@@ -8,25 +8,25 @@
              d:DesignHeight="700" d:DesignWidth="1280">
     <UserControl.Resources>
         <Style x:Key="PanelStyle" TargetType="Border">
-            <Setter Property="Background" Value="#D0141414"/>
-            <Setter Property="BorderBrush" Value="#404040"/>
+            <Setter Property="Background" Value="{StaticResource Glass14D0Brush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderLightBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="5"/>
             <Setter Property="Padding" Value="16,12"/>
         </Style>
         <Style x:Key="PanelTitleStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Foreground" Value="{StaticResource AccentPrimaryBrush}"/>
             <Setter Property="Margin" Value="0,0,0,6"/>
         </Style>
         <Style x:Key="LabelStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeCompact}"/>
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
             <Setter Property="Margin" Value="0,2,12,2"/>
         </Style>
         <Style x:Key="ValueStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeCompact}"/>
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
             <Setter Property="Margin" Value="0,2"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
@@ -83,11 +83,11 @@
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="row" Property="Background" Value="#30FFFFFF"/>
+                                                <Setter TargetName="row" Property="Background" Value="{StaticResource White30Brush}"/>
                                             </Trigger>
                                             <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="row" Property="Background" Value="#3059FF73"/>
-                                                <Setter TargetName="row" Property="BorderBrush" Value="#59FF73"/>
+                                                <Setter TargetName="row" Property="Background" Value="{StaticResource Fit30Brush}"/>
+                                                <Setter TargetName="row" Property="BorderBrush" Value="{StaticResource FitBrush}"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -104,10 +104,10 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="{Binding Name}"
-                                               FontSize="13"
+                                               FontSize="{StaticResource FontSizeCompact}"
                                                Foreground="{StaticResource TextPrimaryBrush}"
                                                TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock FontSize="11" Foreground="{StaticResource TextSecondaryBrush}">
+                                    <TextBlock FontSize="{StaticResource FontSizeCaption}" Foreground="{StaticResource TextSecondaryBrush}">
                                         <Run Text="{Binding Kind, Mode=OneWay}"/>
                                         <Run Text="  ·  "/>
                                         <Run Text="{Binding Detail, Mode=OneWay}"/>
@@ -115,8 +115,8 @@
                                 </StackPanel>
                                 <TextBlock Grid.Column="1"
                                            Text="{Binding WorthDisplay}"
-                                           FontSize="12"
-                                           Foreground="#90EE90"
+                                           FontSize="{StaticResource FontSizeSmall}"
+                                           Foreground="{StaticResource AccentSuccessBrush}"
                                            VerticalAlignment="Center"
                                            Margin="8,0,0,0"/>
                             </Grid>
@@ -128,22 +128,22 @@
                             Margin="0,8,0,0"
                             Visibility="{Binding ShelfHint, Converter={StaticResource StringToVisibilityConverter}}">
                     <TextBlock Text="{Binding ShelfHint}"
-                               FontSize="13"
-                               Foreground="#59FF73"
+                               FontSize="{StaticResource FontSizeCompact}"
+                               Foreground="{StaticResource FitBrush}"
                                TextWrapping="Wrap"/>
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                         <Button Content="Never mind"
                                 Command="{Binding CancelMountCommand}"
                                 Style="{StaticResource DialogSecondaryButtonStyle}"
                                 Padding="12,4"
-                                FontSize="13"/>
+                                FontSize="{StaticResource FontSizeCompact}"/>
                         <Button Content="Take apart"
                                 Command="{Binding TakeApartCommand}"
                                 Visibility="{Binding CanTakeApart, Converter={StaticResource BooleanToVisibilityConverter}}"
                                 ToolTip="Take off what is mounted on it, here on the shelf"
                                 Style="{StaticResource DialogSecondaryButtonStyle}"
                                 Padding="12,4"
-                                FontSize="13"
+                                FontSize="{StaticResource FontSizeCompact}"
                                 Margin="8,0,0,0"/>
                     </StackPanel>
                 </StackPanel>
@@ -161,7 +161,7 @@
                 <StackPanel>
                     <TextBlock Text="ENGINE" Style="{StaticResource PanelTitleStyle}"/>
                     <TextBlock Text="{Binding EngineName}"
-                               FontSize="16"
+                               FontSize="{StaticResource FontSizeSubheading}"
                                FontWeight="SemiBold"
                                Foreground="{StaticResource TextPrimaryBrush}"
                                TextWrapping="Wrap"
@@ -190,8 +190,8 @@
                         <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding MassDisplay}" Style="{StaticResource ValueStyle}"/>
                     </Grid>
                     <TextBlock Text="{Binding StatusDisplay}"
-                               FontSize="13"
-                               Foreground="#FF8C6B"
+                               FontSize="{StaticResource FontSizeCompact}"
+                               Foreground="{StaticResource SalmonBrush}"
                                TextWrapping="Wrap"
                                Margin="0,6,0,0"
                                Visibility="{Binding StatusDisplay, Converter={StaticResource StringToVisibilityConverter}}"/>
@@ -205,7 +205,7 @@
                 <StackPanel>
                     <TextBlock Text="{Binding SelectedKind}" Style="{StaticResource PanelTitleStyle}"/>
                     <TextBlock Text="{Binding SelectedName}"
-                               FontSize="15"
+                               FontSize="{StaticResource FontSizeBodyLarge}"
                                FontWeight="SemiBold"
                                Foreground="{StaticResource TextPrimaryBrush}"
                                TextWrapping="Wrap"
@@ -222,8 +222,8 @@
                                      Minimum="0" Maximum="1"
                                      Value="{Binding SelectedCondition, Mode=OneWay}"
                                      Height="8"
-                                     Foreground="#90EE90"
-                                     Background="#303030"
+                                     Foreground="{StaticResource AccentSuccessBrush}"
+                                     Background="{StaticResource Gray30Brush}"
                                      BorderThickness="0"
                                      VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="2" Text="{Binding SelectedConditionDisplay}" Style="{StaticResource ValueStyle}" Margin="10,2,0,2"/>
@@ -231,7 +231,7 @@
 
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Worth" Style="{StaticResource LabelStyle}"/>
-                        <TextBlock Text="{Binding SelectedWorthDisplay}" Style="{StaticResource ValueStyle}" Foreground="#90EE90"/>
+                        <TextBlock Text="{Binding SelectedWorthDisplay}" Style="{StaticResource ValueStyle}" Foreground="{StaticResource AccentSuccessBrush}"/>
                     </StackPanel>
 
                     <TextBlock Text="{Binding SelectedAttachedDisplay}"
@@ -240,24 +240,24 @@
                                Visibility="{Binding SelectedAttachedDisplay, Converter={StaticResource StringToVisibilityConverter}}"/>
 
                     <!-- Placement mode (F5): a tool for fitting the converted parts -->
-                    <Border Background="#33FFD700" BorderBrush="#FFD700" BorderThickness="1" Padding="6" Margin="0,6,0,0"
+                    <Border Background="{StaticResource Gold33Brush}" BorderBrush="{StaticResource GoldBrush}" BorderThickness="1" Padding="6" Margin="0,6,0,0"
                             Visibility="{Binding PlacementDisplay, Converter={StaticResource StringToVisibilityConverter}}">
-                        <TextBlock Text="{Binding PlacementDisplay}" FontSize="11" FontFamily="Consolas" Foreground="#FFE8A0" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding PlacementDisplay}" FontSize="{StaticResource FontSizeCaption}" FontFamily="Consolas" Foreground="{StaticResource PaleYellowBrush}" TextWrapping="Wrap"/>
                     </Border>
 
                     <Button Content="Take it off"
                             Command="{Binding RemoveSelectedCommand}"
                             Style="{StaticResource DialogPrimaryButtonStyle}"
                             Padding="15,5"
-                            FontSize="14"
+                            FontSize="{StaticResource FontSizeBody}"
                             HorizontalAlignment="Left"
                             Margin="0,10,0,0"/>
                 </StackPanel>
             </Border>
 
             <TextBlock Text="Click a part to pick it. Drag to look around, scroll to get closer."
-                       FontSize="12"
-                       Foreground="#B0FFFFFF"
+                       FontSize="{StaticResource FontSizeSmall}"
+                       Foreground="{StaticResource WhiteB0Brush}"
                        TextWrapping="Wrap"
                        Margin="4,10,0,0"
                        Visibility="{Binding HasSelection, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>

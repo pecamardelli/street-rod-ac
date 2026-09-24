@@ -1,6 +1,8 @@
 using Street_Rod_AC.Logging;
+using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Market;
 
 namespace Street_Rod_AC.Services.Opponents
 {
@@ -61,6 +63,10 @@ namespace Street_Rod_AC.Services.Opponents
                 _logger.Information("Using all {Count} opponents", allOpponents.Count);
             }
 
+            // The cars they can have, looked up once for all of them: installed ones only (AC cannot race a car
+            // that was deleted from content\cars, however long the catalog remembers it), with a price
+            var carPool = BuildCarPool();
+
             // Add opponents to game state
             foreach (var opponent in selectedOpponents)
             {
@@ -68,7 +74,7 @@ namespace Street_Rod_AC.Services.Opponents
                 opponent.Status = RacerStatus.ReadyToRace;
 
                 // Generate and assign a used car to this opponent
-                var car = GenerateOpponentCar(opponent);
+                var car = GenerateOpponentCar(opponent, carPool, gameState.Date);
                 if (car != null)
                 {
                     opponent.Cars.Add(car);
@@ -122,7 +128,7 @@ namespace Street_Rod_AC.Services.Opponents
             var baseMoney = 2000m + (_random.Next(0, 3001));
 
             // Skill bonus: Higher skill = more money (up to +$3,000)
-            var skillBonus = (opponent.Skill - 80) * 150m; // 0 to 3000
+            var skillBonus = (opponent.Skill - 80) * 150m; // 1500 to 3000 (skills run 90-100)
 
             // Age bonus: Older opponents have had more time to earn (up to +$4,000)
             decimal ageBonus;
@@ -158,31 +164,33 @@ namespace Street_Rod_AC.Services.Opponents
             return Math.Max(1000m, totalMoney); // Minimum $1,000
         }
 
+        /// <summary>The installed, active catalog cars that have a profile to price them, with that profile</summary>
+        private List<(CarDefinition Car, CarProfile Profile)> BuildCarPool()
+        {
+            var installed = InstalledCars.Only(_catalogRepo.GetCarsByStatus(ContentStatus.Active), out var notInstalled);
+            if (notInstalled > 0)
+            {
+                _logger.Warning("{Count} catalog cars are not installed; no opponent gets one of them", notInstalled);
+            }
+
+            var profiles = _profileRepo.GetAllProfiles().ToDictionary(p => p.CarDefinitionId, StringComparer.OrdinalIgnoreCase);
+            return [.. installed.Where(c => profiles.ContainsKey(c.Id)).Select(c => (c, profiles[c.Id]))];
+        }
+
         /// <summary>
         /// Generate a used car for an opponent
         /// Creates a car instance with appropriate condition and mileage based on opponent traits
         /// </summary>
-        private Car? GenerateOpponentCar(Opponent opponent)
+        private Car? GenerateOpponentCar(Opponent opponent, List<(CarDefinition Car, CarProfile Profile)> pool, DateTime today)
         {
-            // Get all active cars from catalog
-            var activeCars = _catalogRepo.GetCarsByStatus(Models.Catalog.ContentStatus.Active);
-
-            if (activeCars.Count == 0)
+            if (pool.Count == 0)
             {
-                _logger.Warning("No active cars available to assign to opponent {Name}", opponent.Name);
+                _logger.Warning("No installed car with a profile to assign to opponent {Name}", opponent.Name);
                 return null;
             }
 
             // Select a random car definition
-            var carDefinition = activeCars[_random.Next(activeCars.Count)];
-
-            // Get car profile for pricing info
-            var profile = _profileRepo.GetProfile(carDefinition.Id);
-            if (profile == null)
-            {
-                _logger.Warning("No profile found for car {CarId}, cannot assign to opponent", carDefinition.Id);
-                return null;
-            }
+            var (carDefinition, profile) = pool[_random.Next(pool.Count)];
 
             // Select random skin
             var skinId = "default";
@@ -194,7 +202,7 @@ namespace Street_Rod_AC.Services.Opponents
             // Generate condition based on opponent's skill and age
             // Higher skill opponents tend to have better maintained cars
             // Younger opponents might have more worn cars (less money for maintenance)
-            var baseCondition = 0.5f + (opponent.Skill - 80) / 100f; // 0.5 to 0.7 based on skill
+            var baseCondition = 0.5f + (opponent.Skill - 80) / 100f; // 0.6 to 0.7 (skills run 90-100)
             var ageAdjustment = opponent.Age > 35 ? 0.1f : -0.05f; // Older opponents have better cars
             var condition = Math.Clamp(baseCondition + ageAdjustment + ((float)_random.NextDouble() * 0.2f - 0.1f), 0.4f, 0.9f);
 
@@ -212,9 +220,11 @@ namespace Street_Rod_AC.Services.Opponents
                 TransmissionHealth = condition + (float)_random.NextDouble() * 0.1f - 0.05f,
                 BodyCondition = condition + (float)_random.NextDouble() * 0.1f - 0.05f,
                 TireCondition = 0.6f + (float)_random.NextDouble() * 0.3f, // Tires vary more
-                PurchasePrice = profile.BasePrice * (decimal)condition,
-                PurchaseDate = DateTime.Now.AddDays(-_random.Next(30, 365)) // Owned for 1 month to 1 year
+                PurchaseDate = today.AddDays(-_random.Next(30, 365)) // Owned for 1 month to 1 year, in game time
             };
+
+            // Paid what a car like that is worth: the same sum the market prices its cars with
+            car.PurchasePrice = CarValuation.ValueOf(car, profile.BasePrice);
 
             _logger.Debug("Generated car {CarId} for opponent {Name}: Condition={Condition:F2}, Mileage={Mileage}",
                 carDefinition.Id, opponent.Name, condition, mileage);

@@ -48,13 +48,6 @@ public static class StockEngineMatcher
     }
 
     /// <summary>The number in a power figure as car data writes it: "430bhp", "335 hp", "250 cv"</summary>
-    public static double? ParsePower(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return null;
-
-        var digits = new string(text.SkipWhile(c => !char.IsDigit(c)).TakeWhile(c => char.IsDigit(c) || c == '.').ToArray());
-        return double.TryParse(digits, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value) && value > 0
-            ? value
-            : null;
-    }
+    /// <remarks>The one spec parser, <see cref="AcSpecs.ParsePower"/>: kept here for the callers that know it by this name</remarks>
+    public static double? ParsePower(string? text) => AcSpecs.ParsePower(text);
 }

@@ -27,4 +27,10 @@
     <Compile Include="..\..\Street Rod AC\Parts\Sounds\*.cs" Link="Parts\Sounds\%(Filename)%(Extension)" />
   </ItemGroup>
 
+  <!-- The game's plain-BCL helpers the linked part code uses (and the tool itself): atomic writes, paths kept inside a root -->
+  <ItemGroup>
+    <Compile Include="..\..\Street Rod AC\Helpers\SafeFile.cs" Link="Helpers\SafeFile.cs" />
+    <Compile Include="..\..\Street Rod AC\Helpers\PathNames.cs" Link="Helpers\PathNames.cs" />
+  </ItemGroup>
+
 </Project>

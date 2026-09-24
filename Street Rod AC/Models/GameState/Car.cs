@@ -33,12 +33,12 @@ namespace Street_Rod_AC.Models.GameState
 
         // Purchase/Sale Info
         public decimal PurchasePrice { get; set; }
-        public DateTime PurchaseDate { get; set; }
 
-        // Calculated Stats (not persisted, computed on load)
-        public double TotalHP { get; set; }
-        public double TotalWeight { get; set; }
-        public double TotalReliability { get; set; }
+        /// <summary>
+        /// When the car changed hands, in game time (1970s). Whoever creates the car sets it from the game's
+        /// date; the real clock has no place in the game world.
+        /// </summary>
+        public DateTime PurchaseDate { get; set; }
 
         public Car()
         {
@@ -51,7 +51,6 @@ namespace Street_Rod_AC.Models.GameState
             TireCondition = 1.0;
             Parts = [];
             PurchasePrice = 0m;
-            PurchaseDate = DateTime.Now;
         }
 
         public Car(string definitionId) : this()

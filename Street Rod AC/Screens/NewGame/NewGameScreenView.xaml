@@ -74,7 +74,7 @@
             <!-- Error Message -->
             <TextBlock Text="{Binding ErrorMessage}"
                        Foreground="{StaticResource AccentPrimaryBrush}"
-                       FontSize="14"
+                       FontSize="{StaticResource FontSizeBody}"
                        TextAlignment="Center"
                        Margin="0,0,0,20"
                        Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
@@ -89,13 +89,13 @@
                         Width="150"
                         Height="45"
                         Margin="0,0,20,0"
-                        FontSize="16"/>
+                        FontSize="{StaticResource FontSizeSubheading}"/>
                 <Button Content="Start Game"
                         Command="{Binding StartGameCommand}"
                         Style="{StaticResource DialogPrimaryButtonStyle}"
                         Width="150"
                         Height="45"
-                        FontSize="16"/>
+                        FontSize="{StaticResource FontSizeSubheading}"/>
             </StackPanel>
         </StackPanel>
     </Grid>

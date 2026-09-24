@@ -28,7 +28,7 @@ public readonly record struct LotCarPlacement(
 /// the work here is placing them, moving the camera between the two views, and working out which car the
 /// pointer is on.
 /// </summary>
-public class DealerLotViewport3D : System.Windows.Controls.Grid
+public class DealerLotViewport3D : D3DViewportBase
 {
     // Taking in the whole lot, and standing on one car
     private const float DefaultLotRadius = 19f;
@@ -72,16 +72,6 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
     private const double ClickSlack = 4.0;
     private static readonly TimeSpan HoverInterval = TimeSpan.FromMilliseconds(40);
-    private static readonly TimeSpan FadeInDuration = TimeSpan.FromMilliseconds(600);
-    private static readonly TimeSpan SettleWindow = TimeSpan.FromMilliseconds(300);
-
-    private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("DealerLot");
-    private readonly System.Windows.Controls.Image _image;
-    private readonly SharedTextureBridge _bridge = new();
-    private readonly System.Windows.Controls.Border _label;
-    private readonly System.Windows.Controls.TextBlock _labelText;
-
-    private GarageRenderer? _renderer;
 
     /// <summary>Slot per car, in the same order as <see cref="Cars"/>. Null where a car was not loaded</summary>
     private readonly List<CarSlot?> _slots = [];
@@ -97,12 +87,6 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
     /// <summary>The showroom the standing scene was built from: a new one means starting the scene again</summary>
     private string? _loadedShowroom;
 
-    private bool _isLoading;
-    private bool _reloadRequested;
-    private bool _failed;
-    private TimeSpan _lastRenderingTime;
-    private DateTime _animateUntil = DateTime.MinValue;
-
     private System.Windows.Point _lastMouse;
     private System.Windows.Point _pressedAt;
     private bool _isDragging;
@@ -116,59 +100,11 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
     private float? _alphaGoal;
 
     public DealerLotViewport3D()
+        : base("DealerLot", new LabelLook(14, 0xD8, 0x90, new Thickness(9, 5, 9, 5), new Vector(18, 18)))
     {
-        Background = System.Windows.Media.Brushes.Transparent;
-        ClipToBounds = true;
-        Focusable = false;
-
-        _image = new System.Windows.Controls.Image
-        {
-            Source = _bridge.Image,
-            Stretch = Stretch.Fill,
-            Opacity = 0
-        };
-        Children.Add(_image);
-
-        _labelText = new System.Windows.Controls.TextBlock
-        {
-            Foreground = System.Windows.Media.Brushes.White,
-            FontSize = 14,
-            FontWeight = FontWeights.SemiBold
-        };
-        _label = new System.Windows.Controls.Border
-        {
-            Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0xD8, 0x10, 0x10, 0x10)),
-            BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0x90, 0xFF, 0xE6, 0x8C)),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(3),
-            Padding = new Thickness(9, 5, 9, 5),
-            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
-            VerticalAlignment = System.Windows.VerticalAlignment.Top,
-            IsHitTestVisible = false,
-            Visibility = Visibility.Collapsed,
-            Child = _labelText
-        };
-        Children.Add(_label);
-
-        Loaded += (_, _) => RequestLoad();
-        Unloaded += (_, _) =>
-        {
-            DisposeRenderer();
-            _bridge.Dispose();
-        };
-        IsVisibleChanged += (_, _) => RequestLoad();
-        SizeChanged += (_, _) => UpdateRendererSize();
-        _bridge.FrontBufferRestored += (_, _) =>
-        {
-            if (_renderer != null) _renderer.IsDirty = true;
-        };
     }
 
-    /// <summary>Raised once when the first 3D frame is on screen</summary>
-    public event EventHandler? Ready;
-
-    /// <summary>Raised if the renderer could not be started or crashed</summary>
-    public event EventHandler? Failed;
+    protected override string ViewportName => "Dealer lot viewport";
 
     /// <summary>A car on the lot was clicked, by its index in <see cref="Cars"/></summary>
     public event Action<int>? CarClicked;
@@ -225,41 +161,6 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         set => SetValue(SelectedIndexProperty, value);
     }
 
-    public static readonly DependencyProperty RunningEngineProperty = DependencyProperty.Register(
-        nameof(RunningEngine), typeof(Audio.EngineRunner), typeof(DealerLotViewport3D),
-        new PropertyMetadata(null, (d, e) => ((DealerLotViewport3D)d).OnRunningEngineChanged((Audio.EngineRunner?)e.OldValue, (Audio.EngineRunner?)e.NewValue)));
-
-    /// <summary>The engine of the car the camera is on, started where it stands: that car's body rocks with it</summary>
-    public Audio.EngineRunner? RunningEngine
-    {
-        get => (Audio.EngineRunner?)GetValue(RunningEngineProperty);
-        set => SetValue(RunningEngineProperty, value);
-    }
-
-    private static readonly DependencyPropertyKey IsReadyPropertyKey = DependencyProperty.RegisterReadOnly(
-        nameof(IsReady), typeof(bool), typeof(DealerLotViewport3D), new PropertyMetadata(false));
-
-    public static readonly DependencyProperty IsReadyProperty = IsReadyPropertyKey.DependencyProperty;
-
-    /// <summary>The first frame is on screen</summary>
-    public bool IsReady
-    {
-        get => (bool)GetValue(IsReadyProperty);
-        private set => SetValue(IsReadyPropertyKey, value);
-    }
-
-    private static readonly DependencyPropertyKey HasFailedPropertyKey = DependencyProperty.RegisterReadOnly(
-        nameof(HasFailed), typeof(bool), typeof(DealerLotViewport3D), new PropertyMetadata(false));
-
-    public static readonly DependencyProperty HasFailedProperty = HasFailedPropertyKey.DependencyProperty;
-
-    /// <summary>The 3D lot could not be shown; the host should fall back to a flat list</summary>
-    public bool HasFailed
-    {
-        get => (bool)GetValue(HasFailedProperty);
-        private set => SetValue(HasFailedPropertyKey, value);
-    }
-
     private static readonly DependencyPropertyKey IsLotReadyPropertyKey = DependencyProperty.RegisterReadOnly(
         nameof(IsLotReady), typeof(bool), typeof(DealerLotViewport3D), new PropertyMetadata(false));
 
@@ -294,39 +195,9 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
     #region Loading
 
-    private async void RequestLoad()
-    {
-        if (!IsLoaded || !IsVisible || _failed) return;
+    protected override bool IsUpToDate => Renderer != null && SameCars(Cars ?? [], _loaded);
 
-        var cars = Cars ?? [];
-        if (_renderer != null && SameCars(cars, _loaded)) return;
-
-        if (_isLoading)
-        {
-            _reloadRequested = true;
-            return;
-        }
-
-        _isLoading = true;
-        try
-        {
-            await LoadLotAsync(cars);
-        }
-        catch (Exception ex)
-        {
-            _logger.Error(ex, "Dealer lot viewport failed");
-            Fail();
-        }
-        finally
-        {
-            _isLoading = false;
-            if (_reloadRequested)
-            {
-                _reloadRequested = false;
-                RequestLoad();
-            }
-        }
-    }
+    protected override Task LoadAsync() => LoadLotAsync(Cars ?? []);
 
     private static bool SameCars(IReadOnlyList<LotCarPlacement> a, IReadOnlyList<LotCarPlacement> b)
     {
@@ -343,7 +214,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         var showroom = ShowroomKn5;
         if (showroom != null && !File.Exists(showroom))
         {
-            _logger.Warning("Showroom not found, rendering the lot without it: {Showroom}", showroom);
+            Logger.Warning("Showroom not found, rendering the lot without it: {Showroom}", showroom);
             showroom = null;
         }
 
@@ -352,74 +223,40 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
             // Leaving the screen clears the bindings one at a time, so this is the ordinary way a lot ends.
             // It is not a failure and must not be reported as one: doing so marked the viewport failed and
             // tore the bridge down on the way out of every single dealer.
-            DisposeRenderer();
+            DisposeRenderer(releaseDevice: false);
             return;
         }
 
         // Selling a car changes the stock but not the place it is sold in. Rebuilding the scene would mean
         // reading a showroom of a few hundred MB again for nothing, so only the cars are swapped.
-        if (_renderer != null && showroom == _loadedShowroom)
+        if (Renderer != null && showroom == _loadedShowroom)
         {
             await UpdateCarsAsync(cars);
             return;
         }
 
-        DisposeRenderer();
-        _failed = false;
+        // A new showroom is a new scene; the D3D9 device the picture goes through stays up for it
+        DisposeRenderer(releaseDevice: false);
 
         var started = DateTime.Now;
-        var (width, height) = GetPixelSize();
 
         // The cars go in one at a time afterwards, so the scene starts as the empty showroom
-        var renderer = new GarageRenderer(null, showroom)
-        {
-            WpfMode = true,
-            UseMsaa = false, // shared surfaces can't be multisampled
-            VisibleUi = false,
-            AutoRotate = false,
-            UseFxaa = true,
-            UseSslr = true,
-            UseAo = true,
-            UseBloom = true,
-            EnableShadows = true,
-            UsePcss = true,
+        var renderer = NewRenderer(null, showroom);
 
-            // Every car would otherwise bring its own headlights and tail lights along. A lot full of them runs
-            // into the shader's own ceiling on how many lights a scene may have, for lamps nobody is looking at.
-            // The ambient cubemap is left alone: the cars are meant to sit in the same light as in the garage,
-            // and its cost is one small probe per car, one of them refreshed per frame. If a full lot turns out
-            // to be slow, CubemapAmbient = 0 switches those probes off and is the first thing to try.
-            LoadCarLights = false,
-            TryToGuessCarLights = false,
+        // Every car would otherwise bring its own headlights and tail lights along. A lot full of them runs
+        // into the shader's own ceiling on how many lights a scene may have, for lamps nobody is looking at.
+        // The ambient cubemap is left alone: the cars are meant to sit in the same light as in the garage,
+        // and its cost is one small probe per car, one of them refreshed per frame. If a full lot turns out
+        // to be slow, CubemapAmbient = 0 switches those probes off and is the first thing to try.
+        renderer.LoadCarLights = false;
+        renderer.TryToGuessCarLights = false;
 
-            // The camera is driven from here; the renderer must not glide it onto a car of its own accord
-            AutoAdjustTarget = false,
+        // The camera is driven from here; the renderer must not glide it onto a car of its own accord
+        renderer.AutoAdjustTarget = false;
 
-            Width = width,
-            Height = height
-        };
+        // The showroom takes seconds to read, and the screen may be gone by now
+        if (!await StartRendererAsync(renderer)) return;
 
-        try
-        {
-            await Task.Run(() => renderer.Initialize());
-        }
-        catch
-        {
-            renderer.Dispose();
-            throw;
-        }
-
-        // The showroom takes seconds to read, and the screen may be gone by now. Check before raising a
-        // device, or one is left behind on a control that will never draw again.
-        if (!IsLoaded)
-        {
-            renderer.Dispose();
-            return;
-        }
-
-        _bridge.EnsureDevice();
-
-        _renderer = renderer;
         _loadedShowroom = showroom;
         _loaded = cars;
         _slots.Clear();
@@ -428,9 +265,8 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
         ApplyLotCamera(immediate: true);
         if (SelectedIndex >= 0) OnSelectionChanged();
-        CompositionTarget.Rendering += OnRendering;
 
-        _logger.Information("Lot showroom up in {Ms} ms, {Count} cars to place",
+        Logger.Information("Lot showroom up in {Ms} ms, {Count} cars to place",
             (int)(DateTime.Now - started).TotalMilliseconds, cars.Count);
 
         await LoadCarsAsync(cars);
@@ -442,7 +278,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
     /// </summary>
     private async Task UpdateCarsAsync(IReadOnlyList<LotCarPlacement> cars)
     {
-        var renderer = _renderer;
+        var renderer = Renderer;
         if (renderer == null) return;
 
         // A bay is about to be told where it stands again: the car in it cannot be leaning when it is
@@ -458,7 +294,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
         for (var i = 0; i < cars.Count; i++)
         {
-            if (_renderer != renderer || !IsLoaded) return;
+            if (Renderer != renderer || !IsLoaded) return;
 
             var car = cars[i];
             if (i < previous.Count && i < _standing.Count && _standing[i] is { } already && already.Equals(car))
@@ -474,11 +310,11 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
             // Whatever was here is not what belongs here. Take it off before anything else: leaving it would
             // mean the old car standing under the new car's name, and a click on it buying the wrong car.
             await ClearBayAsync(i, renderer);
-            if (_renderer != renderer || !IsLoaded) return;
+            if (Renderer != renderer || !IsLoaded) return;
 
             if (!Directory.Exists(car.CarDirectory))
             {
-                _logger.Warning("Car folder not found, left off the lot: {Directory}", car.CarDirectory);
+                Logger.Warning("Car folder not found, left off the lot: {Directory}", car.CarDirectory);
                 continue;
             }
 
@@ -497,19 +333,19 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
                 // and gives it to the car on arrival, so without the first call the car would appear for a
                 // frame wherever the slot was last told to be; without the second it would stay there.
                 Place(slot, car);
-                await slot.SetCarAsync(CarDescription.FromDirectory(car.CarDirectory),
-                    car.SkinId ?? Kn5RenderableCar.DefaultSkin);
+                await TrackDeviceWork(slot.SetCarAsync(CarDescription.FromDirectory(car.CarDirectory),
+                    car.SkinId ?? Kn5RenderableCar.DefaultSkin));
 
-                if (_renderer != renderer || !IsLoaded) return;
+                if (Renderer != renderer || !IsLoaded) return;
 
                 Place(slot, car);
                 _slots[i] = slot;
                 _standing[i] = car;
-                renderer.IsDirty = true;
+                Invalidate();
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Could not put {Car} on the lot", Path.GetFileName(car.CarDirectory));
+                Logger.Error(ex, "Could not put {Car} on the lot", Path.GetFileName(car.CarDirectory));
             }
         }
 
@@ -517,16 +353,15 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         for (var i = cars.Count; i < _slots.Count; i++)
         {
             await ClearBayAsync(i, renderer);
-            if (_renderer != renderer || !IsLoaded) return;
+            if (Renderer != renderer || !IsLoaded) return;
         }
 
         LoadedCount = _standing.Count(c => c != null);
         renderer.RefreshShadows();
-        renderer.IsDirty = true;
         IsLotReady = true;
-        _animateUntil = DateTime.Now + SettleWindow;
+        Invalidate();
 
-        _logger.Information("Lot restocked: {Loaded} of {Total} cars out front", LoadedCount, cars.Count);
+        Logger.Information("Lot restocked: {Loaded} of {Total} cars out front", LoadedCount, cars.Count);
     }
 
     /// <summary>
@@ -542,14 +377,14 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
         try
         {
-            await slot.SetCarAsync(null);
+            await TrackDeviceWork(slot.SetCarAsync(null));
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Could not clear a car off the lot");
+            Logger.Error(ex, "Could not clear a car off the lot");
         }
 
-        if (_renderer != renderer) return;
+        if (Renderer != renderer) return;
 
         if (ReferenceEquals(slot, renderer.MainSlot)) _slots[index] = null;
         if (index < _standing.Count) _standing[index] = null;
@@ -577,20 +412,20 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
         for (var i = 0; i < cars.Count; i++)
         {
-            var renderer = _renderer;
+            var renderer = Renderer;
             if (renderer == null || !IsLoaded) return;
 
             var car = cars[i];
             if (!Directory.Exists(car.CarDirectory))
             {
-                _logger.Warning("Car folder not found, left off the lot: {Directory}", car.CarDirectory);
+                Logger.Warning("Car folder not found, left off the lot: {Directory}", car.CarDirectory);
                 continue;
             }
 
             var bytes = EstimateCarBytes(car.CarDirectory);
             if (bytes > budget)
             {
-                _logger.Information("Lot is full at {Count} cars; {Car} ({Mb} MB) stays in the list only",
+                Logger.Information("Lot is full at {Count} cars; {Car} ({Mb} MB) stays in the list only",
                     LoadedCount, Path.GetFileName(car.CarDirectory), bytes / (1024 * 1024));
                 continue;
             }
@@ -602,36 +437,34 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
                 // Before and after: see the note in UpdateCarsAsync
                 Place(slot, car);
-                await slot.SetCarAsync(CarDescription.FromDirectory(car.CarDirectory),
-                    car.SkinId ?? Kn5RenderableCar.DefaultSkin);
+                await TrackDeviceWork(slot.SetCarAsync(CarDescription.FromDirectory(car.CarDirectory),
+                    car.SkinId ?? Kn5RenderableCar.DefaultSkin));
 
-                if (_renderer != renderer || !IsLoaded) return;
+                if (Renderer != renderer || !IsLoaded) return;
 
                 Place(slot, car);
                 _slots[i] = slot;
                 _standing[i] = car;
                 LoadedCount++;
 
-                renderer.IsDirty = true;
-                _animateUntil = DateTime.Now + SettleWindow;
+                Invalidate();
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Could not put {Car} on the lot", Path.GetFileName(car.CarDirectory));
+                Logger.Error(ex, "Could not put {Car} on the lot", Path.GetFileName(car.CarDirectory));
             }
         }
 
         // The renderer only watches its main slot, so nothing has asked for the shadows of the cars in any
         // of the others. Without this the last car to arrive stands there without one.
-        if (_renderer is { } loaded)
+        if (Renderer is { } loaded)
         {
             loaded.RefreshShadows();
-            loaded.IsDirty = true;
             IsLotReady = true;
-            _animateUntil = DateTime.Now + SettleWindow;
+            Invalidate();
         }
 
-        _logger.Information("Lot loaded: {Loaded} of {Total} cars", LoadedCount, cars.Count);
+        Logger.Information("Lot loaded: {Loaded} of {Total} cars", LoadedCount, cars.Count);
     }
 
     /// <summary>
@@ -694,14 +527,14 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
     private void OnLotRadiusChanged()
     {
-        if (_renderer == null || IsCarView) return;
+        if (Renderer == null || IsCarView) return;
         ApplyLotCamera(immediate: false);
     }
 
     private void OnSelectionChanged()
     {
         ReleaseRock();
-        if (_renderer == null) return;
+        if (Renderer == null) return;
 
         var index = SelectedIndex;
         if (index < 0 || index >= _loaded.Count)
@@ -725,8 +558,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         // Come round to its front three-quarter, until the player takes the camera over
         _alphaGoal = (car.Heading + ModelHeadingOffset + 140f) * (float)Math.PI / 180f;
 
-        _animateUntil = DateTime.Now + SettleWindow;
-        _renderer.IsDirty = true;
+        Invalidate();
     }
 
     private void ApplyLotCamera(bool immediate)
@@ -736,7 +568,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         _betaGoal = LotBeta;
         _alphaGoal = null;
 
-        var orbit = _renderer?.CameraOrbit;
+        var orbit = Renderer?.CameraOrbit;
         if (orbit == null) return;
 
         if (immediate)
@@ -747,8 +579,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
             orbit.Alpha = 0.9f;
         }
 
-        _animateUntil = DateTime.Now + SettleWindow;
-        if (_renderer != null) _renderer.IsDirty = true;
+        Invalidate();
     }
 
     /// <summary>
@@ -757,7 +588,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
     /// </summary>
     private bool StepCamera(float dt)
     {
-        var orbit = _renderer?.CameraOrbit;
+        var orbit = Renderer?.CameraOrbit;
         if (orbit == null) return false;
 
         // A share of what is left, every second: the move starts quickly and settles rather than stopping
@@ -821,7 +652,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
     /// </summary>
     private int PickAt(System.Windows.Point position)
     {
-        var renderer = _renderer;
+        var renderer = Renderer;
         var camera = renderer?.Camera;
         if (renderer == null || camera == null || ActualWidth <= 0 || ActualHeight <= 0) return -1;
 
@@ -880,15 +711,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
             Cursor = hit >= 0 ? System.Windows.Input.Cursors.Hand : System.Windows.Input.Cursors.Arrow;
         }
 
-        if (hit < 0)
-        {
-            _label.Visibility = Visibility.Collapsed;
-            return;
-        }
-
-        _labelText.Text = _loaded[hit].Label;
-        _label.Margin = new Thickness(position.X + 18, position.Y + 18, 0, 0);
-        _label.Visibility = Visibility.Visible;
+        ShowLabel(hit < 0 ? null : _loaded[hit].Label, position);
     }
 
     #endregion
@@ -944,7 +767,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
             return;
         }
 
-        var orbit = _renderer?.CameraOrbit;
+        var orbit = Renderer?.CameraOrbit;
         if (orbit == null) return;
 
         var dx = position.X - _lastMouse.X;
@@ -960,16 +783,15 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
         orbit.Beta = Math.Clamp(orbit.Beta + (float)dy * 0.01f, MinBeta, MaxBeta);
         _betaGoal = orbit.Beta;
 
-        _label.Visibility = Visibility.Collapsed;
-        _animateUntil = DateTime.Now + SettleWindow;
-        _renderer!.IsDirty = true;
+        ShowLabel(null, default);
+        Invalidate();
     }
 
     protected override void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
     {
         base.OnMouseLeave(e);
         _hovered = -1;
-        _label.Visibility = Visibility.Collapsed;
+        ShowLabel(null, default);
         Cursor = System.Windows.Input.Cursors.Arrow;
     }
 
@@ -977,7 +799,7 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
     {
         base.OnMouseWheel(e);
 
-        var orbit = _renderer?.CameraOrbit;
+        var orbit = Renderer?.CameraOrbit;
         if (orbit == null) return;
 
         var min = IsCarView ? MinCarRadius : (float)LotRadius * LotZoomIn;
@@ -985,167 +807,45 @@ public class DealerLotViewport3D : System.Windows.Controls.Grid
 
         // Move by a share of where the camera is, so the wheel feels the same close up and far out
         _radiusGoal = Math.Clamp(_radiusGoal * (1f - e.Delta * 0.0006f), min, max);
-        _animateUntil = DateTime.Now + SettleWindow;
-        _renderer!.IsDirty = true;
+        Invalidate();
     }
 
     #endregion
 
     #region Body rock
 
-    private CarBodyRock? _rock;
-
-    private void OnRunningEngineChanged(Audio.EngineRunner? before, Audio.EngineRunner? after)
-    {
-        if (before != null) before.PoseChanged -= OnPoseChanged;
-        if (after != null) after.PoseChanged += OnPoseChanged;
-        OnPoseChanged();
-    }
-
     /// <summary>The engine of the car being looked at moved its body</summary>
-    private void OnPoseChanged()
+    protected override void OnPoseChanged()
     {
-        var renderer = _renderer;
         var index = SelectedIndex;
-        var carNode = renderer != null && index >= 0 && index < _slots.Count && index < _standing.Count && _standing[index] != null
+        var carNode = Renderer != null && index >= 0 && index < _slots.Count && index < _standing.Count && _standing[index] != null
             ? _slots[index]?.CarNode
             : null;
-        var pose = RunningEngine?.Pose ?? Audio.BodyPose.Rest;
-
-        if (renderer == null || carNode == null || (pose.IsRest && RunningEngine?.IsActive != true))
-        {
-            ReleaseRock();
-            return;
-        }
-
-        if (_rock == null || !ReferenceEquals(_rock.Car, carNode))
-        {
-            ReleaseRock();
-            _rock = new CarBodyRock(carNode);
-        }
-
-        if (!_rock.Apply(pose)) return;
-
-        renderer.RefreshShadows();
-        renderer.IsDirty = true;
-        _animateUntil = DateTime.Now + SettleWindow;
-    }
-
-    private void ReleaseRock()
-    {
-        if (_rock == null) return;
-
-        _rock.Release();
-        _rock = null;
-        if (_renderer != null)
-        {
-            _renderer.RefreshShadows();
-            _renderer.IsDirty = true;
-        }
+        RockCar(carNode);
     }
 
     #endregion
 
     #region Rendering
 
-    private void OnRendering(object? sender, EventArgs e)
+    protected override bool StepFrame(GarageRenderer renderer, float dt) => StepCamera(dt);
+
+    protected override void OnFramePresented()
     {
-        // CompositionTarget.Rendering can fire more than once per frame
-        var args = (RenderingEventArgs)e;
-        if (args.RenderingTime == _lastRenderingTime) return;
-
-        var dt = (float)(args.RenderingTime - _lastRenderingTime).TotalSeconds;
-        _lastRenderingTime = args.RenderingTime;
-        if (dt <= 0f || dt > 0.25f) dt = 1f / 60f;
-
-        var renderer = _renderer;
-        if (renderer == null || !IsVisible || !_bridge.IsFrontBufferAvailable) return;
-
-        var moving = StepCamera(dt);
-
-        var now = DateTime.Now;
-        if (renderer.IsDirty && _animateUntil < now + SettleWindow)
-        {
-            _animateUntil = now + SettleWindow;
-        }
-
-        if (!moving && now >= _animateUntil && _bridge.BoundTarget != IntPtr.Zero) return;
-
-        try
-        {
-            renderer.Draw();
-            _bridge.Present(renderer.GetRenderTarget());
-
-            if (!IsReady)
-            {
-                IsReady = true;
-                Ready?.Invoke(this, EventArgs.Empty);
-            }
-
-            // An empty room filling up one car at a time is not worth watching. The picture is held back
-            // until the lot is stocked, then faded up whole.
-            if (IsLotReady && _image.Opacity == 0)
-            {
-                _image.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, FadeInDuration));
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.Error(ex, "Dealer lot render loop failed");
-            Fail();
-        }
+        // An empty room filling up one car at a time is not worth watching. The picture is held back
+        // until the lot is stocked, then faded up whole.
+        if (IsLotReady && IsPictureHidden) FadeIn();
     }
 
-    private (int Width, int Height) GetPixelSize()
+    protected override void OnRendererDisposed()
     {
-        var dpi = VisualTreeHelper.GetDpi(this);
-        var width = Math.Max(16, (int)Math.Round(ActualWidth * dpi.DpiScaleX));
-        var height = Math.Max(16, (int)Math.Round(ActualHeight * dpi.DpiScaleY));
-        return (width, height);
-    }
-
-    private void UpdateRendererSize()
-    {
-        if (_renderer == null) return;
-
-        var (width, height) = GetPixelSize();
-        _renderer.Width = width;
-        _renderer.Height = height;
-        _renderer.IsDirty = true;
-    }
-
-    private void DisposeRenderer()
-    {
-        CompositionTarget.Rendering -= OnRendering;
-        _rock = null;
-
-        // The target belongs to the renderer: let go of it before the renderer goes
-        _bridge.ReleaseSurface();
-
-        _renderer?.Dispose();
-        _renderer = null;
         _loadedShowroom = null;
-
         _slots.Clear();
         _standing.Clear();
         _loaded = [];
         LoadedCount = 0;
         IsLotReady = false;
-        IsReady = false;
         _hovered = -1;
-        _label.Visibility = Visibility.Collapsed;
-
-        _image.BeginAnimation(OpacityProperty, null);
-        _image.Opacity = 0;
-    }
-
-    private void Fail()
-    {
-        _failed = true;
-        DisposeRenderer();
-        _bridge.Dispose();
-        HasFailed = true;
-        Failed?.Invoke(this, EventArgs.Empty);
     }
 
     #endregion

@@ -1,9 +1,12 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Scripting;
 using Street_Rod_AC.Slrr;
+using static Street_Rod_AC.ConverterOptions;
 
 namespace Street_Rod_AC;
 
@@ -18,24 +21,10 @@ public static class Program
     private const string BasePackId = "stock";
     private const string SlotRoleSuffix = "_slot_ID";
     private const string ConstantsFile = "script_constants.json";
-    private const string NotesOption = "--notes";
-    private const string ReplaceOption = "--replace";
-    private const string DropOption = "--drop";
-    private const string RenameOption = "--rename";
-    private const string MergeOption = "--merge";
-    private const string FitOption = "--fit";
-    private const string ModelOption = "--model";
-    private const string ShiftOption = "--shift";
-    private const string SingleOption = "--single";
-    private const string PadsOption = "--pads";
-    private const string NameOption = "--name";
-    private const string ShiftsOption = "--shifts";
-    private const string AbsorbOption = "--absorb";
-    private const string PreviousOption = "--previous";
-    private const string TwinOption = "--twin";
-    private const string NoTwin = "-";
-    private const string MeasureOption = "--measure";
     private const string TakesPrefix = "takes:";
+
+    /// <summary>Exit code of a run that wrote its output but left parts, packs or rpks out: a script must not take it for a clean run</summary>
+    private const int ExitIncomplete = 2;
 
     /// <summary>Ids of the slots a pad of several carburettors is split into (the pad keeps its id for the first)</summary>
     private const int ExtraPadSlot = 300;
@@ -46,450 +35,332 @@ public static class Program
     private sealed record SourcePart(SlrrRpk Rpk, SlrrRpkEntry Entry, string ConfigFile, string? ScriptPath, string Id, string Name);
 
     /// <summary>
-    /// A part that is left out, with the part that takes its place everywhere it was named or fitted; a set of
-    /// several identical parts is replaced by that many (a dual-quad set by two carburettors)
+    /// A pack converted before from an rpk that could not be read this time: kept as it was, not taken for a pack
+    /// that left SLRR. Folder is where it goes in the output, From where it was read (the output itself, or the
+    /// --previous content for a run into another folder), Root the content From belongs to
     /// </summary>
-    private sealed record MergeRule(Regex Pattern, string KeptId, int Count);
+    private sealed record KeptPack(string Id, string Folder, string From, string Root, string Json, PartPack Pack);
 
-    /// <summary>A model of several identical items in a row (a carburettor set) kept as one item; builds get that many</summary>
-    private sealed record SingleRule(Regex Pattern, int Count, float Spacing);
-
-    /// <summary>
-    /// A pad that took a set of carburettors becomes one pad per carburettor, plus a slot over them for the air
-    /// cleaner that spans the set
-    /// </summary>
-    private sealed record PadRule(Regex Pattern, int Slot, string Fitting, int Count, float Spacing, float[] AirOffset, string? AirFitting);
-
-    private sealed record NameRule(Regex Pattern, string Name);
-
-    /// <summary>A standard fitting given to a slot of every part a pattern picks out</summary>
-    private sealed record FitRule(Regex Pattern, int Slot, List<string> Fittings);
-
-    /// <summary>Parts that are drawn with another part's model (the same product modelled better in another pack)</summary>
-    private sealed record ModelRule(Regex Pattern, string DonorId);
-
-    /// <summary>A slot moved in its part's space, to bring one pack's slot convention onto another's</summary>
-    private sealed record ShiftRule(Regex Pattern, int Slot, float[] Offset);
-
-    /// <summary>
-    /// Where the parts of an rpk go: all of them (no selector), or those a selector picks out, by the name of a
-    /// script class they descend from, a category they are filed under, or their own name (* for anything)
-    /// </summary>
-    private sealed record RenameRule(string Rpk, string? Selector, string PackId)
+    /// <summary>What a run works out, phase by phase; nothing of it reaches the output before <see cref="Write"/></summary>
+    private sealed class Run
     {
-        /// <summary>The selector as a pattern, null for the rule that takes the rest of the rpk</summary>
-        public Regex? Pattern { get; } = Selector == null ? null : Program.Pattern(Selector);
+        public Run(ConverterOptions options)
+        {
+            Options = options;
+            Game = new SlrrGame(options.Slrr);
+            Scripts = new SlrrScriptEvaluator(Game);
+            Staging = ConversionOutput.StagingFolder(options.Output);
+        }
+
+        public ConverterOptions Options { get; }
+        public SlrrGame Game { get; }
+
+        /// <summary>The parts' own evaluator: the classes it touches are the ones the game gets</summary>
+        public SlrrScriptEvaluator Scripts { get; }
+
+        public string Output => Options.Output;
+        public string? Filter => Options.Filter;
+        public string PartsRoot => Path.Combine(Game.Root, PartsFolder);
+
+        /// <summary>Where models and classes are written before they are moved into the output</summary>
+        public string Staging { get; }
+
+        public EarlierConversion? Earlier { get; set; }
+
+        public List<(string Id, SlrrRpk Rpk, List<SourcePart> Parts)> Packs { get; } = new();
+        public Dictionary<(SlrrRpk, int), string> PartIds { get; } = new();
+
+        /// <summary>The keys of <see cref="PartIds"/> by the id they resolve to, kept in step as merges repoint them</summary>
+        public Dictionary<string, List<(SlrrRpk, int)>> PartKeys { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public HashSet<string> Dropped { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Ids parts went by before, for saves made then: a pack renamed since, or replaced by a later release</summary>
+        public SortedDictionary<string, string> Aliases { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Merged parts leave their packs; whatever pointed at one (a twin of a replaced pack included) points at
+        /// the part that stands in for it. Their configs are kept: the stand-in inherits where they fitted
+        /// </summary>
+        public List<(SourcePart Source, string KeptId)> Merged { get; } = new();
+
+        /// <summary>How many of a part a build gets where it named one: a set of carburettors is that many single ones now</summary>
+        public Dictionary<(SlrrRpk, int), int> Multiplicity { get; } = new();
+
+        /// <summary>Sets of carburettors that became single ones, with the slot their air cleaner sat on and the pads they sat on</summary>
+        public Dictionary<(SlrrRpk, int), (int Horn, List<(SlrrRpk Rpk, int TypeId, int Slot)> Pads)> Sets { get; } = new();
+
+        /// <summary>Models of a row of identical items kept as one</summary>
+        public Dictionary<string, SingleRule> Singles { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public Dictionary<string, SourcePart> Donors { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public int Converted { get; set; }
+        public int WithoutModel { get; set; }
+        public List<string> Failures { get; } = new();
+        public List<string> Skipped { get; } = new();
+
+        /// <summary>Packs converted in the run: their folder in the output, their folder in the staging, what they hold</summary>
+        public Dictionary<string, (string Folder, string Staging, PartPack Pack, Dictionary<string, string?> Models)> Written { get; } =
+            new(StringComparer.OrdinalIgnoreCase);
+
+        public Dictionary<string, PartDefinition> Definitions { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Packs of unreadable rpks kept as they were, by pack id</summary>
+        public Dictionary<string, KeptPack> Kept { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Whether an earlier run stopped while it moved its output in (its marker was there when this one started)</summary>
+        public bool InterruptedBefore { get; set; }
     }
 
+    /// <remarks>The options are described at <see cref="ConverterOptions.Parse"/></remarks>
     public static int Main(string[] args)
     {
-        // --notes <folder>: text files with engine builds written down as stock_parts_list_E lines
-        // --replace <old pack>=<new pack>: the old pack stays out, what names its parts gets their twins of the new one
-        // --drop <part id pattern>: parts left out altogether (a pack's take on engines another pack does better)
-        // --rename <rpk pack>[:<selector>]=<pack id>: the pack, or the parts of it a selector picks out, go by a name
-        //   of our own (the mod's file name says nothing to a player, and one rpk may hold rims and tyres both)
-        // --merge <part id pattern>=<part id>: the parts are left out and the named part stands in for them: it is
-        //   what builds, saves and attach lines naming them get, and it fits wherever they fitted
-        // --fit <part id pattern>:<slot>=<fitting>[+<fitting>]: the slot mounts by a standard fitting, so it goes on
-        //   every slot that takes it, whatever the pack; the slots that take it are found from the attach lines
-        //   (a fitting written "takes:carb:4bbl" marks the slot as one that takes it instead)
-        // --model <part id pattern>=<part id>: the parts are drawn with the named part's model (and its slot
-        //   geometry), keeping their own scripts: the same product, modelled better in another pack
-        // --shift <part id pattern>:<slot>=<dx>/<dy>/<dz>: the slot moves in its part's space (metres), to bring
-        //   one pack's slot convention onto another's where parts of different packs meet by a fitting
-        // --single <part id pattern>=<count>@<spacing>: the model draws <count> identical items in a row (a set of
-        //   carburettors); one is kept, builds naming the part get <count> of it. A merge "=<part id>*<count>"
-        //   does the same for a set that another part stands in for
-        // --pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>]: a pad that took
-        //   a set becomes <count> pads taking <fitting>, plus a slot over them (at the offset) for an air cleaner
-        //   spanning the set
-        // --name <part id pattern>=<display name>: what the part is called once it is not what its script says
-        // --shifts <file>: slots nudged into place in the garage (slot_shifts.json), kept for good: what the game
-        //   wrote next to the packs since the last run is folded into this file first, then all of it is applied
-        // --absorb <slot_shifts.json>,...: more of the game's files to fold in (the game writes next to the content
-        //   it runs on, in a build folder) and take away
-        // --previous <folder>: an earlier conversion (the content in use): a part it had that goes by another name
-        //   now, because a release of the mod renamed its files, is aliased to what its rpk resource is now, and
-        //   its older aliases are kept while their targets exist. Saves made with it keep working
-        // --twin <old part id>=<new part id>: a pair of a replaced pack written by hand, where the matcher pairs
-        //   wrongly (a DOHC camshaft has no look-alike among pushrod parts); "-" for a part the new release does without
-        // --measure <part id pattern>,...: convert nothing, print the slots of the parts and the bounds of their meshes
-        //   (metres, the model's own space), to see by what convention a pack places a joint before parts of two
-        //   packs are made to meet by a fitting: a carburettor slot 6 cm above the base sinks that far into a pad
-        //   placed at the flange
-        string? notes = null;
-        string? shiftsFile = null;
-        string? previous = null;
-        var twinRules = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
-        var measure = new List<Regex>();
-        var absorb = new List<string>();
-        var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var renames = new List<RenameRule>();
-        var drops = new List<Regex>();
-        var merges = new List<MergeRule>();
-        var fits = new List<FitRule>();
-        var modelRules = new List<ModelRule>();
-        var shifts = new List<ShiftRule>();
-        var singleRules = new List<SingleRule>();
-        var padRules = new List<PadRule>();
-        var nameRules = new List<NameRule>();
-        var positional = new List<string>();
-        var culture = System.Globalization.CultureInfo.InvariantCulture;
-        for (var i = 0; i < args.Length; i++)
-        {
-            if (args[i] == NotesOption && i + 1 < args.Length) notes = args[++i];
-            else if (args[i] == ShiftsOption && i + 1 < args.Length) shiftsFile = args[++i];
-            else if (args[i] == PreviousOption && i + 1 < args.Length) previous = args[++i];
-            else if (args[i] == MeasureOption && i + 1 < args.Length) measure.AddRange(args[++i].Split(',').Select(p => Pattern(p.Trim())));
-            else if (args[i] == TwinOption && i + 1 < args.Length)
-            {
-                foreach (var pair in args[++i].Split(',').Select(p => p.Split('=')))
-                {
-                    if (pair.Length != 2)
-                    {
-                        Console.WriteLine($"{TwinOption} takes <old part id>=<new part id> (or {NoTwin} for no twin), e.g. engines/fordi6_data/Ford_221_SP_cylinder_head=engines/ford_six/sprint_cylinder_head");
-                        return 1;
-                    }
+        var options = ConverterOptions.Parse(args);
+        if (options == null) return 1;
 
-                    twinRules[pair[0].Trim()] = pair[1].Trim() == NoTwin ? null : pair[1].Trim();
-                }
-            }
-            else if (args[i] == AbsorbOption && i + 1 < args.Length) absorb.AddRange(args[++i].Split(',').Select(f => f.Trim()).Where(f => f.Length > 0));
-            else if (args[i] == DropOption && i + 1 < args.Length)
-            {
-                drops.AddRange(args[++i].Split(',').Select(p => Pattern(p.Trim())));
-            }
-            else if (args[i] == MergeOption && i + 1 < args.Length)
-            {
-                foreach (var pair in args[++i].Split(',').Select(p => p.Split('=')))
-                {
-                    var kept = pair.Length == 2 ? pair[1].Trim().Split('*') : Array.Empty<string>();
-                    var count = 1;
-                    if (kept.Length is < 1 or > 2 || (kept.Length == 2 && !int.TryParse(kept[1], out count)))
-                    {
-                        Console.WriteLine($"{MergeOption} takes <part id pattern>=<part id>[*<count>], e.g. engines/gm/stock_2x4brl_carburator=engines/gm/stock_4brl_carburator*2");
-                        return 1;
-                    }
-
-                    merges.Add(new MergeRule(Pattern(pair[0].Trim()), kept[0], count));
-                }
-            }
-            else if (args[i] == SingleOption && i + 1 < args.Length)
-            {
-                foreach (var rule in args[++i].Split(','))
-                {
-                    var pair = rule.Split('=', 2);
-                    var value = pair.Length == 2 ? pair[1].Split('@') : Array.Empty<string>();
-                    if (value.Length != 2 || !int.TryParse(value[0], out var count) || !float.TryParse(value[1], System.Globalization.NumberStyles.Float, culture, out var spacing))
-                    {
-                        Console.WriteLine($"{SingleOption} takes <part id pattern>=<count>@<spacing>, e.g. engines/generic/Carburetors_2x4BRL_King_Demon=2@0.22");
-                        return 1;
-                    }
-
-                    singleRules.Add(new SingleRule(Pattern(pair[0].Trim()), count, spacing));
-                }
-            }
-            else if (args[i] == PadsOption && i + 1 < args.Length)
-            {
-                foreach (var rule in args[++i].Split(','))
-                {
-                    var pair = rule.Split('=', 2);
-                    var colon = pair[0].LastIndexOf(':');
-                    var value = pair.Length == 2 ? pair[1].Split('@') : Array.Empty<string>();
-                    var fitting = value.Length > 0 ? value[0].Split('*') : Array.Empty<string>();
-                    var offset = value.Length > 2 ? value[2].Split('/') : Array.Empty<string>();
-                    if (colon < 0 || !int.TryParse(pair[0][(colon + 1)..], out var slot) || value.Length is < 3 or > 4 || fitting.Length != 2
-                        || !int.TryParse(fitting[1], out var count) || !float.TryParse(value[1], System.Globalization.NumberStyles.Float, culture, out var spacing)
-                        || offset.Length != 3 || !offset.All(o => float.TryParse(o, System.Globalization.NumberStyles.Float, culture, out _)))
-                    {
-                        Console.WriteLine($"{PadsOption} takes <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>], " +
-                                          "e.g. engines/chrysler/dualquad_intake:7=carb:4bbl*2@0.22@-0.043/0.108/-0.04@air:2x4");
-                        return 1;
-                    }
-
-                    padRules.Add(new PadRule(Pattern(pair[0][..colon].Trim()), slot, fitting[0], count, spacing,
-                        offset.Select(o => float.Parse(o, culture)).ToArray(), value.Length > 3 ? value[3] : null));
-                }
-            }
-            else if (args[i] == NameOption && i + 1 < args.Length)
-            {
-                foreach (var pair in args[++i].Split(',').Select(p => p.Split('=', 2)))
-                {
-                    if (pair.Length != 2)
-                    {
-                        Console.WriteLine($"{NameOption} takes <part id pattern>=<display name>");
-                        return 1;
-                    }
-
-                    nameRules.Add(new NameRule(Pattern(pair[0].Trim()), pair[1].Trim()));
-                }
-            }
-            else if (args[i] == ModelOption && i + 1 < args.Length)
-            {
-                foreach (var pair in args[++i].Split(',').Select(p => p.Split('=')))
-                {
-                    if (pair.Length != 2)
-                    {
-                        Console.WriteLine($"{ModelOption} takes <part id pattern>=<part id>, e.g. engines/generic/Holley_4brl_carburator=engines/generic/Carburetors_4BRL_street_HOLLEY");
-                        return 1;
-                    }
-
-                    modelRules.Add(new ModelRule(Pattern(pair[0].Trim()), pair[1].Trim()));
-                }
-            }
-            else if (args[i] == ShiftOption && i + 1 < args.Length)
-            {
-                foreach (var rule in args[++i].Split(','))
-                {
-                    var pair = rule.Split('=', 2);
-                    var colon = pair[0].LastIndexOf(':');
-                    var offset = pair.Length == 2 ? pair[1].Split('/') : Array.Empty<string>();
-                    if (colon < 0 || offset.Length != 3 || !int.TryParse(pair[0][(colon + 1)..], out var slot)
-                        || !offset.All(o => float.TryParse(o, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out _)))
-                    {
-                        Console.WriteLine($"{ShiftOption} takes <part id pattern>:<slot>=<dx>/<dy>/<dz> in metres, e.g. engines/chrysler/Intake_manifold_*:7=0/-0.062/0");
-                        return 1;
-                    }
-
-                    shifts.Add(new ShiftRule(Pattern(pair[0][..colon].Trim()), slot,
-                        offset.Select(o => float.Parse(o, System.Globalization.CultureInfo.InvariantCulture)).ToArray()));
-                }
-            }
-            else if (args[i] == FitOption && i + 1 < args.Length)
-            {
-                foreach (var rule in args[++i].Split(','))
-                {
-                    var pair = rule.Split('=', 2);
-                    var colon = pair[0].LastIndexOf(':');
-                    if (pair.Length != 2 || colon < 0 || !int.TryParse(pair[0][(colon + 1)..], out var slot))
-                    {
-                        Console.WriteLine($"{FitOption} takes <part id pattern>:<slot>=<fitting>[+<fitting>], e.g. engines/generic/Carburetors_4BRL_*:10=carb:4bbl");
-                        return 1;
-                    }
-
-                    fits.Add(new FitRule(Pattern(pair[0][..colon].Trim()), slot, pair[1].Split('+').Select(f => f.Trim()).ToList()));
-                }
-            }
-            else if (args[i] == ReplaceOption && i + 1 < args.Length)
-            {
-                foreach (var pair in args[++i].Split(',').Select(p => p.Split('=')))
-                {
-                    if (pair.Length != 2)
-                    {
-                        Console.WriteLine($"{ReplaceOption} takes <old pack>=<new pack>, e.g. engines/Mopar=engines/chrysler");
-                        return 1;
-                    }
-
-                    replacements[pair[0].Trim()] = pair[1].Trim();
-                }
-            }
-            else if (args[i] == RenameOption && i + 1 < args.Length)
-            {
-                foreach (var pair in args[++i].Split(',').Select(p => p.Split('=')))
-                {
-                    var source = pair.Length == 2 ? pair[0].Trim().Split(':') : Array.Empty<string>();
-                    if (source.Length is < 1 or > 2)
-                    {
-                        Console.WriteLine($"{RenameOption} takes <rpk pack>[:<class, category or part name>]=<pack id>, " +
-                                          "e.g. engines/Chrysler_V8_pak=engines/chrysler or wheels:Tyre=tyres/sl_tuners");
-                        return 1;
-                    }
-
-                    var selector = source.Length == 2 ? source[1].Trim() : null;
-                    renames.Add(new RenameRule(source[0].Trim(), selector, pair[1].Trim()));
-                }
-            }
-            else if (args[i].StartsWith("--", StringComparison.Ordinal))
-            {
-                // An option nobody knows, or one whose value is missing (a shell drops an empty argument): taken as
-                // the pack filter it would convert nothing and say so only in the totals
-                Console.WriteLine($"Unknown option or missing value: {args[i]}");
-                positional.Clear();
-                break;
-            }
-            else positional.Add(args[i]);
-        }
-
-        if (positional.Count < 2)
-        {
-            Console.WriteLine("Usage: SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] " +
-                              "[--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] " +
-                              "[--merge <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] " +
-                              "[--model <part id pattern>=<part id>,...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] " +
-                              "[--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] " +
-                              "[--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>,...] " +
-                              "[--previous <earlier conversion>] [--twin <old part id>=<new part id or ->,...] [--measure <part id pattern>,...]");
-            Console.WriteLine(@"  e.g. SlrrPartsConverter ""D:\Games\SLRR"" ""Street Rod AC\Assets\Parts"" engines/Mopar  (the full run: tools\convert-parts.ps1)");
-            return 1;
-        }
-
-        var game = new SlrrGame(positional[0]);
-        var scripts = new SlrrScriptEvaluator(game);
-        var output = positional[1];
-        var filter = positional.Count > 2 ? positional[2] : null;
+        var run = new Run(options);
         // Stand-ins, fittings and repointed air cleaners are found among the parts converted in the run: with one pack
         // converted, its pads take only what its own parts fit, and the other packs on disk are not brought in step
-        if (filter != null && (merges.Count > 0 || fits.Count > 0 || padRules.Count > 0 || modelRules.Count > 0))
-            Console.WriteLine($"Converting {filter} alone: what other packs fit on it (and it on them) is left out; run without a filter before the content ships");
+        if (options.Filter != null && (options.Merges.Count > 0 || options.Fits.Count > 0 || options.PadRules.Count > 0 || options.ModelRules.Count > 0))
+            Console.WriteLine($"Converting {options.Filter} alone: what other packs fit on it (and it on them) is left out; run without a filter before the content ships");
 
-        var partsRoot = Path.Combine(game.Root, PartsFolder);
-        if (!Directory.Exists(partsRoot))
+        if (!Directory.Exists(run.PartsRoot))
         {
-            Console.WriteLine($"No '{PartsFolder}' folder in {game.Root}");
+            Console.WriteLine($"No '{PartsFolder}' folder in {run.Game.Root}");
             return 1;
         }
 
         var stopwatch = Stopwatch.StartNew();
 
         // The earlier conversion is read before anything is written: it is usually the output folder itself
-        var earlier = previous == null ? null : EarlierConversion.Load(previous);
-        if (previous != null && earlier == null)
+        run.Earlier = options.Previous == null ? null : EarlierConversion.Load(options.Previous);
+        if (options.Previous != null && run.Earlier == null)
         {
-            Console.WriteLine($"{PreviousOption} names no converted content: {previous}");
+            Console.WriteLine($"{PreviousOption} names no converted content: {options.Previous}");
             return 1;
         }
 
-        // First pass: give every part an id, so slots can refer to parts of any pack. Routing reads class files
-        // of parts that may be dropped: an evaluator of its own keeps their classes out of the game's scripts
-        var routing = new SlrrScriptEvaluator(game);
-        var packs = new List<(string Id, SlrrRpk Rpk, List<SourcePart> Parts)>();
-        var partIds = new Dictionary<(SlrrRpk, int), string>();
-        var dropped = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        // Ids parts went by before, for saves made then: a pack renamed since, or replaced by a later release
-        var aliases = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (!FirstPass(run)) return 1;
 
-        // The base game keeps its stock parts (running gear, accessories, neons) in an rpk next to the parts folder
+        if (options.Measure.Count > 0)
+        {
+            Measure(run.Game, run.Packs.SelectMany(p => p.Parts).Where(p => options.Measure.Any(m => m.IsMatch(p.Id))));
+            // What an unreadable rpk holds was not measured: not a clean run
+            if (run.Game.UnreadableRpks.Count == 0) return 0;
+
+            Console.WriteLine($"{run.Game.UnreadableRpks.Count} rpks could not be read, their parts were not measured");
+            return ExitIncomplete;
+        }
+
+        if (!ReplacePacks(run) || !MergeParts(run) || !ChooseModels(run)) return 1;
+
+        // What a stopped run left: a classes folder parked mid-swap goes back before anything reads or replaces it,
+        // and a commit that never finished is said out loud (only a full run makes that content whole again)
+        try
+        {
+            var recovered = ConversionOutput.RecoverSwap(Path.Combine(options.Output, PartScripts.Folder));
+            if (recovered != null) Console.WriteLine($"  {recovered}");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Swapping the classes in over a parked copy that is still there would cost it
+            Console.WriteLine($"Could not undo what a stopped run left of {PartScripts.Folder}: {ex.Message}");
+            return 1;
+        }
+        run.InterruptedBefore = ConversionOutput.CommitWasInterrupted(options.Output);
+        if (run.InterruptedBefore)
+        {
+            Console.WriteLine($"The last run stopped while it moved its output in ({ConversionOutput.CommitMarker(options.Output)}): " +
+                              "the content is part that run's, part the one before" + (options.Filter == null ? "; this run replaces all of it" : "; run without a filter to make it whole"));
+        }
+
+        // Models and classes are made in a folder next to the output, and moved in only once the whole run has worked
+        // out: a run that stops before the commit (a bad rule, an exception) leaves the content as the last run left
+        // it. The commit itself is ordered so that a stop part way leaves no file naming what is not there (Write)
+        ConversionOutput.ClearStaging(run.Staging, strict: true);
+        try
+        {
+            ConvertPacks(run);
+            Arrange(run);
+            if (!FoldSlotShifts(run)) return 1;
+
+            ApplyNames(run);
+            if (!Write(run)) return 1;
+        }
+        finally
+        {
+            ConversionOutput.ClearStaging(run.Staging);
+        }
+
+        return Report(run, stopwatch);
+    }
+
+    /// <summary>
+    /// First pass: gives every part an id, so slots can refer to parts of any pack. Routing reads class files of
+    /// parts that may be dropped: an evaluator of its own keeps their classes out of the game's scripts
+    /// </summary>
+    private static bool FirstPass(Run run)
+    {
+        var game = run.Game;
+        var options = run.Options;
+        var routing = new SlrrScriptEvaluator(game);
+
+        // The base game keeps its stock parts (running gear, accessories, neons) in an rpk next to the parts folder.
+        // Sorted by ordinal: the order packs are met in shows in the output, which must not change with the culture
         var baseRpk = Path.Combine(game.Root, BaseRpk);
-        var files = Directory.EnumerateFiles(partsRoot, "*.rpk", SearchOption.AllDirectories).OrderBy(f => f).ToList();
+        var files = Directory.EnumerateFiles(run.PartsRoot, "*.rpk", SearchOption.AllDirectories).OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ToList();
         if (File.Exists(baseRpk)) files.Insert(0, baseRpk);
 
         var rpkIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var file in files)
         {
             var relativePath = Path.GetRelativePath(game.Root, file);
+            var rpkId = file == baseRpk
+                ? BasePackId
+                : Path.ChangeExtension(Path.GetRelativePath(run.PartsRoot, file), null).Replace('\\', '/');
+            // An rpk that cannot be read is reported by the game and counted against the run. It is still there: a
+            // rule naming it is no typo, and what was converted from it is kept (FindKeptPacks)
+            rpkIds.Add(rpkId);
             var rpk = game.GetRpk(relativePath);
             if (rpk == null) continue;
 
-            var rpkId = file == baseRpk
-                ? BasePackId
-                : Path.ChangeExtension(Path.GetRelativePath(partsRoot, file), null).Replace('\\', '/');
-            rpkIds.Add(rpkId);
-
             // Packs are named after the rpk they come from unless renamed
-            var rules = renames.Where(r => r.Rpk.Equals(rpkId, StringComparison.OrdinalIgnoreCase)).ToList();
+            var rules = options.Renames.Where(r => r.Rpk.Equals(rpkId, StringComparison.OrdinalIgnoreCase)).ToList();
             var selectors = rules.Where(r => r.Selector != null).ToList();
             var rest = rules.FirstOrDefault(r => r.Selector == null)?.PackId ?? rpkId;
-            var parts = CollectParts(game, rpk, (entry, name, scriptPath) => PackOf(selectors, rest, rpk, entry, name, scriptPath));
-            foreach (var part in parts.Where(part => drops.Any(d => d.IsMatch(part.Id))).ToList())
+            var parts = CollectParts(game, rpk, (entry, name, scriptPath) => PackOf(game, routing, selectors, rest, rpk, entry, name, scriptPath));
+            foreach (var part in parts.Where(part => options.Drops.Any(d => d.IsMatch(part.Id))).ToList())
             {
                 parts.Remove(part);
-                dropped.Add(SlrrGame.Describe(rpk, part.Entry.TypeId));
+                run.Dropped.Add(SlrrGame.Describe(rpk, part.Entry.TypeId));
             }
 
             foreach (var pack in parts.GroupBy(p => p.Id[..p.Id.LastIndexOf('/')]))
             {
-                packs.Add((pack.Key, rpk, pack.ToList()));
+                run.Packs.Add((pack.Key, rpk, pack.ToList()));
                 foreach (var part in pack)
                 {
-                    partIds[(part.Rpk, part.Entry.TypeId)] = part.Id;
+                    run.PartIds[(part.Rpk, part.Entry.TypeId)] = part.Id;
                     // A part routed out of the rpk's own pack by a selector went by that pack's name in a save
                     // made before the selector was written
-                    if (pack.Key != rpkId) aliases[$"{rpkId}/{part.Name}"] = part.Id;
-                    if (pack.Key != rest) aliases[$"{rest}/{part.Name}"] = part.Id;
+                    if (pack.Key != rpkId) run.Aliases[$"{rpkId}/{part.Name}"] = part.Id;
+                    if (pack.Key != rest) run.Aliases[$"{rest}/{part.Name}"] = part.Id;
                 }
             }
         }
 
         // Several rpks may be routed to one pack (the universal-fit parts of every engine pack); ids are the pack
         // plus the cfg name, unique within an rpk only
-        var clashes = packs.SelectMany(p => p.Parts).GroupBy(p => p.Id, StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1).ToList();
+        var clashes = run.Packs.SelectMany(p => p.Parts).GroupBy(p => p.Id, StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1).ToList();
         if (clashes.Count > 0)
         {
             Console.WriteLine($"{RenameOption} routes parts of the same name into one pack: {string.Join(", ", clashes.Select(g => g.Key))}");
-            return 1;
-        }
-
-        // A pack is named by what it holds: the parts a selector picks out go first, the rest where the rpk goes.
-        // A selector matches a part's name, one of its categories, or a class it descends from by the class's
-        // simple or full name
-        string PackOf(List<RenameRule> selectors, string rest, SlrrRpk rpk, SlrrRpkEntry entry, string name, string? scriptPath)
-        {
-            List<string>? categories = null;
-            List<string>? classes = null;
-            foreach (var rule in selectors)
-            {
-                var pattern = rule.Pattern!;
-                if (pattern.IsMatch(name)) return rule.PackId;
-
-                categories ??= game.Categories(rpk, entry);
-                if (categories.Any(pattern.IsMatch)) return rule.PackId;
-
-                classes ??= scriptPath == null ? new List<string>() : routing.Classes(Path.Combine(game.Root, scriptPath)).ToList();
-                if (classes.Any(c => pattern.IsMatch(c) || pattern.IsMatch(c[(c.LastIndexOf('.') + 1)..]))) return rule.PackId;
-            }
-
-            return rest;
+            return false;
         }
 
         // A rule naming an rpk that is not there is a typo, and its parts would quietly end up elsewhere
-        var unmatched = renames.Where(r => !rpkIds.Contains(r.Rpk)).ToList();
+        var unmatched = options.Renames.Where(r => !rpkIds.Contains(r.Rpk)).ToList();
         if (unmatched.Count > 0)
         {
             Console.WriteLine($"{RenameOption} names packs that are not there: {string.Join(", ", unmatched.Select(r => r.Rpk).Distinct())}");
-            return 1;
+            return false;
         }
 
-        Console.WriteLine($"Found {partIds.Count} parts in {packs.Count} packs" + (dropped.Count > 0 ? $", {dropped.Count} dropped" : ""));
+        Console.WriteLine($"Found {run.PartIds.Count} parts in {run.Packs.Count} packs" + (run.Dropped.Count > 0 ? $", {run.Dropped.Count} dropped" : ""));
+        return true;
+    }
 
-        if (measure.Count > 0)
+    /// <summary>
+    /// A pack is named by what it holds: the parts a selector picks out go first, the rest where the rpk goes.
+    /// A selector matches a part's name, one of its categories, or a class it descends from by the class's
+    /// simple or full name
+    /// </summary>
+    private static string PackOf(SlrrGame game, SlrrScriptEvaluator routing, List<RenameRule> selectors, string rest,
+        SlrrRpk rpk, SlrrRpkEntry entry, string name, string? scriptPath)
+    {
+        List<string>? categories = null;
+        List<string>? classes = null;
+        foreach (var rule in selectors)
         {
-            Measure(game, packs.SelectMany(p => p.Parts).Where(p => measure.Any(m => m.IsMatch(p.Id))));
-            return 0;
+            var pattern = rule.Pattern!;
+            if (pattern.IsMatch(name)) return rule.PackId;
+
+            categories ??= game.Categories(rpk, entry);
+            if (categories.Any(pattern.IsMatch)) return rule.PackId;
+
+            classes ??= game.ContentFile(scriptPath) is { } scriptFile ? routing.Classes(scriptFile).ToList() : new List<string>();
+            if (classes.Any(c => pattern.IsMatch(c) || pattern.IsMatch(c[(c.LastIndexOf('.') + 1)..]))) return rule.PackId;
         }
 
+        return rest;
+    }
+
+    /// <summary>Replaced packs leave, and whatever named their parts names the parts' twins in the packs that replace them</summary>
+    private static bool ReplacePacks(Run run)
+    {
+        var twinRules = run.Options.TwinRules;
         var usedTwinRules = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var (oldId, newId) in replacements)
+        foreach (var (oldId, newId) in run.Options.Replacements)
         {
             // A pack and whatever else was routed out of the same rpk
-            var oldPacks = PacksOf(oldId);
-            var newPacks = PacksOf(newId);
+            var oldPacks = PacksOf(run, oldId);
+            var newPacks = PacksOf(run, newId);
             if (oldPacks.Count == 0 || newPacks.Count == 0)
             {
-                Console.WriteLine($"Cannot replace {oldId} with {newId}: {(oldPacks.Count == 0 ? oldId : newId)} is not among the packs");
-                return 1;
+                Console.WriteLine($"Cannot replace {oldId} with {newId}: {(oldPacks.Count == 0 ? oldId : newId)} is not among the packs{UnreadableHint(run)}");
+                return false;
             }
 
             Console.WriteLine($"Replacing {oldId} with {newId}");
             var oldParts = oldPacks.SelectMany(p => p.Parts).ToList();
             var newParts = newPacks.SelectMany(p => p.Parts).ToList();
-            var pairs = ReplacePack(game, oldParts, newParts, partIds, twinRules, usedTwinRules);
-            if (pairs == null) return 1;
-            foreach (var (from, to) in pairs) aliases[from] = to;
+            var pairs = ReplacePack(run.Game, oldParts, newParts, run.PartIds, twinRules, usedTwinRules);
+            if (pairs == null) return false;
+            foreach (var (from, to) in pairs) run.Aliases[from] = to;
 
-            packs.RemoveAll(oldPacks.Contains);
+            run.Packs.RemoveAll(oldPacks.Contains);
         }
 
         var unusedTwinRules = twinRules.Keys.Where(id => !usedTwinRules.Contains(id)).ToList();
         if (unusedTwinRules.Count > 0)
         {
-            Console.WriteLine($"{TwinOption} names parts of no replaced pack: {string.Join(", ", unusedTwinRules)}");
-            return 1;
+            Console.WriteLine($"{TwinOption} names parts of no replaced pack: {string.Join(", ", unusedTwinRules)}{UnreadableHint(run)}");
+            return false;
         }
 
-        List<(string Id, SlrrRpk Rpk, List<SourcePart> Parts)> PacksOf(string packId)
+        return true;
+    }
+
+    /// <summary>
+    /// Added to a rule refused for naming what is not there, when rpks could not be read: what they hold is not among
+    /// the parts. Refused all the same, before anything is written: a rule half applied would change other packs
+    /// </summary>
+    private static string UnreadableHint(Run run) => run.Game.UnreadableRpks.Count == 0
+        ? string.Empty
+        : $" (or is in one of the {run.Game.UnreadableRpks.Count} rpks that could not be read, above; nothing written)";
+
+    private static List<(string Id, SlrrRpk Rpk, List<SourcePart> Parts)> PacksOf(Run run, string packId)
+    {
+        var named = run.Packs.FirstOrDefault(p => p.Id.Equals(packId, StringComparison.OrdinalIgnoreCase));
+        return named.Parts == null ? new() : run.Packs.Where(p => p.Rpk == named.Rpk).ToList();
+    }
+
+    /// <summary>
+    /// Merged parts leave their packs; whatever pointed at one (a twin of a replaced pack included) points at the
+    /// part that stands in for it
+    /// </summary>
+    private static bool MergeParts(Run run)
+    {
+        var merges = run.Options.Merges;
+        // Every key by the id it resolves to now (replaced packs have resolved to their twins), instead of a scan of
+        // all the ids for every merged part
+        foreach (var group in run.PartIds.GroupBy(p => p.Value, StringComparer.OrdinalIgnoreCase))
         {
-            var named = packs.FirstOrDefault(p => p.Id.Equals(packId, StringComparison.OrdinalIgnoreCase));
-            return named.Parts == null ? new() : packs.Where(p => p.Rpk == named.Rpk).ToList();
+            run.PartKeys[group.Key] = group.Select(p => p.Key).ToList();
         }
 
-        // Merged parts leave their packs; whatever pointed at one (a twin of a replaced pack included) points at
-        // the part that stands in for it. Their configs are kept: the stand-in inherits where they fitted
-        var merged = new List<(SourcePart Source, string KeptId)>();
-        // How many of a part a build gets where it named one: a set of carburettors is that many single ones now
-        var multiplicity = new Dictionary<(SlrrRpk, int), int>();
-        // Sets of carburettors that became single ones, with the slot their air cleaner sat on and the pads they sat on
-        var sets = new Dictionary<(SlrrRpk, int), (int Horn, List<(SlrrRpk Rpk, int TypeId, int Slot)> Pads)>();
-        foreach (var (_, _, parts) in packs)
+        foreach (var (_, _, parts) in run.Packs)
         {
             foreach (var part in parts.ToList())
             {
@@ -498,112 +369,138 @@ public static class Program
 
                 var keptId = rule.KeptId;
                 parts.Remove(part);
-                merged.Add((part, keptId));
-                if (rule.Count > 1) RememberSet(part);
-                aliases[part.Id] = keptId;
+                run.Merged.Add((part, keptId));
+                if (rule.Count > 1) RememberSet(run, part);
+                run.Aliases[part.Id] = keptId;
                 // Whatever resolved to the part (a twin of a replaced pack included) resolves to the stand-in
-                foreach (var key in partIds.Where(p => p.Value.Equals(part.Id, StringComparison.OrdinalIgnoreCase)).Select(p => p.Key).ToList())
+                if (!run.PartKeys.Remove(part.Id, out var keys)) continue;
+
+                foreach (var key in keys)
                 {
-                    partIds[key] = keptId;
-                    if (rule.Count > 1) multiplicity[key] = rule.Count;
+                    run.PartIds[key] = keptId;
+                    if (rule.Count > 1) run.Multiplicity[key] = rule.Count;
                 }
+
+                if (run.PartKeys.TryGetValue(keptId, out var keptKeys)) keptKeys.AddRange(keys);
+                else run.PartKeys[keptId] = keys;
             }
         }
 
-        var remaining = packs.SelectMany(p => p.Parts).Select(p => p.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var merged = run.Merged;
+        var remaining = run.Packs.SelectMany(p => p.Parts).Select(p => p.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var unknownKept = merged.Select(m => m.KeptId).Where(id => !remaining.Contains(id)).Distinct().ToList();
         var unusedMerges = merges.Where(m => !merged.Any(p => m.Pattern.IsMatch(p.Source.Id))).ToList();
         if (unknownKept.Count > 0 || unusedMerges.Count > 0)
         {
-            if (unknownKept.Count > 0) Console.WriteLine($"{MergeOption} names parts that are not there to stand in: {string.Join(", ", unknownKept)}");
-            if (unusedMerges.Count > 0) Console.WriteLine($"{MergeOption} patterns that match no part: {string.Join(", ", unusedMerges.Select(m => m.Pattern))}");
-            return 1;
+            if (unknownKept.Count > 0) Console.WriteLine($"{MergeOption} names parts that are not there to stand in: {string.Join(", ", unknownKept)}{UnreadableHint(run)}");
+            if (unusedMerges.Count > 0) Console.WriteLine($"{MergeOption} patterns that match no part: {string.Join(", ", unusedMerges.Select(m => m.Pattern))}{UnreadableHint(run)}");
+            return false;
         }
 
         if (merged.Count > 0) Console.WriteLine($"  {merged.Count} parts merged into {merged.Select(m => m.KeptId).Distinct().Count()}");
+        return true;
+    }
 
-        // A set's air cleaner sat on the slot of the set that has no attach lines of its own (the mount slot has
-        // them); it will sit over the pads the set's mount slot attached to
-        void RememberSet(SourcePart part)
+    /// <summary>
+    /// A set's air cleaner sat on the slot of the set that has no attach lines of its own (the mount slot has
+    /// them); it will sit over the pads the set's mount slot attached to
+    /// </summary>
+    private static void RememberSet(Run run, SourcePart part)
+    {
+        SlrrPartConfig config;
+        try
         {
-            var config = SlrrPartConfig.Load(part.ConfigFile);
-            var mount = config.Slots.FirstOrDefault(s => s.AttachesTo.Count > 0);
-            var horn = config.Slots.FirstOrDefault(s => s.AttachesTo.Count == 0);
-            if (mount == null || horn == null) return;
-
-            var pads = new List<(SlrrRpk, int, int)>();
-            foreach (var (partId, slotId) in mount.AttachesTo)
-            {
-                var (targetRpk, target) = game.Resolve(part.Rpk, partId);
-                if (targetRpk != null && target != null) pads.Add((targetRpk, target.TypeId, slotId));
-            }
-
-            sets[(part.Rpk, part.Entry.TypeId)] = (horn.Id, pads);
+            config = SlrrPartConfig.Load(part.ConfigFile);
+        }
+        catch (Exception ex)
+        {
+            // The part fails again where it is converted, and is counted there
+            Console.WriteLine($"    {part.Id}: {ex.Message}; what sat on the set stays where it was");
+            return;
         }
 
-        // Parts drawn with another part's model: the donor is any remaining part
-        var sources = packs.SelectMany(p => p.Parts).ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
+        var mount = config.Slots.FirstOrDefault(s => s.AttachesTo.Count > 0);
+        var horn = config.Slots.FirstOrDefault(s => s.AttachesTo.Count == 0);
+        if (mount == null || horn == null) return;
 
-        // Models of a row of identical items kept as one
-        var singles = new Dictionary<string, SingleRule>(StringComparer.OrdinalIgnoreCase);
-        foreach (var rule in singleRules)
+        var pads = new List<(SlrrRpk, int, int)>();
+        foreach (var (partId, slotId) in mount.AttachesTo)
+        {
+            var (targetRpk, target) = run.Game.Resolve(part.Rpk, partId);
+            if (targetRpk != null && target != null) pads.Add((targetRpk, target.TypeId, slotId));
+        }
+
+        run.Sets[(part.Rpk, part.Entry.TypeId)] = (horn.Id, pads);
+    }
+
+    /// <summary>Parts whose model draws a row of items, and parts drawn with another part's model (the donor is any remaining part)</summary>
+    private static bool ChooseModels(Run run)
+    {
+        var sources = run.Packs.SelectMany(p => p.Parts).ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var rule in run.Options.SingleRules)
         {
             var matching = sources.Values.Where(p => rule.Pattern.IsMatch(p.Id)).ToList();
             if (matching.Count == 0)
             {
-                Console.WriteLine($"{SingleOption} {rule.Pattern} matches no part");
-                return 1;
+                Console.WriteLine($"{SingleOption} {rule.Pattern} matches no part{UnreadableHint(run)}");
+                return false;
             }
 
             foreach (var part in matching)
             {
-                singles[part.Id] = rule;
-                RememberSet(part);
-                foreach (var key in partIds.Where(p => p.Value.Equals(part.Id, StringComparison.OrdinalIgnoreCase)).Select(p => p.Key))
+                run.Singles[part.Id] = rule;
+                RememberSet(run, part);
+                foreach (var key in run.PartKeys.GetValueOrDefault(part.Id) ?? new List<(SlrrRpk, int)>())
                 {
-                    multiplicity[key] = rule.Count;
+                    run.Multiplicity[key] = rule.Count;
                 }
             }
         }
-        var donors = new Dictionary<string, SourcePart>(StringComparer.OrdinalIgnoreCase);
-        foreach (var rule in modelRules)
+
+        foreach (var rule in run.Options.ModelRules)
         {
             var borrowers = sources.Values.Where(p => rule.Pattern.IsMatch(p.Id) && !p.Id.Equals(rule.DonorId, StringComparison.OrdinalIgnoreCase)).ToList();
             if (borrowers.Count == 0 || !sources.TryGetValue(rule.DonorId, out var donor))
             {
                 Console.WriteLine(borrowers.Count == 0
-                    ? $"{ModelOption} {rule.Pattern} matches no part"
-                    : $"{ModelOption} names a model donor that is not there: {rule.DonorId}");
-                return 1;
+                    ? $"{ModelOption} {rule.Pattern} matches no part{UnreadableHint(run)}"
+                    : $"{ModelOption} names a model donor that is not there: {rule.DonorId}{UnreadableHint(run)}");
+                return false;
             }
 
-            foreach (var borrower in borrowers) donors[borrower.Id] = donor;
+            foreach (var borrower in borrowers) run.Donors[borrower.Id] = donor;
         }
 
-        if (donors.Count > 0) Console.WriteLine($"  {donors.Count} parts drawn with another part's model");
+        if (run.Donors.Count > 0) Console.WriteLine($"  {run.Donors.Count} parts drawn with another part's model");
+        return true;
+    }
 
-        // Second pass: models and definitions. The definitions are written once every pack is converted: a merged
-        // part's fit is grafted onto its stand-in, and fittings are found across packs
-        var converted = 0;
-        var withoutModel = 0;
-        var failures = new List<string>();
-        var written = new Dictionary<string, (string Folder, PartPack Pack, Dictionary<string, string?> Models)>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var (packId, rpk, parts) in packs)
+    /// <summary>
+    /// Second pass: models and definitions. The definitions are written once every pack is converted: a merged
+    /// part's fit is grafted onto its stand-in, and fittings are found across packs. Models go to the staging folder
+    /// </summary>
+    private static void ConvertPacks(Run run)
+    {
+        foreach (var (packId, rpk, parts) in run.Packs)
         {
-            if (filter != null && !packId.Equals(filter, StringComparison.OrdinalIgnoreCase)) continue;
+            if (run.Filter != null && !packId.Equals(run.Filter, StringComparison.OrdinalIgnoreCase)) continue;
 
             // A pack fed by several rpks is prepared once and takes the rest as they come
-            if (!written.TryGetValue(packId, out var target))
+            if (!run.Written.TryGetValue(packId, out var target))
             {
-                var packFolder = Path.Combine(output, packId.Replace('/', Path.DirectorySeparatorChar));
-                if (!PrepareFolder(packFolder))
+                var packPath = packId.Replace('/', Path.DirectorySeparatorChar);
+                var packFolder = Path.Combine(run.Output, packPath);
+                if (!CanConvertInto(packFolder))
                 {
                     Console.WriteLine($"Skipped {packId}: {packFolder} exists and is not a converted pack");
+                    run.Skipped.Add($"{packId}: {packFolder} exists and is not a converted pack");
                     continue;
                 }
 
-                written[packId] = target = (packFolder, new PartPack { Id = packId, Source = rpk.RelativePath }, new Dictionary<string, string?>());
+                var staging = Path.Combine(run.Staging, packPath);
+                Directory.CreateDirectory(staging);
+                run.Written[packId] = target = (packFolder, staging, new PartPack { Id = packId, Source = rpk.RelativePath }, new Dictionary<string, string?>());
             }
             else target.Pack.Source += ", " + rpk.RelativePath;
 
@@ -612,177 +509,509 @@ public static class Program
             {
                 try
                 {
-                    var donor = donors.GetValueOrDefault(source.Id);
-                    var single = singles.GetValueOrDefault(donor?.Id ?? source.Id);
-                    var definition = Convert(game, scripts, source, donor, single, partIds, target.Folder, texturePrefix, target.Models);
+                    var donor = run.Donors.GetValueOrDefault(source.Id);
+                    var single = run.Singles.GetValueOrDefault(donor?.Id ?? source.Id);
+                    var definition = Convert(run.Game, run.Scripts, source, donor, single, run.PartIds, target.Staging, texturePrefix, target.Models);
                     target.Pack.Parts.Add(definition);
 
-                    converted++;
-                    if (definition.Model == null) withoutModel++;
+                    run.Converted++;
+                    if (definition.Model == null) run.WithoutModel++;
                 }
                 catch (Exception ex)
                 {
-                    failures.Add($"{source.Id}: {ex.Message}");
+                    run.Failures.Add($"{source.Id}: {ex.Message}");
                 }
             }
 
             Console.WriteLine($"  {packId,-45} {parts.Count,4} parts from {rpk.RelativePath}");
         }
 
-        var definitions = written.Values.SelectMany(w => w.Pack.Parts).ToDictionary(d => d.Id, StringComparer.OrdinalIgnoreCase);
-        // Merged parts' fit first, then geometry (pads split after the shift, so the new pads are where the pad
-        // is), then what sat on sets moves over the pads, and fittings are derived from the lines as they end up
-        Graft(game, merged, definitions, partIds);
-        Shift(shifts, definitions);
-        SplitPads(padRules, definitions);
-        Repoint(game, sets, definitions, partIds, singles.Keys);
-        Fit(fits, definitions);
+        run.Definitions = run.Written.Values.SelectMany(w => w.Pack.Parts).ToDictionary(d => d.Id, StringComparer.OrdinalIgnoreCase);
+    }
 
-        // Slots nudged into place in the garage, last: they were made against the geometry as it ends up here.
-        // What the game wrote since the last run joins the kept file and leaves the output folder
-        if (shiftsFile != null)
+    /// <summary>
+    /// Merged parts' fit first, then geometry (pads split after the shift, so the new pads are where the pad is), then
+    /// what sat on sets moves over the pads, and fittings are derived from the lines as they end up
+    /// </summary>
+    private static void Arrange(Run run)
+    {
+        Graft(run.Game, run.Merged, run.Definitions, run.PartIds);
+        Shift(run.Options.Shifts, run.Definitions);
+        SplitPads(run.Options.PadRules, run.Definitions);
+        Repoint(run.Game, run.Sets, run.Definitions, run.PartIds, run.Singles.Keys);
+        Fit(run.Options.Fits, run.Definitions);
+    }
+
+    /// <summary>
+    /// Slots nudged into place in the garage, last: they were made against the geometry as it ends up here.
+    /// What the game wrote since the last run joins the kept file and leaves the output folder
+    /// </summary>
+    private static bool FoldSlotShifts(Run run)
+    {
+        var shiftsFile = run.Options.ShiftsFile;
+        if (shiftsFile == null) return true;
+
+        var absorb = run.Options.Absorb;
+        if (Path.GetFileName(shiftsFile) != SlotShifts.FileName || absorb.Any(f => Path.GetFileName(f) != SlotShifts.FileName))
         {
-            if (Path.GetFileName(shiftsFile) != SlotShifts.FileName || absorb.Any(f => Path.GetFileName(f) != SlotShifts.FileName))
-            {
-                Console.WriteLine($"{ShiftsOption} and {AbsorbOption} take files named {SlotShifts.FileName}");
-                return 1;
-            }
-
-            var keptFolder = Path.GetDirectoryName(Path.GetFullPath(shiftsFile))!;
-            var kept = SlotShifts.Load(keptFolder);
-            var folded = 0;
-            var absorbed = new List<string>();
-            // The kept file itself is not one of the game's: folding it into itself would double it and take it away
-            foreach (var folder in absorb.Select(f => Path.GetDirectoryName(Path.GetFullPath(f))!).Prepend(Path.TrimEndingDirectorySeparator(Path.GetFullPath(output)))
-                         .Distinct(StringComparer.OrdinalIgnoreCase).Where(f => !f.Equals(keptFolder, StringComparison.OrdinalIgnoreCase)))
-            {
-                var fresh = SlotShifts.Load(folder);
-                if (fresh.IsEmpty) continue;
-
-                foreach (var (partId, slotId, offset) in fresh.All) kept.Add(partId, slotId, offset, save: false);
-                folded += fresh.All.Count();
-                absorbed.Add(fresh.Path!);
-            }
-
-            if (folded > 0)
-            {
-                // The game's files go only once what they held is safely in the kept one
-                if (!kept.Save())
-                {
-                    Console.WriteLine($"Could not write {shiftsFile}: the game's slot shifts stay where they are");
-                    return 1;
-                }
-
-                foreach (var file in absorbed) File.Delete(file);
-                Console.WriteLine($"  {folded} slot shifts from the garage folded into {shiftsFile}");
-            }
-
-            var applied = kept.ApplyTo(definitions);
-            if (!kept.IsEmpty) Console.WriteLine($"  {applied} slots moved by {shiftsFile}");
+            Console.WriteLine($"{ShiftsOption} and {AbsorbOption} take files named {SlotShifts.FileName}");
+            return false;
         }
 
-        foreach (var rule in nameRules)
+        var keptFolder = Path.GetDirectoryName(Path.GetFullPath(shiftsFile))!;
+        var kept = SlotShifts.Load(keptFolder);
+        if (kept.Problem != null)
         {
-            var named = definitions.Values.Where(d => rule.Pattern.IsMatch(d.Id)).ToList();
+            // Folding into a file that could not be read would write over the user's shifts with only the new ones
+            Console.WriteLine($"{shiftsFile}: {kept.Problem}. Fix or move it and run again");
+            return false;
+        }
+
+        var folded = 0;
+        var absorbed = new List<string>();
+        // The kept file itself is not one of the game's: folding it into itself would double it and take it away
+        foreach (var folder in absorb.Select(f => Path.GetDirectoryName(Path.GetFullPath(f))!).Prepend(Path.TrimEndingDirectorySeparator(Path.GetFullPath(run.Output)))
+                     .Distinct(StringComparer.OrdinalIgnoreCase).Where(f => !f.Equals(keptFolder, StringComparison.OrdinalIgnoreCase)))
+        {
+            var fresh = SlotShifts.Load(folder);
+            if (fresh.Problem != null)
+            {
+                // Not folded and not deleted: what the game wrote there is left for someone to look at
+                Console.WriteLine($"  {fresh.Path}: {fresh.Problem}; skipped");
+                continue;
+            }
+            if (fresh.IsEmpty) continue;
+
+            foreach (var (partId, slotId, offset) in fresh.All) kept.Add(partId, slotId, offset, save: false);
+            folded += fresh.All.Count();
+            absorbed.Add(fresh.Path!);
+        }
+
+        if (folded > 0)
+        {
+            // The game's files go only once what they held is safely in the kept one
+            if (!kept.Save())
+            {
+                Console.WriteLine($"Could not write {shiftsFile}: the game's slot shifts stay where they are");
+                return false;
+            }
+
+            foreach (var file in absorbed) File.Delete(file);
+            Console.WriteLine($"  {folded} slot shifts from the garage folded into {shiftsFile}");
+        }
+
+        var applied = kept.ApplyTo(run.Definitions);
+        if (!kept.IsEmpty) Console.WriteLine($"  {applied} slots moved by {shiftsFile}");
+        return true;
+    }
+
+    private static void ApplyNames(Run run)
+    {
+        foreach (var rule in run.Options.NameRules)
+        {
+            var named = run.Definitions.Values.Where(d => rule.Pattern.IsMatch(d.Id)).ToList();
             if (named.Count == 0) Console.WriteLine($"    {NameOption} {rule.Pattern}: no part has it");
             foreach (var definition in named) definition.DisplayName = rule.Name;
         }
-        foreach (var (folder, pack, models) in written.Values)
+    }
+
+    /// <summary>
+    /// Works out every file of the output first (pack definitions, the classes the parts use and, for a full run,
+    /// the constants, aliases and engine builds), and only then moves it all in (<see cref="Commit"/>). The packs of an
+    /// rpk that could not be read are kept as the last conversion left them. False when the commit stopped part way
+    /// </summary>
+    private static bool Write(Run run)
+    {
+        var output = run.Output;
+        FindKeptPacks(run);
+
+        var packFiles = new List<(string Folder, string Staging, string Json)>();
+        foreach (var (folder, staging, pack, models) in run.Written.Values)
         {
-            File.WriteAllText(Path.Combine(folder, PartPack.FileName), JsonConvert.SerializeObject(pack, Formatting.Indented));
+            // Made from the rpks that could be read; the pack as it was holds the unreadable one's parts too
+            if (run.Kept.ContainsKey(pack.Id)) continue;
+
+            packFiles.Add((folder, staging, JsonConvert.SerializeObject(pack, Formatting.Indented)));
             Console.WriteLine($"  {pack.Id,-45} {pack.Parts.Count,4} parts, {models.Values.Count(m => m != null),4} models");
         }
 
-        // The game runs the part scripts itself. A filtered run adds the classes of its packs to what is there;
-        // parts without their classes would be parts nobody finds on their slot.
-        var copied = CopyScripts(game, scripts, Path.Combine(output, PartScripts.Folder), filter == null);
-        Console.WriteLine($"  {copied} script classes");
+        foreach (var kept in run.Kept.Values)
+        {
+            Console.WriteLine($"  {kept.Id,-45} kept as it was: {kept.Pack.Source} could not be read");
+            if (SamePath(kept.From, kept.Folder)) continue;
 
+            // Kept from the --previous content for a run into another folder: its models go in through the staging
+            // folder like the run's own (a folder of their own there: the run may have made some of the pack too)
+            var staging = Path.Combine(run.Staging, ".kept", kept.Id.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(staging);
+            foreach (var model in Directory.EnumerateFiles(kept.From, "*.kn5")) File.Copy(model, Path.Combine(staging, Path.GetFileName(model)));
+            packFiles.Add((kept.Folder, staging, kept.Json));
+        }
+
+        // The game runs the part scripts itself. A filtered run adds the classes of its packs to what is there;
+        // parts without their classes would be parts nobody finds on their slot. Taken before the engine kits
+        // below are evaluated: the classes and constants those touch are no part's
+        var classes = ScriptFiles(run.Game, run.Scripts);
+        Console.WriteLine($"  {classes.Count} script classes");
+        if (run.Filter == null) StageScripts(run, classes);
+
+        string? constants = null;
+        string? aliases = null;
+        string? builds = null;
+        var stale = new List<string>();
         // Constants of the shared script classes (fuel types, price factors...), for the game's part logic.
         // A filtered run has not seen them all.
-        if (filter == null)
+        if (run.Filter == null)
         {
-            // A run that converted nothing has not made the folder yet
-            Directory.CreateDirectory(output);
-
             // Packs converted before under a name no longer produced (renamed, replaced, dropped whole) would be
-            // loaded next to the current ones
-            var current = packs.Select(p => Path.GetFullPath(Path.Combine(output, p.Id.Replace('/', Path.DirectorySeparatorChar))))
+            // loaded next to the current ones. A pack whose rpk could not be read has not left SLRR: it is kept
+            var current = run.Packs.Select(p => Path.GetFullPath(Path.Combine(output, p.Id.Replace('/', Path.DirectorySeparatorChar))))
+                .Concat(run.Kept.Values.Select(k => Path.GetFullPath(k.Folder)))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
-            foreach (var stale in Directory.EnumerateFiles(output, PartPack.FileName, SearchOption.AllDirectories)
-                         .Select(f => Path.GetFullPath(Path.GetDirectoryName(f)!)).Where(f => !current.Contains(f)).ToList())
+            if (Directory.Exists(output))
             {
-                RemovePack(stale);
-                Console.WriteLine($"  removed {Path.GetRelativePath(output, stale)}: no longer converted");
+                stale = Directory.EnumerateFiles(output, PartPack.FileName, SearchOption.AllDirectories)
+                    .Select(f => Path.GetFullPath(Path.GetDirectoryName(f)!)).Where(f => !current.Contains(f)).ToList();
             }
 
-            File.WriteAllText(Path.Combine(output, ConstantsFile), JsonConvert.SerializeObject(scripts.Constants, Formatting.Indented));
+            constants = Constants(run);
 
-            if (earlier != null)
+            // The parts the content ends up with: a kept pack's as it was, not what the run made of the rpks of it
+            // that it could read
+            var definitions = new Dictionary<string, PartDefinition>(run.Definitions, StringComparer.OrdinalIgnoreCase);
+            foreach (var kept in run.Kept.Values)
             {
-                var (renamed, kept) = earlier.Carry(game, partIds, definitions, aliases);
-                if (renamed + kept > 0) Console.WriteLine($"  {renamed} parts renamed in their rpk and {kept} older aliases kept from {previous}");
-            }
-
-            File.WriteAllText(Path.Combine(output, PartPack.AliasesFileName), JsonConvert.SerializeObject(aliases, Formatting.Indented));
-
-            var engineBuilds = new SlrrEngineBuilds(game, partIds);
-            // Cars get an evaluator of their own: their classes are of no use to the game
-            var builds = engineBuilds.FromCars(new SlrrScriptEvaluator(game));
-            if (notes != null && Directory.Exists(notes)) builds.AddRange(engineBuilds.FromNotes(notes));
-
-            // The packs' own engine kits: what an author wrote as a complete engine. A kit without a block is an
-            // upgrade, no engine; one whose parts a car or notes build already lists (with a battery, say) adds nothing
-            var kits = engineBuilds.FromKits(scripts, packs.Select(p => p.Rpk).Distinct().ToList());
-            var listed = builds.Select(PartSet).ToList();
-            kits.RemoveAll(k => !k.Parts.Any(p => p.Part != null && definitions.TryGetValue(p.Part, out var d) && d.BaseClass?.Contains(".block.") == true)
-                                || listed.Any(PartSet(k).IsSubsetOf));
-            builds.AddRange(kits);
-            if (kits.Count > 0) Console.WriteLine($"  {kits.Count} engine kits of the packs are builds");
-
-            static HashSet<string> PartSet(EngineBuild build) =>
-                build.Parts.Select(p => p.Part ?? p.Source).ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            // An engine around a part that was dropped on purpose is no engine the game should offer
-            var left = builds.RemoveAll(b => b.Parts.Any(p => p.Part == null && dropped.Contains(p.Source)));
-            if (left > 0) Console.WriteLine($"  {left} engine builds left out, they use dropped parts");
-
-            // A build that named a set of carburettors gets one carburettor per pad
-            if (multiplicity.Count > 0)
-            {
-                var repeated = 0;
-                foreach (var build in builds)
+                if (run.Written.TryGetValue(kept.Id, out var written))
                 {
-                    for (var i = build.Parts.Count - 1; i >= 0; i--)
-                    {
-                        var part = build.Parts[i];
-                        if (part.Part == null || !SlrrGame.TryParseReference(part.Source, out var rpkPath, out var typeId)) continue;
-                        var rpk = game.GetRpk(rpkPath);
-                        if (rpk == null || !multiplicity.TryGetValue((rpk, typeId), out var count)) continue;
-
-                        for (var extra = 1; extra < count; extra++) build.Parts.Insert(i + 1, part);
-                        repeated++;
-                    }
+                    foreach (var part in written.Pack.Parts) definitions.Remove(part.Id);
                 }
 
-                if (repeated > 0) Console.WriteLine($"  {repeated} carburettor sets in builds became single carburettors, one per pad");
+                foreach (var part in kept.Pack.Parts) definitions[part.Id] = part;
             }
 
-            File.WriteAllText(Path.Combine(output, EngineBuild.FileName), JsonConvert.SerializeObject(builds, Formatting.Indented));
+            if (run.Earlier != null)
+            {
+                var (renamed, kept) = run.Earlier.Carry(run.Game, run.PartIds, definitions, run.Aliases);
+                if (renamed + kept > 0) Console.WriteLine($"  {renamed} parts renamed in their rpk and {kept} older aliases kept from {run.Options.Previous}");
+            }
 
-            Console.WriteLine($"  {builds.Count} engine builds ({builds.Count(b => b.RatedPower != null)} with a rated power, " +
-                              $"{builds.Count(b => b.Parts.All(p => p.Part != null))} fully resolved)");
+            KeepAliases(run, definitions);
+            aliases = JsonConvert.SerializeObject(run.Aliases, Formatting.Indented);
+
+            var engineBuilds = EngineBuilds(run);
+            KeepBuilds(run, engineBuilds);
+            builds = JsonConvert.SerializeObject(engineBuilds, Formatting.Indented);
         }
 
-        Console.WriteLine();
-        Console.WriteLine($"Converted {converted} parts ({withoutModel} without a model) in {stopwatch.Elapsed.TotalSeconds:0.0} s");
-        if (failures.Count > 0)
+        return Commit(run, packFiles, classes, constants, aliases, builds, stale);
+    }
+
+    /// <summary>
+    /// Moves the output in, in an order that leaves no file naming what is not there wherever it stops (a file held
+    /// open, the process killed): what is named goes in before what names it, what nothing names any more goes last.
+    /// <list type="number">
+    /// <item>The classes, which the packs name (a full run swaps the folder in whole, <see cref="ConversionOutput.SwapIn"/>).</item>
+    /// <item>Every pack's models: one moved over a model of the same name is the same part's, and no pack names a new one yet.</item>
+    /// <item>Every pack.json, each followed by the removal of the models it no longer names.</item>
+    /// <item>The constants, the engine builds and the aliases, which name the packs' parts.</item>
+    /// <item>The packs no longer converted, once nothing written by the run leads to them.</item>
+    /// </list>
+    /// Each file goes in whole (renames, <see cref="SafeFile"/>). What a stop part way can leave is old files next to new
+    /// ones: an old alias naming a part the new pack.json no longer has (a missing part, as for any save of a removed
+    /// part). A marker next to the output is there from the first step to the last, so the next run says the content
+    /// is a mix, and a full run, which rewrites every file, takes it away.
+    /// </summary>
+    private static bool Commit(Run run, List<(string Folder, string Staging, string Json)> packFiles, HashSet<string> classes,
+        string? constants, string? aliases, string? builds, List<string> stale)
+    {
+        var output = run.Output;
+        // A run that converted nothing has not made the folder yet
+        Directory.CreateDirectory(output);
+        ConversionOutput.BeginCommit(output);
+        try
         {
-            Console.WriteLine($"{failures.Count} failed:");
-            foreach (var failure in failures) Console.WriteLine("  " + failure);
+            if (run.Filter == null)
+            {
+                // Nothing staged (no class at all) leaves the folder as it is
+                ConversionOutput.SwapIn(Path.Combine(output, PartScripts.Folder), Path.Combine(run.Staging, PartScripts.Folder));
+            }
+            else CopyClasses(run.Game.Root, classes, Path.Combine(output, PartScripts.Folder));
+
+            var made = packFiles.Select(p => MoveModelsIn(p.Folder, p.Staging)).ToList();
+            for (var i = 0; i < packFiles.Count; i++) WritePack(packFiles[i].Folder, packFiles[i].Json, made[i]);
+
+            if (run.Filter == null)
+            {
+                SafeFile.WriteAllText(Path.Combine(output, ConstantsFile), constants!);
+                SafeFile.WriteAllText(Path.Combine(output, EngineBuild.FileName), builds!);
+                SafeFile.WriteAllText(Path.Combine(output, PartPack.AliasesFileName), aliases!);
+
+                foreach (var folder in stale)
+                {
+                    RemovePack(folder);
+                    Console.WriteLine($"  removed {Path.GetRelativePath(output, folder)}: no longer converted");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Stopped while moving the output in: {ex.Message}");
+            Console.WriteLine($"{output} is part this run's, part the last one's (every file whole); run again without a filter");
+            return false;
         }
 
-        return 0;
+        // A filtered run does not make whole what a stopped full commit left: the marker stays for the full run that does
+        if (run.Filter == null || !run.InterruptedBefore) ConversionOutput.EndCommit(output);
+        return true;
+    }
+
+    /// <summary>
+    /// The packs converted before from an rpk that could not be read this time, from the output and, for a full run,
+    /// from the --previous content (a run into another folder). A pack gone from SLRR is stale; one that could not be
+    /// read is not, and neither are its models, aliases and builds
+    /// </summary>
+    private static void FindKeptPacks(Run run)
+    {
+        if (run.Game.UnreadableRpks.Count == 0) return;
+
+        // A filtered run commits only its own pack: the output's is the one it must not write over
+        var roots = run.Filter == null ? ContentRoots(run) : ContentRoots(run).Where(r => SamePath(r, run.Output));
+        foreach (var root in roots)
+        {
+            foreach (var file in Directory.EnumerateFiles(root, PartPack.FileName, SearchOption.AllDirectories))
+            {
+                var folder = Path.GetDirectoryName(file)!;
+                var relative = Path.GetRelativePath(root, folder);
+                var id = relative.Replace('\\', '/');
+                if (run.Kept.ContainsKey(id) || (run.Filter != null && !run.Written.ContainsKey(id))) continue;
+
+                string json;
+                PartPack? pack;
+                try
+                {
+                    json = File.ReadAllText(file);
+                    pack = JsonConvert.DeserializeObject<PartPack>(json);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+                {
+                    Console.WriteLine($"  {file}: {ex.Message}; not kept");
+                    continue;
+                }
+
+                if (pack == null || !pack.Source.Split(',').Select(s => s.Trim()).Any(s => s.Length > 0 && run.Game.IsUnreadable(s))) continue;
+
+                run.Kept[id] = new KeptPack(id, Path.Combine(run.Output, relative), folder, root, json, pack);
+            }
+        }
+    }
+
+    /// <summary>The converted content there is to keep things from: the output as it is, then the --previous content</summary>
+    private static List<string> ContentRoots(Run run)
+    {
+        var roots = new List<string>();
+        if (Directory.Exists(run.Output)) roots.Add(run.Output);
+        var previous = run.Options.Previous;
+        if (previous != null && Directory.Exists(previous) && !SamePath(previous, run.Output)) roots.Add(previous);
+        return roots;
+    }
+
+    /// <summary>The content the kept packs came from, the output first</summary>
+    private static List<string> KeptRoots(Run run) =>
+        run.Kept.Values.Select(k => k.Root).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+    private static bool SamePath(string a, string b) =>
+        string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(a)), Path.TrimEndingDirectorySeparator(Path.GetFullPath(b)), StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>A JSON file of the content, or null when it is not there or cannot be read (said, not fatal: it only feeds what is kept)</summary>
+    private static T? ReadJson<T>(string file) where T : class
+    {
+        if (!File.Exists(file)) return null;
+
+        try
+        {
+            return JsonConvert.DeserializeObject<T>(File.ReadAllText(file));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            Console.WriteLine($"  {file}: {ex.Message}; nothing kept from it");
+            return null;
+        }
+    }
+
+    /// <summary>The constants of the classes the run evaluated, plus those of the kept packs' classes it could not evaluate</summary>
+    private static string Constants(Run run)
+    {
+        if (run.Kept.Count == 0) return JsonConvert.SerializeObject(run.Scripts.Constants, Formatting.Indented);
+
+        var merged = new SortedDictionary<string, object>(StringComparer.Ordinal);
+        foreach (var (className, values) in run.Scripts.Constants) merged[className] = values;
+        foreach (var root in KeptRoots(run))
+        {
+            var old = ReadJson<Dictionary<string, JToken>>(Path.Combine(root, ConstantsFile));
+            if (old == null) continue;
+
+            foreach (var (className, values) in old) merged.TryAdd(className, values);
+        }
+
+        return JsonConvert.SerializeObject(merged, Formatting.Indented);
+    }
+
+    /// <summary>
+    /// The aliases of the content the kept packs came from that lead to their parts: saves name those parts by
+    /// them, and with the rpk unreadable nothing else in the run knows they are still there
+    /// </summary>
+    private static void KeepAliases(Run run, Dictionary<string, PartDefinition> definitions)
+    {
+        // As many hops as the game follows (PartsCatalog.CurrentId)
+        const int maxHops = 8;
+        if (run.Kept.Count == 0) return;
+
+        var keptIds = run.Kept.Values.SelectMany(k => k.Pack.Parts).Select(p => p.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var added = 0;
+        foreach (var root in KeptRoots(run))
+        {
+            var old = ReadJson<Dictionary<string, string>>(Path.Combine(root, PartPack.AliasesFileName));
+            if (old == null) continue;
+
+            var oldAliases = new Dictionary<string, string>(old, StringComparer.OrdinalIgnoreCase);
+            foreach (var (gone, target) in old)
+            {
+                if (definitions.ContainsKey(gone) || run.Aliases.ContainsKey(gone) || !Leads(target)) continue;
+
+                run.Aliases[gone] = target;
+                added++;
+            }
+
+            bool Leads(string id)
+            {
+                for (var hops = 0; hops < maxHops; hops++)
+                {
+                    if (keptIds.Contains(id)) return true;
+                    if (!run.Aliases.TryGetValue(id, out var next) && !oldAliases.TryGetValue(id, out next)) return false;
+
+                    id = next;
+                }
+
+                return false;
+            }
+        }
+
+        if (added > 0) Console.WriteLine($"  {added} aliases of the kept packs kept");
+    }
+
+    /// <summary>
+    /// The engine builds of the converted content that name an rpk that could not be read (the car's, a part's)
+    /// stay as they were: made now, they would miss the car or have those parts unresolved
+    /// </summary>
+    private static void KeepBuilds(Run run, List<EngineBuild> builds)
+    {
+        if (run.Game.UnreadableRpks.Count == 0) return;
+
+        var handled = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var root in ContentRoots(run))
+        {
+            var old = ReadJson<List<EngineBuild>>(Path.Combine(root, EngineBuild.FileName));
+            if (old == null) continue;
+
+            foreach (var build in old.Where(b => Touches(b.Source) || b.Parts.Any(p => Touches(p.Source))))
+            {
+                if (!handled.Add(build.Id)) continue;
+
+                var at = builds.FindIndex(b => b.Id.Equals(build.Id, StringComparison.OrdinalIgnoreCase));
+                if (at >= 0) builds[at] = build;
+                else builds.Add(build);
+            }
+        }
+
+        if (handled.Count > 0) Console.WriteLine($"  {handled.Count} engine builds kept as they were: they name an rpk that could not be read");
+
+        bool Touches(string? reference) =>
+            reference != null && SlrrGame.TryParseReference(reference, out var rpkPath, out _) && run.Game.IsUnreadable(rpkPath);
+    }
+
+    /// <summary>The engines the game offers: the cars' own, the build notes', and the packs' complete kits</summary>
+    private static List<EngineBuild> EngineBuilds(Run run)
+    {
+        var game = run.Game;
+        var definitions = run.Definitions;
+        var engineBuilds = new SlrrEngineBuilds(game, run.PartIds);
+        // Cars get an evaluator of their own: their classes are of no use to the game
+        var builds = engineBuilds.FromCars(new SlrrScriptEvaluator(game));
+        // The folder was checked when the options were read
+        if (run.Options.Notes != null) builds.AddRange(engineBuilds.FromNotes(run.Options.Notes));
+
+        // The packs' own engine kits: what an author wrote as a complete engine. A kit without a block is an
+        // upgrade, no engine; one whose parts a car or notes build already lists (with a battery, say) adds nothing
+        var kits = engineBuilds.FromKits(run.Scripts, run.Packs.Select(p => p.Rpk).Distinct().ToList());
+        var listed = builds.Select(PartSet).ToList();
+        kits.RemoveAll(k => !k.Parts.Any(p => p.Part != null && definitions.TryGetValue(p.Part, out var d) && d.BaseClass?.Contains(".block.") == true)
+                            || listed.Any(PartSet(k).IsSubsetOf));
+        builds.AddRange(kits);
+        if (kits.Count > 0) Console.WriteLine($"  {kits.Count} engine kits of the packs are builds");
+
+        static HashSet<string> PartSet(EngineBuild build) =>
+            build.Parts.Select(p => p.Part ?? p.Source).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        // An engine around a part that was dropped on purpose is no engine the game should offer
+        var left = builds.RemoveAll(b => b.Parts.Any(p => p.Part == null && run.Dropped.Contains(p.Source)));
+        if (left > 0) Console.WriteLine($"  {left} engine builds left out, they use dropped parts");
+
+        // A build that named a set of carburettors gets one carburettor per pad
+        if (run.Multiplicity.Count > 0)
+        {
+            var repeated = 0;
+            foreach (var build in builds)
+            {
+                for (var i = build.Parts.Count - 1; i >= 0; i--)
+                {
+                    var part = build.Parts[i];
+                    if (part.Part == null || !SlrrGame.TryParseReference(part.Source, out var rpkPath, out var typeId)) continue;
+                    var rpk = game.GetRpk(rpkPath);
+                    if (rpk == null || !run.Multiplicity.TryGetValue((rpk, typeId), out var count)) continue;
+
+                    for (var extra = 1; extra < count; extra++) build.Parts.Insert(i + 1, part);
+                    repeated++;
+                }
+            }
+
+            if (repeated > 0) Console.WriteLine($"  {repeated} carburettor sets in builds became single carburettors, one per pad");
+        }
+
+        Console.WriteLine($"  {builds.Count} engine builds ({builds.Count(b => b.RatedPower != null)} with a rated power, " +
+                          $"{builds.Count(b => b.Parts.All(p => p.Part != null))} fully resolved)");
+        return builds;
+    }
+
+    /// <summary>The totals, and what the run left out, last; a run that left anything out does not exit 0</summary>
+    private static int Report(Run run, Stopwatch stopwatch)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"Converted {run.Converted} parts ({run.WithoutModel} without a model) in {stopwatch.Elapsed.TotalSeconds:0.0} s");
+        if (run.Failures.Count > 0)
+        {
+            Console.WriteLine($"{run.Failures.Count} failed:");
+            foreach (var failure in run.Failures) Console.WriteLine("  " + failure);
+        }
+
+        if (run.Skipped.Count > 0)
+        {
+            Console.WriteLine($"{run.Skipped.Count} packs skipped:");
+            foreach (var skipped in run.Skipped) Console.WriteLine("  " + skipped);
+        }
+
+        var unreadable = run.Game.UnreadableRpks;
+        if (unreadable.Count > 0)
+        {
+            // Kept, not removed: an rpk that could not be read has not left SLRR (FindKeptPacks)
+            Console.WriteLine($"{unreadable.Count} rpks could not be read: {run.Kept.Count} packs of theirs kept as the last conversion left them, " +
+                              "their parts missing where no earlier conversion had them:");
+            foreach (var rpk in unreadable) Console.WriteLine("  " + rpk);
+        }
+
+        if (run.Failures.Count + run.Skipped.Count + unreadable.Count == 0) return 0;
+
+        Console.WriteLine($"Incomplete: {run.Failures.Count} parts failed, {run.Skipped.Count} packs skipped, {unreadable.Count} rpks unreadable");
+        return ExitIncomplete;
     }
 
     /// <summary>
@@ -792,19 +1021,37 @@ public static class Program
     private static void Measure(SlrrGame game, IEnumerable<SourcePart> parts)
     {
         var culture = System.Globalization.CultureInfo.InvariantCulture;
-        foreach (var part in parts.OrderBy(p => p.Id))
+        foreach (var part in parts.OrderBy(p => p.Id, StringComparer.OrdinalIgnoreCase))
         {
             Console.WriteLine(part.Id);
-            var config = SlrrPartConfig.Load(part.ConfigFile);
+            SlrrPartConfig config;
+            try
+            {
+                config = SlrrPartConfig.Load(part.ConfigFile);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  cannot be read: {ex.Message}");
+                continue;
+            }
+
             foreach (var (render, meshFile, _) in SelectRenders(game, part, config))
             {
                 var min = new System.Numerics.Vector3(float.MaxValue);
                 var max = new System.Numerics.Vector3(float.MinValue);
-                foreach (var vertex in SlrrMesh.Load(meshFile).SubMeshes.SelectMany(s => s.Vertices))
+                try
                 {
-                    var position = System.Numerics.Vector3.Transform(vertex.Position, render.Matrix);
-                    min = System.Numerics.Vector3.Min(min, position);
-                    max = System.Numerics.Vector3.Max(max, position);
+                    foreach (var vertex in SlrrMesh.Load(meshFile).SubMeshes.SelectMany(s => s.Vertices))
+                    {
+                        var position = System.Numerics.Vector3.Transform(vertex.Position, render.Matrix);
+                        min = System.Numerics.Vector3.Min(min, position);
+                        max = System.Numerics.Vector3.Max(max, position);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"  mesh {Path.GetFileName(meshFile),-40} cannot be read: {ex.Message}");
+                    continue;
                 }
 
                 Console.WriteLine(string.Format(culture, "  mesh {0,-40} x {1,7:0.000}..{2,7:0.000}  y {3,7:0.000}..{4,7:0.000}  z {5,7:0.000}..{6,7:0.000}",
@@ -819,7 +1066,7 @@ public static class Program
         }
     }
 
-    private static Regex Pattern(string glob) =>
+    internal static Regex Pattern(string glob) =>
         new("^" + Regex.Escape(glob).Replace(@"\*", ".*") + "$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     /// <param name="packOf">The pack a part goes to, from its rpk entry, cfg name and script path</param>
@@ -833,8 +1080,9 @@ public static class Program
             var configPath = entry.Lines.FirstOrDefault(l => l.Length > 2 && l[0] == "native" && l[1] == "part")?[2];
             if (configPath == null) continue;
 
-            var configFile = Path.Combine(game.Root, configPath);
-            if (!File.Exists(configFile)) continue;
+            // A cfg outside the install counts as missing
+            var configFile = game.ContentFile(configPath);
+            if (configFile == null) continue;
 
             // Several entries may share one cfg; the type id keeps their names apart
             var name = Path.GetFileNameWithoutExtension(configPath);
@@ -876,8 +1124,8 @@ public static class Program
             }
         }
 
-        var scriptFile = source.ScriptPath == null ? null : Path.Combine(game.Root, source.ScriptPath);
-        var script = scriptFile != null && File.Exists(scriptFile) ? scripts.Evaluate(scriptFile) : null;
+        var scriptFile = game.ContentFile(source.ScriptPath);
+        var script = scriptFile != null ? scripts.Evaluate(scriptFile) : null;
 
         // Fields like crankshaft_slot_ID name the slot a kind of part goes on; 0 = the part has no such slot
         var properties = script?.Properties ?? new Dictionary<string, object>();
@@ -1176,7 +1424,7 @@ public static class Program
             }
         }
 
-        var fittings = definitions.Values.SelectMany(d => d.Slots).SelectMany(s => s.Fits.Concat(s.Takes)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(f => f);
+        var fittings = definitions.Values.SelectMany(d => d.Slots).SelectMany(s => s.Fits.Concat(s.Takes)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(f => f, StringComparer.OrdinalIgnoreCase);
         foreach (var fitting in fittings)
         {
             var fitters = definitions.Values.Where(d => d.Slots.Any(s => s.Fits.Contains(fitting, StringComparer.OrdinalIgnoreCase))).ToList();
@@ -1192,7 +1440,7 @@ public static class Program
 
         static string Packs(List<PartDefinition> parts) => string.Join(", ", parts
             .GroupBy(p => p.Id[..p.Id.LastIndexOf('/')], StringComparer.OrdinalIgnoreCase)
-            .OrderBy(g => g.Key)
+            .OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase)
             .Select(g => $"{g.Key} {g.Count()}"));
     }
 
@@ -1262,7 +1510,7 @@ public static class Program
     {
         // An evaluator of its own: the classes of a pack that is left out are of no use to the game
         var scripts = new SlrrScriptEvaluator(game);
-        var geometry = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var geometry = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         var newTraits = newParts.Select(Traits).ToList();
         var twins = SlrrPackTwins.Match(oldParts.Select(Traits).ToList(), newTraits);
 
@@ -1302,11 +1550,26 @@ public static class Program
 
         return aliases;
 
+        // A part that cannot be read is matched by what is known of it (its id and name): one bad part of a
+        // replaced pack must not end the run. It fails again where it is converted, if it is, and is counted there
         SlrrPartTraits Traits(SourcePart source)
         {
+            try
+            {
+                return ReadTraits(source);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"    {source.Id}: {ex.Message}; matched by its name alone");
+                return new SlrrPartTraits { Id = source.Id, Name = source.Name, Slots = new(), Geometry = new(), Textures = new() };
+            }
+        }
+
+        SlrrPartTraits ReadTraits(SourcePart source)
+        {
             var config = SlrrPartConfig.Load(source.ConfigFile);
-            var scriptFile = source.ScriptPath == null ? null : Path.Combine(game.Root, source.ScriptPath);
-            var script = scriptFile != null && File.Exists(scriptFile) ? scripts.Evaluate(scriptFile) : null;
+            var scriptFile = game.ContentFile(source.ScriptPath);
+            var script = scriptFile != null ? scripts.Evaluate(scriptFile) : null;
             var renders = SelectRenders(game, source, config);
 
             var traits = new SlrrPartTraits
@@ -1316,7 +1579,7 @@ public static class Program
                 DisplayName = script?.DisplayName,
                 BaseClass = script?.BaseClass,
                 Slots = config.Slots.Select(s => s.Id).ToHashSet(),
-                Geometry = renders.Select(r => GeometryOf(r.MeshFile)).ToHashSet(),
+                Geometry = renders.Select(r => GeometryOf(r.MeshFile)).OfType<string>().ToHashSet(),
                 Textures = renders.SelectMany(r => r.TextureFiles).Where(t => t != null)
                     .Select(t => Path.GetFileNameWithoutExtension(t!).ToLowerInvariant()).ToHashSet()
             };
@@ -1330,35 +1593,101 @@ public static class Program
             return traits;
         }
 
-        string GeometryOf(string meshFile) =>
-            geometry.TryGetValue(meshFile, out var hash) ? hash : geometry[meshFile] = SlrrPackTwins.GeometryHash(SlrrMesh.Load(meshFile));
+        // A mesh that cannot be read has no shape to match by; the part is matched by the rest
+        string? GeometryOf(string meshFile)
+        {
+            if (geometry.TryGetValue(meshFile, out var hash)) return hash;
+
+            try
+            {
+                hash = SlrrPackTwins.GeometryHash(SlrrMesh.Load(meshFile));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"    {Path.GetFileName(meshFile)}: {ex.Message}; its shape is left out of the match");
+                hash = null;
+            }
+
+            return geometry[meshFile] = hash;
+        }
     }
 
     /// <summary>
     /// The game runs the part scripts itself, so it gets the classes: everything the evaluation touched plus the
-    /// shared part classes, in the folder layout class lookup depends on.
+    /// shared part classes
     /// </summary>
-    /// <param name="replace">Whether the classes are all there are: what was in the folder before goes</param>
-    private static int CopyScripts(SlrrGame game, SlrrScriptEvaluator scripts, string target, bool replace)
+    private static HashSet<string> ScriptFiles(SlrrGame game, SlrrScriptEvaluator scripts)
     {
         var files = new HashSet<string>(scripts.UsedClassFiles, StringComparer.OrdinalIgnoreCase);
         var shared = Path.Combine(game.Root, PartsFolder, "scripts");
         if (Directory.Exists(shared)) files.UnionWith(Directory.EnumerateFiles(shared, "*.class", SearchOption.AllDirectories));
+        return files;
+    }
 
-        if (replace && Directory.Exists(target)) Directory.Delete(target, true);
+    /// <summary>
+    /// A full run's classes, in the staging folder, for <see cref="Commit"/> to swap in whole for what was there. The
+    /// classes of the output's folder that the kept packs' parts use are not among the run's: the old folder's
+    /// classes the run did not make are kept with them
+    /// </summary>
+    private static void StageScripts(Run run, IEnumerable<string> classes)
+    {
+        var staged = Path.Combine(run.Staging, PartScripts.Folder);
+        CopyClasses(run.Game.Root, classes, staged);
+        foreach (var root in KeptRoots(run))
+        {
+            var kept = ConversionOutput.FillMissing(staged, Path.Combine(root, PartScripts.Folder));
+            if (kept > 0) Console.WriteLine($"  {kept} script classes of {root} kept for the kept packs");
+        }
+    }
 
-        var root = Path.GetFullPath(game.Root);
+    /// <summary>Copies the classes in the folder layout class lookup depends on</summary>
+    private static void CopyClasses(string gameRoot, IEnumerable<string> files, string destinationRoot)
+    {
+        var root = Path.GetFullPath(gameRoot);
         foreach (var file in files)
         {
-            var relative = Path.GetRelativePath(root, Path.GetFullPath(file));
-            if (relative.StartsWith("..", StringComparison.Ordinal)) continue;
+            // Only classes inside the install keep their layout (on another drive the relative path is the file's
+            // absolute path, and the copy would land on the file itself)
+            if (!PathNames.IsUnder(root, file)) continue;
 
-            var destination = Path.Combine(target, relative);
+            var destination = Path.Combine(destinationRoot, Path.GetRelativePath(root, Path.GetFullPath(file)));
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
             File.Copy(file, destination, true);
         }
+    }
 
-        return files.Count;
+    /// <summary>
+    /// Moves a pack's models in from the staging folder: before any pack file names them. Returns the names of the
+    /// models it moved, the ones its pack file names
+    /// </summary>
+    private static HashSet<string> MoveModelsIn(string folder, string staging)
+    {
+        Directory.CreateDirectory(folder);
+        var made = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!Directory.Exists(staging)) return made;
+
+        foreach (var file in Directory.EnumerateFiles(staging, "*.kn5").ToList())
+        {
+            var name = Path.GetFileName(file);
+            File.Move(file, Path.Combine(folder, name), overwrite: true);
+            made.Add(name);
+        }
+
+        return made;
+    }
+
+    /// <summary>
+    /// Writes a pack's definitions once its models are in, then takes away the models of its last conversion that
+    /// this one did not make: the pack file never names a model that is not there
+    /// </summary>
+    private static void WritePack(string folder, string json, HashSet<string> made)
+    {
+        SafeFile.WriteAllText(Path.Combine(folder, PartPack.FileName), json);
+
+        foreach (var file in Directory.EnumerateFiles(folder, "*.kn5").Where(f => !made.Contains(Path.GetFileName(f))).ToList())
+        {
+            File.Delete(file);
+        }
     }
 
     /// <summary>Takes a converted pack out of the output; a folder that is anything else is left alone</summary>
@@ -1372,19 +1701,13 @@ public static class Program
         if (!Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder);
     }
 
-    /// <summary>Empties a previously converted pack folder; refuses to touch anything else</summary>
-    private static bool PrepareFolder(string folder)
+    /// <summary>Whether a pack may be converted into the folder: one it converted before, an empty one or none; nothing else is touched</summary>
+    private static bool CanConvertInto(string folder)
     {
-        if (Directory.Exists(folder))
-        {
-            var isPack = File.Exists(Path.Combine(folder, PartPack.FileName));
-            var isEmpty = !Directory.EnumerateFileSystemEntries(folder).Any();
-            if (!isPack && !isEmpty) return false;
+        if (!Directory.Exists(folder)) return true;
 
-            foreach (var file in Directory.EnumerateFiles(folder, "*.kn5")) File.Delete(file);
-        }
-
-        Directory.CreateDirectory(folder);
-        return true;
+        var isPack = File.Exists(Path.Combine(folder, PartPack.FileName));
+        var isEmpty = !Directory.EnumerateFileSystemEntries(folder).Any();
+        return isPack || isEmpty;
     }
 }

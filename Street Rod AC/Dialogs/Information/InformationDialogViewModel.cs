@@ -22,6 +22,12 @@ namespace Street_Rod_AC.Dialogs.Information
             set => SetProperty(ref _message, value);
         }
 
+        /// <summary>
+        /// The same message, word for word, is only shown once at a time; one with something to do on OK is
+        /// always shown, so no callback is dropped
+        /// </summary>
+        public override string? DuplicateKey => _okCallback == null ? $"{Title}\n{Message}" : null;
+
         public RelayCommand OkCommand { get; }
 
         public InformationDialogViewModel(
@@ -40,8 +46,9 @@ namespace Street_Rod_AC.Dialogs.Information
 
         private void OnOk()
         {
-            _okCallback?.Invoke();
+            // Closed first, so a dialog the callback shows is not closed along with this one
             _dialogService.CloseDialog();
+            _okCallback?.Invoke();
         }
     }
 }

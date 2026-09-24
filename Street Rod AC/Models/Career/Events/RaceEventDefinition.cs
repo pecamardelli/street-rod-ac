@@ -143,7 +143,7 @@ namespace Street_Rod_AC.Models.Career.Events
         public string? Nickname { get; set; }
 
         /// <summary>
-        /// AC AI skill level (80-100)
+        /// AC AI skill level (90-100; Opponent clamps to it)
         /// </summary>
         public int Skill { get; set; } = 90;
 

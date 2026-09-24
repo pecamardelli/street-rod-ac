@@ -1,14 +1,54 @@
 # Makes the game's parts content out of the SLRR install: the packs named after what they hold, sorted into
 # engines/rims/tyres/exhaust/suspension/brakes, fictional, modern and non-mechanical parts left out.
 # See docs/systems/parts-system.md for what each rule is there for.
+#
+# The SLRR install and the folder of build notes are this machine's: pass -Slrr and -Notes, or set SRAC_SLRR and
+# SRAC_SLRR_NOTES once. A folder that is not there stops the run (the notes' engine builds would silently go).
+# The converter is built (Release) from the sources first, so a stale build never makes the content; -Converter runs
+# a given exe instead. The exit code is the converter's: 0 clean, 1 a rule or folder it refused (or a commit that
+# stopped part way, which it says), 2 parts or packs left out, or packs of unreadable rpks kept as they were (listed at
+# the end of its output).
 param(
-    [string]$Slrr = "D:\JUEGOS\Street Legal Racing - Redline",
+    [string]$Slrr = $env:SRAC_SLRR,
     [string]$Output = (Join-Path $PSScriptRoot "..\Street Rod AC\Assets\Parts"),
-    [string]$Notes = "D:\JUEGOS\SLRR\SCRIPTS",
-    [string]$Converter = (Join-Path $PSScriptRoot "SlrrPartsConverter\bin\Release\net10.0\SlrrPartsConverter.exe"),
+    [string]$Notes = $env:SRAC_SLRR_NOTES,
+    [string]$Converter = "",
     # Part id patterns to measure (slots against mesh bounds) instead of converting: the joint conventions of a pack
     [string]$Measure = ""
 )
+
+$ErrorActionPreference = 'Stop'
+
+function Fail([string]$message) {
+    [Console]::Error.WriteLine("convert-parts: $message")
+    exit 1
+}
+
+# Windows PowerShell 5.1 passes a native argument that ends in a backslash as "...\", which the converter reads as an
+# escaped quote: that argument swallows the ones after it. Folders set in the environment often end in one
+function Trim-Folder([string]$folder) {
+    if (-not $folder) { return $folder }
+    $trimmed = $folder.TrimEnd('\', '/')
+    # A drive root keeps its separator ("D:" alone is that drive's current folder), with a dot after it
+    if ($trimmed -match '^[A-Za-z]:$') { return "$trimmed\." }
+    return $trimmed
+}
+$Slrr = Trim-Folder $Slrr
+$Output = Trim-Folder $Output
+$Notes = Trim-Folder $Notes
+
+if (-not $Slrr) { Fail "no SLRR folder: pass -Slrr <folder> or set SRAC_SLRR" }
+# Not Join-Path: on a drive that is not there it throws before Fail can say what is wrong
+if (-not (Test-Path -LiteralPath "$Slrr\parts" -PathType Container)) { Fail "$Slrr is not an SLRR install (no 'parts' folder)" }
+if (-not $Notes) { Fail "no build notes folder: pass -Notes <folder> or set SRAC_SLRR_NOTES" }
+if (-not (Test-Path -LiteralPath $Notes -PathType Container)) { Fail "the build notes folder is not there: $Notes" }
+
+if (-not $Converter) {
+    dotnet build (Join-Path $PSScriptRoot "SlrrPartsConverter\SlrrPartsConverter.csproj") -c Release -v q -nologo
+    if ($LASTEXITCODE -ne 0) { Fail "the converter does not build" }
+    $Converter = Join-Path $PSScriptRoot "SlrrPartsConverter\bin\Release\net10.0\SlrrPartsConverter.exe"
+}
+if (-not (Test-Path -LiteralPath $Converter -PathType Leaf)) { Fail "no converter at $Converter" }
 
 # Packs a later release took the place of: the old one stays installed (car scripts and build notes name it) and
 # every part of it resolves to its twin in the new one. Chrysler V8 Pack 4.5 for the MagnumForce Mopar pack; the
@@ -461,9 +501,10 @@ $shift = @(
 
 # Slots nudged into place in the garage (F5 in the workbench) are kept in tools\slot_shifts.json for good. The game
 # writes them next to the content it runs on, which is a build folder: those files are folded in and taken away
-$absorb = @(Get-ChildItem (Join-Path $PSScriptRoot "..\Street Rod AC\bin") -Recurse -Filter slot_shifts.json -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }) -join ','
-# An empty argument is dropped on the way to the converter, which would then read --absorb as the pack filter
-$absorbArgs = if ($absorb) { @("--absorb", $absorb) } else { @() }
+# One --absorb per file: a path may hold a comma. None at all when there are none (an empty argument is dropped on the
+# way to the converter, which would then read --absorb as the pack filter)
+$absorbArgs = @(Get-ChildItem (Join-Path $PSScriptRoot "..\Street Rod AC\bin") -Recurse -Filter slot_shifts.json -ErrorAction SilentlyContinue |
+    ForEach-Object { "--absorb"; $_.FullName })
 $measureArgs = if ($Measure) { @("--measure", $Measure) } else { @() }
 
 # The content in the repo is what saves were made with: ids it had that this run does not produce any more stay
@@ -471,3 +512,4 @@ $measureArgs = if ($Measure) { @("--measure", $Measure) } else { @() }
 $previous = Join-Path $PSScriptRoot "..\Street Rod AC\Assets\Parts"
 
 & $Converter $Slrr $Output --notes $Notes --replace $replace --twin $twin --rename $rename --drop $drop --merge $merge --model $model --single $single --name $name --pads $pads --fit $fit --shift $shift --shifts (Join-Path $PSScriptRoot "slot_shifts.json") --previous $previous @absorbArgs @measureArgs
+exit $LASTEXITCODE

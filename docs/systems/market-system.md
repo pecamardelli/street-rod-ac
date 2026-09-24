@@ -40,10 +40,14 @@ catalog order starves whole dealers.
 3. Top each dealer back up to its own target
 
 ## Pricing
-- Start with `CarProfile.BasePrice`
-- Multiply by condition factor (0.3 = 50%, 1.0 = 110%)
-- Add random variation ±20%
-- Round to nearest $100
+What a car is worth has one formula, `CarValuation` (`Services/Market/CarValuation.cs`), used by the market, an
+opponent's car, a pink-slipped car going back on a lot and the pink-slip challenge logic:
+- `CarProfile.BasePrice` × condition factor `0.5 + 0.6 × condition` (condition 0 = 50%, 1.0 = 110%)
+- plus half of what the car's engine parts cost new beyond its factory build's, scaled by condition (`ValueOf`, with the
+  parts catalog; without it the engine counts as the factory one)
+- rounded to the nearest $100
+
+A listing's price is that times the dealer's random variation of ±20%.
 
 ## Dealer Locations
 Ten dealers, defined in `Assets/Dealers/dealers.json` and read by `DealerCatalog`: Downtown Motors,
@@ -63,14 +67,23 @@ of the range (the roll still leads, and one car in twelve is not shifted at all)
 cars without making a good find impossible.
 
 ## Purchase Flow
-`CarPurchaseService` owns this, shared by the listings screen and the dealer lot.
+`CarPurchaseService` owns this, shared by the listings screen and the dealer lot (`Screens/Shared/PurchaseFlow.cs`
+holds the confirmation and result dialogs).
 
 1. Validate funds and availability
-2. Create `CarInstance` from listing
-3. Add to `GameState.Player.Cars`
-4. Deduct money
-5. Mark listing `IsSold = true`
-6. Save game state
+2. Claim the listing (`IsSold = true`) before anything is awaited, so a second confirm cannot buy it twice; it is
+   released again if making the car fails
+3. Create `CarInstance` from listing (a part pack that cannot be put together is logged; the car sells without it and
+   `EnsurePartsAsync` fills it in later)
+4. Add to `GameState.Player.Cars`
+5. Deduct money
+6. Spend `GameAction.BuyCar` time
+7. Save game state
+
+## Cars Going Back on a Lot
+`ListCar(car, price, location, listedDate)` turns a car into a listing with its parts (engine, running gear), the
+seller's engine summary and whether it has been worked on. A pink-slipped car goes back this way at its `ValueOf`, to
+`TradeInLocation(dealers)`: the roughest lot (lowest `conditionCenter`).
 
 ## Key Service
 `UsedCarMarketService` (`IUsedCarMarketService`):
@@ -78,10 +91,14 @@ cars without making a good find impossible.
 - `RefreshMarketAsync(listings, dealers, date)` - Daily refresh. Engines are put together only for the listings that
   make it into the market, on a worker thread; the listings are looked at and handed back on the calling thread
 - `GetAvailableListings(listings)` - Filter unsold
+- `ListCar(car, price, location, listedDate)` - A car (with its parts) as a listing
+- `ValueOf(car)` - What the car is worth (`CarValuation`)
+- `TradeInLocation(dealers)` - The dealer that takes in traded cars
 
 ## Files
 - `Services/Market/UsedCarMarketService.cs`
 - `Services/Market/CarPurchaseService.cs`
+- `Services/Market/CarValuation.cs`
 - `Services/Dealers/DealerCatalog.cs`
 - `Assets/Dealers/dealers.json`
 - `Services/Market/IUsedCarMarketService.cs`

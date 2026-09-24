@@ -1,0 +1,27 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- Font size scale. Every FontSize in the views comes from here, so a size is changed in one place.
+         The scale is the sizes the screens actually use, smallest to largest -->
+    <sys:Double x:Key="FontSizeMicro">9</sys:Double>
+    <sys:Double x:Key="FontSizeTiny">10</sys:Double>
+    <sys:Double x:Key="FontSizeCaption">11</sys:Double>
+    <sys:Double x:Key="FontSizeSmall">12</sys:Double>
+    <sys:Double x:Key="FontSizeCompact">13</sys:Double>
+    <sys:Double x:Key="FontSizeBody">14</sys:Double>
+    <sys:Double x:Key="FontSizeBodyLarge">15</sys:Double>
+    <sys:Double x:Key="FontSizeSubheading">16</sys:Double>
+    <sys:Double x:Key="FontSizeHeading">18</sys:Double>
+    <sys:Double x:Key="FontSizeHeadingLarge">20</sys:Double>
+    <sys:Double x:Key="FontSizeCardTitle">21</sys:Double>
+    <sys:Double x:Key="FontSizeSubtitle">22</sys:Double>
+    <sys:Double x:Key="FontSizeTitleSmall">24</sys:Double>
+    <sys:Double x:Key="FontSizeTitle">28</sys:Double>
+    <sys:Double x:Key="FontSizeTitleLarge">30</sys:Double>
+    <sys:Double x:Key="FontSizeScreenTitle">32</sys:Double>
+    <sys:Double x:Key="FontSizeDisplaySmall">36</sys:Double>
+    <sys:Double x:Key="FontSizeDisplay">48</sys:Double>
+    <sys:Double x:Key="FontSizeHero">72</sys:Double>
+
+</ResourceDictionary>

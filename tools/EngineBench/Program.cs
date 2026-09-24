@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts;
@@ -14,6 +15,15 @@ namespace Street_Rod_AC;
 /// </summary>
 public static class Program
 {
+    /// <summary>
+    /// How far a rated build's modelled power may be off its rated figure before <c>rated</c>/<c>all</c> fail. The model
+    /// is fitted to about 15% mean absolute error (the ratings mix SLRR dyno readings and factory figures); a build
+    /// several times further off has lost a part in a conversion or the model broke
+    /// </summary>
+    private const double MaxRatedError = 0.5;
+
+    private const int DefaultTuneCount = 10;
+
     public static int Main(string[] args)
     {
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -31,6 +41,7 @@ public static class Program
             Console.WriteLine("       EngineBench <parts folder> car <AC car folder> <build id> [output folder]   every data file the car's parts change");
             Console.WriteLine("       EngineBench <parts folder> sound <AC car folder> <car id> [output folder]   the car's sound written for another car id");
             Console.WriteLine("       EngineBench <parts folder> sounds <AC cars folder> [sounds folder]        the sound library, and the sound every build gets");
+            Console.WriteLine("A <build id> is the exact id or a part of one; a part that more than one build's id holds is refused with a list of them");
             return 1;
         }
 
@@ -43,6 +54,7 @@ public static class Program
                 foreach (var build in catalog.EngineBuilds) Console.WriteLine($"  {build.Id,-62} {build.Name}");
                 return 0;
 
+            // Both fail when a rated build no longer runs or is far off its rating: the check after a converter run
             case "rated":
                 return Table(catalog, catalog.EngineBuilds.Where(b => b.RatedPower != null));
 
@@ -62,7 +74,14 @@ public static class Program
                 return Cars(catalog, args[2]);
 
             case "tune" when args.Length > 2:
-                return Tune(catalog, args[2], args.Length > 3 ? int.Parse(args[3]) : 10);
+                var count = DefaultTuneCount;
+                if (args.Length > 3 && (!int.TryParse(args[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out count) || count < 1))
+                {
+                    Console.WriteLine($"tune takes a count of 1 or more, not '{args[3]}': EngineBench <parts folder> tune <build id> [count]");
+                    return 1;
+                }
+
+                return Tune(catalog, args[2], count);
 
             case "bench" when args.Length > 2:
                 return Bench(catalog, args[2]);
@@ -92,12 +111,15 @@ public static class Program
     {
         Console.WriteLine($"{"build",-48} {"rated",6} {"model",6} {"error",6}  {"@rpm",5} {"Nm",5} {"@rpm",5} {"litres",6} {"CR",5}  problem");
         var errors = new List<double>();
+        // Rated builds that do not run, or run far off their rating (unrated ones that do not run are known and listed only)
+        var failures = new List<string>();
         foreach (var build in builds)
         {
             var tree = PartTreeBuilder.BuildEngine(catalog, build);
             if (tree == null)
             {
                 Console.WriteLine($"{Short(build.Id),-48} no engine block among its parts");
+                if (build.RatedPower != null) failures.Add($"{build.Id}: no engine block among its parts");
                 continue;
             }
 
@@ -105,6 +127,11 @@ public static class Program
             var dyno = report.Dyno;
             var error = build.RatedPower is { } rated && dyno != null ? (dyno.MaxPowerHp - rated) / rated : (double?)null;
             if (error != null && report.Problem == null) errors.Add(error.Value);
+            if (build.RatedPower != null)
+            {
+                if (report.Problem != null || dyno == null) failures.Add($"{build.Id}: {report.Problem ?? "no dyno run"}");
+                else if (Math.Abs(error!.Value) > MaxRatedError) failures.Add($"{build.Id}: {error:+0%;-0%} off its rated {build.RatedPower:0} hp");
+            }
 
             Console.WriteLine($"{Short(build.Id),-48} {build.RatedPower,6:0} {dyno?.MaxPowerHp,6:0} {error,6:+0%;-0%}  {dyno?.MaxPowerRpm,5:0} " +
                               $"{dyno?.MaxTorque,5:0} {dyno?.MaxTorqueRpm,5:0} {dyno?.Displacement * 1000,6:0.00} {dyno?.Compression,5:0.0}  " +
@@ -114,7 +141,12 @@ public static class Program
         if (errors.Count > 0)
             Console.WriteLine($"\n{errors.Count} rated builds that run: mean error {errors.Average():+0.0%;-0.0%}, " +
                               $"mean absolute {errors.Average(Math.Abs):0.0%}, worst {errors.MaxBy(Math.Abs):+0.0%;-0.0%}");
-        return 0;
+
+        if (failures.Count == 0) return 0;
+
+        Console.WriteLine($"\n{failures.Count} rated build(s) do not run or are more than {MaxRatedError:0%} off:");
+        foreach (var failure in failures) Console.WriteLine("  " + failure);
+        return 1;
     }
 
     /// <summary>What the scripts feed the engine model, side by side</summary>
@@ -143,13 +175,8 @@ public static class Program
 
     private static int Show(PartsCatalog catalog, string id)
     {
-        var build = catalog.EngineBuilds.FirstOrDefault(b => b.Id.Equals(id, StringComparison.OrdinalIgnoreCase))
-                    ?? catalog.EngineBuilds.FirstOrDefault(b => b.Id.Contains(id, StringComparison.OrdinalIgnoreCase));
-        if (build == null)
-        {
-            Console.WriteLine($"No build '{id}'");
-            return 1;
-        }
+        var build = FindBuild(catalog.EngineBuilds, b => b.Id, id);
+        if (build == null) return 1;
 
         var tree = PartTreeBuilder.BuildEngine(catalog, build);
         if (tree == null)
@@ -185,9 +212,11 @@ public static class Program
     /// <summary>Writes the Assetto Corsa data files a build changes, made from an unpacked car data folder</summary>
     private static int Export(PartsCatalog catalog, string id, string carData, string output)
     {
-        var build = catalog.EngineBuilds.FirstOrDefault(b => b.Id.Contains(id, StringComparison.OrdinalIgnoreCase));
-        var tree = build == null ? null : PartTreeBuilder.BuildEngine(catalog, build);
-        if (build == null || tree == null)
+        var build = FindBuild(catalog.EngineBuilds, b => b.Id, id);
+        if (build == null) return 1;
+
+        var tree = PartTreeBuilder.BuildEngine(catalog, build);
+        if (tree == null)
         {
             Console.WriteLine($"No usable build '{id}'");
             return 1;
@@ -226,17 +255,30 @@ public static class Program
 
         foreach (var folder in AcCarFolder.InstalledCars(carsFolder))
         {
-            var uiFile = Path.Combine(folder, "ui", "ui_car.json");
-            if (!File.Exists(uiFile)) continue;
+            if (!File.Exists(AcCarUi.PathIn(folder))) continue;
 
-            var ui = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(uiFile));
-            var brand = (string?)ui["brand"] ?? "";
-            var name = (string?)ui["name"] ?? "";
-            var bhp = StockEngineMatcher.ParsePower((string?)ui["specs"]?["bhp"]);
+            // Mod cars often ship a ui_car.json that is not quite JSON: the car is reported and the run goes on
+            try
+            {
+                var ui = AcCarUi.TryRead(folder, out var error);
+                if (ui == null)
+                {
+                    Console.WriteLine($"{Path.GetFileName(folder)}: {error}");
+                    continue;
+                }
 
-            Console.WriteLine($"{Path.GetFileName(folder)}: {brand} | {name} | {bhp:0} bhp  (family '{MakeFamilies.FamilyOf(brand + " " + name)}')");
-            foreach (var match in StockEngineMatcher.Rank(index, brand, name, bhp).Take(4))
-                Console.WriteLine($"    {match.Score,6:0.00}  {match.Build.PowerHp,4:0} hp {match.Build.Litres,5:0.00} l  [{match.Build.Family,-6}] {match.Build.Build.Name}  ({match.Build.Build.Id})");
+                var brand = AcCarUi.GetString(ui, "brand") ?? "";
+                var name = AcCarUi.GetString(ui, "name") ?? "";
+                var bhp = AcSpecs.ParsePower(AcCarUi.GetString(AcCarUi.GetObject(ui, "specs"), "bhp"));
+
+                Console.WriteLine($"{Path.GetFileName(folder)}: {brand} | {name} | {bhp:0} bhp  (family '{MakeFamilies.FamilyOf(brand + " " + name)}')");
+                foreach (var match in StockEngineMatcher.Rank(index, brand, name, bhp).Take(4))
+                    Console.WriteLine($"    {match.Score,6:0.00}  {match.Build.PowerHp,4:0} hp {match.Build.Litres,5:0.00} l  [{match.Build.Family,-6}] {match.Build.Build.Name}  ({match.Build.Build.Id})");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{Path.GetFileName(folder)}: {ex.Message}");
+            }
         }
 
         return 0;
@@ -245,16 +287,12 @@ public static class Program
     private static int Tune(PartsCatalog catalog, string id, int count)
     {
         var index = EngineBuildIndex.Create(catalog);
-        var stock = index.Runnable.FirstOrDefault(b => b.Build.Id.Contains(id, StringComparison.OrdinalIgnoreCase));
-        if (stock == null)
-        {
-            Console.WriteLine($"No build '{id}' that runs");
-            return 1;
-        }
+        var stock = FindBuild(index.Runnable, b => b.Build.Id, id, " that runs");
+        if (stock == null) return 1;
 
         Console.WriteLine($"{stock.Build.Name}: {stock.PowerHp:0} hp, family '{stock.Family}'\n");
         var random = new Random(1);
-        var started = DateTime.Now;
+        var stopwatch = Stopwatch.StartNew();
         for (var i = 0; i < count; i++)
         {
             var level = random.NextDouble();
@@ -265,7 +303,7 @@ public static class Program
                               $"{(engine.IsModified ? string.Join(", ", engine.Changes) : "stock")}{(engine.Report.Runs ? "" : "  DOES NOT RUN: " + engine.Report.Problem)}");
         }
 
-        Console.WriteLine($"\n{(DateTime.Now - started).TotalMilliseconds / count:0} ms per engine");
+        Console.WriteLine($"\n{stopwatch.Elapsed.TotalMilliseconds / count:0} ms per engine");
         return 0;
     }
 
@@ -273,8 +311,10 @@ public static class Program
     private static int Bench(PartsCatalog catalog, string id)
     {
         var index = EngineBuildIndex.Create(catalog);
-        var stock = index.Runnable.FirstOrDefault(b => b.Build.Id.Contains(id, StringComparison.OrdinalIgnoreCase));
-        var engine = stock == null ? null : EngineFactory.CreateStock(catalog, stock, 1.0, new Random(1));
+        var stock = FindBuild(index.Runnable, b => b.Build.Id, id, " that runs");
+        if (stock == null) return 1;
+
+        var engine = EngineFactory.CreateStock(catalog, stock, 1.0, new Random(1));
         if (engine == null)
         {
             Console.WriteLine($"No build '{id}' that runs");
@@ -415,9 +455,9 @@ public static class Program
         var index = EngineBuildIndex.Create(catalog);
         var library = SoundLibrary.Load(Path.GetFullPath(soundsFolder));
         var master = Path.GetFullPath(Path.Combine(carsFolder, "..", "sfx", AcCarSound.GuidsFileName));
-        var started = DateTime.Now;
+        var stopwatch = Stopwatch.StartNew();
         var cars = library.Harvest(carsFolder, master, SoundLibrary.StockFacts(index, catalog));
-        Console.WriteLine($"{library.Curated.Count} curated sound(s) under {library.Root}, {library.Harvested.Count} harvested off {cars} car(s) in {(DateTime.Now - started).TotalMilliseconds:0} ms\n");
+        Console.WriteLine($"{library.Curated.Count} curated sound(s) under {library.Root}, {library.Harvested.Count} harvested off {cars} car(s) in {stopwatch.Elapsed.TotalMilliseconds:0} ms\n");
         foreach (var problem in library.Problems) Console.WriteLine("  left out: " + problem);
         if (library.Problems.Count > 0) Console.WriteLine();
 
@@ -446,9 +486,11 @@ public static class Program
     /// <summary>Every data file a car's parts change: the build as its engine, the factory running gear as its wheels</summary>
     private static int Car(PartsCatalog catalog, string carFolder, string id, string? output)
     {
-        var build = catalog.EngineBuilds.FirstOrDefault(b => b.Id.Contains(id, StringComparison.OrdinalIgnoreCase));
-        var tree = build == null ? null : PartTreeBuilder.BuildEngine(catalog, build);
-        if (build == null || tree == null)
+        var build = FindBuild(catalog.EngineBuilds, b => b.Id, id);
+        if (build == null) return 1;
+
+        var tree = PartTreeBuilder.BuildEngine(catalog, build);
+        if (tree == null)
         {
             Console.WriteLine($"No usable build '{id}'");
             return 1;
@@ -504,4 +546,29 @@ public static class Program
     }
 
     private static string Short(string id) => id.Length > 48 ? id[^48..] : id;
+
+    /// <summary>
+    /// The build a command names, the same way for every command: the build of exactly that id, else the one build
+    /// whose id contains it. Several that contain it is an error listing them: a short id must not bench one build
+    /// and show another. Null (with the reason printed) when there is none or no single one.
+    /// </summary>
+    /// <param name="what">Said of the candidates when none matches, e.g. " that runs"</param>
+    private static T? FindBuild<T>(IReadOnlyCollection<T> candidates, Func<T, string> idOf, string id, string what = "") where T : class
+    {
+        var exact = candidates.FirstOrDefault(c => idOf(c).Equals(id, StringComparison.OrdinalIgnoreCase));
+        if (exact != null) return exact;
+
+        var matches = candidates.Where(c => idOf(c).Contains(id, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (matches.Count == 1) return matches[0];
+
+        if (matches.Count == 0) Console.WriteLine($"No build '{id}'{what}");
+        else
+        {
+            Console.WriteLine($"'{id}' names {matches.Count} builds{what}; give more of the id:");
+            foreach (var match in matches.Take(12)) Console.WriteLine($"  {idOf(match)}");
+            if (matches.Count > 12) Console.WriteLine("  ...");
+        }
+
+        return null;
+    }
 }

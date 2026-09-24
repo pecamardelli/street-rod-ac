@@ -62,7 +62,7 @@ dotnet sln "Street Rod AC.slnx" list
 dotnet list "Street Rod AC.slnx" package --include-transitive --format json
 
 # Non-.NET units: AC-side apps and scripts
-ls apps/lua apps/python tools/*.ps1
+ls apps/lua tools/*.ps1   # apps/python was removed 2026-09-24; list it too if it ever comes back
 ```
 
 For every .NET project capture from its `.csproj`: path, `OutputType`, `TargetFramework`, `Nullable`, `AllowUnsafeBlocks`, `UseWPF`/`UseWindowsForms`, `PackageReference`s (id + version), `Reference`s with `HintPath` (local DLLs — note path and whether it exists on disk), and **linked `<Compile Include="..\..\Street Rod AC\...">` items**. The tools compile game source by link: those files belong to the game project and must be audited once, under the game — a tool's audit covers only its own files plus how it uses the linked ones.
@@ -101,7 +101,7 @@ git ls-files | grep -iE '\.(db|pfx|snk|key|pem)$|secrets|\.env'   # things that 
 | `OutputType=WinExe` + `UseWPF`                              | WPF desktop app    |
 | `OutputType=Exe`, no UI                                     | CLI tool           |
 | `manifest.ini` + `*.lua` under `apps/lua`                   | CSP Lua app        |
-| Python AC app under `apps/python`                           | AC Python app (legacy) |
+| Python AC app under `apps/python`                           | AC Python app (legacy; removed 2026-09-24, no unit exists) |
 | `*.ps1` under `tools/`                                      | Build/ops script   |
 
 Write the classification + reference summary to `references/workspace-map.md` (overwrite each run — it's a snapshot, not history).
@@ -144,7 +144,7 @@ Write the inventory to `references/attack-surface.md` (overwrite each run; in di
 
 ## Phase 4 — Per-unit code review (parallel, bounded)
 
-Dispatch **one Explore subagent per audit slice**. Derive slices from the unit matrix, never hardcode them. The game project is large (≈260 `.cs` + ≈30 `.xaml`), so split it by top-level folder groups of similar size, e.g. `Parts/` · `Services/` · `Audio/ + Controls/ + interop windows` · `Screens/ + ViewModels/ + Views/ + Dialogs/ + Navigation/` · `Models/ + remaining`. Small units (each CLI tool, the Lua app, the legacy Python app, scripts) can share one agent. In diff mode, drop slices with no changed files. Keep the total at or under 8 agents.
+Dispatch **one Explore subagent per audit slice**. Derive slices from the unit matrix, never hardcode them. The game project is large (≈260 `.cs` + ≈30 `.xaml`), so split it by top-level folder groups of similar size, e.g. `Parts/` · `Services/` · `Audio/ + Controls/ + interop windows` · `Screens/ + ViewModels/ + Views/ + Dialogs/ + Navigation/` · `Models/ + remaining`. Small units (each CLI tool, the Lua app, scripts) can share one agent. In diff mode, drop slices with no changed files. Keep the total at or under 8 agents.
 
 Cross-cutting sections get their own agents on top of the slice agents, because a per-folder reviewer can't see them:
 
@@ -176,6 +176,8 @@ Each subagent looks for:
 
 1. Confirm every dispatched slice produced its `$WORK/audit-<slice>.md`. Do **not** accept findings from chat results alone — they cannot be re-read after a context reset.
 2. **Verify every BUG and SECURITY finding yourself** by reading the cited lines before it goes in the report. Drop anything the code does not bear out; downgrade anything that is real but not exploitable/reachable. A handful of true findings beats forty plausible ones.
+   - **Check intent before calling a mismatch a bug.** When the code disagrees with a doc, a comment or a "norm", run `git log -L <line>,<line>:<file>` (or `git log -S`) on the code side first. A commit that set the value on purpose makes the doc the finding, not the code. Example: the opponent skill floor of 90 (commit 61ca613) disagreed with docs that said 80–100. The first audit told us to "clamp to 80", but below 90 AC's AI drives too badly to make a race.
+   - **Rate by likelihood, not by the worst outcome.** A bug that needs a rare trigger (for example a ≥25 g spike in the few seconds before AC quits) is tagged *Plausible* and ranked below one that fires on a normal run, even if both end the same way.
 3. Write one findings file:
 
 ```
@@ -193,6 +195,8 @@ Structure (sorted by severity; include only the sections that ran):
 **Deterministic checks:** build <ok|failed: why> · <N> warnings (<top codes>) · vulnerable pkgs <N> · deprecated <N> · outdated <N>
 **Duplication scan:** exact <N files / N pairs / ~N lines> · renamed <N pairs / ~N lines>   (if run)
 
+Legend: ✔ = re-read by the controller · *Plausible* = real code path, but it needs an unlikely trigger or timing · no mark = verified by the slice reviewer. Every BUG and SECURITY entry carries a **Fix** line.
+
 ## Executive summary
 
 <5–10 lines, severity counts, top 3 fixes>
@@ -204,6 +208,8 @@ Structure (sorted by severity; include only the sections that ran):
   - **Fix:** <concrete change>
 
 ## STABILITY (should fix)
+
+<one line: N crash · N corrupt · N hang · N leak · N fragile>
 
 - **[CRASH|CORRUPT|HANG|LEAK|FRAGILE] <unit>/<file>:<line>** — <finding>
   - **Trigger:** <what the user does / what input or machine state>
@@ -267,7 +273,7 @@ The chat output is the executive summary only — point the user to the findings
 - **Acknowledge good patterns.** Not just a fault-finding exercise.
 - **Don't duplicate `docs/CLAUDE.md` rules.** If a convention is already documented, only flag it when violated.
 - **Audit linked source once.** Files compiled into the tools by `<Compile Include="..\..\Street Rod AC\...">` belong to the game slice.
-- **Respect deliberate decisions.** The project's memory and docs record choices that look odd out of context (running SLRR's compiled scripts in a VM instead of porting them, carbs of different packs never merged, re-implementing AC's FMOD DSP plugins). Flag how they are implemented, not that they were chosen.
+- **Respect deliberate decisions.** The project's memory and docs record choices that look odd out of context (running SLRR's compiled scripts in a VM instead of porting them, carbs of different packs never merged, re-implementing AC's FMOD DSP plugins). Flag how they are implemented, not that they were chosen. Opponent skill never goes below 90 (`Opponent.MinSkill`): AC's AI drives too badly under that. A doc that says otherwise is the thing to fix.
 - **No interactive prompts in autonomous mode.** Default to `security` and proceed.
 - **Cap subagent output.** Slices × 40 findings × 1 sentence is readable; unbounded prose is not.
 

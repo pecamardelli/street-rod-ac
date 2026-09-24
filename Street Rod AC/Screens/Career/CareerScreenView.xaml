@@ -54,7 +54,7 @@
         <!-- Title -->
         <TextBlock Text="CAREER"
                    Grid.Row="0"
-                   FontSize="28"
+                   FontSize="{StaticResource FontSizeTitle}"
                    FontWeight="Bold"
                    Foreground="{StaticResource TextPrimaryBrush}"
                    HorizontalAlignment="Center"
@@ -89,8 +89,8 @@
 
             <!-- Victory Progress Panel -->
             <Border Grid.Column="0" Grid.Row="0"
-                    Background="#DF1B1B1B"
-                    BorderBrush="#404040"
+                    Background="{StaticResource BgDarkDFBrush}"
+                    BorderBrush="{StaticResource BorderLightBrush}"
                     BorderThickness="2"
                     CornerRadius="5"
                     Margin="0,0,10,10">
@@ -102,12 +102,12 @@
 
                     <!-- Header -->
                     <Border Grid.Row="0"
-                            Background="#1A1A1A"
-                            BorderBrush="#404040"
+                            Background="{StaticResource BgPanelBrush}"
+                            BorderBrush="{StaticResource BorderLightBrush}"
                             BorderThickness="0,0,0,1"
                             Padding="15">
                         <TextBlock Text="VICTORY PROGRESS"
-                                   FontSize="16"
+                                   FontSize="{StaticResource FontSizeSubheading}"
                                    FontWeight="Bold"
                                    Foreground="{StaticResource TextPrimaryBrush}"/>
                     </Border>
@@ -120,18 +120,30 @@
                                       Margin="10">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <!-- Victory Card -->
+                                    <!-- Victory Card: later triggers win, so achieved beats active beats unlocked -->
                                     <Border Margin="0,0,0,10"
                                             CornerRadius="5"
                                             Padding="12"
+                                            BorderThickness="2"
                                             Opacity="{Binding Opacity}">
-                                        <Border.Background>
-                                            <SolidColorBrush Color="{Binding BackgroundColor}"/>
-                                        </Border.Background>
-                                        <Border.BorderThickness>2</Border.BorderThickness>
-                                        <Border.BorderBrush>
-                                            <SolidColorBrush Color="{Binding BorderColor}"/>
-                                        </Border.BorderBrush>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{StaticResource BgMediumBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{StaticResource Gray30Brush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsUnlocked}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="{StaticResource Gray50Brush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                        <Setter Property="Background" Value="{StaticResource GoldBgBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource WarningBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsAchieved}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="{StaticResource SuccessStrongBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
 
                                         <Grid>
                                             <Grid.ColumnDefinitions>
@@ -143,12 +155,25 @@
                                             <!-- Status Icon -->
                                             <TextBlock Grid.Column="0"
                                                        Text="{Binding StatusIcon}"
-                                                       FontSize="24"
+                                                       FontSize="{StaticResource FontSizeTitleSmall}"
                                                        VerticalAlignment="Center"
                                                        Margin="0,0,12,0">
-                                                <TextBlock.Foreground>
-                                                    <SolidColorBrush Color="{Binding StatusColor}"/>
-                                                </TextBlock.Foreground>
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource Gray80Brush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsUnlocked}" Value="True">
+                                                                <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                <Setter Property="Foreground" Value="{StaticResource GoldBrush}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsAchieved}" Value="True">
+                                                                <Setter Property="Foreground" Value="{StaticResource AccentSuccessBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
                                             </TextBlock>
 
                                             <!-- Victory Info -->
@@ -156,24 +181,24 @@
                                                         VerticalAlignment="Center">
                                                 <!-- Name -->
                                                 <TextBlock Text="{Binding Name}"
-                                                           FontSize="16"
+                                                           FontSize="{StaticResource FontSizeSubheading}"
                                                            FontWeight="Bold"
                                                            Foreground="{StaticResource TextPrimaryBrush}"/>
 
                                                 <!-- Description -->
                                                 <TextBlock Text="{Binding Description}"
-                                                           FontSize="12"
+                                                           FontSize="{StaticResource FontSizeSmall}"
                                                            Foreground="{StaticResource TextSecondaryBrush}"
                                                            TextWrapping="Wrap"
                                                            Margin="0,4,0,8"/>
 
                                                 <!-- Progress Bar -->
                                                 <Grid Height="20">
-                                                    <Border Background="#1A1A1A"
+                                                    <Border Background="{StaticResource BgPanelBrush}"
                                                             CornerRadius="3"
-                                                            BorderBrush="#404040"
+                                                            BorderBrush="{StaticResource BorderLightBrush}"
                                                             BorderThickness="1"/>
-                                                    <Border Background="#4A90D9"
+                                                    <Border Background="{StaticResource InfoBrush}"
                                                             CornerRadius="3"
                                                             HorizontalAlignment="Left"
                                                             Margin="2">
@@ -185,7 +210,7 @@
                                                         </Border.Width>
                                                     </Border>
                                                     <TextBlock Text="{Binding ProgressText}"
-                                                               FontSize="11"
+                                                               FontSize="{StaticResource FontSizeCaption}"
                                                                FontWeight="Bold"
                                                                Foreground="White"
                                                                HorizontalAlignment="Center"
@@ -199,11 +224,11 @@
                                                         <DataTemplate>
                                                             <StackPanel Orientation="Horizontal">
                                                                 <TextBlock Text="✓ "
-                                                                           Foreground="#90EE90"
-                                                                           FontSize="11"/>
+                                                                           Foreground="{StaticResource AccentSuccessBrush}"
+                                                                           FontSize="{StaticResource FontSizeCaption}"/>
                                                                 <TextBlock Text="{Binding}"
-                                                                           Foreground="#90EE90"
-                                                                           FontSize="11"/>
+                                                                           Foreground="{StaticResource AccentSuccessBrush}"
+                                                                           FontSize="{StaticResource FontSizeCaption}"/>
                                                             </StackPanel>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
@@ -217,10 +242,10 @@
                                                             <StackPanel Orientation="Horizontal">
                                                                 <TextBlock Text="○ "
                                                                            Foreground="{StaticResource TextSecondaryBrush}"
-                                                                           FontSize="11"/>
+                                                                           FontSize="{StaticResource FontSizeCaption}"/>
                                                                 <TextBlock Text="{Binding}"
                                                                            Foreground="{StaticResource TextSecondaryBrush}"
-                                                                           FontSize="11"/>
+                                                                           FontSize="{StaticResource FontSizeCaption}"/>
                                                             </StackPanel>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
@@ -236,10 +261,10 @@
                                                     VerticalAlignment="Top"
                                                     Margin="10,0,0,0"
                                                     Padding="10,5"
-                                                    FontSize="11"
+                                                    FontSize="{StaticResource FontSizeCaption}"
                                                     FontWeight="Bold"
-                                                    Foreground="#1A1A1A"
-                                                    Background="#FFD700"
+                                                    Foreground="{StaticResource BgPanelBrush}"
+                                                    Background="{StaticResource GoldBrush}"
                                                     BorderThickness="0"
                                                     Cursor="Hand">
                                                 <Button.Style>
@@ -256,7 +281,7 @@
                                                                     </Border>
                                                                     <ControlTemplate.Triggers>
                                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                                            <Setter TargetName="Bd" Property="Background" Value="#FFA500"/>
+                                                                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource WarningBrush}"/>
                                                                         </Trigger>
                                                                     </ControlTemplate.Triggers>
                                                                 </ControlTemplate>
@@ -276,8 +301,8 @@
 
             <!-- Stats Panel -->
             <Border Grid.Column="1" Grid.Row="0"
-                    Background="#DF1B1B1B"
-                    BorderBrush="#404040"
+                    Background="{StaticResource BgDarkDFBrush}"
+                    BorderBrush="{StaticResource BorderLightBrush}"
                     BorderThickness="2"
                     CornerRadius="5"
                     Margin="10,0,0,10">
@@ -289,12 +314,12 @@
 
                     <!-- Header -->
                     <Border Grid.Row="0"
-                            Background="#1A1A1A"
-                            BorderBrush="#404040"
+                            Background="{StaticResource BgPanelBrush}"
+                            BorderBrush="{StaticResource BorderLightBrush}"
                             BorderThickness="0,0,0,1"
                             Padding="15">
                         <TextBlock Text="YOUR STATS"
-                                   FontSize="16"
+                                   FontSize="{StaticResource FontSizeSubheading}"
                                    FontWeight="Bold"
                                    Foreground="{StaticResource TextPrimaryBrush}"/>
                     </Border>
@@ -304,24 +329,24 @@
                                   VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="15">
                             <!-- Reputation -->
-                            <Border Background="#1A1A1A"
-                                    BorderBrush="#404040"
+                            <Border Background="{StaticResource BgPanelBrush}"
+                                    BorderBrush="{StaticResource BorderLightBrush}"
                                     BorderThickness="1"
                                     CornerRadius="5"
                                     Padding="12"
                                     Margin="0,0,0,10">
                                 <StackPanel>
                                     <TextBlock Text="REPUTATION"
-                                               FontSize="11"
+                                               FontSize="{StaticResource FontSizeCaption}"
                                                FontWeight="Bold"
                                                Foreground="{StaticResource TextSecondaryBrush}"/>
                                     <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                                         <TextBlock Text="{Binding Reputation}"
-                                                   FontSize="28"
+                                                   FontSize="{StaticResource FontSizeTitle}"
                                                    FontWeight="Bold"
-                                                   Foreground="#FFD700"/>
+                                                   Foreground="{StaticResource GoldBrush}"/>
                                         <TextBlock Text="{Binding ReputationTier}"
-                                                   FontSize="14"
+                                                   FontSize="{StaticResource FontSizeBody}"
                                                    Foreground="{StaticResource TextSecondaryBrush}"
                                                    VerticalAlignment="Bottom"
                                                    Margin="10,0,0,5"/>
@@ -330,15 +355,15 @@
                             </Border>
 
                             <!-- Race Record -->
-                            <Border Background="#1A1A1A"
-                                    BorderBrush="#404040"
+                            <Border Background="{StaticResource BgPanelBrush}"
+                                    BorderBrush="{StaticResource BorderLightBrush}"
                                     BorderThickness="1"
                                     CornerRadius="5"
                                     Padding="12"
                                     Margin="0,0,0,10">
                                 <StackPanel>
                                     <TextBlock Text="RACE RECORD"
-                                               FontSize="11"
+                                               FontSize="{StaticResource FontSizeCaption}"
                                                FontWeight="Bold"
                                                Foreground="{StaticResource TextSecondaryBrush}"/>
                                     <Grid Margin="0,8,0,0">
@@ -348,20 +373,20 @@
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
                                             <TextBlock Text="{Binding TotalWins}"
-                                                       FontSize="24"
+                                                       FontSize="{StaticResource FontSizeTitleSmall}"
                                                        FontWeight="Bold"
-                                                       Foreground="#90EE90"/>
+                                                       Foreground="{StaticResource AccentSuccessBrush}"/>
                                             <TextBlock Text="Wins"
-                                                       FontSize="11"
+                                                       FontSize="{StaticResource FontSizeCaption}"
                                                        Foreground="{StaticResource TextSecondaryBrush}"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1">
                                             <TextBlock Text="{Binding TotalLosses}"
-                                                       FontSize="24"
+                                                       FontSize="{StaticResource FontSizeTitleSmall}"
                                                        FontWeight="Bold"
-                                                       Foreground="#FF6B6B"/>
+                                                       Foreground="{StaticResource DangerBrush}"/>
                                             <TextBlock Text="Losses"
-                                                       FontSize="11"
+                                                       FontSize="{StaticResource FontSizeCaption}"
                                                        Foreground="{StaticResource TextSecondaryBrush}"/>
                                         </StackPanel>
                                     </Grid>
@@ -373,15 +398,15 @@
                             </Border>
 
                             <!-- Pink Slips -->
-                            <Border Background="#1A1A1A"
-                                    BorderBrush="#404040"
+                            <Border Background="{StaticResource BgPanelBrush}"
+                                    BorderBrush="{StaticResource BorderLightBrush}"
                                     BorderThickness="1"
                                     CornerRadius="5"
                                     Padding="12"
                                     Margin="0,0,0,10">
                                 <StackPanel>
                                     <TextBlock Text="PINK SLIPS"
-                                               FontSize="11"
+                                               FontSize="{StaticResource FontSizeCaption}"
                                                FontWeight="Bold"
                                                Foreground="{StaticResource TextSecondaryBrush}"/>
                                     <Grid Margin="0,8,0,0">
@@ -391,20 +416,20 @@
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
                                             <TextBlock Text="{Binding PinkSlipsWon}"
-                                                       FontSize="20"
+                                                       FontSize="{StaticResource FontSizeHeadingLarge}"
                                                        FontWeight="Bold"
-                                                       Foreground="#90EE90"/>
+                                                       Foreground="{StaticResource AccentSuccessBrush}"/>
                                             <TextBlock Text="Won"
-                                                       FontSize="11"
+                                                       FontSize="{StaticResource FontSizeCaption}"
                                                        Foreground="{StaticResource TextSecondaryBrush}"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1">
                                             <TextBlock Text="{Binding PinkSlipsLost}"
-                                                       FontSize="20"
+                                                       FontSize="{StaticResource FontSizeHeadingLarge}"
                                                        FontWeight="Bold"
-                                                       Foreground="#FF6B6B"/>
+                                                       Foreground="{StaticResource DangerBrush}"/>
                                             <TextBlock Text="Lost"
-                                                       FontSize="11"
+                                                       FontSize="{StaticResource FontSizeCaption}"
                                                        Foreground="{StaticResource TextSecondaryBrush}"/>
                                         </StackPanel>
                                     </Grid>
@@ -412,15 +437,15 @@
                             </Border>
 
                             <!-- Other Stats -->
-                            <Border Background="#1A1A1A"
-                                    BorderBrush="#404040"
+                            <Border Background="{StaticResource BgPanelBrush}"
+                                    BorderBrush="{StaticResource BorderLightBrush}"
                                     BorderThickness="1"
                                     CornerRadius="5"
                                     Padding="12"
                                     Margin="0,0,0,10">
                                 <StackPanel>
                                     <TextBlock Text="OTHER"
-                                               FontSize="11"
+                                               FontSize="{StaticResource FontSizeCaption}"
                                                FontWeight="Bold"
                                                Foreground="{StaticResource TextSecondaryBrush}"
                                                Margin="0,0,0,8"/>
@@ -434,11 +459,11 @@
                                     </TextBlock>
                                     <TextBlock Margin="0,0,0,4">
                                         <Run Text="Total Earnings: " Foreground="{StaticResource TextSecondaryBrush}"/>
-                                        <Run Text="{Binding TotalEarnings, Mode=OneWay}" FontWeight="Bold" Foreground="#90EE90"/>
+                                        <Run Text="{Binding TotalEarnings, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource AccentSuccessBrush}"/>
                                     </TextBlock>
                                     <TextBlock>
                                         <Run Text="Net Profit: " Foreground="{StaticResource TextSecondaryBrush}"/>
-                                        <Run Text="{Binding NetEarnings, Mode=OneWay}" FontWeight="Bold" Foreground="#90EE90"/>
+                                        <Run Text="{Binding NetEarnings, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource AccentSuccessBrush}"/>
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
@@ -449,8 +474,8 @@
 
             <!-- Milestones Panel -->
             <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1"
-                    Background="#DF1B1B1B"
-                    BorderBrush="#404040"
+                    Background="{StaticResource BgDarkDFBrush}"
+                    BorderBrush="{StaticResource BorderLightBrush}"
                     BorderThickness="2"
                     CornerRadius="5"
                     Margin="0,10,0,0">
@@ -462,17 +487,17 @@
 
                     <!-- Header -->
                     <Border Grid.Row="0"
-                            Background="#1A1A1A"
-                            BorderBrush="#404040"
+                            Background="{StaticResource BgPanelBrush}"
+                            BorderBrush="{StaticResource BorderLightBrush}"
                             BorderThickness="0,0,0,1"
                             Padding="15">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="MILESTONES"
-                                       FontSize="16"
+                                       FontSize="{StaticResource FontSizeSubheading}"
                                        FontWeight="Bold"
                                        Foreground="{StaticResource TextPrimaryBrush}"/>
                             <TextBlock Text="{Binding MilestoneProgressText}"
-                                       FontSize="14"
+                                       FontSize="{StaticResource FontSizeBody}"
                                        Foreground="{StaticResource TextSecondaryBrush}"
                                        Margin="15,0,0,0"
                                        VerticalAlignment="Center"/>
@@ -492,20 +517,37 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
+                                    <DataTemplate.Resources>
+                                        <!-- The icon and the progress line: green once the milestone is done -->
+                                        <Style x:Key="MilestoneStatusText" TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource WhiteBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentSuccessBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataTemplate.Resources>
                                     <!-- Milestone Badge -->
                                     <Border Width="180"
                                             Margin="5"
                                             CornerRadius="5"
                                             Padding="10"
+                                            BorderThickness="1"
                                             Opacity="{Binding Opacity}"
                                             ToolTip="{Binding TooltipText}">
-                                        <Border.Background>
-                                            <SolidColorBrush Color="{Binding BackgroundColor}"/>
-                                        </Border.Background>
-                                        <Border.BorderThickness>1</Border.BorderThickness>
-                                        <Border.BorderBrush>
-                                            <SolidColorBrush Color="{Binding BorderColor}"/>
-                                        </Border.BorderBrush>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{StaticResource BgMediumBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{StaticResource BorderLightBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                        <Setter Property="Background" Value="{StaticResource SuccessBgBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource SuccessStrongBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
 
                                         <Grid>
                                             <Grid.ColumnDefinitions>
@@ -516,28 +558,22 @@
                                             <!-- Status Icon -->
                                             <TextBlock Grid.Column="0"
                                                        Text="{Binding StatusIcon}"
-                                                       FontSize="18"
+                                                       FontSize="{StaticResource FontSizeHeading}"
                                                        VerticalAlignment="Center"
-                                                       Margin="0,0,8,0">
-                                                <TextBlock.Foreground>
-                                                    <SolidColorBrush Color="{Binding StatusColor}"/>
-                                                </TextBlock.Foreground>
-                                            </TextBlock>
+                                                       Margin="0,0,8,0"
+                                                       Style="{StaticResource MilestoneStatusText}"/>
 
                                             <!-- Milestone Info -->
                                             <StackPanel Grid.Column="1">
                                                 <TextBlock Text="{Binding Name}"
-                                                           FontSize="12"
+                                                           FontSize="{StaticResource FontSizeSmall}"
                                                            FontWeight="Bold"
                                                            Foreground="{StaticResource TextPrimaryBrush}"
                                                            TextTrimming="CharacterEllipsis"/>
                                                 <TextBlock Text="{Binding ProgressText}"
-                                                           FontSize="10"
-                                                           Margin="0,2,0,0">
-                                                    <TextBlock.Foreground>
-                                                        <SolidColorBrush Color="{Binding StatusColor}"/>
-                                                    </TextBlock.Foreground>
-                                                </TextBlock>
+                                                           FontSize="{StaticResource FontSizeTiny}"
+                                                           Margin="0,2,0,0"
+                                                           Style="{StaticResource MilestoneStatusText}"/>
                                             </StackPanel>
                                         </Grid>
                                     </Border>

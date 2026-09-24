@@ -21,6 +21,12 @@ namespace Street_Rod_AC.Services.Settings
         // Where the last free run went: "track" or "track/configuration"
         public string FreeRunTrack { get; set; } = string.Empty;
 
+        /// <summary>
+        /// The Assetto Corsa folder; null for the default (<see cref="Street_Rod_AC.Configuration.AppSettings.DefaultAssettoCorsaPath"/>).
+        /// Read once, when the settings load at start-up: a change takes effect at the next start.
+        /// </summary>
+        public string? AssettoCorsaPath { get; set; }
+
         // Simulation Settings
         public bool RaceSimulationEnabled { get; set; } = true;
         public bool SeasonalRacingEnabled { get; set; } = true;

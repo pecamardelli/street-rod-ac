@@ -1,15 +1,14 @@
-using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Dialogs;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Navigation;
+using Street_Rod_AC.Screens.Shared;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
 using System.Collections.ObjectModel;
-using System.IO;
 
 namespace Street_Rod_AC.Screens.CarSelection
 {
@@ -20,6 +19,7 @@ namespace Street_Rod_AC.Screens.CarSelection
         private readonly Models.GameState.GameState _gameState;
         private readonly IContentCatalogRepository _catalogRepo;
         private readonly IGameStateRepository _gameStateRepo;
+        private readonly IGameTimeService _timeService;
         private readonly IAppLogger _logger;
 
         public RelayCommand BackCommand { get; }
@@ -43,13 +43,15 @@ namespace Street_Rod_AC.Screens.CarSelection
             DialogService dialogService,
             Models.GameState.GameState gameState,
             IContentCatalogRepository catalogRepo,
-            IGameStateRepository gameStateRepo)
+            IGameStateRepository gameStateRepo,
+            IGameTimeService timeService)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
             _gameState = gameState;
             _catalogRepo = catalogRepo;
             _gameStateRepo = gameStateRepo;
+            _timeService = timeService;
             _logger = AppLoggerFactory.CreateLogger("CarSelection");
 
             BackCommand = new RelayCommand(OnBack);
@@ -72,40 +74,15 @@ namespace Street_Rod_AC.Screens.CarSelection
 
             _logger.Information("Loading {Count} player cars for selection", _gameState.Player.Cars.Count);
 
-            foreach (var car in _gameState.Player.Cars)
+            foreach (var entry in PlayerCars.Load(_gameState, _catalogRepo, _logger))
             {
-                var carDef = _catalogRepo.GetCar(car.DefinitionId);
-                if (carDef == null)
+                Cars.Add(new CarSelectionItemViewModel
                 {
-                    _logger.Warning("Car definition not found for car instance {InstanceId}, definition {DefinitionId}",
-                        car.InstanceId, car.DefinitionId);
-                    continue;
-                }
-
-                // Get preview image path for the specific skin
-                var skinId = !string.IsNullOrEmpty(car.SkinId) ? car.SkinId : "default";
-                var previewPath = Path.Combine(AppSettings.Instance.CarsPath, carDef.Id, "skins", skinId, "preview.jpg");
-
-                if (!File.Exists(previewPath))
-                {
-                    // Fallback to generic car preview if skin preview doesn't exist
-                    previewPath = Path.Combine(AppSettings.Instance.CarsPath, carDef.Id, "preview.jpg");
-                    if (!File.Exists(previewPath))
-                    {
-                        // Final fallback to ui folder preview
-                        previewPath = Path.Combine(AppSettings.Instance.CarsPath, carDef.Id, "ui", "preview.jpg");
-                    }
-                }
-
-                var itemVm = new CarSelectionItemViewModel
-                {
-                    CarInstance = car,
-                    CarDefinition = carDef,
-                    PreviewImagePath = File.Exists(previewPath) ? previewPath : string.Empty,
-                    IsSelected = car.InstanceId == _gameState.Player.SelectedCarInstanceId
-                };
-
-                Cars.Add(itemVm);
+                    CarInstance = entry.Car,
+                    CarDefinition = entry.Definition,
+                    PreviewImagePath = entry.PreviewImagePath,
+                    IsSelected = entry.Car.InstanceId == _gameState.Player.SelectedCarInstanceId
+                });
             }
 
             _logger.Information("Loaded {Count} cars for selection", Cars.Count);
@@ -131,7 +108,7 @@ namespace Street_Rod_AC.Screens.CarSelection
             {
                 try
                 {
-                    await ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.SwitchCar);
+                    await _timeService.SpendTimeAsync(_gameState, GameAction.SwitchCar);
                 }
                 catch (Exception ex)
                 {
@@ -150,7 +127,7 @@ namespace Street_Rod_AC.Screens.CarSelection
                 _logger.Error(ex, "Failed to save game state after car selection");
             }
 
-            // Navigate back to garage screen
+            // Navigate back to garage screen; the navigation service catches and reports a garage that will not open
             OnBack();
         }
 

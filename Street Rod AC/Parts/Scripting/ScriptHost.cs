@@ -23,6 +23,9 @@ public class ScriptHost : IScriptHost
     // %1.0f, %5.2f, %d as the scripts pass them to Float.toString
     private static readonly Regex Format = new(@"%[-+ 0#]*\d*(?:\.(?<precision>\d+))?(?<kind>[fdi])", RegexOptions.Compiled);
 
+    // More digits than a double holds say nothing more
+    private const int MaxPrecision = 20;
+
     public virtual ScriptValue? CallNative(ScriptVm vm, ScriptObject self, string method, ScriptValue[] arguments, bool uncertain) => null;
 
     public virtual ScriptValue? CallStatic(ScriptVm vm, string className, string method, ScriptValue[] arguments)
@@ -60,7 +63,10 @@ public class ScriptHost : IScriptHost
         foreach (Match match in Format.Matches(format))
         {
             result.Append(format, position, match.Index - position);
-            var precision = match.Groups["precision"].Success ? int.Parse(match.Groups["precision"].Value, CultureInfo.InvariantCulture) : 6;
+            // The precision is script text: "%.999999999f" would ask for a billion digits, more than ten overflow
+            var precision = !match.Groups["precision"].Success ? 6
+                : int.TryParse(match.Groups["precision"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out var digits) ? Math.Clamp(digits, 0, MaxPrecision)
+                : MaxPrecision;
             result.Append(match.Groups["kind"].Value == "f"
                 ? value.ToString("F" + precision, CultureInfo.InvariantCulture)
                 : Math.Truncate(value).ToString("F0", CultureInfo.InvariantCulture));

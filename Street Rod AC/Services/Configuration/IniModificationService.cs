@@ -1,30 +1,40 @@
+using System.IO;
+using System.Text;
+using Street_Rod_AC.Configuration;
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Race;
+using Street_Rod_AC.Parts.Export;
 using Street_Rod_AC.Services.Configuration.Models;
-using Street_Rod_AC.Services.Configuration.Parsers;
-using System.IO;
 
 namespace Street_Rod_AC.Services.Configuration
 {
     /// <summary>
     /// Central service for all Assetto Corsa INI file modifications.
-    /// Implements the Read -> Intent -> Apply model.
+    /// Implements the Read -> Intent -> Apply model, with one way to write: the file's original is kept first
+    /// (<see cref="AcConfigBackup"/>, under %AppData%\StreetRodAC\AcRestore), then the new text is written through
+    /// <see cref="SafeFile"/> (temp file, flushed, renamed over the old one). An edited file keeps its encoding and
+    /// every line but the ones changed (<see cref="IniText"/>); race.ini, which a race rewrites whole, is written as
+    /// UTF-8 without a BOM. Everything written goes back with <see cref="RestoreAll"/> once AC has exited.
     /// </summary>
     public class IniModificationService : IIniModificationService
     {
         private readonly string _cfgDirectory;
-        private readonly IniParser _parser;
-        private readonly IniWriter _writer;
+        private readonly AcConfigBackup _backup;
         private readonly IAppLogger _logger;
 
-        public IniModificationService()
+        public IniModificationService() : this(
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Assetto Corsa", "cfg"),
+            AppSettings.AcRestorePath)
         {
-            // AC cfg files are in Documents/Assetto Corsa/cfg
-            var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            _cfgDirectory = Path.Combine(documentsPath, "Assetto Corsa", "cfg");
+        }
 
-            _parser = new IniParser();
-            _writer = new IniWriter();
+        /// <param name="cfgDirectory">AC's Documents\Assetto Corsa\cfg</param>
+        /// <param name="restoreRoot">Where the originals wait (%AppData%\StreetRodAC\AcRestore)</param>
+        public IniModificationService(string cfgDirectory, string restoreRoot)
+        {
+            _cfgDirectory = cfgDirectory;
+            _backup = new AcConfigBackup(cfgDirectory, restoreRoot);
             _logger = AppLoggerFactory.CreateLogger("IniModification");
 
             // Ensure cfg directory exists
@@ -47,7 +57,6 @@ namespace Street_Rod_AC.Services.Configuration
                 return intent switch
                 {
                     ShowroomIntent showroomIntent => ApplyShowroomIntent(showroomIntent),
-                    DisableAssistsIntent assistsIntent => ApplyDisableAssistsIntent(assistsIntent),
                     DragRaceIntent dragRaceIntent => ApplyDragRaceIntent(dragRaceIntent),
                     RaceConfigIntent raceIntent => ApplyRaceConfigIntent(raceIntent),
                     FreeRunIntent freeRunIntent => ApplyFreeRunIntent(freeRunIntent),
@@ -61,10 +70,16 @@ namespace Street_Rod_AC.Services.Configuration
             }
         }
 
-        public IniFile? ReadIniFile(string fileName)
+        public int RestoreAll() => _backup.RestoreAll();
+
+        public bool HasPendingRestore => _backup.HasPending;
+
+        public IniText? ReadIniFile(string fileName)
         {
             var filePath = GetIniFilePath(fileName);
-            return _parser.TryParse(filePath);
+            if (!File.Exists(filePath)) return null;
+
+            return new IniText(Decode(File.ReadAllBytes(filePath), out _));
         }
 
         public bool FileExists(string fileName)
@@ -85,23 +100,126 @@ namespace Street_Rod_AC.Services.Configuration
             return Path.Combine(_cfgDirectory, fileName);
         }
 
+        // ===== THE ONE WAY AN INI FILE IS WRITTEN =====
+
+        /// <summary>
+        /// Changes some values of a cfg file and leaves the rest as it was: comments, order and the encoding (a BOM
+        /// stays if there was one, none is added). Lines are written back with CRLF, as AC writes them.
+        /// </summary>
+        private void EditIni(string filePath, Action<IniText> edit)
+        {
+            Encoding encoding = SafeFile.Utf8NoBom;
+            var hadBom = false;
+            string? text = null;
+            if (File.Exists(filePath))
+            {
+                var bytes = File.ReadAllBytes(filePath);
+                hadBom = HasUtf8Bom(bytes);
+                text = Decode(bytes, out encoding);
+            }
+
+            var ini = new IniText(text);
+            edit(ini);
+
+            // IniText marks every Set as a change, even one to the value already there
+            var content = ini.ToString();
+            if (text != null && content == new IniText(text).ToString()) return;
+
+            WriteIni(filePath, content, encoding, hadBom);
+        }
+
+        /// <summary>The original is kept, then the file is replaced in one rename</summary>
+        private void WriteIni(string filePath, string content, Encoding encoding, bool bom = false)
+        {
+            _backup.Keep(filePath);
+
+            var bytes = encoding.GetBytes(content);
+            if (bom) bytes = [.. Utf8Bom, .. bytes];
+            if (File.Exists(filePath)) File.SetAttributes(filePath, File.GetAttributes(filePath) & ~FileAttributes.ReadOnly);
+            SafeFile.WriteAllBytes(filePath, bytes);
+        }
+
+        private static readonly byte[] Utf8Bom = [0xEF, 0xBB, 0xBF];
+
+        private static bool HasUtf8Bom(byte[] bytes) =>
+            bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+
+        /// <summary>
+        /// The text of a cfg file and the encoding that writes it back byte for byte: UTF-8 when it is valid UTF-8
+        /// (plain ASCII is), else Latin-1, which maps every byte to one character and back, so an ANSI file's
+        /// accented names survive an edit of another key unchanged
+        /// </summary>
+        internal static string Decode(byte[] bytes, out Encoding encoding)
+        {
+            var offset = HasUtf8Bom(bytes) ? 3 : 0;
+            try
+            {
+                var text = new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(bytes, offset, bytes.Length - offset);
+                encoding = SafeFile.Utf8NoBom;
+                return text;
+            }
+            catch (DecoderFallbackException)
+            {
+                encoding = Encoding.Latin1;
+                return Encoding.Latin1.GetString(bytes, offset, bytes.Length - offset);
+            }
+        }
+
+        // ===== VALUES THAT GO INTO AN INI FILE =====
+
+        /// <summary>
+        /// An id (car, skin, track, layout) as it goes into a cfg file. Ids are folder names; one that could end its
+        /// line, open a section or start a comment is refused rather than written, since it would change what the
+        /// file says (a new [REMOTE] section, a key of ours overwritten). Null is an empty value.
+        /// </summary>
+        internal static string IniId(string? value, string what)
+        {
+            var id = value ?? string.Empty;
+            if (id.Any(c => char.IsControl(c) || c is '[' or ']' or '=' or ';'))
+                throw new ArgumentException($"The {what} id '{IniName(id)}' has characters that cannot go into an INI file");
+            return id;
+        }
+
+        /// <summary>
+        /// A name (a driver's) as it goes into a cfg file: free text, so what would break the line is replaced
+        /// rather than refused. Line breaks and other control characters become spaces, [ ] become ( ), = becomes -,
+        /// and ; (a comment to AC, which would cut the name) becomes ,
+        /// </summary>
+        internal static string IniName(string? value)
+        {
+            var name = new StringBuilder(value?.Length ?? 0);
+            foreach (var c in value ?? string.Empty)
+            {
+                name.Append(c switch
+                {
+                    '[' => '(',
+                    ']' => ')',
+                    '=' => '-',
+                    ';' => ',',
+                    _ when char.IsControl(c) => ' ',
+                    _ => c
+                });
+            }
+
+            return name.ToString().Trim();
+        }
+
         // ===== INTENT APPLICATION METHODS =====
 
         private bool ApplyShowroomIntent(ShowroomIntent intent)
         {
             var filePath = GetIniFilePath(intent.TargetFile);
+            var carId = IniId(intent.CarId, "car");
+            var skinId = IniId(intent.SkinId, "skin");
+            var track = IniId(intent.Track, "showroom");
 
-            // Parse or create new file
-            var iniFile = _parser.TryParse(filePath) ?? new IniFile(filePath);
-
-            // Apply changes to [SHOWROOM] section
-            iniFile.SetValue("SHOWROOM", "CAR", intent.CarId);
-            iniFile.SetValue("SHOWROOM", "SKIN", intent.SkinId);
-            iniFile.SetValue("SHOWROOM", "SELECTED_SKIN", intent.SkinId);
-            iniFile.SetValue("SHOWROOM", "TRACK", intent.Track);
-
-            // Write back
-            _writer.Write(iniFile);
+            EditIni(filePath, ini =>
+            {
+                ini.Set("SHOWROOM", "CAR", carId);
+                ini.Set("SHOWROOM", "SKIN", skinId);
+                ini.Set("SHOWROOM", "SELECTED_SKIN", skinId);
+                ini.Set("SHOWROOM", "TRACK", track);
+            });
 
             _logger.Information("Applied showroom intent: Car={CarId}, Skin={SkinId}",
                 intent.CarId, intent.SkinId);
@@ -109,38 +227,25 @@ namespace Street_Rod_AC.Services.Configuration
             return true;
         }
 
-        private bool ApplyDisableAssistsIntent(DisableAssistsIntent intent)
-        {
-            var filePath = GetIniFilePath(intent.TargetFile);
-
-            var iniFile = _parser.TryParse(filePath) ?? new IniFile(filePath);
-
-            // TODO: Implement assist disabling logic
-            // This would set ABS=0, TC=0, etc. in the assists.ini file
-
-            _writer.Write(iniFile);
-
-            _logger.Information("Applied disable assists intent");
-
-            return true;
-        }
-
         private bool ApplyRaceConfigIntent(RaceConfigIntent intent)
         {
             var filePath = GetIniFilePath(intent.TargetFile);
+            var carId = IniId(intent.CarId, "car");
+            var skinId = IniId(intent.SkinId, "skin");
+            var trackId = IniId(intent.TrackId, "track");
+            var trackConfig = IniId(intent.TrackConfig, "track layout");
 
-            var iniFile = _parser.TryParse(filePath) ?? new IniFile(filePath);
+            EditIni(filePath, ini =>
+            {
+                // Configure [RACE] section
+                ini.Set("RACE", "MODEL", carId);
+                ini.Set("RACE", "SKIN", skinId);
+                ini.Set("RACE", "TRACK", trackId);
+                ini.Set("RACE", "CONFIG_TRACK", trackConfig);
 
-            // Configure [RACE] section
-            iniFile.SetValue("RACE", "MODEL", intent.CarId);
-            iniFile.SetValue("RACE", "SKIN", intent.SkinId);
-            iniFile.SetValue("RACE", "TRACK", intent.TrackId);
-            iniFile.SetValue("RACE", "CONFIG_TRACK", intent.TrackConfig ?? string.Empty);
-
-            // Configure [SESSION_0] section
-            iniFile.SetValue("SESSION_0", "NAME", "Quick Race");
-
-            _writer.Write(iniFile);
+                // Configure [SESSION_0] section
+                ini.Set("SESSION_0", "NAME", "Quick Race");
+            });
 
             _logger.Information("Applied race config intent: Car={CarId}, Skin={SkinId}, Track={TrackId}, Config={TrackConfig}",
                 intent.CarId, intent.SkinId, intent.TrackId, intent.TrackConfig ?? "(none)");
@@ -157,11 +262,12 @@ namespace Street_Rod_AC.Services.Configuration
             // Build the race.ini content from scratch
             var content = BuildDragRaceIni(intent);
 
-            // Write to race.ini
-            File.WriteAllText(filePath, content);
+            // Write to race.ini; the user's own is kept until AC exits
+            WriteIni(filePath, content, SafeFile.Utf8NoBom);
 
-            _logger.Information("Applied drag race intent: Player={PlayerName} ({PlayerCarId}), Opponent={OpponentName} ({OpponentCarId}), AI={AILevel}/{AIAggression}",
-                intent.PlayerName, intent.PlayerCarId, intent.OpponentName, intent.OpponentCarId, intent.OpponentAILevel, intent.OpponentAIAggression);
+            _logger.Information("Applied drag race intent: Player={PlayerName} ({PlayerCarId}), Opponent={OpponentName} ({OpponentCarId}), AI={AILevel}/{AIAggression}, Context={ContextId}",
+                intent.PlayerName, intent.PlayerCarId, intent.OpponentName, intent.OpponentCarId, intent.OpponentAILevel, intent.OpponentAIAggression,
+                intent.ContextId?.ToString("D") ?? "(none)");
 
             return true;
         }
@@ -178,16 +284,16 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("[RACE]");
             sb.AppendLine("AI_LEVEL=100");
             sb.AppendLine("CARS=2");
-            sb.AppendLine($"CONFIG_TRACK={intent.TrackConfig ?? string.Empty}");
+            sb.AppendLine($"CONFIG_TRACK={IniId(intent.TrackConfig, "track layout")}");
             sb.AppendLine("DRIFT_MODE=0");
             sb.AppendLine("FIXED_SETUP=0");
             sb.AppendLine("JUMP_START_PENALTY=1");
-            sb.AppendLine($"MODEL={intent.PlayerCarId}");
+            sb.AppendLine($"MODEL={IniId(intent.PlayerCarId, "car")}");
             sb.AppendLine("MODEL_CONFIG=");
             sb.AppendLine("PENALTIES=0");
             sb.AppendLine("RACE_LAPS=1");
-            sb.AppendLine($"SKIN={intent.PlayerSkin}");
-            sb.AppendLine($"TRACK={intent.TrackId}");
+            sb.AppendLine($"SKIN={IniId(intent.PlayerSkin, "skin")}");
+            sb.AppendLine($"TRACK={IniId(intent.TrackId, "track")}");
             sb.AppendLine("MODE=sr_race");  // CSP new-mode for auto-start and auto-quit
             sb.AppendLine();
 
@@ -218,22 +324,31 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("[CAR_0]");
             sb.AppendLine("MODEL=-");
             sb.AppendLine("MODEL_CONFIG=");
-            sb.AppendLine($"SKIN={intent.PlayerSkin}");
-            sb.AppendLine($"DRIVER_NAME={intent.PlayerName}");
+            sb.AppendLine($"SKIN={IniId(intent.PlayerSkin, "skin")}");
+            sb.AppendLine($"DRIVER_NAME={IniName(intent.PlayerName)}");
             sb.AppendLine("NATIONALITY=");
             sb.AppendLine("NATION_CODE=");
             sb.AppendLine();
 
             // [CAR_1] - Opponent (AI)
             sb.AppendLine("[CAR_1]");
-            sb.AppendLine($"MODEL={intent.OpponentCarId}");
+            sb.AppendLine($"MODEL={IniId(intent.OpponentCarId, "car")}");
             sb.AppendLine("MODEL_CONFIG=");
             sb.AppendLine($"AI_LEVEL={intent.OpponentAILevel}");
             sb.AppendLine($"AI_AGGRESSION={intent.OpponentAIAggression}");
-            sb.AppendLine($"SKIN={intent.OpponentSkin}");
-            sb.AppendLine($"DRIVER_NAME={intent.OpponentName}");
+            sb.AppendLine($"SKIN={IniId(intent.OpponentSkin, "skin")}");
+            sb.AppendLine($"DRIVER_NAME={IniName(intent.OpponentName)}");
             sb.AppendLine("NATIONALITY=");
             sb.AppendLine("NATION_CODE=");
+
+            // [STREET_ROD] - Which race this is: the Lua app writes it into the result, so a result is only ever
+            // applied to the race it came from
+            if (intent.ContextId is { } contextId)
+            {
+                sb.AppendLine();
+                sb.AppendLine("[STREET_ROD]");
+                sb.AppendLine($"CONTEXT_ID={contextId:D}");
+            }
 
             return sb.ToString();
         }
@@ -241,7 +356,7 @@ namespace Street_Rod_AC.Services.Configuration
         private bool ApplyFreeRunIntent(FreeRunIntent intent)
         {
             var filePath = GetIniFilePath(intent.TargetFile);
-            File.WriteAllText(filePath, BuildFreeRunIni(intent));
+            WriteIni(filePath, BuildFreeRunIni(intent), SafeFile.Utf8NoBom);
 
             _logger.Information("Applied free run intent: Car={CarId}, Track={TrackId}, Config={TrackConfig}",
                 intent.CarId, intent.TrackId, intent.TrackConfig ?? "(none)");
@@ -260,16 +375,16 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("[RACE]");
             sb.AppendLine("AI_LEVEL=100");
             sb.AppendLine("CARS=1");
-            sb.AppendLine($"CONFIG_TRACK={intent.TrackConfig ?? string.Empty}");
+            sb.AppendLine($"CONFIG_TRACK={IniId(intent.TrackConfig, "track layout")}");
             sb.AppendLine("DRIFT_MODE=0");
             sb.AppendLine("FIXED_SETUP=0");
             sb.AppendLine("JUMP_START_PENALTY=0");
-            sb.AppendLine($"MODEL={intent.CarId}");
+            sb.AppendLine($"MODEL={IniId(intent.CarId, "car")}");
             sb.AppendLine("MODEL_CONFIG=");
             sb.AppendLine("PENALTIES=0");
             sb.AppendLine("RACE_LAPS=0");
-            sb.AppendLine($"SKIN={intent.Skin}");
-            sb.AppendLine($"TRACK={intent.TrackId}");
+            sb.AppendLine($"SKIN={IniId(intent.Skin, "skin")}");
+            sb.AppendLine($"TRACK={IniId(intent.TrackId, "track")}");
             sb.AppendLine();
 
             AppendTailSections(sb);
@@ -284,8 +399,8 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("[CAR_0]");
             sb.AppendLine("MODEL=-");
             sb.AppendLine("MODEL_CONFIG=");
-            sb.AppendLine($"SKIN={intent.Skin}");
-            sb.AppendLine($"DRIVER_NAME={intent.PlayerName}");
+            sb.AppendLine($"SKIN={IniId(intent.Skin, "skin")}");
+            sb.AppendLine($"DRIVER_NAME={IniName(intent.PlayerName)}");
             sb.AppendLine("NATIONALITY=");
             sb.AppendLine("NATION_CODE=");
 
@@ -410,48 +525,6 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("ACTIVE=0");
             sb.AppendLine();
 
-        }
-
-        /// <summary>
-        /// Replace a specific key value in an INI section
-        /// </summary>
-        private string ReplaceLine(string content, string section, string key, string newValue)
-        {
-            var lines = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-            var inSection = false;
-            var result = new List<string>();
-
-            foreach (var line in lines)
-            {
-                var trimmedLine = line.Trim();
-
-                // Check if we're entering the target section
-                if (trimmedLine.Equals(section, StringComparison.OrdinalIgnoreCase))
-                {
-                    inSection = true;
-                    result.Add(line);
-                    continue;
-                }
-
-                // Check if we're leaving the section
-                if (inSection && trimmedLine.StartsWith("[") && trimmedLine.EndsWith("]"))
-                {
-                    inSection = false;
-                }
-
-                // If we're in the target section and this line has the key
-                if (inSection && trimmedLine.StartsWith(key + "=", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Replace the value
-                    result.Add($"{key}={newValue}");
-                }
-                else
-                {
-                    result.Add(line);
-                }
-            }
-
-            return string.Join(Environment.NewLine, result);
         }
     }
 }

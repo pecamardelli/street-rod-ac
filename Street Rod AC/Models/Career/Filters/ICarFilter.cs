@@ -27,5 +27,11 @@ namespace Street_Rod_AC.Models.Career.Filters
         /// <param name="instance">Optional car instance for condition/value checks</param>
         /// <returns>True if the car matches the filter criteria</returns>
         bool Matches(CarDefinition car, Car? instance = null);
+
+        /// <summary>
+        /// Check a car with a way to value it: <paramref name="valueOf"/> is what the car is worth
+        /// (<c>CarValuation</c> through the market). Filters that don't look at worth ignore it.
+        /// </summary>
+        bool Matches(CarDefinition car, Car? instance, Func<Car, decimal>? valueOf) => Matches(car, instance);
     }
 }

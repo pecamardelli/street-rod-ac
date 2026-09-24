@@ -19,8 +19,9 @@ namespace Street_Rod_AC.Services.Opponents
         /// </summary>
         public Opponent GenerateOpponent(string name, int age, Gender gender)
         {
-            // Generate base skill between 80-100
-            var baseSkill = _random.Next(80, 101);
+            // Generate base skill between 90-100: the opponent floor (Opponent.MinSkill), below which AC's AI
+            // is too slow to make a race of it
+            var baseSkill = _random.Next(Opponent.MinSkill, Opponent.MaxSkill + 1);
 
             return GenerateOpponent(name, age, gender, baseSkill);
         }
@@ -31,7 +32,7 @@ namespace Street_Rod_AC.Services.Opponents
         public Opponent GenerateOpponent(string name, int age, Gender gender, int baseSkill)
         {
             // Ensure skill is in valid range
-            var skill = Math.Max(80, Math.Min(100, baseSkill));
+            var skill = Math.Clamp(baseSkill, Opponent.MinSkill, Opponent.MaxSkill);
 
             // Generate base aggression (30-70 for neutral range)
             var baseAggression = _random.Next(30, 71);
@@ -46,7 +47,7 @@ namespace Street_Rod_AC.Services.Opponents
             var aggression = baseAggression + ageModifier + genderModifier;
 
             // Clamp to valid range (0-100)
-            aggression = Math.Max(0, Math.Min(100, aggression));
+            aggression = Math.Clamp(aggression, 0, 100);
 
             // Create opponent
             var opponent = new Opponent(name, age, gender, skill, aggression);
@@ -156,7 +157,7 @@ namespace Street_Rod_AC.Services.Opponents
             var reputation = baseReputation + ageBonus + skillBonus;
 
             // Clamp to valid range (30-70 for new opponents, they need to prove themselves)
-            return Math.Max(30, Math.Min(70, reputation));
+            return Math.Clamp(reputation, 30, 70);
         }
     }
 }

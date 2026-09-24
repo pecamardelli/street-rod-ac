@@ -46,15 +46,6 @@ namespace Street_Rod_AC.Services.Configuration.Models
     }
 
     /// <summary>
-    /// Intent to disable all driving assists (for career mode realism)
-    /// </summary>
-    public class DisableAssistsIntent : ModificationIntent
-    {
-        public override string Description => "Disable all driving assists for career mode";
-        public override string TargetFile => "assists.ini";
-    }
-
-    /// <summary>
     /// Intent to configure a race session
     /// </summary>
     public class RaceConfigIntent : ModificationIntent
@@ -93,7 +84,7 @@ namespace Street_Rod_AC.Services.Configuration.Models
         public string? TrackConfig { get; set; } = "drag1000";
 
         /// <summary>
-        /// Opponent AI skill level (80-100)
+        /// Opponent AI skill level (90-100)
         /// </summary>
         public int OpponentAILevel { get; set; } = 90;
 
@@ -106,6 +97,12 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// Type of race (drag or circuit)
         /// </summary>
         public RaceType RaceType { get; set; } = RaceType.DragRace;
+
+        /// <summary>
+        /// The race's <see cref="RaceContext.ContextId"/>, written to race.ini as [STREET_ROD] CONTEXT_ID so the Lua
+        /// app can put it into the result; null for a launch without a context (nothing is written then)
+        /// </summary>
+        public Guid? ContextId { get; set; }
 
         public override string Description =>
             $"Configure drag race: {PlayerName} ({PlayerCarId}) vs {OpponentName} ({OpponentCarId}) [AI: {OpponentAILevel}/{OpponentAIAggression}]";

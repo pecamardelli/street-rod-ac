@@ -23,8 +23,10 @@ namespace Street_Rod_AC.Services.Opponents
         public static AssettoCorsaAIParameters ToAssettoCorsaAI(Opponent opponent)
         {
             // Direct mapping (1:1) - no transformation needed since ranges align
-            var aiStrength = opponent.Skill;  // Already 80-100
-            var aiAggression = opponent.Aggression;  // Already 0-100
+            // Clamped all the same: a save edited by hand or an older one may hold a skill out of range, and
+            // AC takes whatever race.ini says
+            var aiStrength = Math.Clamp(opponent.Skill, Opponent.MinSkill, Opponent.MaxSkill);  // 90-100
+            var aiAggression = Math.Clamp(opponent.Aggression, 0, 100);
 
             return new AssettoCorsaAIParameters
             {
@@ -41,7 +43,7 @@ namespace Street_Rod_AC.Services.Opponents
         /// <returns>True if valid, false otherwise</returns>
         public static bool ValidateOpponent(Opponent opponent)
         {
-            if (opponent.Skill < 80 || opponent.Skill > 100)
+            if (opponent.Skill < Opponent.MinSkill || opponent.Skill > Opponent.MaxSkill)
                 return false;
 
             if (opponent.Aggression < 0 || opponent.Aggression > 100)
@@ -58,7 +60,7 @@ namespace Street_Rod_AC.Services.Opponents
     public class AssettoCorsaAIParameters
     {
         /// <summary>
-        /// AC AI Level (skill) - Range: 80-100
+        /// AC AI Level (skill) - Range: 90-100
         /// </summary>
         public int AILevel { get; set; }
 
