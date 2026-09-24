@@ -1,4 +1,6 @@
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Logging;
+using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Models.Race;
 using Street_Rod_AC.Services.Race.Validation;
 using System.IO;
@@ -8,31 +10,105 @@ namespace Street_Rod_AC.Services.Race
     /// <summary>
     /// Main orchestrator for race result ingestion pipeline
     /// Implements 8-step pipeline for race result ingestion
+    ///
+    /// A result file is tied to its race by the context id the launcher wrote into race.ini and the Lua app
+    /// wrote back (K1). It is applied only with that race's context: the race just run, or the save's pending
+    /// race for a file left over when the app closed during a race. A file for any other race is quarantined
+    /// with the reason, so a leftover never pays out the current race's wager.
     /// </summary>
     public class RaceResultIngestionService : IRaceResultIngestionService
     {
+        /// <summary>
+        /// How much earlier than its context a file without a context id may say it started: the Lua app's
+        /// clock has whole seconds. A file that started before its race was even set up is from another race.
+        /// </summary>
+        private static readonly TimeSpan ContextClockSlack = TimeSpan.FromSeconds(5);
+
         private readonly IRaceResultValidator _validator;
         private readonly SessionDeduplicator _deduplicator;
         private readonly IRaceResultProcessor _processor;
         private readonly IRaceSessionRepository _sessionRepository;
+        private readonly Func<GameState?> _currentGameState;
         private readonly IAppLogger _logger;
 
+        // One ingestion at a time: the orphan pass on loading a save must not race the launcher's pass
+        // over the same inbox
+        private readonly SemaphoreSlim _gate = new(1, 1);
+
+        /// <param name="currentGameState">The loaded game (App.CurrentGameState); null when none is loaded</param>
         public RaceResultIngestionService(
             IRaceResultValidator validator,
             SessionDeduplicator deduplicator,
             IRaceResultProcessor processor,
-            IRaceSessionRepository sessionRepository)
+            IRaceSessionRepository sessionRepository,
+            Func<GameState?> currentGameState)
         {
             _validator = validator;
             _deduplicator = deduplicator;
             _processor = processor;
             _sessionRepository = sessionRepository;
+            _currentGameState = currentGameState;
             _logger = AppLoggerFactory.CreateLogger(LogCategory.RaceIngestion);
         }
 
         public async Task<IngestionResult> IngestResultsAsync(
             RaceContext? raceContext = null,
             IProgress<string>? progress = null)
+        {
+            await _gate.WaitAsync();
+            try
+            {
+                return await IngestCoreAsync(raceContext, progress);
+            }
+            finally
+            {
+                _gate.Release();
+            }
+        }
+
+        public async Task<IngestionResult> ProcessOrphanedResultsAsync()
+        {
+            _logger.Information("Processing orphaned race result files");
+            return await IngestResultsAsync(raceContext: null);
+        }
+
+        public async Task<bool> ApplyNoResultForfeitAsync(RaceContext context, List<PlayerMessage>? messages = null)
+        {
+            await _gate.WaitAsync();
+            try
+            {
+                var gameState = _currentGameState();
+                if (gameState == null || string.IsNullOrEmpty(gameState.SaveName))
+                {
+                    _logger.Warning("No game loaded - the race without a result cannot be settled");
+                    return false;
+                }
+
+                // The race may have been settled after all (its result applied, or a forfeit already recorded)
+                if (await _sessionRepository.IsContextSettledAsync(gameState.SaveName, context.ContextId))
+                {
+                    _logger.Information("Race {ContextId} is already settled - no forfeit", context.ContextId);
+                    return false;
+                }
+
+                if (context.CashWager <= 0 && !context.IsPinkSlip)
+                {
+                    // Nothing at stake: the race simply did not happen, and is no longer waiting for a result
+                    _processor.ReleasePendingRace(context, gameState);
+                    return false;
+                }
+
+                var forfeitMessages = _processor.ApplyForfeit(context, gameState);
+                messages?.AddRange(forfeitMessages);
+                return true;
+            }
+            finally
+            {
+                _gate.Release();
+            }
+        }
+
+        private async Task<IngestionResult> IngestCoreAsync(RaceContext? raceContext, IProgress<string>? progress)
         {
             var result = new IngestionResult();
             var startTime = DateTime.Now;
@@ -41,6 +117,18 @@ namespace Street_Rod_AC.Services.Race
 
             try
             {
+                // Results belong to a save: with none loaded they wait in the inbox for one
+                var gameState = _currentGameState();
+                if (gameState == null || string.IsNullOrEmpty(gameState.SaveName))
+                {
+                    _logger.Warning("No game loaded - race results stay in the inbox until one is");
+                    result.Duration = DateTime.Now - startTime;
+                    return result;
+                }
+
+                // The race just run, or else the one this save is waiting on
+                var context = raceContext ?? gameState.PendingRace;
+
                 // Step 1: Folder enumeration
                 var inboxPath = GetInboxPath();
                 if (!Directory.Exists(inboxPath))
@@ -75,7 +163,7 @@ namespace Street_Rod_AC.Services.Race
                 foreach (var file in candidates)
                 {
                     progress?.Report($"Processing {file.Name}...");
-                    await ProcessSingleFileAsync(file, raceContext, result);
+                    await ProcessSingleFileAsync(file, context, gameState, result);
                 }
 
                 result.Duration = DateTime.Now - startTime;
@@ -95,16 +183,10 @@ namespace Street_Rod_AC.Services.Race
             }
         }
 
-        public async Task<IngestionResult> ProcessOrphanedResultsAsync()
-        {
-            _logger.Information("Processing orphaned race result files");
-            return await IngestResultsAsync(raceContext: null);
-        }
-
         /// <summary>
         /// Process a single candidate file through the pipeline
         /// </summary>
-        private async Task ProcessSingleFileAsync(FileInfo file, RaceContext? context, IngestionResult result)
+        private async Task ProcessSingleFileAsync(FileInfo file, RaceContext? context, GameState gameState, IngestionResult result)
         {
             try
             {
@@ -122,8 +204,9 @@ namespace Street_Rod_AC.Services.Race
                 var raceResult = validation.ParsedResult!;
                 _logger.Debug("File {FileName} validated successfully", file.Name);
 
-                // Step 4: Deduplication check
-                if (await _deduplicator.IsProcessedAsync(raceResult.Session.SessionId))
+                // Step 4: Deduplication check. A read failure throws: the file stays for the next pass rather
+                // than risk applying it twice.
+                if (await _deduplicator.IsProcessedAsync(gameState.SaveName, raceResult.Session.SessionId))
                 {
                     _logger.Information("Session {SessionId} already processed - deleting duplicate file",
                         raceResult.Session.SessionId);
@@ -143,8 +226,21 @@ namespace Street_Rod_AC.Services.Race
                     return;
                 }
 
+                // Step 4b: Does the file belong to the race in hand, and is that race still open?
+                var mismatch = ContextMismatch(raceResult, context);
+                if (mismatch == null && await _sessionRepository.IsContextSettledAsync(gameState.SaveName, context!.ContextId))
+                    mismatch = $"race {context.ContextId} already has its result";
+
+                if (mismatch != null)
+                {
+                    _logger.Warning("File {FileName} is not applied: {Reason} - quarantining", file.Name, mismatch);
+                    await QuarantineFileAsync(file, "Not applied", new[] { mismatch });
+                    result.FilesQuarantined++;
+                    return;
+                }
+
                 // Step 5: Ownership transfer (atomic move)
-                var archivePath = GetArchivePath(raceResult.Session.SessionId);
+                var archivePath = GetArchivePath(raceResult.Session.SessionId, gameState);
                 try
                 {
                     var archiveDir = Path.GetDirectoryName(archivePath);
@@ -171,16 +267,14 @@ namespace Street_Rod_AC.Services.Race
                     return;
                 }
 
-                // Step 7: Processing
+                // Step 7: Processing. On the thread that owns the game state; the processor changes nothing
+                // before everything it needs from the file has been worked out.
                 try
                 {
-                    await _processor.ProcessRaceResultAsync(raceResult, context);
+                    var messages = _processor.ProcessRaceResult(raceResult, context!, gameState);
+                    result.PlayerMessages.AddRange(messages);
                     _logger.Information("Successfully processed session {SessionId}", raceResult.Session.SessionId);
                     result.FilesProcessed++;
-
-                    // Optional: Delete archived file after successful processing
-                    // Uncomment if you don't want to keep archived files
-                    // File.Delete(archivePath);
                 }
                 catch (Exception ex)
                 {
@@ -188,7 +282,7 @@ namespace Street_Rod_AC.Services.Race
                     result.Errors.Add($"Processing failed for {file.Name}: {ex.Message}");
 
                     // Quarantine the file for investigation
-                    await QuarantineFileAsync(new FileInfo(archivePath), validation);
+                    await QuarantineFileAsync(new FileInfo(archivePath), "Processing failed", new[] { ex.Message });
                     result.FilesQuarantined++;
                 }
             }
@@ -197,6 +291,36 @@ namespace Street_Rod_AC.Services.Race
                 _logger.Error(ex, "Unexpected error processing file {FileName}", file.Name);
                 result.Errors.Add($"Unexpected error for {file.Name}: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Why the file cannot be applied with <paramref name="context"/>; null when it can. A file names its
+        /// race by context_id. One without (an older Lua app, or a race.ini without the id) is taken for the
+        /// race in hand unless it started before that race was set up.
+        /// </summary>
+        private static string? ContextMismatch(RaceResultJson raceResult, RaceContext? context)
+        {
+            if (context == null)
+                return "no race is waiting for a result in this save";
+
+            var fileContext = raceResult.Session.ContextId;
+            if (!string.IsNullOrWhiteSpace(fileContext))
+            {
+                if (!Guid.TryParse(fileContext, out var fileContextId))
+                    return $"its context_id '{fileContext}' is not a GUID";
+
+                return fileContextId == context.ContextId
+                    ? null
+                    : $"it belongs to race {fileContextId}, not to race {context.ContextId}";
+            }
+
+            if (RaceResultValidator.TryParseTimestamp(raceResult.Session.StartTimestamp, out var startedAt)
+                && startedAt.ToUniversalTime() < context.CreatedAt.ToUniversalTime() - ContextClockSlack)
+            {
+                return $"it has no context_id and started ({startedAt:u}) before race {context.ContextId} was set up";
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -230,7 +354,9 @@ namespace Street_Rod_AC.Services.Race
                 case ValidationFailureReason.MissingSchemaVersion:
                 case ValidationFailureReason.MissingSessionId:
                 case ValidationFailureReason.MissingStartTimestamp:
+                case ValidationFailureReason.InvalidTimestamp:
                 case ValidationFailureReason.InvalidParticipantCount:
+                case ValidationFailureReason.InvalidParticipantData:
                     // Quarantine - looks like our file but invalid
                     _logger.Warning("File {FileName} failed content validation - quarantining", file.Name);
                     await QuarantineFileAsync(file, validation);
@@ -248,7 +374,13 @@ namespace Street_Rod_AC.Services.Race
         /// <summary>
         /// Move a file to quarantine with error sidecar
         /// </summary>
-        private async Task QuarantineFileAsync(FileInfo file, ValidationResult validation)
+        private Task QuarantineFileAsync(FileInfo file, ValidationResult validation) =>
+            QuarantineFileAsync(file, $"Validation failed: {validation.FailureReason}", validation.Errors);
+
+        /// <summary>
+        /// Move a file to quarantine with an error sidecar saying why
+        /// </summary>
+        private async Task QuarantineFileAsync(FileInfo file, string headline, IEnumerable<string> errors)
         {
             try
             {
@@ -265,8 +397,8 @@ namespace Street_Rod_AC.Services.Race
                 }
 
                 // Create error sidecar file
-                var errorMessage = $"Validation failed: {validation.FailureReason}\n" +
-                                   $"Errors:\n{string.Join("\n", validation.Errors)}\n" +
+                var errorMessage = $"{headline}\n" +
+                                   $"Errors:\n{string.Join("\n", errors)}\n" +
                                    $"Quarantined at: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
 
                 await File.WriteAllTextAsync(errorFilePath, errorMessage);
@@ -280,7 +412,8 @@ namespace Street_Rod_AC.Services.Race
         }
 
         /// <summary>
-        /// Get the inbox path (Lua app output folder)
+        /// Get the inbox path (Lua app output folder). The Lua app writes under CSP's ACDocuments folder,
+        /// which is this same shell folder (it follows a Documents folder moved to OneDrive).
         /// </summary>
         private string GetInboxPath()
         {
@@ -292,17 +425,12 @@ namespace Street_Rod_AC.Services.Race
         /// Get the archive path for a processed session
         /// Organized by player name: %AppData%\StreetRodAC\RaceResults\{PlayerName}\{session_id}.json
         /// </summary>
-        private string GetArchivePath(string sessionId)
+        private static string GetArchivePath(string sessionId, GameState gameState)
         {
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
-            // Get player name from current game state
-            var app = System.Windows.Application.Current as App;
-            var playerName = app?.CurrentGameState?.Player?.Name ?? "Unknown";
-
-            // Sanitize player name for file system (remove invalid characters)
-            var invalidChars = Path.GetInvalidFileNameChars();
-            var safePlayerName = string.Join("_", playerName.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
+            // The same sanitizing as every other name that becomes a folder
+            var safePlayerName = PathNames.Sanitize(gameState.Player?.Name, fallback: "Unknown");
 
             return Path.Combine(appDataPath, "StreetRodAC", "RaceResults", safePlayerName, $"{sessionId}.json");
         }

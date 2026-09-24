@@ -68,6 +68,13 @@ namespace Street_Rod_AC.Models.Race
         public string? EventId { get; set; }
 
         /// <summary>
+        /// The instance of the event this race is for (<c>RaceEventState.InstanceId</c>). Daily and weekly
+        /// events share their definition id, so this is what tells them apart when the race completes one;
+        /// null for regular races and for contexts saved before instances had ids.
+        /// </summary>
+        public Guid? EventInstanceId { get; set; }
+
+        /// <summary>
         /// True if opponent is event-only (don't track their stats)
         /// </summary>
         public bool IsEventOnlyOpponent { get; set; }

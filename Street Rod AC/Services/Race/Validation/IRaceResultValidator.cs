@@ -129,6 +129,19 @@ namespace Street_Rod_AC.Services.Race.Validation
         MissingStartTimestamp,
 
         /// <summary>
+        /// session.start_timestamp is not an ISO 8601 date and time
+        /// Action: Quarantine
+        /// </summary>
+        InvalidTimestamp,
+
+        /// <summary>
+        /// A participant has no performance or crash block, a distance that is negative or not a number,
+        /// or more than one participant claims to be the player
+        /// Action: Quarantine
+        /// </summary>
+        InvalidParticipantData,
+
+        /// <summary>
         /// Session ID has already been processed (duplicate)
         /// Action: Delete file
         /// </summary>

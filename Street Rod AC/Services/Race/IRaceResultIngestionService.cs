@@ -9,9 +9,11 @@ namespace Street_Rod_AC.Services.Race
     public interface IRaceResultIngestionService
     {
         /// <summary>
-        /// Ingest race results from the AC output folder
+        /// Ingest race results from the AC output folder into the loaded game. A file is applied only with the
+        /// context it belongs to (its context_id); anything else is quarantined, never applied to this race.
+        /// Needs a loaded game: without one the files stay where they are.
         /// </summary>
-        /// <param name="raceContext">Optional race context for correlation</param>
+        /// <param name="raceContext">The race just run; null uses the save's pending race</param>
         /// <param name="progress">Optional progress reporter</param>
         /// <returns>Ingestion summary</returns>
         Task<IngestionResult> IngestResultsAsync(
@@ -19,9 +21,21 @@ namespace Street_Rod_AC.Services.Race
             IProgress<string>? progress = null);
 
         /// <summary>
-        /// Process orphaned result files on application startup
+        /// Applies result files left from a race whose result never came in (the app closed during it) to the
+        /// loaded game: only a file of the save's pending race (<c>GameState.PendingRace</c>). Call it once a
+        /// game is loaded; without one it does nothing.
         /// </summary>
         Task<IngestionResult> ProcessOrphanedResultsAsync();
+
+        /// <summary>
+        /// A race that brought back no result. With money or a pink slip on it the player walked away, which
+        /// counts as a loss: it is recorded, saved, and the pending race cleared. Without stakes the pending
+        /// race is only cleared.
+        /// </summary>
+        /// <param name="context">The race that was run</param>
+        /// <param name="messages">Receives what the player should be told, when given</param>
+        /// <returns>True when a forfeit was applied</returns>
+        Task<bool> ApplyNoResultForfeitAsync(RaceContext context, List<PlayerMessage>? messages = null);
     }
 
     /// <summary>
@@ -59,6 +73,11 @@ namespace Street_Rod_AC.Services.Race
         /// List of error messages
         /// </summary>
         public List<string> Errors { get; set; } = new();
+
+        /// <summary>
+        /// What the player should be told about the races that were applied (event rewards, career progress)
+        /// </summary>
+        public List<PlayerMessage> PlayerMessages { get; } = new();
 
         /// <summary>
         /// Total duration of ingestion operation

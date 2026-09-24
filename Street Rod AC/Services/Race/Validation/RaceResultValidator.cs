@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Race;
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -170,6 +171,14 @@ namespace Street_Rod_AC.Services.Race.Validation
                     "Missing session.start_timestamp field");
             }
 
+            // Parsed here, before anything is applied: the processor must not find a bad date halfway through
+            if (!TryParseTimestamp(raceResult.Session.StartTimestamp, out _))
+            {
+                return ValidationResult.Failure(
+                    ValidationFailureReason.InvalidTimestamp,
+                    $"session.start_timestamp is not an ISO 8601 date: '{raceResult.Session.StartTimestamp}'");
+            }
+
             // Check participants array exists
             if (raceResult.Participants == null || raceResult.Participants.Count == 0)
             {
@@ -205,9 +214,41 @@ namespace Street_Rod_AC.Services.Race.Validation
                         ValidationFailureReason.InvalidJson,
                         "Participant has missing or empty driver_name");
                 }
+
+                // An explicit "performance": null or "crash": null replaces the initializers (Newtonsoft
+                // assigns the null), and the processor reads both
+                if (participant.Performance == null || participant.Crash == null)
+                {
+                    return ValidationResult.Failure(
+                        ValidationFailureReason.InvalidParticipantData,
+                        $"Participant '{participant.DriverName}' has no performance or crash data");
+                }
+
+                // The distance goes onto the car's odometer and into the save
+                var distance = participant.Performance.DistanceKm;
+                if (!double.IsFinite(distance) || distance < 0)
+                {
+                    return ValidationResult.Failure(
+                        ValidationFailureReason.InvalidParticipantData,
+                        $"Participant '{participant.DriverName}' has an impossible distance: {distance}");
+                }
+            }
+
+            if (raceResult.Participants.Count(p => p.IsPlayer == true) > 1)
+            {
+                return ValidationResult.Failure(
+                    ValidationFailureReason.InvalidParticipantData,
+                    "More than one participant is marked as the player");
             }
 
             return new ValidationResult { IsValid = true };
         }
+
+        /// <summary>
+        /// The one parser for the Lua app's timestamps ("2026-09-24T18:30:05Z"): culture-free, and a trailing Z
+        /// comes back as UTC
+        /// </summary>
+        public static bool TryParseTimestamp(string? text, out DateTime timestamp) =>
+            DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out timestamp);
     }
 }
