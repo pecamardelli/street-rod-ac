@@ -1,5 +1,6 @@
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Services.Market;
 
 namespace Street_Rod_AC.Services.Simulation
 {
@@ -11,11 +12,14 @@ namespace Street_Rod_AC.Services.Simulation
     {
         private readonly IAppLogger _logger;
         private readonly Random _random;
+        private readonly IUsedCarMarketService _market;
 
-        public RaceSimulatorService()
+        /// <param name="market">Values a pink-slipped car and puts it on a lot, with its parts</param>
+        public RaceSimulatorService(IUsedCarMarketService market)
         {
             _logger = AppLoggerFactory.CreateLogger("RaceSimulator");
             _random = new Random();
+            _market = market;
         }
 
         /// <summary>
@@ -177,22 +181,34 @@ namespace Street_Rod_AC.Services.Simulation
             ApplyRaceWear(car1, isRoadRace, racer1Wins);
             ApplyRaceWear(car2, isRoadRace, !racer1Wins);
 
-            // Handle race results
-            if (isRoadRace)
-            {
-                winner.Stats.Wins++;
-                loser.Stats.Losses++;
-            }
+            // Handle race results: every race counts, and it counts for its own kind as well
+            winner.Stats.Wins++;
+            loser.Stats.Losses++;
             winner.Stats.Races++;
             loser.Stats.Races++;
+
+            if (isRoadRace)
+            {
+                winner.Stats.RoadWins++;
+                loser.Stats.RoadLosses++;
+                winner.Stats.RoadRaces++;
+                loser.Stats.RoadRaces++;
+            }
+            else
+            {
+                winner.Stats.DragWins++;
+                loser.Stats.DragLosses++;
+                winner.Stats.DragRaces++;
+                loser.Stats.DragRaces++;
+            }
 
             decimal actualPrize = 0;
             Car? carWon = null;
 
             if (isPinkSlip)
             {
-                // Pink slip race - winner gets loser's car
-                actualPrize = loserCar.PurchasePrice;
+                // Pink slip race - winner gets loser's car, worth what any car is worth
+                actualPrize = _market.ValueOf(loserCar);
                 winner.Stats.PinkSlipsWon++;
                 winner.Stats.TotalEarnings += actualPrize;
                 loser.Stats.PinkSlipsLost++;
@@ -201,18 +217,10 @@ namespace Street_Rod_AC.Services.Simulation
                 carWon = loserCar;
                 loser.Cars.Remove(loserCar);
 
-                // Put car on market instead of giving to winner (simpler)
-                gameState.UsedCarMarket.Add(new UsedCarListing
-                {
-                    CarDefinitionId = loserCar.DefinitionId,
-                    SkinId = loserCar.SkinId,
-                    Mileage = (int)loserCar.OdometerKM,
-                    Condition = (float)GetOverallCarCondition(loserCar),
-                    Price = loserCar.PurchasePrice * 0.8m,
-                    ListedDate = gameState.Date,
-                    IsSold = false,
-                    DealerLocation = "street"
-                });
+                // The winner sells it on (simpler than a second car in the garage): it goes to the lot that takes
+                // the trade-ins, with its engine and everything else on it, at what it is worth
+                gameState.UsedCarMarket.Add(_market.ListCar(
+                    loserCar, actualPrize, _market.TradeInLocation(gameState.DealerLocations), gameState.Date));
 
                 // Check if loser has no more cars
                 if (loser.Cars.Count == 0)
@@ -223,12 +231,13 @@ namespace Street_Rod_AC.Services.Simulation
             }
             else if (prize > 0)
             {
-                // Cash prize
-                actualPrize = (decimal)prize;
+                // Cash prize: nobody pays out more than they have, and the winner gets what the loser paid.
+                // Paying the full prize while taking only what was there made money out of nothing.
+                actualPrize = Math.Min((decimal)prize, Math.Max(0m, loser.Money));
                 winner.Stats.TotalEarnings += actualPrize;
                 winner.Money += actualPrize;
                 loser.Stats.TotalLosses += actualPrize;
-                loser.Money = Math.Max(0, loser.Money - actualPrize);
+                loser.Money -= actualPrize;
             }
 
             // Skill improvement for winner (slight)
@@ -299,13 +308,14 @@ namespace Street_Rod_AC.Services.Simulation
             }
             else
             {
-                // Drag race - smaller bets
+                // Drag race - smaller bets, and never more than the poorer of the two can put up
                 var avgMoney = (double)(racer1.Money + racer2.Money) / 2;
+                var poorer = (double)Math.Max(0m, Math.Min(racer1.Money, racer2.Money));
                 var prob = _random.NextDouble();
 
                 if (prob < 0.3) return 0;                              // Just for fun
-                else if (prob < 0.7) return Math.Max(10, avgMoney * 0.02); // 2% of average bankroll
-                else return Math.Max(25, avgMoney * 0.05);             // 5% of average bankroll
+                else if (prob < 0.7) return Math.Min(poorer, Math.Max(10, avgMoney * 0.02)); // 2% of average bankroll
+                else return Math.Min(poorer, Math.Max(25, avgMoney * 0.05));             // 5% of average bankroll
             }
         }
 
@@ -442,11 +452,14 @@ namespace Street_Rod_AC.Services.Simulation
             };
         }
 
+        /// <summary>
+        /// A rough power figure from what the car cost. The real one is on the dyno (CarPartsService.Evaluate),
+        /// but that runs the part scripts for every car, several times a day, on the UI thread; the race
+        /// between two opponents nobody watches does not need it.
+        /// </summary>
         private double GetCarHP(Car car)
         {
-            // Use TotalHP if set, otherwise estimate from purchase price
-            if (car.TotalHP > 0) return car.TotalHP;
-            return 100 + (double)car.PurchasePrice / 50; // Rough estimate
+            return 100 + (double)car.PurchasePrice / 50;
         }
 
         private int GetRacerSkill(Racer racer)
@@ -456,10 +469,7 @@ namespace Street_Rod_AC.Services.Simulation
             return 85; // Default skill
         }
 
-        private double GetOverallCarCondition(Car car)
-        {
-            return (car.EngineHealth + car.TransmissionHealth + car.BodyCondition + car.TireCondition) / 4.0;
-        }
+        private static double GetOverallCarCondition(Car car) => CarValuation.ConditionOf(car);
     }
 
     /// <summary>

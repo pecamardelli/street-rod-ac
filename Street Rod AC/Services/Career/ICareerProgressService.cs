@@ -9,7 +9,8 @@ namespace Street_Rod_AC.Services.Career
     public interface ICareerProgressService
     {
         /// <summary>
-        /// Check for career progress after a race. Shows notifications for:
+        /// Check for career progress after a race. Words the notifications (returned in
+        /// <see cref="CareerProgressResult.PlayerMessages"/>, never shown from here) for:
         /// - Newly completed milestones
         /// - Newly unlocked victories
         /// - Victory achieved (game won)
@@ -50,5 +51,11 @@ namespace Street_Rod_AC.Services.Career
         public bool HasProgress => CompletedMilestones.Count > 0
             || UnlockedVictories.Count > 0
             || GameWon;
+
+        /// <summary>
+        /// What to tell the player about it, in the order to show it; empty when there is nothing to tell.
+        /// The service opens no dialogs: whoever ran the race passes these on to the screen.
+        /// </summary>
+        public List<Models.Race.PlayerMessage> PlayerMessages { get; } = [];
     }
 }

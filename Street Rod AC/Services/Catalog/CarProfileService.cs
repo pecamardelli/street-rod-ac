@@ -1,5 +1,6 @@
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
+using Street_Rod_AC.Parts.Cars;
 
 namespace Street_Rod_AC.Services.Catalog
 {
@@ -11,6 +12,13 @@ namespace Street_Rod_AC.Services.Catalog
         private readonly IContentCatalogRepository _catalogRepo;
         private readonly ICarProfileRepository _profileRepo;
         private readonly IAppLogger _logger;
+
+        /// <summary>
+        /// Weights outside this are misprints ("1.250" read the wrong way, a weight in tonnes or pounds): no
+        /// road car weighs under 300 kg or over 5 t. The car is then priced as one without specs.
+        /// </summary>
+        private const double MinPlausibleWeightKg = 300;
+        private const double MaxPlausibleWeightKg = 5000;
 
         // Brand reputation multipliers for pricing
         private static readonly Dictionary<string, float> BrandMultipliers = new()
@@ -49,6 +57,7 @@ namespace Street_Rod_AC.Services.Catalog
                 BasePrice = basePrice,
                 DealerPrecedence = precedence,
                 Source = ProfileDataSource.Generated,
+                DefinitionHash = carDefinition.ContentHash,
                 CreatedDate = DateTime.Now,
                 LastUpdatedDate = DateTime.Now,
                 IsStreetLegal = true // Default assumption
@@ -128,7 +137,17 @@ namespace Street_Rod_AC.Services.Catalog
             return Math.Clamp(precedence, 0.0f, 1.0f);
         }
 
-        public async Task EnsureProfilesExistAsync()
+        /// <summary>
+        /// Gives every active car a profile, and works a Generated profile out again when the car's definition
+        /// changed since (its hash moved on): a price worked out from an older ui_car.json, or read the wrong way,
+        /// would otherwise stick for good. Manual and imported profiles are left alone, and so is everything a
+        /// generated one holds besides price and precedence (the stock engine picked for it).
+        ///
+        /// Runs on a worker thread, with one read of each collection and one write: start-up waits for it.
+        /// </summary>
+        public Task EnsureProfilesExistAsync() => Task.Run(EnsureProfilesExist);
+
+        private void EnsureProfilesExist()
         {
             _logger.Information("Ensuring car profiles exist for all car definitions");
 
@@ -138,16 +157,25 @@ namespace Street_Rod_AC.Services.Catalog
             _logger.Information("Found {TotalCars} total cars, {ActiveCars} active",
                 allCars.Count, activeCars.Count);
 
-            int created = 0;
-            int existing = 0;
+            var profiles = _profileRepo.GetAllProfiles().ToDictionary(p => p.CarDefinitionId, StringComparer.OrdinalIgnoreCase);
+            var changed = new List<CarProfile>();
+            int created = 0, regenerated = 0, existing = 0;
 
             foreach (var car in activeCars)
             {
-                if (!_profileRepo.ProfileExists(car.Id))
+                if (!profiles.TryGetValue(car.Id, out var profile))
                 {
-                    var profile = GenerateDefaultProfile(car);
-                    _profileRepo.UpsertProfile(profile);
+                    changed.Add(GenerateDefaultProfile(car));
                     created++;
+                }
+                else if (profile.Source == ProfileDataSource.Generated && profile.DefinitionHash != car.ContentHash)
+                {
+                    profile.BasePrice = CalculateBasePrice(car);
+                    profile.DealerPrecedence = CalculatePrecedence(car);
+                    profile.DefinitionHash = car.ContentHash;
+                    profile.LastUpdatedDate = DateTime.Now;
+                    changed.Add(profile);
+                    regenerated++;
                 }
                 else
                 {
@@ -155,10 +183,10 @@ namespace Street_Rod_AC.Services.Catalog
                 }
             }
 
-            _logger.Information("Profile generation complete. Created: {Created}, Existing: {Existing}",
-                created, existing);
+            if (changed.Count > 0) _profileRepo.UpsertProfiles(changed);
 
-            await Task.CompletedTask;
+            _logger.Information("Profile generation complete. Created: {Created}, Regenerated: {Regenerated}, Existing: {Existing}",
+                created, regenerated, existing);
         }
 
         // Helper methods
@@ -185,42 +213,20 @@ namespace Street_Rod_AC.Services.Catalog
             if (carDef.Specs == null)
                 return 0f;
 
-            // Try to parse BHP
-            if (!TryParseBhp(carDef.Specs.Bhp, out var bhp))
+            // The one parser for ui_car.json figures: culture-free, first number only ("350hp @ 6000rpm")
+            if (!AcSpecs.TryParsePower(carDef.Specs.Bhp, out var bhp))
                 return 0f;
 
-            // Try to parse weight
-            if (!TryParseWeight(carDef.Specs.Weight, out var weightKg))
+            if (!AcSpecs.TryParseWeight(carDef.Specs.Weight, out var weightKg))
                 return 0f;
 
-            if (weightKg <= 0)
+            if (weightKg < MinPlausibleWeightKg || weightKg > MaxPlausibleWeightKg)
+            {
+                _logger.Debug("{CarId}: weight {Weight} kg is not believable; priced as a car without specs", carDef.Id, weightKg);
                 return 0f;
+            }
 
-            return bhp / weightKg;
-        }
-
-        private bool TryParseBhp(string? bhpStr, out float bhp)
-        {
-            bhp = 0f;
-            if (string.IsNullOrEmpty(bhpStr))
-                return false;
-
-            // Remove common suffixes and parse
-            var cleaned = bhpStr.Replace("bhp", "", StringComparison.OrdinalIgnoreCase)
-                                .Replace("hp", "", StringComparison.OrdinalIgnoreCase)
-                                .Trim();
-
-            return float.TryParse(cleaned, out bhp);
-        }
-
-        private bool TryParseWeight(string? weightStr, out float weightKg)
-        {
-            weightKg = 0f;
-            if (string.IsNullOrEmpty(weightStr))
-                return false;
-
-            var cleaned = weightStr.Replace("kg", "", StringComparison.OrdinalIgnoreCase).Trim();
-            return float.TryParse(cleaned, out weightKg);
+            return (float)(bhp / weightKg);
         }
 
         private float GetBrandMultiplier(string brand)

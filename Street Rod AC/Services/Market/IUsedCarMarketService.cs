@@ -33,5 +33,19 @@ namespace Street_Rod_AC.Services.Market
         /// Gets default dealer locations
         /// </summary>
         List<DealerLocation> GetDefaultDealers();
+
+        /// <summary>
+        /// Puts a car that somebody owned on a lot, the one way a listing is made from a car: it goes with its
+        /// parts (engine, running gear), and the seller says what engine it has and whether it has been worked
+        /// on. The car's part list moves to the listing; the caller no longer owns the car. The listing is
+        /// returned, not added to the market.
+        /// </summary>
+        UsedCarListing ListCar(Car car, decimal price, string location, DateTime listedDate);
+
+        /// <summary>What the car is worth (<see cref="CarValuation"/>): its model's base price, its condition, its engine</summary>
+        decimal ValueOf(Car car);
+
+        /// <summary>The id of the dealer that takes in the cars nobody asked about: the roughest lot of <paramref name="dealers"/></summary>
+        string TradeInLocation(IReadOnlyList<DealerLocation>? dealers);
     }
 }

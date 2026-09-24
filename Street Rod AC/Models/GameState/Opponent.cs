@@ -13,6 +13,12 @@ namespace Street_Rod_AC.Models.GameState
         public Guid OpponentId { get; set; } = Guid.NewGuid();
 
         /// <summary>
+        /// The id of the definition this opponent was made from ("drv_001" in opponent_definitions.json); empty
+        /// for one that was generated. <see cref="OpponentId"/> is made from it, so it is stable across loads.
+        /// </summary>
+        public string DefinitionId { get; set; } = string.Empty;
+
+        /// <summary>
         /// Opponent nickname (e.g., "Flathead", "Redline")
         /// </summary>
         public string Nickname { get; set; } = string.Empty;
@@ -93,21 +99,21 @@ namespace Street_Rod_AC.Models.GameState
             Aggression = ClampAggression(Aggression + delta);
         }
 
+        /// <summary>Lowest skill an opponent drives with. 90 on purpose: below that AC's AI is too slow to be a race</summary>
+        public const int MinSkill = 90;
+
+        /// <summary>Highest skill: AC's AI_LEVEL tops out at 100</summary>
+        public const int MaxSkill = 100;
+
         /// <summary>
         /// Clamp skill to valid range (90-100)
         /// </summary>
-        private static int ClampSkill(int value)
-        {
-            return Math.Max(90, Math.Min(100, value));
-        }
+        private static int ClampSkill(int value) => Math.Clamp(value, MinSkill, MaxSkill);
 
         /// <summary>
         /// Clamp aggression to valid range (0-100)
         /// </summary>
-        private static int ClampAggression(int value)
-        {
-            return Math.Max(0, Math.Min(100, value));
-        }
+        private static int ClampAggression(int value) => Math.Clamp(value, 0, 100);
     }
 
     /// <summary>

@@ -1,29 +1,34 @@
 
 using LiteDB;
 using Street_Rod_AC.Models.Catalog;
-using System.IO;
 
 namespace Street_Rod_AC.Services.Catalog
 {
     /// <summary>
-    /// LiteDB implementation of content catalog repository
-    /// Shares database with game saves but uses independent collections
+    /// LiteDB implementation of content catalog repository.
+    /// catalog.db is the catalog's own database (%AppData%\StreetRodAC\Catalog), apart from the game saves
     /// </summary>
     public class ContentCatalogRepository : IContentCatalogRepository
     {
         private readonly string _databasePath;
         private const string CarsCollection = "catalog_cars";
 
+        /// <summary>The indexes are made by the first write of the session; after that they are there</summary>
+        private bool _indexesEnsured;
+
         public ContentCatalogRepository()
         {
-            // Same database directory as game saves
-            var dbDirectory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "StreetRodAC",
-                "Saves");
+            _databasePath = CatalogDatabase.DefaultPath;
+        }
 
-            Directory.CreateDirectory(dbDirectory);
-            _databasePath = Path.Combine(dbDirectory, "catalog.db");
+        private void EnsureIndexes(ILiteCollection<CarDefinition> collection)
+        {
+            if (_indexesEnsured) return;
+
+            collection.EnsureIndex(x => x.Brand);
+            collection.EnsureIndex(x => x.Source);
+            collection.EnsureIndex(x => x.Status);
+            _indexesEnsured = true;
         }
 
         public void UpsertCar(CarDefinition car)
@@ -31,12 +36,7 @@ namespace Street_Rod_AC.Services.Catalog
             using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarDefinition>(CarsCollection);
 
-            // Ensure indexes exist
-            collection.EnsureIndex(x => x.Id, unique: true);
-            collection.EnsureIndex(x => x.Brand);
-            collection.EnsureIndex(x => x.Source);
-            collection.EnsureIndex(x => x.Status);
-
+            EnsureIndexes(collection);
             collection.Upsert(car);
         }
 
@@ -45,12 +45,7 @@ namespace Street_Rod_AC.Services.Catalog
             using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarDefinition>(CarsCollection);
 
-            // Ensure indexes exist
-            collection.EnsureIndex(x => x.Id, unique: true);
-            collection.EnsureIndex(x => x.Brand);
-            collection.EnsureIndex(x => x.Source);
-            collection.EnsureIndex(x => x.Status);
-
+            EnsureIndexes(collection);
             collection.Upsert(cars);
         }
 

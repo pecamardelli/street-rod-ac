@@ -46,7 +46,8 @@ namespace Street_Rod_AC.Models.Career.Filters
         public bool Matches(CarDefinition car, Car? instance = null)
         {
             // Try to parse BHP from specs
-            var bhp = ParseBhp(car.Specs?.Bhp);
+            // The one spec parser: "350hp @ 6000rpm" is 350, "1,200hp" is 1200, "335.5 bhp" is 335.5
+            var bhp = Street_Rod_AC.Parts.Cars.AcSpecs.ParsePower(car.Specs?.Bhp);
             if (!bhp.HasValue)
                 return false; // Cars without power data don't match power-based filters
 
@@ -57,36 +58,6 @@ namespace Street_Rod_AC.Models.Career.Filters
                 return false;
 
             return true;
-        }
-
-        /// <summary>
-        /// Parse BHP value from specs string (e.g., "450 bhp", "350hp @ 6000rpm")
-        /// </summary>
-        private static int? ParseBhp(string? bhpString)
-        {
-            if (string.IsNullOrWhiteSpace(bhpString))
-                return null;
-
-            // Remove common suffixes and extract first number
-            var cleaned = bhpString
-                .Replace("bhp", "", StringComparison.OrdinalIgnoreCase)
-                .Replace("hp", "", StringComparison.OrdinalIgnoreCase)
-                .Trim();
-
-            // Find first contiguous number
-            var numberChars = new List<char>();
-            foreach (var c in cleaned)
-            {
-                if (char.IsDigit(c))
-                    numberChars.Add(c);
-                else if (numberChars.Count > 0)
-                    break; // Stop at first non-digit after we have digits
-            }
-
-            if (numberChars.Count > 0 && int.TryParse(new string(numberChars.ToArray()), out var result))
-                return result;
-
-            return null;
         }
     }
 }

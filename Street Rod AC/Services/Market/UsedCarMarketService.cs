@@ -1,5 +1,3 @@
-using System.IO;
-using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
@@ -33,7 +31,6 @@ namespace Street_Rod_AC.Services.Market
         private const int MinMileage = 5000;
         private const int MaxMileage = 60000;
         private const float PriceVariationPercent = 0.2f; // ±20%
-        private const double ModificationsPriceShare = 0.5; // money put into an engine never comes back in full
 
         /// <summary>How hard a dealer pulls condition toward its own standard. At 1 the shift is the full
         /// distance between that standard and the middle of the range</summary>
@@ -91,30 +88,23 @@ namespace Street_Rod_AC.Services.Market
         /// </summary>
         private List<PoolEntry> BuildPool(List<CarDefinition> activeCars)
         {
-            var priced = new List<(CarDefinition Car, CarProfile Profile)>();
-            var uninstalled = 0;
-
-            foreach (var car in activeCars)
-            {
-                var profile = _profileRepo.GetProfile(car.Id);
-                if (profile == null || profile.BasePrice <= 0) continue;
-
-                // The catalog outlives the install: a car deleted from content/cars stays on its books, and
-                // one that is not there cannot be sold. It would take a place on a lot, show a card, and
-                // stand as an invisible gap - which is what emptied the dearest lots, since the cars that
-                // were cleared out were the expensive ones.
-                if (!Directory.Exists(Path.Combine(AppSettings.Instance.CarsPath, car.Id)))
-                {
-                    uninstalled++;
-                    continue;
-                }
-
-                priced.Add((car, profile));
-            }
-
+            // The catalog outlives the install: a car deleted from content/cars stays on its books, and one that
+            // is not there cannot be sold. It would take a place on a lot, show a card, and stand as an invisible
+            // gap - which is what emptied the dearest lots, since the cars that were cleared out were the
+            // expensive ones.
+            var installed = InstalledCars.Only(activeCars, out var uninstalled);
             if (uninstalled > 0)
             {
                 _logger.Warning("{Count} cars in the catalog are not installed and cannot be sold", uninstalled);
+            }
+
+            // One visit to the catalog for every profile, not one per car: this runs every game day
+            var profiles = _profileRepo.GetAllProfiles().ToDictionary(p => p.CarDefinitionId, StringComparer.OrdinalIgnoreCase);
+
+            var priced = new List<(CarDefinition Car, CarProfile Profile)>();
+            foreach (var car in installed)
+            {
+                if (profiles.TryGetValue(car.Id, out var profile) && profile.BasePrice > 0) priced.Add((car, profile));
             }
 
             if (priced.Count == 0) return [];
@@ -124,12 +114,26 @@ namespace Street_Rod_AC.Services.Market
 
             foreach (var (car, profile) in priced)
             {
-                var below = ladder.Count(p => p < profile.BasePrice);
+                var below = CountBelow(ladder, profile.BasePrice);
                 var rank = ladder.Count == 1 ? 0.5f : (float)below / (ladder.Count - 1);
                 pool.Add(new PoolEntry(car, profile, Math.Clamp(rank, 0f, 1f)));
             }
 
             return pool;
+        }
+
+        /// <summary>How many prices of the sorted ladder are below <paramref name="price"/>: the first index not below it</summary>
+        private static int CountBelow(List<decimal> ladder, decimal price)
+        {
+            int low = 0, high = ladder.Count;
+            while (low < high)
+            {
+                var middle = low + (high - low) / 2;
+                if (ladder[middle] < price) low = middle + 1;
+                else high = middle;
+            }
+
+            return low;
         }
 
         /// <summary>How many cars this dealer means to have out, from its own definition</summary>
@@ -274,31 +278,73 @@ namespace Street_Rod_AC.Services.Market
             };
         }
 
-        // Helper methods
-
-        private int DetermineInstanceCount(float precedence)
+        public UsedCarListing ListCar(Car car, decimal price, string location, DateTime listedDate)
         {
-            // Roll random to determine if we spawn at all
-            var roll = (float)_random.NextDouble();
+            var listing = new UsedCarListing
+            {
+                Id = Guid.NewGuid().ToString(),
+                CarDefinitionId = car.DefinitionId,
+                Price = price,
+                Mileage = (int)Math.Clamp(car.OdometerKM, 0, int.MaxValue),
+                Condition = (float)CarValuation.ConditionOf(car),
+                SkinId = string.IsNullOrEmpty(car.SkinId) ? "default" : car.SkinId,
+                ListedDate = listedDate,
+                DealerLocation = location,
+                IsSold = false,
 
-            if (roll >= precedence)
+                // The car goes with everything on it; the buyer gets exactly this car
+                Parts = car.Parts,
+                HasRunningGearAssigned = car.HasRunningGearAssigned
+            };
+
+            if (listing.Parts.Count > 0 && car.Engine is { } engine && _partsService is { IsAvailable: true } parts)
             {
-                return 0; // Don't spawn
+                try
+                {
+                    listing.EngineSummary = parts.Describe(engine, parts.Evaluate(car));
+
+                    // Worked on when the engine is not made of the factory build's parts
+                    if (_catalogRepo.GetCar(car.DefinitionId) is { } carDef && parts.GetStockBuild(carDef) is { } stock)
+                    {
+                        var factory = stock.Build.Parts.Where(p => p.Part != null).Select(p => p.Part!).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                        listing.IsModified = !engine.SelfAndDescendants().All(p => factory.Contains(p.DefinitionId));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // The listing still sells with its parts; the seller just has less to say about the engine
+                    _logger.Warning("Could not describe the engine of a {CarId}: {Error}", car.DefinitionId, ex.Message);
+                }
             }
 
-            // Spawn count based on precedence
-            if (precedence >= 0.7f)
+            return listing;
+        }
+
+        public decimal ValueOf(Car car)
+        {
+            var profile = _profileRepo.GetProfile(car.DefinitionId);
+            if (profile == null || profile.BasePrice <= 0)
             {
-                return _random.Next(1, 4); // 1-3 instances
+                // A car the catalog cannot price: what was paid for it is the best guess there is
+                return CarValuation.RoundToHundred(car.PurchasePrice);
             }
-            else if (precedence >= 0.4f)
-            {
-                return _random.Next(0, 3); // 0-2 instances
-            }
-            else
-            {
-                return _random.Next(0, 2); // 0-1 instance
-            }
+
+            return CarValuation.ValueOf(car, profile.BasePrice, _partsService, _catalogRepo.GetCar(car.DefinitionId));
+        }
+
+        public string TradeInLocation(IReadOnlyList<DealerLocation>? dealers)
+        {
+            var known = dealers is { Count: > 0 } ? dealers : GetDefaultDealers();
+
+            // The lot that keeps the roughest stock takes the cars nobody asked about: the trade-ins
+            var roughest = known
+                .Select(d => (Location: d, Definition: _dealerCatalog?.Get(d.Id)))
+                .Where(d => d.Definition != null)
+                .OrderBy(d => d.Definition!.ConditionCenter)
+                .Select(d => d.Location)
+                .FirstOrDefault();
+
+            return (roughest ?? known[^1]).Id;
         }
 
         private UsedCarListing CreateListing(CarDefinition carDef, CarProfile profile, DealerLocation dealer, DateTime currentDate)
@@ -366,8 +412,8 @@ namespace Street_Rod_AC.Services.Market
                 if (engine.IsModified && parts.GetStockBuild(carDef) is { } stockBuild
                     && EngineFactory.CreateStock(parts.Catalog, stockBuild, listing.Condition, Random.Shared) is { } stock)
                 {
-                    var extra = PartPricing.WorthOfAssembly(parts.Catalog, engine.Root) - PartPricing.WorthOfAssembly(parts.Catalog, stock.Root);
-                    if (extra > 0) listing.Price += Math.Round((decimal)(extra * ModificationsPriceShare) / 100) * 100;
+                    listing.Price += CarValuation.RoundToHundred(CarValuation.ModificationsValue(
+                        PartPricing.WorthOfAssembly(parts.Catalog, engine.Root), PartPricing.WorthOfAssembly(parts.Catalog, stock.Root)));
                 }
             }
             catch (Exception ex)
@@ -410,19 +456,13 @@ namespace Street_Rod_AC.Services.Market
 
         private decimal CalculatePrice(decimal basePrice, float condition)
         {
-            // Start with base price
-            var price = basePrice;
-
-            // Apply condition multiplier (0.3 condition = 50% price, 1.0 condition = 110% price)
-            var conditionMultiplier = 0.5m + ((decimal)condition * 0.6m);
-            price *= conditionMultiplier;
-
-            // Add random variation ±20%
+            // What the car is worth (the one condition curve every price in the game uses), and then what this
+            // dealer makes of it on the day: a random variation of ±20%
+            var price = basePrice * CarValuation.ConditionFactor(condition);
             var variation = 1.0m + ((decimal)_random.NextDouble() * (decimal)PriceVariationPercent * 2) - (decimal)PriceVariationPercent;
             price *= variation;
 
-            // Round to nearest 100
-            return Math.Round(price / 100) * 100;
+            return CarValuation.RoundToHundred(price);
         }
     }
 }

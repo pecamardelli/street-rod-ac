@@ -23,17 +23,20 @@ namespace Street_Rod_AC.Services.Scheduler
                 task.TaskId, task.IntervalDays);
         }
 
-        public async Task OnTimeAdvancedAsync(GameState gameState, DateTime previousDate, DateTime newDate)
+        public async Task<IReadOnlyList<string>> OnTimeAdvancedAsync(GameState gameState, DateTime previousDate, DateTime newDate)
         {
             _logger.Debug("Time advanced from {PreviousDate} to {NewDate}", previousDate, newDate);
 
+            var failed = new List<string>();
             foreach (var task in _tasks)
             {
-                if (IsTaskDue(gameState, task, newDate))
+                if (IsTaskDue(gameState, task, newDate) && !await ExecuteTaskAsync(gameState, task, newDate))
                 {
-                    await ExecuteTaskAsync(gameState, task, newDate);
+                    failed.Add(task.TaskId);
                 }
             }
+
+            return failed;
         }
 
         public async Task ExecuteAllTasksAsync(GameState gameState, DateTime currentDate)
@@ -54,7 +57,8 @@ namespace Street_Rod_AC.Services.Scheduler
             return daysSinceLastRun >= task.IntervalDays;
         }
 
-        private async Task ExecuteTaskAsync(GameState gameState, IScheduledTask task, DateTime currentDate)
+        /// <summary>False when the task threw; its last run then stays where it was, so it is due again tomorrow</summary>
+        private async Task<bool> ExecuteTaskAsync(GameState gameState, IScheduledTask task, DateTime currentDate)
         {
             _logger.Information("Executing scheduled task: {TaskId}", task.TaskId);
 
@@ -67,10 +71,12 @@ namespace Street_Rod_AC.Services.Scheduler
                 taskState.LastExecuted = currentDate;
 
                 _logger.Information("Scheduled task completed: {TaskId}", task.TaskId);
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, "Scheduled task failed: {TaskId}", task.TaskId);
+                return false;
             }
         }
 

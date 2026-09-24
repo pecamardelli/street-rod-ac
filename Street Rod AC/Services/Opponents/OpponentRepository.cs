@@ -1,6 +1,8 @@
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace Street_Rod_AC.Services.Opponents
@@ -40,7 +42,7 @@ namespace Street_Rod_AC.Services.Opponents
             try
             {
                 var json = File.ReadAllText(_definitionsFilePath);
-                var document = JsonDocument.Parse(json);
+                using var document = JsonDocument.Parse(json);
                 var root = document.RootElement;
 
                 if (!root.TryGetProperty("opponents", out var opponentsArray))
@@ -71,12 +73,28 @@ namespace Street_Rod_AC.Services.Opponents
         }
 
         /// <summary>
-        /// Load a specific opponent by ID
+        /// Load a specific opponent by ID: the definition's own id ("drv_001") or the Guid made from it
         /// </summary>
         public Opponent? LoadOpponent(string opponentId)
         {
             var allOpponents = LoadAllOpponents();
-            return allOpponents.FirstOrDefault(o => o.OpponentId.ToString() == opponentId);
+            return allOpponents.FirstOrDefault(o =>
+                string.Equals(o.DefinitionId, opponentId, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(o.OpponentId.ToString(), opponentId, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// The same Guid for the same definition id on every load and every machine, so an opponent is the same
+        /// opponent from one game to the next. A definition id that already is a Guid is taken as it is.
+        /// </summary>
+        internal static Guid StableIdFor(string definitionId)
+        {
+            if (Guid.TryParse(definitionId, out var guid)) return guid;
+
+            var hash = MD5.HashData(Encoding.UTF8.GetBytes("street-rod-opponent:" + definitionId.ToLowerInvariant()));
+            hash[6] = (byte)((hash[6] & 0x0F) | 0x30); // version 3: name-based (MD5)
+            hash[8] = (byte)((hash[8] & 0x3F) | 0x80); // RFC 4122 variant
+            return new Guid(hash, bigEndian: true);
         }
 
         /// <summary>
@@ -109,9 +127,13 @@ namespace Street_Rod_AC.Services.Opponents
                 }
 
                 // Create opponent
+                // The definition's id is kept, and the Guid is made from it rather than rolled fresh on every
+                // load: the same definition is the same opponent every time. A definition without an id gets a
+                // new one, as before.
                 var opponent = new Opponent(name, age, gender, skill, aggression)
                 {
-                    OpponentId = Guid.NewGuid() // Generate new GUID for persistence
+                    DefinitionId = id,
+                    OpponentId = string.IsNullOrWhiteSpace(id) ? Guid.NewGuid() : StableIdFor(id)
                 };
 
                 // Extract optional fields

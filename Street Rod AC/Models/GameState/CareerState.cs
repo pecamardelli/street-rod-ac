@@ -139,6 +139,13 @@ namespace Street_Rod_AC.Models.GameState
     public class RaceEventState
     {
         /// <summary>
+        /// This very instance of the event, stored with it: the newspaper's invitation carries it into the race
+        /// and the result completes exactly this one. (States saved before it existed get one when loaded and
+        /// keep it from the next save on.)
+        /// </summary>
+        public Guid InstanceId { get; set; } = Guid.NewGuid();
+
+        /// <summary>
         /// ID of the event definition this is an instance of
         /// </summary>
         public string EventDefinitionId { get; set; } = string.Empty;

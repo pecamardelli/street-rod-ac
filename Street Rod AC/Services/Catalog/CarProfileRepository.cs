@@ -1,6 +1,5 @@
 using LiteDB;
 using Street_Rod_AC.Models.Catalog;
-using System.IO;
 
 namespace Street_Rod_AC.Services.Catalog
 {
@@ -13,16 +12,20 @@ namespace Street_Rod_AC.Services.Catalog
         private readonly string _databasePath;
         private const string ProfilesCollection = "catalog_carprofiles";
 
+        /// <summary>The indexes are made by the first write of the session; after that they are there</summary>
+        private bool _indexesEnsured;
+
         public CarProfileRepository()
         {
-            // Same database directory as catalog
-            var dbDirectory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "StreetRodAC",
-                "Saves");
+            _databasePath = CatalogDatabase.DefaultPath;
+        }
 
-            Directory.CreateDirectory(dbDirectory);
-            _databasePath = Path.Combine(dbDirectory, "catalog.db");
+        private void EnsureIndexes(ILiteCollection<CarProfile> collection)
+        {
+            if (_indexesEnsured) return;
+
+            collection.EnsureIndex(x => x.DealerPrecedence);
+            _indexesEnsured = true;
         }
 
         public CarProfile? GetProfile(string carDefinitionId)
@@ -48,11 +51,17 @@ namespace Street_Rod_AC.Services.Catalog
             using var db = CatalogDatabase.Open(_databasePath);
             var collection = db.GetCollection<CarProfile>(ProfilesCollection);
 
-            // Ensure indexes
-            collection.EnsureIndex(x => x.CarDefinitionId, unique: true);
-            collection.EnsureIndex(x => x.DealerPrecedence);
-
+            EnsureIndexes(collection);
             collection.Upsert(profile);
+        }
+
+        public void UpsertProfiles(IEnumerable<CarProfile> profiles)
+        {
+            using var db = CatalogDatabase.Open(_databasePath);
+            var collection = db.GetCollection<CarProfile>(ProfilesCollection);
+
+            EnsureIndexes(collection);
+            collection.Upsert(profiles);
         }
 
         public bool UpdateProfile(string carDefinitionId, Func<CarProfile, CarProfile?> change)

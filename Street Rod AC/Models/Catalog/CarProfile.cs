@@ -33,6 +33,13 @@ namespace Street_Rod_AC.Models.Catalog
         public ProfileDataSource Source { get; set; } = ProfileDataSource.Generated;
 
         /// <summary>
+        /// The CarDefinition.ContentHash a Generated profile was worked out from. When the car's ui_car.json (or
+        /// its skins) change, the hash moves on and the price and precedence are worked out again; a Manual
+        /// profile is left as it is. Null on profiles from before it was kept: those are worked out again once.
+        /// </summary>
+        public string? DefinitionHash { get; set; }
+
+        /// <summary>
         /// When this profile was created
         /// </summary>
         public DateTime CreatedDate { get; set; }

@@ -23,6 +23,11 @@ namespace Street_Rod_AC.Services.Catalog
         void UpsertProfile(CarProfile profile);
 
         /// <summary>
+        /// Upserts many profiles in one visit to the database
+        /// </summary>
+        void UpsertProfiles(IEnumerable<CarProfile> profiles);
+
+        /// <summary>
         /// Reads the stored profile, asks the caller what to store instead and stores that, all in one visit
         /// to the database, so that nothing saved from another thread in between gets lost. The caller returns
         /// the stored profile with its changes, or one of its own with whatever it wants to keep of the stored

@@ -38,7 +38,7 @@ namespace Street_Rod_AC.Services.Dealers
                     return;
                 }
 
-                var document = JsonDocument.Parse(File.ReadAllText(path));
+                using var document = JsonDocument.Parse(File.ReadAllText(path));
                 if (!document.RootElement.TryGetProperty("dealers", out var array))
                 {
                     _logger.Error("No 'dealers' array in {Path}", path);
@@ -81,7 +81,7 @@ namespace Street_Rod_AC.Services.Dealers
                     return;
                 }
 
-                var document = JsonDocument.Parse(File.ReadAllText(path));
+                using var document = JsonDocument.Parse(File.ReadAllText(path));
                 if (!document.RootElement.TryGetProperty("showrooms", out var array)) return;
 
                 foreach (var element in array.EnumerateArray())

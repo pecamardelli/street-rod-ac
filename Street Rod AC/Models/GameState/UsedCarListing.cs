@@ -69,6 +69,12 @@ namespace Street_Rod_AC.Models.GameState
 
         /// <summary>True when the engine is not as it left the factory</summary>
         public bool IsModified { get; set; }
+
+        /// <summary>
+        /// True when <see cref="Parts"/> already holds the car's wheels, brakes, springs and shocks (a car that was
+        /// somebody's, relisted); the buyer's car must not be given a second factory set then
+        /// </summary>
+        public bool HasRunningGearAssigned { get; set; }
     }
 
     /// <summary>

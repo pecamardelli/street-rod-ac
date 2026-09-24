@@ -1,6 +1,7 @@
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Services.Parts;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
 
@@ -24,9 +25,14 @@ namespace Street_Rod_AC.Services.Market
     /// Buying a car: the money, the paperwork and the clock. Shared by every screen that sells one, so a car
     /// bought off the lot and a car bought out of the listings end up in exactly the same state.
     /// </summary>
-    public class CarPurchaseService(IGameStateRepository gameStateRepository) : ICarPurchaseService
+    public class CarPurchaseService(
+        IGameStateRepository gameStateRepository,
+        ICarPartsService partsService,
+        IGameTimeService gameTimeService) : ICarPurchaseService
     {
         private readonly IGameStateRepository _gameStateRepository = gameStateRepository;
+        private readonly ICarPartsService _partsService = partsService;
+        private readonly IGameTimeService _gameTimeService = gameTimeService;
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("CarPurchase");
 
         public async Task<PurchaseResult> PurchaseAsync(
@@ -47,24 +53,22 @@ namespace Street_Rod_AC.Services.Market
                     "This car is no longer available.");
             }
 
-            var carInstance = new Car
+            // Claimed before anything is awaited: a second confirm that comes in while the engine is being put
+            // together finds it sold, instead of buying the same car twice and paying for it twice
+            currentListing.IsSold = true;
+            currentListing.SoldDate = gameState.Date;
+
+            Car carInstance;
+            try
             {
-                InstanceId = Guid.NewGuid(),
-                DefinitionId = listing.CarDefinitionId,
-                SkinId = listing.SkinId,
-                PurchasePrice = listing.Price,
-                PurchaseDate = gameState.Date,
-                OdometerKM = listing.Mileage,
-                // Map single condition to health metrics
-                EngineHealth = listing.Condition,
-                TransmissionHealth = listing.Condition,
-                BodyCondition = listing.Condition,
-                TireCondition = listing.Condition,
-                // What was for sale is what gets bought; older listings carry no parts and get the factory engine
-                Parts = listing.Parts,
-                HasPartsAssigned = listing.Parts.Count > 0
-            };
-            await ((App)System.Windows.Application.Current).CarPartsService.EnsurePartsAsync(carInstance);
+                carInstance = await CreateCarAsync(gameState, listing);
+            }
+            catch
+            {
+                currentListing.IsSold = false;
+                currentListing.SoldDate = null;
+                throw;
+            }
 
             gameState.Player.Cars ??= [];
             gameState.Player.Cars.Add(carInstance);
@@ -73,9 +77,6 @@ namespace Street_Rod_AC.Services.Market
             // Somebody with no car of their own has just bought one: it is the one they mean. Without this
             // the garage falls back to whatever happens to be first in the list.
             gameState.Player.SelectedCarInstanceId ??= carInstance.InstanceId;
-
-            currentListing.IsSold = true;
-            currentListing.SoldDate = gameState.Date;
 
             // The parts went with the car; the sold listing stays around for a week and need not keep a copy
             currentListing.Parts = [];
@@ -87,7 +88,7 @@ namespace Street_Rod_AC.Services.Market
             // with the market and the ads turned over, and all of it belongs in the save.
             try
             {
-                await ((App)System.Windows.Application.Current).SpendTimeAsync(GameAction.BuyCar);
+                await _gameTimeService.SpendTimeAsync(gameState, GameAction.BuyCar);
             }
             catch (Exception ex)
             {
@@ -110,6 +111,42 @@ namespace Street_Rod_AC.Services.Market
                 $"Congratulations! You've purchased a {carDef.Brand} {carDef.Name} for ${listing.Price:N0}.\n\n" +
                 "You can now find it in your garage.",
                 saveFailed);
+        }
+
+        /// <summary>The car that was for sale, with the parts it came with, or its factory engine if it came without</summary>
+        private async Task<Car> CreateCarAsync(Models.GameState.GameState gameState, UsedCarListing listing)
+        {
+            var carInstance = new Car
+            {
+                InstanceId = Guid.NewGuid(),
+                DefinitionId = listing.CarDefinitionId,
+                SkinId = listing.SkinId,
+                PurchasePrice = listing.Price,
+                PurchaseDate = gameState.Date,
+                OdometerKM = listing.Mileage,
+                // Map single condition to health metrics
+                EngineHealth = listing.Condition,
+                TransmissionHealth = listing.Condition,
+                BodyCondition = listing.Condition,
+                TireCondition = listing.Condition,
+                // What was for sale is what gets bought; older listings carry no parts and get the factory engine
+                Parts = listing.Parts,
+                HasPartsAssigned = listing.Parts.Count > 0,
+                HasRunningGearAssigned = listing.HasRunningGearAssigned
+            };
+
+            try
+            {
+                await _partsService.EnsurePartsAsync(carInstance);
+            }
+            catch (Exception ex)
+            {
+                // The car sells without the parts it was missing, the way a listing whose engine could not be
+                // built does; the garage gives it its factory ones the next time it looks
+                _logger.Warning("Could not give the {CarId} its factory parts: {Error}", listing.CarDefinitionId, ex.Message);
+            }
+
+            return carInstance;
         }
     }
 }

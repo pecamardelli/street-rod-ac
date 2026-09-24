@@ -214,7 +214,7 @@ namespace Street_Rod_AC.Services.Career
                 .Where(e => e.IsAvailable(currentTime))
                 .Select(e => new RaceEventInstance
                 {
-                    InstanceId = Guid.NewGuid(), // Note: This should use stored instance
+                    InstanceId = e.InstanceId,
                     EventDefinitionId = e.EventDefinitionId,
                     AvailableFrom = e.AvailableFrom,
                     ExpiresAt = e.ExpiresAt,
@@ -278,9 +278,10 @@ namespace Street_Rod_AC.Services.Career
                     OpponentName = eventDef.SpecificOpponent
                 };
 
-                // Add to career state
+                // Add to career state, under the instance's id: that is what the invitation hands back
                 career.ActiveEvents.Add(new RaceEventState
                 {
+                    InstanceId = instance.InstanceId,
                     EventDefinitionId = instance.EventDefinitionId,
                     AvailableFrom = instance.AvailableFrom,
                     ExpiresAt = instance.ExpiresAt,
@@ -322,13 +323,18 @@ namespace Street_Rod_AC.Services.Career
             return true;
         }
 
+        /// <param name="eventInstanceId">The instance the player entered (<see cref="RaceEventState.InstanceId"/>).
+        /// Guid.Empty only for a race from before instances were carried into it: then the first open event in
+        /// its window is taken, as it always was.</param>
+        /// <param name="completedAt">Game time of the race (gameState.Date), never the real clock</param>
         public EventReward? CompleteEvent(Guid eventInstanceId, bool playerWon, CareerState career, DateTime completedAt)
         {
-            // Find the event state in career
-            var eventState = career.ActiveEvents.FirstOrDefault(e =>
-                !e.IsCompleted &&
-                e.AvailableFrom <= completedAt &&
-                (!e.ExpiresAt.HasValue || e.ExpiresAt.Value >= completedAt));
+            var eventState = eventInstanceId != Guid.Empty
+                ? career.ActiveEvents.FirstOrDefault(e => e.InstanceId == eventInstanceId && !e.IsCompleted)
+                : career.ActiveEvents.FirstOrDefault(e =>
+                    !e.IsCompleted &&
+                    e.AvailableFrom <= completedAt &&
+                    (!e.ExpiresAt.HasValue || e.ExpiresAt.Value >= completedAt));
 
             if (eventState == null)
                 return null;
@@ -337,9 +343,10 @@ namespace Street_Rod_AC.Services.Career
             if (eventDef == null)
                 return null;
 
-            // Mark as completed
+            // Mark as completed. When it was is what brings a daily or weekly event back.
             eventState.IsCompleted = true;
             eventState.PlayerWon = playerWon;
+            eventState.CompletedAt = completedAt;
 
             // Track one-time event completion
             if (eventDef.Schedule == EventSchedule.OneTime)
@@ -351,12 +358,34 @@ namespace Street_Rod_AC.Services.Career
             return playerWon ? eventDef.Reward : null;
         }
 
+        /// <summary>
+        /// Takes out the events that ran out unentered, and the completed ones once they have done their job:
+        /// a completed daily or weekly event is kept until its schedule would bring it back (that is what
+        /// GenerateEvents looks at), a completed one-time event lives on in CompletedEventIds. Without this the
+        /// save's list only ever grew.
+        /// </summary>
         public int CleanupExpiredEvents(CareerState career, DateTime currentTime)
         {
             var expiredCount = career.ActiveEvents.RemoveAll(e =>
-                !e.IsCompleted && e.ExpiresAt.HasValue && e.ExpiresAt.Value < currentTime);
+                (!e.IsCompleted && e.ExpiresAt.HasValue && e.ExpiresAt.Value < currentTime)
+                || (e.IsCompleted && CompletionHasRunOut(e, currentTime)));
 
             return expiredCount;
+        }
+
+        private bool CompletionHasRunOut(RaceEventState state, DateTime currentTime)
+        {
+            // Completed before CompletedAt was recorded: nothing would ever bring it back, so it only blocks
+            if (!state.CompletedAt.HasValue) return true;
+
+            var keepFor = GetEventDefinition(state.EventDefinitionId)?.Schedule switch
+            {
+                EventSchedule.Daily => TimeSpan.FromHours(24),
+                EventSchedule.Weekly => TimeSpan.FromDays(7),
+                _ => TimeSpan.Zero
+            };
+
+            return currentTime - state.CompletedAt.Value >= keepFor;
         }
     }
 }

@@ -62,8 +62,7 @@ namespace Street_Rod_AC.Services.Career
                 Description = "Reach 25 reputation",
                 Trigger = MilestoneTrigger.ReputationReached,
                 TargetValue = 25,
-                Category = "Reputation",
-                Unlocks = ["event:muscle_car_events"]
+                Category = "Reputation"
             });
 
             AddMilestone(milestones, new MilestoneDefinition
@@ -117,8 +116,7 @@ namespace Street_Rod_AC.Services.Career
                 Description = "Own 5 cars at once",
                 Trigger = MilestoneTrigger.CarsOwned,
                 TargetValue = 5,
-                Category = "Collection",
-                Unlocks = ["event:car_shows"]
+                Category = "Collection"
             });
 
             AddMilestone(milestones, new MilestoneDefinition

@@ -2,6 +2,8 @@ using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Market;
+using Street_Rod_AC.Services.Parts;
 
 namespace Street_Rod_AC.Services.Opponents
 {
@@ -14,16 +16,27 @@ namespace Street_Rod_AC.Services.Opponents
         private readonly IAppLogger _logger;
         private readonly IContentCatalogRepository _catalogRepository;
         private readonly ICarProfileRepository _carProfileRepository;
+        private readonly ICarPartsService? _partsService;
 
+        /// <param name="partsService">Weighs what has been done to the two engines in a pink-slip challenge; without
+        /// it the cars are valued as if they had their factory engines</param>
         public OpponentChallengeService(
             IContentCatalogRepository catalogRepository,
-            ICarProfileRepository carProfileRepository)
+            ICarProfileRepository carProfileRepository,
+            ICarPartsService? partsService = null)
         {
             _random = new Random();
             _logger = AppLoggerFactory.CreateLogger("OpponentChallenge");
             _catalogRepository = catalogRepository;
             _carProfileRepository = carProfileRepository;
+            _partsService = partsService;
         }
+
+        /// <summary>
+        /// For testing races without being turned down: every challenge is accepted. Off unless a debug build
+        /// or a test turns it on; it never ships on.
+        /// </summary>
+        public bool AlwaysAccept { get; set; }
 
         /// <summary>
         /// Evaluate whether an opponent accepts a challenge
@@ -39,16 +52,17 @@ namespace Street_Rod_AC.Services.Opponents
             _logger.Information("Evaluating challenge: {OpponentName} vs {PlayerName}, PinkSlip: {IsPinkSlip}, Wager: {Wager}",
                 opponent.Name, player.Name, isPinkSlip, cashWager);
 
-            // TEMPORARY: Always accept challenges for testing
-            _logger.Warning("Challenge acceptance bypassed for testing - opponent automatically accepts");
-            return new ChallengeResponse
+            if (AlwaysAccept)
             {
-                Accepted = true,
-                Message = $"{opponent.Name}: You're on! Let's race!",
-                DeclineReason = null
-            };
+                _logger.Warning("Challenge acceptance bypassed for testing - opponent automatically accepts");
+                return new ChallengeResponse
+                {
+                    Accepted = true,
+                    Message = $"{opponent.Name}: You're on! Let's race!",
+                    DeclineReason = null
+                };
+            }
 
-            /* COMMENTED OUT FOR TESTING - RESTORE THIS LATER
             // Get car definitions for value comparison
             var playerCarDef = _catalogRepository.GetCar(playerCar.DefinitionId);
             var opponentCarDef = _catalogRepository.GetCar(opponentCar.DefinitionId);
@@ -67,13 +81,12 @@ namespace Street_Rod_AC.Services.Opponents
             // Evaluate based on bet type
             if (isPinkSlip)
             {
-                return EvaluatePinkSlipChallenge(opponent, player, playerCarDef, opponentCarDef);
+                return EvaluatePinkSlipChallenge(opponent, player, playerCar, playerCarDef, opponentCar, opponentCarDef);
             }
             else
             {
                 return EvaluateCashChallenge(opponent, player, cashWager);
             }
-            */
         }
 
         /// <summary>
@@ -82,16 +95,27 @@ namespace Street_Rod_AC.Services.Opponents
         private ChallengeResponse EvaluatePinkSlipChallenge(
             Opponent opponent,
             Player player,
+            Car playerCar,
             CarDefinition playerCarDef,
+            Car opponentCar,
             CarDefinition opponentCarDef)
         {
-            // Get car profiles for pricing
-            var playerCarProfile = _carProfileRepository.GetProfile(playerCarDef.Id);
-            var opponentCarProfile = _carProfileRepository.GetProfile(opponentCarDef.Id);
+            // What each car is worth as it stands: model, condition, engine. The same sum the market uses.
+            var playerCarValue = ValueOf(playerCar, playerCarDef);
+            var opponentCarValue = ValueOf(opponentCar, opponentCarDef);
 
-            // Calculate car value ratio
-            var playerCarValue = playerCarProfile?.BasePrice ?? 1000m;
-            var opponentCarValue = opponentCarProfile?.BasePrice ?? 1000m;
+            // A car worth nothing (no price for its model, a wreck) is nothing to stake either way. Without a
+            // value to compare against, the ratio would divide by zero.
+            if (opponentCarValue <= 0 || playerCarValue <= 0)
+            {
+                return new ChallengeResponse
+                {
+                    Accepted = false,
+                    Message = GetCarValueMismatchMessage(opponent, isPlayerCarCheaper: playerCarValue <= 0),
+                    DeclineReason = ChallengeDeclineReason.CarValueMismatch
+                };
+            }
+
             var valueRatio = (double)(playerCarValue / opponentCarValue);
 
             // Check car value mismatch (won't risk expensive car for cheap car)
@@ -152,7 +176,7 @@ namespace Street_Rod_AC.Services.Opponents
             }
 
             // Clamp to 5-95%
-            acceptanceChance = Math.Max(0.05, Math.Min(0.95, acceptanceChance));
+            acceptanceChance = Math.Clamp(acceptanceChance, 0.05, 0.95);
 
             _logger.Information("Pink slip acceptance chance for {Name}: {Chance:P0}", opponent.Name, acceptanceChance);
 
@@ -280,7 +304,7 @@ namespace Street_Rod_AC.Services.Opponents
             }
 
             // Clamp to 10-95%
-            acceptanceChance = Math.Max(0.1, Math.Min(0.95, acceptanceChance));
+            acceptanceChance = Math.Clamp(acceptanceChance, 0.1, 0.95);
 
             _logger.Information("Cash challenge acceptance chance for {Name}: {Chance:P0}", opponent.Name, acceptanceChance);
 
@@ -302,6 +326,15 @@ namespace Street_Rod_AC.Services.Opponents
                     DeclineReason = ChallengeDeclineReason.NotInterested
                 };
             }
+        }
+
+        /// <summary>The car's worth by <see cref="CarValuation"/>; a model without a price is worth what was paid for the car</summary>
+        private decimal ValueOf(Car car, CarDefinition definition)
+        {
+            var profile = _carProfileRepository.GetProfile(definition.Id);
+            if (profile == null || profile.BasePrice <= 0) return car.PurchasePrice;
+
+            return CarValuation.ValueOf(car, profile.BasePrice, _partsService, definition);
         }
 
         #region Message Generation
