@@ -53,10 +53,12 @@ namespace Street_Rod_AC.Services.Market
                     "This car is no longer available.");
             }
 
-            // Claimed before anything is awaited: a second confirm that comes in while the engine is being put
-            // together finds it sold, instead of buying the same car twice and paying for it twice
+            // Claimed and paid for before anything is awaited: a second confirm that comes in while the engine is
+            // being put together finds it sold, and a second purchase of a different car checks the money that is
+            // actually left instead of the same bankroll, so two overlapping purchases can never overdraw
             currentListing.IsSold = true;
             currentListing.SoldDate = gameState.Date;
+            gameState.Player.Money -= listing.Price;
 
             Car carInstance;
             try
@@ -67,12 +69,12 @@ namespace Street_Rod_AC.Services.Market
             {
                 currentListing.IsSold = false;
                 currentListing.SoldDate = null;
+                gameState.Player.Money += listing.Price;
                 throw;
             }
 
             gameState.Player.Cars ??= [];
             gameState.Player.Cars.Add(carInstance);
-            gameState.Player.Money -= listing.Price;
 
             // Somebody with no car of their own has just bought one: it is the one they mean. Without this
             // the garage falls back to whatever happens to be first in the list.

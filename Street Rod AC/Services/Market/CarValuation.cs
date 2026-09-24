@@ -1,3 +1,4 @@
+using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts.Cars;
@@ -17,6 +18,8 @@ namespace Street_Rod_AC.Services.Market
     /// </summary>
     public static class CarValuation
     {
+        private static readonly IAppLogger Logger = AppLoggerFactory.CreateLogger("Market");
+
         /// <summary>Share of the money put into an engine beyond the factory one that shows in the car's worth</summary>
         public const double ModificationsShare = 0.5;
 
@@ -58,7 +61,25 @@ namespace Street_Rod_AC.Services.Market
             return Value(basePrice, condition, ModificationsOf(car, condition, parts, definition));
         }
 
+        /// <remarks>
+        /// Parts work (the factory build, the parts catalog) can fail on a bad part. Worth is asked for in places
+        /// that must not fail over it - a pink-slip challenge in the diner, a race nobody watches - so a failure
+        /// counts the engine as the factory one, the way a listing whose engine could not be described still sells.
+        /// </remarks>
         private static decimal ModificationsOf(Car car, double condition, ICarPartsService? parts, CarDefinition? definition)
+        {
+            try
+            {
+                return ModificationsOrThrow(car, condition, parts, definition);
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning("Could not weigh the engine of a {CarId}; valued as the factory one: {Error}", car.DefinitionId, ex.Message);
+                return 0m;
+            }
+        }
+
+        private static decimal ModificationsOrThrow(Car car, double condition, ICarPartsService? parts, CarDefinition? definition)
         {
             if (parts is not { IsAvailable: true } || definition == null || car.Engine is not { } engine) return 0m;
             if (parts.GetStockBuild(definition) is not { } stock) return 0m;

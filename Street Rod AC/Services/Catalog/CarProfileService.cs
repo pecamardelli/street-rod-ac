@@ -20,6 +20,15 @@ namespace Street_Rod_AC.Services.Catalog
         private const double MinPlausibleWeightKg = 300;
         private const double MaxPlausibleWeightKg = 5000;
 
+        /// <summary>
+        /// Goes into a Generated profile's DefinitionHash with the car's own hash. Moved on when the way specs are
+        /// read changes (2: lb and kW converted, instead of read as kg and hp), so every generated price is worked out
+        /// again once with the new reading. The formula is deterministic: a car whose specs read the same keeps its price.
+        /// </summary>
+        private const string SpecsReading = "specs2";
+
+        private static string DefinitionHashOf(CarDefinition car) => $"{car.ContentHash}|{SpecsReading}";
+
         // Brand reputation multipliers for pricing
         private static readonly Dictionary<string, float> BrandMultipliers = new()
         {
@@ -57,7 +66,7 @@ namespace Street_Rod_AC.Services.Catalog
                 BasePrice = basePrice,
                 DealerPrecedence = precedence,
                 Source = ProfileDataSource.Generated,
-                DefinitionHash = carDefinition.ContentHash,
+                DefinitionHash = DefinitionHashOf(carDefinition),
                 CreatedDate = DateTime.Now,
                 LastUpdatedDate = DateTime.Now,
                 IsStreetLegal = true // Default assumption
@@ -143,7 +152,9 @@ namespace Street_Rod_AC.Services.Catalog
         /// would otherwise stick for good. Manual and imported profiles are left alone, and so is everything a
         /// generated one holds besides price and precedence (the stock engine picked for it).
         ///
-        /// Runs on a worker thread, with one read of each collection and one write: start-up waits for it.
+        /// Runs on a worker thread, with one read of each collection and one write: start-up waits for it. The write
+        /// touches only the fields worked out here, on the profile as stored at that moment: whatever else was saved
+        /// since the read (a stock engine suggested, a profile edited by hand) stays.
         /// </summary>
         public Task EnsureProfilesExistAsync() => Task.Run(EnsureProfilesExist);
 
@@ -158,23 +169,33 @@ namespace Street_Rod_AC.Services.Catalog
                 allCars.Count, activeCars.Count);
 
             var profiles = _profileRepo.GetAllProfiles().ToDictionary(p => p.CarDefinitionId, StringComparer.OrdinalIgnoreCase);
-            var changed = new List<CarProfile>();
+            var fresh = new List<CarProfile>();
+            var changes = new List<KeyValuePair<string, Func<CarProfile, CarProfile?>>>();
             int created = 0, regenerated = 0, existing = 0;
 
             foreach (var car in activeCars)
             {
+                var hash = DefinitionHashOf(car);
                 if (!profiles.TryGetValue(car.Id, out var profile))
                 {
-                    changed.Add(GenerateDefaultProfile(car));
+                    fresh.Add(GenerateDefaultProfile(car));
                     created++;
                 }
-                else if (profile.Source == ProfileDataSource.Generated && profile.DefinitionHash != car.ContentHash)
+                else if (profile.Source == ProfileDataSource.Generated && profile.DefinitionHash != hash)
                 {
-                    profile.BasePrice = CalculateBasePrice(car);
-                    profile.DealerPrecedence = CalculatePrecedence(car);
-                    profile.DefinitionHash = car.ContentHash;
-                    profile.LastUpdatedDate = DateTime.Now;
-                    changed.Add(profile);
+                    // Worked out now, written onto the profile as it is stored when the write comes: only these
+                    // fields, and only if it is still a generated one that has not been worked out since
+                    var basePrice = CalculateBasePrice(car);
+                    var precedence = CalculatePrecedence(car);
+                    changes.Add(new(profile.CarDefinitionId, stored =>
+                    {
+                        if (stored.Source != ProfileDataSource.Generated || stored.DefinitionHash == hash) return null;
+                        stored.BasePrice = basePrice;
+                        stored.DealerPrecedence = precedence;
+                        stored.DefinitionHash = hash;
+                        stored.LastUpdatedDate = DateTime.Now;
+                        return stored;
+                    }));
                     regenerated++;
                 }
                 else
@@ -183,7 +204,7 @@ namespace Street_Rod_AC.Services.Catalog
                 }
             }
 
-            if (changed.Count > 0) _profileRepo.UpsertProfiles(changed);
+            if (fresh.Count > 0 || changes.Count > 0) _profileRepo.MergeProfiles(fresh, changes);
 
             _logger.Information("Profile generation complete. Created: {Created}, Regenerated: {Regenerated}, Existing: {Existing}",
                 created, regenerated, existing);

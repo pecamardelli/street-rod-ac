@@ -73,6 +73,42 @@ namespace Street_Rod_AC.Services.Catalog
             return stored != null && change(stored) is { } changed && collection.Update(changed);
         }
 
+        public int MergeProfiles(IEnumerable<CarProfile> created, IEnumerable<KeyValuePair<string, Func<CarProfile, CarProfile?>>> changes)
+        {
+            using var db = CatalogDatabase.Open(_databasePath);
+            var collection = db.GetCollection<CarProfile>(ProfilesCollection);
+            EnsureIndexes(collection);
+
+            var stored = 0;
+
+            // One transaction for the lot, as one Upsert was: a batch of hundreds is one write, not hundreds
+            db.BeginTrans();
+            try
+            {
+                foreach (var profile in created)
+                {
+                    if (collection.FindById(profile.CarDefinitionId) != null) continue;
+                    collection.Insert(profile);
+                    stored++;
+                }
+
+                foreach (var (id, change) in changes)
+                {
+                    if (collection.FindById(id) is { } current && change(current) is { } changed && collection.Update(changed))
+                        stored++;
+                }
+
+                db.Commit();
+            }
+            catch
+            {
+                db.Rollback();
+                throw;
+            }
+
+            return stored;
+        }
+
         public List<CarProfile> GetAllProfiles()
         {
             using var db = CatalogDatabase.Open(_databasePath);

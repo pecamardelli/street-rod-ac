@@ -36,6 +36,15 @@ namespace Street_Rod_AC.Services.Catalog
         bool UpdateProfile(string carDefinitionId, Func<CarProfile, CarProfile?> change);
 
         /// <summary>
+        /// Many profiles in one visit to the database: each of <paramref name="created"/> is stored when there is
+        /// no profile for its car yet (one stored in the meantime is kept), and each change in
+        /// <paramref name="changes"/> is applied to the profile as stored now, the way <see cref="UpdateProfile"/>
+        /// does. A batch that read its profiles earlier thus never writes back a stale copy over fields somebody
+        /// else changed since. Returns how many profiles were stored.
+        /// </summary>
+        int MergeProfiles(IEnumerable<CarProfile> created, IEnumerable<KeyValuePair<string, Func<CarProfile, CarProfile?>>> changes);
+
+        /// <summary>
         /// Gets all profiles
         /// </summary>
         List<CarProfile> GetAllProfiles();

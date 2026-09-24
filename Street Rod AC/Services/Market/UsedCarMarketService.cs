@@ -278,15 +278,24 @@ namespace Street_Rod_AC.Services.Market
             };
         }
 
+        /// <summary>
+        /// The least a car goes back on a lot for. A car the catalog cannot price and nobody paid for (no profile, a
+        /// purchase price of 0) is valued at nothing, and a listing at $0 is a free car.
+        /// </summary>
+        private const decimal MinListPrice = 500m;
+
         public UsedCarListing ListCar(Car car, decimal price, string location, DateTime listedDate)
         {
+            // What a race did to the car is not always sane: a NaN odometer casts to int.MinValue, and an opponent's
+            // health values carry a little noise above 1. The buyer gets the car at these numbers, so they are made sane here.
+            var condition = CarValuation.ConditionOf(car);
             var listing = new UsedCarListing
             {
                 Id = Guid.NewGuid().ToString(),
                 CarDefinitionId = car.DefinitionId,
-                Price = price,
-                Mileage = (int)Math.Clamp(car.OdometerKM, 0, int.MaxValue),
-                Condition = (float)CarValuation.ConditionOf(car),
+                Price = CarValuation.RoundToHundred(Math.Max(price, MinListPrice)),
+                Mileage = double.IsFinite(car.OdometerKM) ? (int)Math.Clamp(car.OdometerKM, 0, int.MaxValue) : 0,
+                Condition = (float)(double.IsFinite(condition) ? Math.Clamp(condition, 0, 1) : 0),
                 SkinId = string.IsNullOrEmpty(car.SkinId) ? "default" : car.SkinId,
                 ListedDate = listedDate,
                 DealerLocation = location,
@@ -332,6 +341,8 @@ namespace Street_Rod_AC.Services.Market
             return CarValuation.ValueOf(car, profile.BasePrice, _partsService, _catalogRepo.GetCar(car.DefinitionId));
         }
 
+        private const string TradeInFallbackId = "industrial_motors";
+
         public string TradeInLocation(IReadOnlyList<DealerLocation>? dealers)
         {
             var known = dealers is { Count: > 0 } ? dealers : GetDefaultDealers();
@@ -344,7 +355,11 @@ namespace Street_Rod_AC.Services.Market
                 .Select(d => d.Location)
                 .FirstOrDefault();
 
-            return (roughest ?? known[^1]).Id;
+            // No dealer the catalog knows: the one of the default five that always took the trade-ins, when this
+            // game has it, rather than whichever dealer happens to be last
+            return (roughest
+                ?? known.FirstOrDefault(d => string.Equals(d.Id, TradeInFallbackId, StringComparison.OrdinalIgnoreCase))
+                ?? known[^1]).Id;
         }
 
         private UsedCarListing CreateListing(CarDefinition carDef, CarProfile profile, DealerLocation dealer, DateTime currentDate)

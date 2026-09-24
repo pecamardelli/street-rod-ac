@@ -332,7 +332,7 @@ namespace Street_Rod_AC.Services.Opponents
         private decimal ValueOf(Car car, CarDefinition definition)
         {
             var profile = _carProfileRepository.GetProfile(definition.Id);
-            if (profile == null || profile.BasePrice <= 0) return car.PurchasePrice;
+            if (profile == null || profile.BasePrice <= 0) return CarValuation.RoundToHundred(car.PurchasePrice);
 
             return CarValuation.ValueOf(car, profile.BasePrice, _partsService, definition);
         }

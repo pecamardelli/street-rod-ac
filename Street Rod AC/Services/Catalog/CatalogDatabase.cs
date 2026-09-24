@@ -17,8 +17,9 @@ namespace Street_Rod_AC.Services.Catalog
     /// catalog.db left in the saves folder by an older version is moved over once.
     ///
     /// Everything in the catalog is read from the install again at start-up, except profiles edited by hand. So
-    /// a catalog.db that cannot be opened is put aside as catalog.db.bad and a new one made, rather than every
-    /// call failing for good.
+    /// a catalog.db that is corrupt is put aside as catalog.db.bad and a new one made, rather than every call
+    /// failing for good. Only a file LiteDB says is broken goes: one written by LiteDB 4 is upgraded in place, and a
+    /// file that is busy, locked or refused for any other reason goes to the caller untouched.
     /// </summary>
     internal static class CatalogDatabase
     {
@@ -85,34 +86,77 @@ namespace Street_Rod_AC.Services.Catalog
         private static void MigrateOnce(string path)
         {
             if (_migrated) return;
+
+            // Only the default catalog has an old home to come from. Another path (a test's) says nothing about it,
+            // and must not stop the default one from being moved when it is opened later.
+            if (!string.Equals(Path.GetFullPath(path), Path.GetFullPath(DefaultPath), StringComparison.OrdinalIgnoreCase)) return;
+
+            // Handled once per run, whatever the outcome: a move that failed has left the old catalog whole where it
+            // was, and trying again on every open would only log the same failure
             _migrated = true;
 
-            if (!string.Equals(Path.GetFullPath(path), Path.GetFullPath(DefaultPath), StringComparison.OrdinalIgnoreCase)) return;
             if (!File.Exists(LegacyPath)) return;
 
-            try
+            if (File.Exists(path))
             {
-                if (File.Exists(path))
+                try
                 {
                     // Both there: the new one is the one in use; the old one only confuses the Load screen
                     File.Move(LegacyPath, LegacyPath + ".old", overwrite: true);
                     Logger.Warning("An old catalog.db was left among the saves; renamed it to {Path}", LegacyPath + ".old");
-                    return;
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    Logger.Warning("Could not rename the old catalog.db among the saves ({Error}); it stays at {Path}", ex.Message, LegacyPath);
+                }
+
+                return;
+            }
+
+            // The side files first, the data file last. catalog-log.db holds the writes not yet folded into the
+            // data file: moved after it, a failure would leave them behind, lost to a catalog that went ahead
+            // without them. Moved first, a failure puts them back and the old catalog stays whole where it was.
+            var legacyFolder = Path.GetDirectoryName(LegacyPath)!;
+            var folder = Path.GetDirectoryName(path)!;
+            var moved = new List<(string From, string To)>();
+            try
+            {
+                foreach (var side in new[] { "-log", "-tmp" })
+                {
+                    var from = Path.Combine(legacyFolder, "catalog" + side + ".db");
+                    var to = Path.Combine(folder, "catalog" + side + ".db");
+                    if (!File.Exists(from)) continue;
+
+                    File.Move(from, to, overwrite: true);
+                    moved.Add((from, to));
                 }
 
                 File.Move(LegacyPath, path);
-                foreach (var side in new[] { "-log", "-tmp" })
-                {
-                    var from = Path.Combine(Path.GetDirectoryName(LegacyPath)!, "catalog" + side + ".db");
-                    if (File.Exists(from)) File.Move(from, Path.Combine(Path.GetDirectoryName(path)!, "catalog" + side + ".db"), overwrite: true);
-                }
-
                 Logger.Information("Moved catalog.db from the saves folder to {Path}", path);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                // The import rebuilds the catalog from the install; only hand-edited profiles stay behind
-                Logger.Warning("Could not move catalog.db from the saves folder ({Error}); starting a new catalog", ex.Message);
+                var restored = true;
+                foreach (var (from, to) in Enumerable.Reverse(moved))
+                {
+                    try
+                    {
+                        File.Move(to, from, overwrite: true);
+                    }
+                    catch (Exception back) when (back is IOException or UnauthorizedAccessException)
+                    {
+                        restored = false;
+                        Logger.Error(back, "Could not put {File} back among the saves; it is at {Path}", Path.GetFileName(from), to);
+                    }
+                }
+
+                // The import rebuilds the catalog from the install; only hand-edited profiles stay behind, in the old file
+                if (restored)
+                    Logger.Warning("Could not move catalog.db from the saves folder ({Error}); it stays at {Old}, and a new " +
+                        "catalog is started at {Path}", ex.Message, LegacyPath, path);
+                else
+                    Logger.Error(ex, "Could not move catalog.db from the saves folder, and its side files are split between " +
+                        "{Old} and {Folder}; a new catalog is started", legacyFolder, folder);
             }
         }
 
@@ -122,19 +166,57 @@ namespace Street_Rod_AC.Services.Catalog
             {
                 return new Connection(path);
             }
-            catch (Exception ex) when (ex is LiteException or InvalidCastException or InvalidDataException or FormatException)
+            catch (LiteException ex) when (ex.ErrorCode == LiteException.INVALID_DATABASE)
             {
-                // Not "in use" (that is an IOException and goes to the caller): the file itself is bad
-                var bad = path + ".bad";
-                Logger.Warning(ex, "catalog.db cannot be read; moving it to {Bad} and starting a new one. " +
-                    "Car profiles edited by hand are in the old file", bad);
-
-                File.Move(path, bad, overwrite: true);
-                var log = Path.Combine(Path.GetDirectoryName(path)!, Path.GetFileNameWithoutExtension(path) + "-log.db");
-                if (File.Exists(log)) File.Move(log, log + ".bad", overwrite: true);
-
-                return new Connection(path);
+                // "Not a LiteDB 5 file": either written by LiteDB 4, which LiteDB upgrades in place (keeping a backup
+                // of the old file next to it), or not a database at all. Only once the upgrade fails is it broken.
+                try
+                {
+                    var upgraded = new Connection(new ConnectionString { Filename = path, Upgrade = true });
+                    Logger.Warning("catalog.db was written by an older LiteDB; upgraded it in place");
+                    return upgraded;
+                }
+                catch (Exception upgrade) when (IsCorrupt(upgrade))
+                {
+                    return Recreate(path, upgrade);
+                }
             }
+            catch (Exception ex) when (IsCorrupt(ex))
+            {
+                return Recreate(path, ex);
+            }
+        }
+
+        /// <summary>
+        /// The errors that say the file itself is broken. Not "in use" (an IOException, or LiteDB's lock timeout
+        /// and already-open), not a password (the catalog has none; a file that wants one is somebody else's to
+        /// look at), not a database shut down under us: those go to the caller and the file stays.
+        /// </summary>
+        private static bool IsCorrupt(Exception ex) => ex switch
+        {
+            LiteException lite => lite.ErrorCode is LiteException.INVALID_DATABASE
+                or LiteException.INVALID_DATAFILE_STATE
+                or LiteException.INVALID_FREE_SPACE_PAGE,
+            // Thrown while decoding the pages of the file; opening reads nothing else
+            InvalidCastException or InvalidDataException or FormatException or EndOfStreamException => true,
+            _ => false
+        };
+
+        private static LiteDatabase Recreate(string path, Exception ex)
+        {
+            var bad = path + ".bad";
+            Logger.Warning(ex, "catalog.db is corrupt ({Type} {Code}); moving it to {Bad} and starting a new one. " +
+                "Car profiles edited by hand are in the old file", ex.GetType().Name,
+                ex is LiteException lite ? lite.ErrorCode : 0, bad);
+
+            File.Move(path, bad, overwrite: true);
+            foreach (var side in new[] { "-log", "-tmp" })
+            {
+                var file = Path.Combine(Path.GetDirectoryName(path)!, Path.GetFileNameWithoutExtension(path) + side + ".db");
+                if (File.Exists(file)) File.Move(file, file + ".bad", overwrite: true);
+            }
+
+            return new Connection(path);
         }
 
         private sealed class Connection : LiteDatabase
@@ -142,7 +224,11 @@ namespace Street_Rod_AC.Services.Catalog
             private readonly bool _opened;
             private int _released;
 
-            public Connection(string path) : base(path)
+            public Connection(string path) : this(new ConnectionString(path))
+            {
+            }
+
+            public Connection(ConnectionString connection) : base(connection)
             {
                 // A file that could not be opened gives its turn back in Open, not here
                 _opened = true;

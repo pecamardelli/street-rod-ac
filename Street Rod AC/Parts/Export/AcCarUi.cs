@@ -43,7 +43,14 @@ public static class AcCarUi
     {
         try
         {
-            using var reader = new JsonTextReader(new StringReader(json)) { MaxDepth = 64 };
+            // Strings stay strings: by default a date-like one ("version": "2021-05-01") would come back as a Date
+            // token, which GetString does not read. Numbers with a fraction are doubles, never decimals.
+            using var reader = new JsonTextReader(new StringReader(json))
+            {
+                MaxDepth = 64,
+                DateParseHandling = DateParseHandling.None,
+                FloatParseHandling = FloatParseHandling.Double
+            };
             var token = JToken.ReadFrom(reader, new JsonLoadSettings
             {
                 CommentHandling = CommentHandling.Ignore,

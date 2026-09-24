@@ -5,6 +5,11 @@ namespace Street_Rod_AC.Services.Scheduler
     /// <summary>
     /// Represents a task that runs on a game time schedule
     /// </summary>
+    /// <remarks>
+    /// Tasks run inside GameTimeService's spend of time, which holds its (non-reentrant) lock: a task must never
+    /// spend time or end the day itself (SpendTimeAsync/EndDayAsync), or it waits for itself for good.
+    /// A task that fails is run again the next time, so it does all its fallible work before changing the game state.
+    /// </remarks>
     public interface IScheduledTask
     {
         /// <summary>

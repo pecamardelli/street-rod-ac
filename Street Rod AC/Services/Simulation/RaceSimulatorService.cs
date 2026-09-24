@@ -181,6 +181,15 @@ namespace Street_Rod_AC.Services.Simulation
             ApplyRaceWear(car1, isRoadRace, racer1Wins);
             ApplyRaceWear(car2, isRoadRace, !racer1Wins);
 
+            // Everything that can fail (the valuation reads catalog.db) is done before a single stat changes. The
+            // scheduler runs a failed day again, and a day that had already counted its wins and moved its money
+            // would count them twice.
+            UsedCarListing? relisting = null;
+            if (isPinkSlip)
+            {
+                relisting = RelistPinkSlip(loserCar, gameState);
+            }
+
             // Handle race results: every race counts, and it counts for its own kind as well
             winner.Stats.Wins++;
             loser.Stats.Losses++;
@@ -208,7 +217,7 @@ namespace Street_Rod_AC.Services.Simulation
             if (isPinkSlip)
             {
                 // Pink slip race - winner gets loser's car, worth what any car is worth
-                actualPrize = _market.ValueOf(loserCar);
+                actualPrize = relisting!.Price;
                 winner.Stats.PinkSlipsWon++;
                 winner.Stats.TotalEarnings += actualPrize;
                 loser.Stats.PinkSlipsLost++;
@@ -217,10 +226,8 @@ namespace Street_Rod_AC.Services.Simulation
                 carWon = loserCar;
                 loser.Cars.Remove(loserCar);
 
-                // The winner sells it on (simpler than a second car in the garage): it goes to the lot that takes
-                // the trade-ins, with its engine and everything else on it, at what it is worth
-                gameState.UsedCarMarket.Add(_market.ListCar(
-                    loserCar, actualPrize, _market.TradeInLocation(gameState.DealerLocations), gameState.Date));
+                // The winner sells it on (simpler than a second car in the garage)
+                gameState.UsedCarMarket.Add(relisting);
 
                 // Check if loser has no more cars
                 if (loser.Cars.Count == 0)
@@ -262,6 +269,40 @@ namespace Street_Rod_AC.Services.Simulation
                 IsPinkSlip = isPinkSlip,
                 CarWon = carWon
             };
+        }
+
+        /// <summary>
+        /// The pink-slipped car on the lot that takes the trade-ins, with its engine and everything else on it, at
+        /// what it is worth. Never throws: a valuation that cannot be had (catalog.db busy or failing) falls back to
+        /// the car's condition times what was paid for it, so the race still settles today.
+        /// </summary>
+        private UsedCarListing RelistPinkSlip(Car car, GameState gameState)
+        {
+            decimal value;
+            try
+            {
+                value = _market.ValueOf(car);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Could not value the pink-slipped {CarId}; going by what was paid for it: {Error}",
+                    car.DefinitionId, ex.Message);
+                value = CarValuation.ValueOf(car, car.PurchasePrice);
+            }
+
+            string location;
+            try
+            {
+                location = _market.TradeInLocation(gameState.DealerLocations);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Could not find the trade-in lot; using the first dealer: {Error}", ex.Message);
+                location = gameState.DealerLocations?.FirstOrDefault()?.Id ?? "industrial_motors";
+            }
+
+            // ListCar puts the price on the market's floor, so the prize and the price on the lot agree
+            return _market.ListCar(car, value, location, gameState.Date);
         }
 
         /// <summary>

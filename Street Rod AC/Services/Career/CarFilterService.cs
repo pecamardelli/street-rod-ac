@@ -9,9 +9,20 @@ namespace Street_Rod_AC.Services.Career
     /// </summary>
     public class CarFilterService : ICarFilterService
     {
+        private readonly Func<Car, decimal>? _valueOf;
+
+        /// <param name="valueOf">
+        /// What a car is worth (the market's <c>CarValuation</c>), for value requirements; null values a car at
+        /// what was paid for it
+        /// </param>
+        public CarFilterService(Func<Car, decimal>? valueOf = null)
+        {
+            _valueOf = valueOf;
+        }
+
         public bool Matches(ICarFilter filter, CarDefinition car, Car? instance = null)
         {
-            return filter.Matches(car, instance);
+            return filter.Matches(car, instance, _valueOf);
         }
 
         public IEnumerable<Car> FindMatchingCars(ICarFilter filter, IEnumerable<Car> cars,
@@ -20,7 +31,7 @@ namespace Street_Rod_AC.Services.Career
             foreach (var car in cars)
             {
                 var definition = definitionLookup(car.DefinitionId);
-                if (definition != null && filter.Matches(definition, car))
+                if (definition != null && filter.Matches(definition, car, _valueOf))
                 {
                     yield return car;
                 }

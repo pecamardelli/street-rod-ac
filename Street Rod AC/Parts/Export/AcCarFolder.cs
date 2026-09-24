@@ -21,8 +21,41 @@ public static class AcCarFolder
 
     /// <summary>The car folders of the install, without the copies made for a race: what every reader of the cars goes through</summary>
     /// <param name="carsFolder">The install's content\cars</param>
+    /// <remarks>
+    /// A missing folder lists as empty here, the same as a folder with no cars in it. Whoever must not take the one for
+    /// the other (a misconfigured path or an unplugged drive is not "nothing installed") uses
+    /// <see cref="TryListInstalledCars"/>.
+    /// </remarks>
     public static IEnumerable<string> InstalledCars(string carsFolder) =>
         Directory.Exists(carsFolder) ? Directory.EnumerateDirectories(carsFolder).Where(f => !IsClone(f)) : Enumerable.Empty<string>();
+
+    /// <summary>
+    /// The car folders of the install, race copies left out, read in full now. False, with <paramref name="error"/>
+    /// saying why, when the folder is missing or cannot be read: that is not an install with no cars.
+    /// </summary>
+    /// <param name="carsFolder">The install's content\cars</param>
+    public static bool TryListInstalledCars(string carsFolder, out List<string> folders, out string? error)
+    {
+        folders = [];
+        error = null;
+
+        if (string.IsNullOrWhiteSpace(carsFolder) || !Directory.Exists(carsFolder))
+        {
+            error = "the folder does not exist";
+            return false;
+        }
+
+        try
+        {
+            folders = [.. Directory.EnumerateDirectories(carsFolder).Where(f => !IsClone(f))];
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            error = $"{ex.GetType().Name}: {ex.Message}";
+            return false;
+        }
+    }
 
     public const string DefaultSkin = "default";
     private const string PreviewFile = "preview.jpg";

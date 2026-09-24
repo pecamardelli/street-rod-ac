@@ -30,11 +30,13 @@ namespace Street_Rod_AC.Models.GameState
             // Racers are known by name all through the game (the diner, the results, the simulator), so two of
             // them cannot share one: the second would silently take the first one's place and that racer would
             // be gone. The newcomer gets a number after the name instead.
-            if (Find(racer.Name) is { } other && !ReferenceEquals(other, racer))
+            // Case does not make two names: "ace" and "Ace" read as one racer to the player and to anything that
+            // compares names loosely.
+            if (FindIgnoringCase(racer.Name) is { } other && !ReferenceEquals(other, racer))
             {
                 var original = racer.Name;
                 var number = 2;
-                while (Find($"{original} ({number})") != null) number++;
+                while (FindIgnoringCase($"{original} ({number})") != null) number++;
                 racer.Name = $"{original} ({number})";
 
                 Logger.Warning("Two racers are called {Name}; the second one races as {NewName}", original, racer.Name);
@@ -49,6 +51,12 @@ namespace Street_Rod_AC.Models.GameState
             : Inactive.TryGetValue(name, out var inactive) ? inactive
             : Retired.TryGetValue(name, out var retired) ? retired
             : null;
+
+        /// <summary>The racer whose name matches whatever its case, the exact match first</summary>
+        private Racer? FindIgnoringCase(string name) =>
+            Find(name)
+            ?? ReadyToRace.Concat(Inactive).Concat(Retired)
+                .FirstOrDefault(entry => string.Equals(entry.Key, name, StringComparison.OrdinalIgnoreCase)).Value;
 
         public void MoveRacer(string name, RacerStatus newStatus)
         {

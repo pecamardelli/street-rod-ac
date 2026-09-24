@@ -331,10 +331,12 @@ namespace Street_Rod_AC.Services.Career
         {
             var eventState = eventInstanceId != Guid.Empty
                 ? career.ActiveEvents.FirstOrDefault(e => e.InstanceId == eventInstanceId && !e.IsCompleted)
+                // A day of slack past the expiry: completedAt is after the race's time was spent, and a race
+                // started late in the evening finishes the next morning, past the midnight its event expired at
                 : career.ActiveEvents.FirstOrDefault(e =>
                     !e.IsCompleted &&
                     e.AvailableFrom <= completedAt &&
-                    (!e.ExpiresAt.HasValue || e.ExpiresAt.Value >= completedAt));
+                    (!e.ExpiresAt.HasValue || e.ExpiresAt.Value.AddDays(1) >= completedAt));
 
             if (eventState == null)
                 return null;
