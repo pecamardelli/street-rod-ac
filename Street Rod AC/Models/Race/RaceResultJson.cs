@@ -91,6 +91,9 @@ namespace Street_Rod_AC.Models.Race
 
         /// <summary>AC put the player's car back in the middle of the race: the pits, a lane violation</summary>
         public const string Abandoned = "ABANDONED";
+
+        /// <summary>The player hit the rival out of their own lane in a drag race</summary>
+        public const string Disqualified = "DISQUALIFIED";
     }
 
     /// <summary>
@@ -116,6 +119,13 @@ namespace Street_Rod_AC.Models.Race
         /// <summary>This car jumped the start (schema 1.2); null in older files</summary>
         [JsonProperty("false_start")]
         public bool? FalseStart { get; set; }
+
+        /// <summary>
+        /// This car hit the other one out of its own lane in a drag race and was disqualified (schema 1.3); null in
+        /// older files
+        /// </summary>
+        [JsonProperty("disqualified")]
+        public bool? Disqualified { get; set; }
 
         [JsonProperty("performance")]
         public ParticipantPerformance Performance { get; set; } = new();

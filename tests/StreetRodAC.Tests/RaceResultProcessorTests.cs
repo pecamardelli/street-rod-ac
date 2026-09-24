@@ -292,6 +292,41 @@ public sealed class RaceResultProcessorTests : IDisposable
     }
 
     [Fact]
+    public void Hitting_the_rival_out_of_your_lane_is_a_loss()
+    {
+        var (state, context, _, rival) = World();
+        var json = File(playerPosition: 1);
+        json["session"]!["end_reason"] = EndReasons.Disqualified;
+        json["participants"]![0]!["disqualified"] = true;
+
+        var messages = Processor().ProcessRaceResult(Result(json), context, state);
+
+        Assert.Equal(1, state.Player.Stats.Losses);
+        Assert.Equal(1_000_000m - 100m, state.Player.Money);
+        Assert.Equal(5100m, rival.Money);
+        Assert.Equal("PlayerDisqualified", _repository.Recorded.Single().WinCondition);
+        Assert.Contains(messages, m => m.Title == "Disqualified");
+    }
+
+    [Fact]
+    public void A_rival_disqualified_for_hitting_you_loses_even_when_the_hit_crashed_you()
+    {
+        var (state, context, _, rival) = World();
+        var json = File(playerPosition: 2);
+        json["session"]!["end_reason"] = EndReasons.Crash;
+        json["participants"]![0]!["crash"]!["crashed"] = true;
+        json["participants"]![1]!["disqualified"] = true;
+
+        var messages = Processor().ProcessRaceResult(Result(json), context, state);
+
+        Assert.Equal(1, state.Player.Stats.Wins);
+        Assert.Equal(1_000_000m + 100m, state.Player.Money);
+        Assert.Equal(4900m, rival.Money);
+        Assert.Equal("OpponentDisqualified", _repository.Recorded.Single().WinCondition);
+        Assert.Contains(messages, m => m.Title == "Rival Disqualified");
+    }
+
+    [Fact]
     public void Being_put_back_mid_race_is_a_loss()
     {
         var (state, context, _, rival) = World();

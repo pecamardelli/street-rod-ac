@@ -6,7 +6,13 @@
   - Judges a crash: a collision with a change of velocity of CRASH_G or more. A crashed player is stopped and
     the race is over; a crashed rival is stopped where it lies and the player still has to finish
   - Judges a false start: the player's car moving before the green, or AC putting it back before it got anywhere
+  - A drag race: whoever hits the other car out of their own lane is disqualified (crossing lanes alone is fine:
+    nobody judges lanes on the street). AC's own start lights give the green.
   - Reports the race to the career, one JSON file per race, written once, and quits Assetto Corsa
+
+  Full control: every race, drag races too, is a one-lap race session (Street Corsa never asks AC for its drag
+  session, whose lane disqualifications, jump-start resets and match resets teleport the cars), with jump-start
+  penalties off, pit teleports blocked and car recovery off. What happens to a car is this mode's call.
 
   A mode rather than an app since 2026-09-24: its manifest grants the physics API (ALLOW_PHYSICS_ALTERATIONS),
   which an app only gets from a track that opts in, and none of ours do. Without it the old app's control lock
@@ -19,10 +25,11 @@
   to finish.
 ]]
 
-local SCRIPT_VERSION = "3.0.0"
+local SCRIPT_VERSION = "3.2.0"
 -- 1.1: session.context_id, participants[].car_index and participants[].is_player
 -- 1.2: session.end_reason, participants[].false_start, participants[].condition
-local SCHEMA_VERSION = "1.2"
+-- 1.3: participants[].disqualified, session.race_type
+local SCHEMA_VERSION = "1.3"
 
 -- A crash: a collision with a change of velocity of at least this, in g over one frame
 local CRASH_G = 15.0
@@ -33,6 +40,11 @@ local COLLISION_WINDOW_SECONDS = 0.25
 
 -- After a teleport the jump in velocity is not a crash
 local TELEPORT_GRACE_SECONDS = 1.0
+
+-- A car that moves further in one frame than its speed allows, by this much, was teleported. AC does not always
+-- say so: the drag race's reset after a disqualification moves both cars back to the line without onCarJumped,
+-- and the jump read as two crashes (1440 g and 17.5 g, 2026-09-24).
+local TELEPORT_SLACK_METRES = 2.0
 
 -- A false start: the player's car this far from where it was put on the grid before the green
 local FALSE_START_METRES = 1.0
@@ -52,6 +64,7 @@ local MSG_WIN = "You won a few bucks, not bad!"
 local MSG_LOSE = "You lost, sucker!"
 local MSG_CRASH = "Lucky you weren't killed!\nBetter luck next time!"
 local MSG_FALSE_START = "You jumped the gun!\nNo contest, and everybody saw it."
+local MSG_DISQUALIFIED = "You hit him in his own lane!\nThat's a DQ, you lose."
 
 local sim = ac.getSim()
 
@@ -74,6 +87,13 @@ local playerCrashed = false
 
 -- Where the player's car stood before the green, for the false start
 local gridPosition = nil
+
+-- DRAG or ROAD, from race.ini [STREET_ROD] RACE_TYPE
+local raceType = nil
+
+-- A drag race's lanes: the sideways axis of the strip, from the player's car on the line. Each car's own lane is
+-- where it stood (data.laneStart).
+local stripSide = nil
 
 -- Overlay state
 local showResultOverlay = false
@@ -107,12 +127,15 @@ local function createCarData(carIndex)
 
     -- Crash tracking
     velocity = car and vec3():set(car.velocity) or vec3(),
+    position = car and vec3():set(car.position) or vec3(),
     grace = 0.0,
     crashIntensities = {},
     crashed = false,
     crashTimestamp = nil,
 
     falseStart = false,
+    disqualified = false,
+    laneStart = nil,
 
     -- Final result
     finalPosition = nil
@@ -126,6 +149,15 @@ local function readContextId()
   end)
   if ok and type(value) == 'string' and value ~= '' then return value end
   if not ok then ac.log('[Street Corsa] Could not read CONTEXT_ID from race.ini: ' .. tostring(value)) end
+  return nil
+end
+
+-- DRAG or ROAD, from race.ini [STREET_ROD] RACE_TYPE; nil when it is not there (a launcher older than the mode)
+local function readRaceType()
+  local ok, value = pcall(function()
+    return ac.INIConfig.raceConfig():get('STREET_ROD', 'RACE_TYPE', '')
+  end)
+  if ok and (value == 'DRAG' or value == 'ROAD') then return value end
   return nil
 end
 
@@ -175,8 +207,19 @@ local function initializeSession()
   local player = ac.getCar(0)
   if player and not sim.isSessionStarted then gridPosition = vec3():set(player.position) end
 
-  ac.log(string.format('[Street Corsa] Session started: %s with %d cars, context %s, physics allowed %s, session type %s',
-    sessionId, carCount, tostring(contextId), tostring(physics.allowed()), tostring(sim.raceSessionType)))
+  raceType = readRaceType()
+  if raceType == 'DRAG' and player and not sim.isSessionStarted then
+    -- Each car's lane is the line it stands on
+    for i = 0, carCount - 1 do
+      local car = ac.getCar(i)
+      if car then carData[i].laneStart = vec3():set(car.position) end
+    end
+    local look = vec3(player.look.x, 0, player.look.z):normalize()
+    stripSide = vec3(-look.z, 0, look.x)
+  end
+
+  ac.log(string.format('[Street Corsa] Session started: %s with %d cars, context %s, physics allowed %s, session type %s, race %s',
+    sessionId, carCount, tostring(contextId), tostring(physics.allowed()), tostring(sim.raceSessionType), tostring(raceType)))
 end
 
 local function scheduleQuit(delay, why)
@@ -201,7 +244,7 @@ local function holdAI(carIndex)
 end
 
 -- End session: write results, show the result, and quit
--- reason: FINISHED (WIN or LOSE), CRASH, FALSE_START or ABANDONED
+-- reason: FINISHED (WIN or LOSE), CRASH, FALSE_START, DISQUALIFIED or ABANDONED
 local function endSession(reason, won)
   if not sessionActive then return end
   sessionActive = false
@@ -229,6 +272,9 @@ local function endSession(reason, won)
     holdPlayer(30)
   elseif reason == 'FALSE_START' then
     resultTitle, resultMessage = "False Start", MSG_FALSE_START
+    holdPlayer(30)
+  elseif reason == 'DISQUALIFIED' then
+    resultTitle, resultMessage = "Disqualified", MSG_DISQUALIFIED
     holdPlayer(30)
   else
     resultTitle, resultMessage = "Race Over", won and MSG_WIN or MSG_LOSE
@@ -268,6 +314,15 @@ local function updateCrashes(dt)
         if touching[carIndex] <= 0 then touching[carIndex] = nil end
       end
 
+      -- Put somewhere else without a word from AC: not a crash, and a moment's grace to land
+      local reach = math.max(data.velocity:length(), car.velocity:length()) * math.max(dt, 1 / 240)
+      local moved = car.position:distance(data.position)
+      data.position:set(car.position)
+      if moved > reach + TELEPORT_SLACK_METRES then
+        ac.log(string.format('[Street Corsa] Car %d moved %.0f m in one frame: teleported, not crashed', carIndex, moved))
+        data.grace = TELEPORT_GRACE_SECONDS
+      end
+
       _dv:set(car.velocity):sub(data.velocity)
       local g = _dv:length() / math.max(dt, 1 / 240) / 9.81
       data.velocity:set(car.velocity)
@@ -275,8 +330,17 @@ local function updateCrashes(dt)
       if data.crashed then
         -- A crashed rival stays where it is
         if carIndex ~= 0 then holdAI(carIndex) end
+      elseif data.disqualified and carIndex ~= 0 and data.grace <= 0 and touching[carIndex] and g >= CRASH_G then
+        -- A disqualified rival that crashed doing it: both on its record
+        crash(carIndex, data, g)
+      elseif data.disqualified and carIndex ~= 0 then
+        -- A disqualified rival stays where it is
+        holdAI(carIndex)
       elseif data.grace > 0 then
         data.grace = data.grace - dt
+      elseif data.lapsCompleted >= 1 then
+        -- Past the line nothing counts: a rival that finishes first and wrecks itself at the end of the strip
+        -- (205 km/h, 2026-09-24) has still won, and the player still gets to finish
       elseif touching[carIndex] and g >= CRASH_G and sim.isSessionStarted then
         crash(carIndex, data, g)
         if sessionEnded then return end
@@ -327,7 +391,7 @@ local function checkFalseStart()
   end
 end
 
--- Check if player finished the race
+-- The race is over when the player crosses the line, whoever got there first: the player always gets to finish
 local function checkRaceFinish()
   if raceEnded then return end
 
@@ -400,6 +464,7 @@ local function carDataToDict(data)
     car_index = data.carIndex,
     is_player = data.carIndex == 0,
     false_start = data.falseStart,
+    disqualified = data.disqualified,
     performance = {
       final_position = data.finalPosition,
       laps_completed = data.lapsCompleted,
@@ -453,7 +518,8 @@ writeSessionOutput = function()
       duration_seconds = round(sessionDuration, 2),
       track_id = trackId,
       track_layout = trackLayout,
-      end_reason = endReason
+      end_reason = endReason,
+      race_type = raceType
     },
     participants = participants
   }
@@ -492,9 +558,60 @@ local function measureTick()
   return dt
 end
 
+-- How far a car has moved out of its own lane towards the other car's, in metres (negative: away from it)
+local function intrusion(data, otherData, car)
+  local towards = (otherData.laneStart - data.laneStart):dot(stripSide)
+  local drift = (car.position - data.laneStart):dot(stripSide)
+  return towards >= 0 and drift or -drift
+end
+
+-- A drag race, between the green and the line: the two cars touched. The one further out of its own lane hit
+-- the other and is disqualified. The player's disqualification ends the race; a disqualified rival is stopped
+-- where it is, and the player finishes to win.
+local function judgeContact(carIndex, otherIndex)
+  local data, otherData = carData[carIndex], carData[otherIndex]
+  if not data or not otherData or not data.laneStart or not otherData.laneStart then return end
+  if data.disqualified or otherData.disqualified then return end
+  if data.lapsCompleted >= 1 or otherData.lapsCompleted >= 1 then return end
+
+  local car, other = ac.getCar(carIndex), ac.getCar(otherIndex)
+  if not car or not other then return end
+  local mine, theirs = intrusion(data, otherData, car), intrusion(otherData, data, other)
+  local guiltyIndex = mine >= theirs and carIndex or otherIndex
+  local guilty = carData[guiltyIndex]
+  guilty.disqualified = true
+  ac.log(string.format('[Street Corsa] Contact between cars %d and %d (%.1f m and %.1f m out of their lanes): car %d DISQUALIFIED',
+    carIndex, otherIndex, mine, theirs, guiltyIndex))
+
+  if guiltyIndex == 0 then
+    endSession('DISQUALIFIED')
+  else
+    holdAI(guiltyIndex)
+    pcall(ac.setMessage, 'Disqualified', guilty.driverName .. ' hit you. Finish the race and it is yours!')
+  end
+end
+
 ac.onCarCollision(-1, function(carIndex)
   touching[carIndex] = COLLISION_WINDOW_SECONDS
+
+  -- Car against car in a drag race: somebody left their lane
+  if raceType ~= 'DRAG' or not sessionActive or not sim.isSessionStarted then return end
+  local car = ac.getCar(carIndex)
+  if not car or car.collidedWith == 0 then return end
+  -- collidedWith is 0 for the track and non-zero for a car; with two cars the other one is the only one there is
+  if carCount ~= 2 then return end
+  judgeContact(carIndex, 1 - carIndex)
 end)
+
+-- Everything AC would do to a car on its own: pit teleports and recovery. The block is a disposable; AC quits
+-- with the mode, which releases it.
+if physics.allowed() then
+  local block = physics.blockTeleportingToPits()
+  local recoveryOff = pcall(ac.disableCarRecovery, true)
+  ac.log(string.format('[Street Corsa] Pit teleports blocked %s, car recovery off %s', tostring(block ~= nil), tostring(recoveryOff)))
+else
+  ac.log('[Street Corsa] ERROR: no physics API - is ALLOW_PHYSICS_ALTERATIONS in the manifest?')
+end
 
 -- The race starts by itself, in two steps. The game loads onto the pits menu, where neither prepare() nor
 -- update() is called: a timer presses Drive (the old app did this; without it the game waits on the menu).
@@ -556,7 +673,10 @@ ac.onCarJumped(-1, function(carIndex)
   if data then
     data.grace = TELEPORT_GRACE_SECONDS
     local car = ac.getCar(carIndex)
-    if car then data.velocity:set(car.velocity) end
+    if car then
+      data.velocity:set(car.velocity)
+      data.position:set(car.position)
+    end
   end
 
   if carIndex ~= 0 then return end

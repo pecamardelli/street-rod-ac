@@ -267,6 +267,12 @@ namespace Street_Rod_AC.Services.Race
             else if (outcome.WinCondition == WinCondition.PlayerAbandoned)
                 messages.Add(new PlayerMessage("Out of the Race",
                     $"You left the race before the finish, and that counts as a loss to {context.OpponentName}."));
+            else if (outcome.WinCondition == WinCondition.PlayerDisqualified)
+                messages.Add(new PlayerMessage("Disqualified",
+                    $"You hit {context.OpponentName} in his own lane. That's a DQ, and the race is his."));
+            else if (outcome.WinCondition == WinCondition.OpponentDisqualified)
+                messages.Add(new PlayerMessage("Rival Disqualified",
+                    $"{context.OpponentName} hit you in your own lane. That's a DQ, and the race is yours."));
 
             // Update career milestone counters
             UpdateMilestoneCounters(gameState, outcome, context);
@@ -352,6 +358,21 @@ namespace Street_Rod_AC.Services.Race
             {
                 outcome.WinCondition = WinCondition.PlayerAbandoned;
                 outcome.PlayerWon = false;
+                return outcome;
+            }
+
+            // A drag race's contact: whoever hit the other out of their own lane is out, whatever the crash did
+            if (playerParticipant.Disqualified == true || result.Session.EndReason == EndReasons.Disqualified)
+            {
+                outcome.WinCondition = WinCondition.PlayerDisqualified;
+                outcome.PlayerWon = false;
+                return outcome;
+            }
+
+            if (opponentParticipant.Disqualified == true)
+            {
+                outcome.WinCondition = WinCondition.OpponentDisqualified;
+                outcome.PlayerWon = true;
                 return outcome;
             }
 
@@ -1027,6 +1048,16 @@ namespace Street_Rod_AC.Services.Race
         /// <summary>
         /// The player was put back in the middle of the race (the pits, a lane violation): out, and loses
         /// </summary>
-        PlayerAbandoned
+        PlayerAbandoned,
+
+        /// <summary>
+        /// Drag race: the player hit the rival out of their own lane and is disqualified: loses
+        /// </summary>
+        PlayerDisqualified,
+
+        /// <summary>
+        /// Drag race: the rival hit the player out of their own lane and is disqualified: the player wins
+        /// </summary>
+        OpponentDisqualified
     }
 }

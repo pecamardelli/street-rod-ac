@@ -295,6 +295,12 @@ public sealed class AcConfigBackupTests : IDisposable
 
         var race = File.ReadAllLines(CfgFile("race.ini"));
         Assert.Contains($"__CM_CUSTOM_MODE={IniModificationService.RaceModeId}", race);
+        // A drag race is a one-lap race the mode controls: not AC's drag session, no AC jump-start penalty
+        Assert.Contains("TYPE=3", race);
+        Assert.DoesNotContain("TYPE=7", race);
+        Assert.Contains("LAPS=1", race);
+        Assert.Contains("JUMP_START_PENALTY=0", race);
+        Assert.Contains("RACE_TYPE=DRAG", race);
         Assert.DoesNotContain(race, l => l.StartsWith("MODE=") || l.StartsWith("__CM_NEW_MODE_USED"));
 
         var raced = File.ReadAllLines(assistsFile);

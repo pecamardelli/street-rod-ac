@@ -301,7 +301,7 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine($"CONFIG_TRACK={IniId(intent.TrackConfig, "track layout")}");
             sb.AppendLine("DRIFT_MODE=0");
             sb.AppendLine("FIXED_SETUP=0");
-            sb.AppendLine("JUMP_START_PENALTY=1");
+            sb.AppendLine("JUMP_START_PENALTY=0");  // the race mode judges false starts; AC's penalty teleports the car
             sb.AppendLine($"MODEL={IniId(intent.PlayerCarId, "car")}");
             sb.AppendLine("MODEL_CONFIG=");
             sb.AppendLine("PENALTIES=0");
@@ -313,25 +313,18 @@ namespace Street_Rod_AC.Services.Configuration
 
             AppendTailSections(sb);
 
-            // [SESSION_0] - Race session
+            // [SESSION_0] - Race session. A drag race is a one-lap race too, on the strip: AC's own drag session
+            // (TYPE=7) disqualifies for lanes, resets jump starts and runs matches, all by teleporting the cars,
+            // and the race mode owns those calls. On ks_drag both cars start side by side, one per lane, and the
+            // lap ends at the strip's finish line (checked in the game 2026-09-24).
             var isDrag = intent.RaceType == RaceType.DragRace;
             sb.AppendLine("[SESSION_0]");
-            if (isDrag)
-            {
-                sb.AppendLine("NAME=Drag Race");
-                sb.AppendLine("TYPE=7");
-                sb.AppendLine("SPAWN_SET=START");
-                sb.AppendLine("MATCHES=10");
-            }
-            else
-            {
-                sb.AppendLine("STARTING_POSITION=1");
-                sb.AppendLine("NAME=Quick Race");
-                sb.AppendLine("TYPE=3");
-                sb.AppendLine("LAPS=1");
-                sb.AppendLine("DURATION_MINUTES=0");
-                sb.AppendLine("SPAWN_SET=START");
-            }
+            sb.AppendLine("STARTING_POSITION=1");
+            sb.AppendLine(isDrag ? "NAME=Drag Race" : "NAME=Quick Race");
+            sb.AppendLine("TYPE=3");
+            sb.AppendLine("LAPS=1");
+            sb.AppendLine("DURATION_MINUTES=0");
+            sb.AppendLine("SPAWN_SET=START");
             sb.AppendLine();
 
             // [CAR_0] - Player
@@ -355,12 +348,14 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("NATIONALITY=");
             sb.AppendLine("NATION_CODE=");
 
-            // [STREET_ROD] - Which race this is: the Lua app writes it into the result, so a result is only ever
-            // applied to the race it came from
+            // [STREET_ROD] - What the race mode needs to know: the kind of race (a drag race has lanes and a
+            // flagger), and which race this is, which it writes into the result so a result is only ever applied
+            // to the race it came from
+            sb.AppendLine();
+            sb.AppendLine("[STREET_ROD]");
+            sb.AppendLine(isDrag ? "RACE_TYPE=DRAG" : "RACE_TYPE=ROAD");
             if (intent.ContextId is { } contextId)
             {
-                sb.AppendLine();
-                sb.AppendLine("[STREET_ROD]");
                 sb.AppendLine($"CONTEXT_ID={contextId:D}");
             }
 
