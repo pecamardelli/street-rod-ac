@@ -22,7 +22,7 @@ namespace Street_Rod_AC.Services.Opponents
         /// <param name="name">Opponent name</param>
         /// <param name="age">Age (affects aggression tendencies)</param>
         /// <param name="gender">Gender (slight tendency in aggression variation)</param>
-        /// <param name="baseSkill">Base skill level (80-100)</param>
+        /// <param name="baseSkill">Base skill level (90-100; lower is raised to Opponent.MinSkill)</param>
         /// <returns>New opponent with generated traits</returns>
         Opponent GenerateOpponent(string name, int age, Gender gender, int baseSkill);
     }

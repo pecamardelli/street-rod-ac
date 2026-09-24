@@ -11,7 +11,7 @@ Stored in save file, evolves over time.
 
 | Property | Range | Purpose |
 |----------|-------|---------|
-| Skill | 90-100 | Overall driving ability (the floor of 90 is deliberate, commit 61ca613: generation, evolution clamping and the adapter all keep to it) |
+| Skill | 90-100 | Overall driving ability (the floor of 90 is deliberate, commit 61ca613: below it AC's AI drives too badly to make a race. Generation, evolution clamping and the adapter all keep to it; never lower it) |
 | Aggression | 0-100 | Risk appetite |
 | Age, Gender | - | Personality modifiers |
 | Name, Portrait | - | Identity |

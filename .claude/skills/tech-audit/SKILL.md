@@ -176,6 +176,8 @@ Each subagent looks for:
 
 1. Confirm every dispatched slice produced its `$WORK/audit-<slice>.md`. Do **not** accept findings from chat results alone — they cannot be re-read after a context reset.
 2. **Verify every BUG and SECURITY finding yourself** by reading the cited lines before it goes in the report. Drop anything the code does not bear out; downgrade anything that is real but not exploitable/reachable. A handful of true findings beats forty plausible ones.
+   - **Check intent before calling a mismatch a bug.** When the code disagrees with a doc, a comment or a "norm", run `git log -L <line>,<line>:<file>` (or `git log -S`) on the code side first. A commit that set the value on purpose makes the doc the finding, not the code. Example: the opponent skill floor of 90 (commit 61ca613) disagreed with docs that said 80–100. The first audit told us to "clamp to 80", but below 90 AC's AI drives too badly to make a race.
+   - **Rate by likelihood, not by the worst outcome.** A bug that needs a rare trigger (for example a ≥25 g spike in the few seconds before AC quits) is tagged *Plausible* and ranked below one that fires on a normal run, even if both end the same way.
 3. Write one findings file:
 
 ```
@@ -193,6 +195,8 @@ Structure (sorted by severity; include only the sections that ran):
 **Deterministic checks:** build <ok|failed: why> · <N> warnings (<top codes>) · vulnerable pkgs <N> · deprecated <N> · outdated <N>
 **Duplication scan:** exact <N files / N pairs / ~N lines> · renamed <N pairs / ~N lines>   (if run)
 
+Legend: ✔ = re-read by the controller · *Plausible* = real code path, but it needs an unlikely trigger or timing · no mark = verified by the slice reviewer. Every BUG and SECURITY entry carries a **Fix** line.
+
 ## Executive summary
 
 <5–10 lines, severity counts, top 3 fixes>
@@ -204,6 +208,8 @@ Structure (sorted by severity; include only the sections that ran):
   - **Fix:** <concrete change>
 
 ## STABILITY (should fix)
+
+<one line: N crash · N corrupt · N hang · N leak · N fragile>
 
 - **[CRASH|CORRUPT|HANG|LEAK|FRAGILE] <unit>/<file>:<line>** — <finding>
   - **Trigger:** <what the user does / what input or machine state>
@@ -267,7 +273,7 @@ The chat output is the executive summary only — point the user to the findings
 - **Acknowledge good patterns.** Not just a fault-finding exercise.
 - **Don't duplicate `docs/CLAUDE.md` rules.** If a convention is already documented, only flag it when violated.
 - **Audit linked source once.** Files compiled into the tools by `<Compile Include="..\..\Street Rod AC\...">` belong to the game slice.
-- **Respect deliberate decisions.** The project's memory and docs record choices that look odd out of context (running SLRR's compiled scripts in a VM instead of porting them, carbs of different packs never merged, re-implementing AC's FMOD DSP plugins). Flag how they are implemented, not that they were chosen.
+- **Respect deliberate decisions.** The project's memory and docs record choices that look odd out of context (running SLRR's compiled scripts in a VM instead of porting them, carbs of different packs never merged, re-implementing AC's FMOD DSP plugins). Flag how they are implemented, not that they were chosen. Opponent skill never goes below 90 (`Opponent.MinSkill`): AC's AI drives too badly under that. A doc that says otherwise is the thing to fix.
 - **No interactive prompts in autonomous mode.** Default to `security` and proceed.
 - **Cap subagent output.** Slices × 40 findings × 1 sentence is readable; unbounded prose is not.
 

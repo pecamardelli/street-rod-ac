@@ -161,7 +161,7 @@ namespace Street_Rod_AC.Services.Configuration.Models
         public bool IsPinkSlip { get; set; }
 
         /// <summary>
-        /// Opponent AI skill level (80-100)
+        /// Opponent AI skill level (90-100)
         /// Derived from Opponent model at runtime
         /// </summary>
         public int OpponentAILevel { get; set; } = 90;

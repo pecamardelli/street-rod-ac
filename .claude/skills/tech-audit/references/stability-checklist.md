@@ -47,6 +47,7 @@ git grep -nE 'DateTime\.Now|Environment\.(UserName|MachineName)|Environment\.Get
 | Waiting on AC                   | Waiting for `acs.exe` to exit has a path for: AC never starting, AC crashing, the user killing it, and AC still running when the app closes      |
 | Cancellation                    | Leaving a screen cancels its background work (`CancellationTokenSource` cancelled + disposed on exit)                                           |
 | Infinite loops                  | `while (true)` loops have an exit on every failure path; the script VM has an instruction budget                                               |
+| Library first use from threads  | Static/global state that a library builds lazily (LiteDB's `BsonMapper.Global` registering a type on first use, static caches) is warmed up once before two threads can reach it — missed by the first audit, found while fixing it |
 
 ## Leaks and resource lifetime
 
@@ -68,12 +69,14 @@ git grep -nE 'DateTime\.Now|Environment\.(UserName|MachineName)|Environment\.Get
 | Partial operations            | Multi-step changes (buy car: money − price, add car, remove listing) can't half-apply if a step throws                                                           |
 | Scheduler                     | A failing `IScheduledTask` doesn't stop the others or the clock; tasks are safe to run twice after a crash between run and "last run" being saved              |
 | Randomness                    | Seeded `Random` where reproducibility matters (converter determinism, tests); no `new Random()` per call in tight loops                                         |
+| Self-repair of stores         | A database or cache that rebuilds itself (catalog `AutoRebuild`, LiteDB's recovery on open) can't silently drop user data or run while another open is live     |
+| State that isn't persisted    | Every value a later step reads back (a race event's track, the pending race context) is stored in the save, not only kept on a screen VM — follow each launch intent field to where it's read after a restart |
 
 ## Environment differences (works on your machine only)
 
 | Check                     | What to verify                                                                                                                                                                         |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Culture                   | Every parse/format of a file value (INI, cfg, JSON by hand, SLRR text, AC data) uses `CultureInfo.InvariantCulture` — on a comma-decimal locale (es-AR, de-DE…) `float.Parse("1.5")` is 15 or throws, and an INI written with `1,5` breaks AC |
+| Culture                   | Every parse/format of a file value (INI, cfg, JSON by hand, SLRR text, AC data) uses `CultureInfo.InvariantCulture` — on a comma-decimal locale (es-AR, de-DE…) `float.Parse("1.5")` is 15 or throws, and an INI written with `1,5` breaks AC. Spec strings from `ui_car.json` also use space, thin-space or dot thousands separators (`"1 250 kg"`, `"1.250kg"`) |
 | Paths                     | No hardcoded `C:\GAMES\...`, `C:\Users\...`, drive letters; AC and Documents paths come from settings / `Environment.GetFolderPath`; paths with spaces and non-ASCII names work      |
 | Missing optional installs | Missing CSP, missing Lua app, missing AC sound bank, missing actools-dependent assets → clear message, not a crash                                                                    |
 | DPI / multi-monitor       | D3DImage viewports and overlays behave at 125–200% scaling and when the window moves between monitors                                                                                  |

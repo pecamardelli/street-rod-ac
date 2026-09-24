@@ -202,7 +202,7 @@ namespace Street_Rod_AC.Services.Opponents
             // Generate condition based on opponent's skill and age
             // Higher skill opponents tend to have better maintained cars
             // Younger opponents might have more worn cars (less money for maintenance)
-            var baseCondition = 0.5f + (opponent.Skill - 80) / 100f; // 0.5 to 0.7 based on skill
+            var baseCondition = 0.5f + (opponent.Skill - 80) / 100f; // 0.6 to 0.7 (skills run 90-100)
             var ageAdjustment = opponent.Age > 35 ? 0.1f : -0.05f; // Older opponents have better cars
             var condition = Math.Clamp(baseCondition + ageAdjustment + ((float)_random.NextDouble() * 0.2f - 0.1f), 0.4f, 0.9f);
 

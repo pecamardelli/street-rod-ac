@@ -84,7 +84,7 @@ namespace Street_Rod_AC.Services.Configuration.Models
         public string? TrackConfig { get; set; } = "drag1000";
 
         /// <summary>
-        /// Opponent AI skill level (80-100)
+        /// Opponent AI skill level (90-100)
         /// </summary>
         public int OpponentAILevel { get; set; } = 90;
 

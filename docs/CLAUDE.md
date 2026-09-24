@@ -71,7 +71,7 @@ NavigationService.NavigateTo[ScreenName](dependencies) : bool
 ```
 
 ## Opponent System (AC-Agnostic)
-- `Opponent` model stores Skill (90-100; the floor of 90 is deliberate, commit 61ca613) and Aggression (0-100)
+- `Opponent` model stores Skill (90-100; the floor of 90 is deliberate, commit 61ca613: below it AC's AI drives too badly to make a race. Never lower it) and Aggression (0-100)
 - `OpponentAIAdapter` converts to AC AI parameters at runtime (never persisted)
 - Evolution happens after races via `OpponentEvolutionService`
 
