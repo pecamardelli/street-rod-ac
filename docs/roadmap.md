@@ -24,30 +24,61 @@ design. Steps are meant to be vertical slices, one PR each, to `dev` (remote `gi
 - **False start:** moving more than 1 m before the green. No contest, nothing changes hands, and each one costs 3 reputation (up to 15).
 - **Drag race contact:** crossing lanes is fine. When the cars touch, the car further out of its own lane is disqualified: the player's disqualification is a loss, the rival's a win.
 - **The player always gets to finish.** Quitting AC is a forfeit.
-- **Result schema 1.3:** `end_reason`, `race_type`, `false_start`, `disqualified`, and `condition`. `condition` is the car as AC left it: body damage by zone, engine life, gearbox, oil and water, fuel, and per wheel tyre wear, virtual km, blown and suspension damage. **Nothing reads `condition` yet.**
+- **Result schema 1.3:** `end_reason`, `race_type`, `false_start`, `disqualified`, and `condition`. `condition` is the car as AC left it: body damage by zone, engine life, gearbox, oil and water, fuel, and per wheel tyre wear, virtual km, blown and suspension damage. Step 2 puts `condition` onto the parts (schema 1.4 since).
 
 Not yet tested by the user in a race: a clean drag race to the finish, a disqualification for contact either way, a
 crashed rival being held, a false start on a road race, `assists.ini` coming back after the race.
 
-**Step 2, damage, timeslips and the repair shop: built on `feature/damage`** (one PR, the user's choice). See
-`docs/ac-integration/csp-lua-scripts.md`, "Damage". The user decided: AC's damage at 100%; a car with a blown engine,
-a wrecked gearbox or a totaled body (200 km/h of hits) does not race until repaired.
-- AC's `condition` lands on the parts (`CarCondition`): engine life on the rotating parts' `Tear`, gearbox damage on
-  the transmission, a bent corner on its spring and shock, tyre wear on the tyres, body damage on the car in km/h.
-  `Car.EngineHealth` and the other car figures are worked out from the parts after every race and repair.
-- The next race starts where the last left off: race.ini `[STREET_ROD] CAR_n_BODY/ENGINE_LIFE/GEARBOX/SUSPENSION`;
-  the mode sets body and engine life, the car's data carries the gearbox (slower shifts) and the corners (toe).
-- Breakdowns (`BROKE_DOWN`, schema 1.4): out of the race; both cars out is a draw.
-- Timeslips for drag races (R/T, 60', 330', 1/8, 1000', 1/4, trap speeds) and a timeslip dialog after the race.
-- The garage's Repairs button: engine and gearbox rebuilds, straightened corners, new tyres, body work, for money and
-  garage time.
+**Done: step 2, damage, timeslips and the repair shop** (PR #18, `feature/damage`, open against `dev` on
+2026-09-24; one PR, the user's choice). See `docs/ac-integration/csp-lua-scripts.md` "Damage" and
+`docs/systems/parts-system.md` "Damage and repairs".
+- **The user decided:**
+  - AC's damage at 100%;
+  - a car with a blown engine, a wrecked gearbox or a totaled body (200 km/h of hits, all zones together) does not
+    race or free-run until repaired, and neither does one with a broken corner or a blown tyre;
+  - after a crash the player is towed to the garage and sees the damage report there.
+- **Damage lands on the parts** (`CarCondition`):
+  - engine life on the `Tear` of the rotating parts (crankshaft, rods, pistons, camshafts);
+  - gearbox damage on the transmission;
+  - a bent steering rod on that corner's spring and shock;
+  - tyre wear on the tyres' `Wear`, a blown tyre's `Tear` to 0;
+  - body damage on the car, in km/h per zone (`Car.BodyDamageKmh`);
+  - a little mileage `Wear` on the engine.
+  `Car.EngineHealth` and the other car figures are worked out from the parts after every race and repair. Old result
+  files without `condition` still get the flat wear of before.
+- **The next race starts where the last left off.** `race.ini [STREET_ROD]` gets `CAR_n_BODY`, `ENGINE_LIFE`,
+  `GEARBOX` and `SUSPENSION`. The mode sets body and engine life. The car's data carries the rest (`AcDamageData`):
+  slower shifts for a worn gearbox, toe for a bent axle. AC's tyre km are deliberately not carried: the tyre's wear
+  already lowers its grip in `tyres.ini`.
+- **Breakdowns** (schema 1.4, `BROKE_DOWN`): a blown engine, a gearbox or a corner past what it can take, a blown
+  tyre. The player's is a loss, the rival's a win, both cars out a draw (`WinCondition.BothOut`).
+- **Timeslips** for drag races (R/T, 60', 330', ⅛, 1000', ¼, trap speeds over the last 66 ft), shown in a timeslip
+  dialog after the race.
+- **The garage's Repairs button** (`RepairShop`): engine and gearbox rebuilds, straightened corners, new tyres, body
+  work, for money and garage time (`GarageWorkMinor` 30 min, `GarageWorkMajor` 2 h).
+- **Opponents' cars** carry their damage too, but race with just enough to leave the line (`CarCondition.Runnable`)
+  until step 5 has them repair their cars.
 
-Not yet tested in the game: that the scratches redraw when the body damage is set at the start; the breakdowns;
-the timeslip marks on ks_drag; the toe and gearbox data. Left for later: overheating and oil starvation modelled by
-the game (CSP only fills oil figures for scripted cars), fuel carried between races, body dirt, opponents repairing
-their own cars (step 5), each car's best elapsed time and bracket racing.
+Not yet tested by the user in the game:
+- the scratches and dents redrawing when the body damage is set at the start;
+- breakdowns, both ways;
+- the timeslip marks on `ks_drag` (its layout is 1000 m, so the ¼ mile falls inside the lap);
+- how the toe and gearbox data drive;
+- the tow to the garage after a crash.
 
-## Step 2: damage, as real as AC allows (built, see above)
+Left for later: overheating and oil starvation modelled by the game (CSP only fills oil figures for scripted cars),
+fuel carried between races, body dirt, each car's best elapsed time, bracket racing with a dial-in, and whether AC's
+full damage wrecks 1970 street cars too fast (the user chose 100% to start).
+
+## Next: step 4, economy
+
+Step 3 is done (see below) and step 2b went in with step 2, so the economy is next. Before starting: check that PR #18
+is merged into `dev`, and branch from `dev`.
+
+## Step 2: damage, as real as AC allows (done, PR #18)
+
+The research and the design sketch, kept as the record. What was built differs in places: see "Where
+things stand".
 
 **User:**
 - "Everything that AC takes into consideration should be ported to the game": map everything AC tracks.
@@ -93,7 +124,7 @@ their own cars (step 5), each car's best elapsed time and bracket racing.
 5. **Repair shop:** time and money per part, using `GameAction.GarageWorkMinor/Major`, which exist but are unused. A "totaled" state for a car whose crash was hard enough.
 6. **Open:** how much of AC's damage to scale (the full rate may wreck cars too fast for 1970 street cars), and whether a car too damaged to run can race at all (`RaceSetupBuilder` already refuses a player car that won't run).
 
-## Step 2b: timeslips
+## Step 2b: timeslips (done with step 2, PR #18)
 
 **User:** yes.
 
@@ -101,10 +132,11 @@ The mode records reaction time (green to the car moving), 60 ft, ⅛ mile, ¼ mi
 both cars, measured from AC's green (`sim.isSessionStarted` turning true; in a race session that is AC's start
 lights, and the rival leaves on it). The distances come from progress along the track (`car.splinePosition` times the
 track length, or distance from the line along the strip's axis the mode already has). They go into the result, and
-the app shows a timeslip screen after a drag race (today it only shows dialogs). Later: bracket races with a dial-in,
+the app shows a timeslip after a drag race. Built: the elapsed times run from the car leaving the line (0.2 m), the
+reaction time from the green to that, the distance is along the strip's axis. Later: bracket races with a dial-in,
 and each car's best elapsed time.
 
-## Step 3: crash and start rules (mostly done)
+## Step 3: crash and start rules (done)
 
 **Done:**
 - a crash is 15 g during a collision (Test Drive uses 10 g in `C:\GAMES\Assetto Corsa\extension\lua\new-modes\test-drive`);
@@ -118,8 +150,11 @@ and each car's best elapsed time.
 
 **User:** yes to all, except that the starting money stays at the $1M placeholder until a first release (they are testing).
 - **Selling cars:** to the dealer and in the newspaper. `GameAction.SellCar` exists but nothing uses it, and `CarsSold` is never written.
-- **Make `GameSettings` do something.** None of its economy or difficulty fields is read anywhere (`CarPriceMultiplier`, `PartPriceMultiplier`, `RacePrizeMultiplier`, `OpponentSkill/AggressionModifier`, `CarWearMultiplier`, `PinkSlipFrequency`, `RaceSimulationEnabled`, `SeasonalRacingEnabled`, `MarketRefreshEnabled`). The New Game screen could offer a difficulty.
-- **The repair shop** (see step 2).
+- **Make `GameSettings` do something.** None of its economy or difficulty fields is read anywhere (`CarPriceMultiplier`, `PartPriceMultiplier`, `RacePrizeMultiplier`, `OpponentSkill/AggressionModifier`, `CarWearMultiplier`, `PinkSlipFrequency`, `RaceSimulationEnabled`, `SeasonalRacingEnabled`, `MarketRefreshEnabled`). The New Game screen could offer a difficulty. `CarWearMultiplier` could scale AC's damage (`IniModificationService.RaceDamage`, now 100) and the mileage wear (`CarCondition.MileageWearPerKm`).
+- **The repair shop:** done in step 2 (`RepairShop`). Its prices are constants in `RepairShop` (60% of the damaged
+  parts' new price, $15 labour, $8 per km/h of body damage): `PartPriceMultiplier` or a labour setting could scale them.
+- **Selling a wreck:** a totaled car should sell for scrap (the GameMaker version pays 15% ±20% of its value).
+  `CarValuation.ConditionOf` already sees the damage, since the car's figures come from its parts.
 - **Bigger bets:** they are $10–100 on drag and $25–250 on road today (`MatchupCalculator.cs:17-32`), and could grow at night and against higher-reputation rivals.
 
 ## Step 5: living opponents
@@ -140,7 +175,7 @@ ported is the daily life cycle:
   - **No car:** buy the best affordable one from the same listings the player sees; it leaves the market. It needs at least $100. Purchase score:
     - `hp×2 + cond×3 + 500 if it runs + (hp/price)×1000`;
     - plus `(1 − price/budget)×200` when the car costs under 70% of the budget, so money is left for repairs.
-  - **Car doesn't run:** repair only if the whole bill is affordable (`StructCar.repair`, `StructCar.gml:541`). Otherwise the racer retires until they can.
+  - **Car doesn't run:** repair only if the whole bill is affordable (`StructCar.repair`, `StructCar.gml:541`). Otherwise the racer retires until they can. Since step 2 this is real: an opponent's car keeps its damage, and `CarCondition.WhyCannotRace` plus `RepairShop.Jobs` give the bill. Once opponents repair, `RaceSetupBuilder` can stop making their cars `Runnable`.
   - **Bankrupt** (no running car, and less money than the cheapest used car, or $200 if the market is empty): a cash injection of $50–500, then back to racing.
   - Retired racers are checked daily and return once they're ready.
 - **Tuning within budget** (`StructCar.tuneUp` + `scr_get_car_upgrades`), to run every day in the review, not only when a car is generated:
@@ -205,7 +240,7 @@ ported is the daily life cycle:
 - **Rivals remember you:** a grudge rematch after a pink-slip loss, with talk lines to match. `StaticTalkService` today; the LLM talk planned in `docs/ai-integration.md` later.
 - **Newspaper articles written from race history** (the processed race sessions are already saved).
 - **Car history:** every car keeps its odometer, previous owners and wins, and its price reflects them.
-- **Parts that fail in the race:** an over-revved engine throws a rod in AC, and you find the damaged part on the workbench afterwards (step 2).
+- **Parts that fail in the race:** an over-revved engine throws a rod in AC, and you find the damaged part on the workbench afterwards. Since step 2 the whole rotating assembly takes the damage together (the parts view shows it); singling out the one part that failed is still open.
 
 ## Known gaps found in the analysis (not scheduled yet)
 
