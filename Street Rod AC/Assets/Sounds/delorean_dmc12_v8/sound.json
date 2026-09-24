@@ -1,0 +1,11 @@
+{
+  "donor_id": "delorean_dmc_12_v8",
+  "name": "DeLorean DMC-12 V8 (Corvette C7R samples)",
+  "cylinders": 8,
+  "family": "gm",
+  "rpm_max": 6500,
+  "tags": [
+    "modern",
+    "big v8"
+  ]
+}

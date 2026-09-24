@@ -2,11 +2,9 @@
 # Set default behavior to automatically normalize line endings.
 ###############################################################################
 * text=auto
-
 # Converted part models and the compiled part scripts they run on (Street Rod AC/Assets/Parts)
 *.kn5   binary
 *.class binary
-
 ###############################################################################
 # Set default behavior for command prompt diff.
 #
@@ -15,7 +13,6 @@
 # Note: This is only used by command line
 ###############################################################################
 #*.cs     diff=csharp
-
 ###############################################################################
 # Set the merge driver for project and solution files
 #
@@ -38,7 +35,6 @@
 #*.modelproj merge=binary
 #*.sqlproj   merge=binary
 #*.wwaproj   merge=binary
-
 ###############################################################################
 # behavior for image files
 #
@@ -47,7 +43,6 @@
 #*.jpg   binary
 #*.png   binary
 #*.gif   binary
-
 ###############################################################################
 # diff behavior for common document formats
 # 
@@ -65,3 +60,4 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+*.bank filter=lfs diff=lfs merge=lfs -text

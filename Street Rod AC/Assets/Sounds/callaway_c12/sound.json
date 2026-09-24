@@ -1,0 +1,10 @@
+{
+  "donor_id": "dg_bp_callaway_c12",
+  "name": "Callaway C12 Corvette",
+  "cylinders": 8,
+  "family": "gm",
+  "rpm_max": 7000,
+  "tags": [
+    "corvette"
+  ]
+}

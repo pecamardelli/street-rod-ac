@@ -1,0 +1,10 @@
+{
+  "donor_id": "gd_dodge_viper_gts",
+  "name": "Dodge Viper GTS (V10)",
+  "cylinders": 10,
+  "family": "mopar",
+  "rpm_max": 6000,
+  "tags": [
+    "v10"
+  ]
+}

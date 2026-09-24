@@ -1,0 +1,17 @@
+alfa 8c-35							-> Ford six
+Aston Martin V8 Vantage V600		-> Excelente para big blocks, suena algo moderno pero puede adaptarse. Tiene el problema de que se escucha con poco volumen.
+Plymouth Fury 58					-> Tiene el sonido del Ford 429 que es el que se usó para la película Christine.
+Shelby GT500						-> Tiene su sonido original, probablemente sea el mismo que el Fury 58.
+Audi Sport Quattro					-> Va muy bien para small blocks
+Auto Union Type C Avus				-> Para V8s de competición o sin muffler
+Callaway C12 Corvette				-> Su nombre sugiere agregarlo a los corvettes. Lo agregaría a la gama intermedia 396-400.
+Camaro 69							-> La versión COPO es una modificación mía, el sonido podría aplicarse a un 283, 307, o algún otro small block.
+Corvette c4 ZR-1					-> Para el 427 o cualquier big block "tuneado"
+Corvette Stingray 63				-> El sonido ideal a los small blocks, principalmente a los de Corvette.
+Cooper Monaco Type 61P Maserati		-> Para algún V8 mediano de cualquier fabricante.
+Shelby Cobra 427 S/C				-> Para el 427 de ford y algún otro similar.
+Delage 15S8 Seaman					-> Para el Ford Flathead V8 (cuando lo tengamos).
+DeLorean DMC-12 V8					-> En teoría es el sonido de un LS. Podríamos usarlo para cualquier familia de V8s grandes.
+Dodge Charger Daytona				-> Parece ser el sonido original del Hemi 426.
+Dodge Viper GTS						-> No es del todo un sonido de V8 pero suena a potencia. Aplicable a cualquier familia de small blocks.
+Lotus Esprit V8 GT					-> Buen sonido para cualquier V8 en general. Lo pondría en algún Pontiac.

@@ -1,0 +1,10 @@
+{
+  "donor_id": "avus_auto_union_type_c",
+  "name": "Auto Union Type C Avus (V16)",
+  "cylinders": 16,
+  "rpm_max": 5000,
+  "tags": [
+    "race",
+    "open exhaust"
+  ]
+}

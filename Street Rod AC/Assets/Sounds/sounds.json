@@ -1,5 +1,34 @@
 {
   "pins": {
+    "engines/gm/V8_small_block": "car:chevy_camaro_1969_zl1",
+    "engines/gm/vette_63_block": "car:chevrolet_63vette",
+    "engines/gm/Vette_C3_block": "car:chevrolet_63vette",
+    "engines/gm/GM_327_block": "callaway_c12",
+    "engines/gm/GTO65_block": "lotus_esprit_v8_gt",
+    "engines/gm/GM_427_block": "car:bpr_reliable_custom",
+    "engines/gm/WORLD_Motown_454_block": "delorean_dmc12_v8",
+    "engines/gm/GM_500_block": "car:amc_javelin_1970",
+
+    "engines/ford_six/ford_188_block": "car:exmods_dodge_zeder_z250",
+    "engines/ford_six/ford_221_block": "car:exmods_dodge_zeder_z250",
+    "engines/ford/Ford_260_block": "audi_sport_quattro",
+    "engines/ford/Ford_302_block": "audi_sport_quattro",
+    "engines/ford/Ford_292_block": "cooper_monaco_61p",
+    "engines/ford/Ford_312_block": "cooper_monaco_61p",
+    "engines/ford/Ford_351_block": "cooper_monaco_61p",
+    "engines/ford/Ford_332_block": "car:j8_shelby_gt500_67",
+    "engines/ford/Ford_390_block": "car:j8_shelby_gt500_67",
+    "engines/ford/Cobra_Jet_429_block": "car:mv_plymouth_fury_1958_enc",
+    "engines/ford/Ford_460_block": "car:shelby_cobra_427sc",
+
+    "engines/chrysler/_Engine_block_318": "dodge_viper_gts",
+    "engines/chrysler/_Engine_block_340": "dodge_viper_gts",
+    "engines/chrysler/_Engine_block_360": "dodge_viper_gts",
+    "engines/chrysler/_Engine_block_361": "cooper_monaco_61p",
+    "engines/chrysler/_Engine_block_383": "cooper_monaco_61p",
+    "engines/chrysler/_Engine_block_400": "cooper_monaco_61p",
+    "engines/chrysler/_Engine_block_440": "car:amc_javelin_1970",
+    "engines/chrysler/_Engine_block_426_XEMI": "car:exmods_dodge_charg_daytona"
   },
   "cars": {
   }

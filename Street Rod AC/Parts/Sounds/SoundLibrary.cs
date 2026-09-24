@@ -106,7 +106,21 @@ public sealed class SoundLibrary
 
     private readonly List<string> _problems = new();
 
-    public SoundEntry? Get(string? id) => id == null ? null : _byId.GetValueOrDefault(id);
+    /// <summary>
+    /// A sound by id. <c>car:&lt;car id&gt;</c> names the bank that car ships whichever carrier the harvested sound
+    /// is named after, so a pin to a car's bank holds when another car with the same bank comes first.
+    /// </summary>
+    public SoundEntry? Get(string? id)
+    {
+        if (id == null) return null;
+        if (_byId.TryGetValue(id, out var entry)) return entry;
+        if (!id.StartsWith(CarPrefix, StringComparison.OrdinalIgnoreCase)) return null;
+        var carId = id[CarPrefix.Length..];
+        return _entries.FirstOrDefault(e => e.Carriers.Contains(carId, StringComparer.OrdinalIgnoreCase));
+    }
+
+    /// <summary>The id prefix of a sound harvested off an installed car</summary>
+    public const string CarPrefix = "car:";
 
     public static SoundLibrary Empty(string root) => new(root, new SoundOverrides());
 
@@ -265,7 +279,7 @@ public sealed class SoundLibrary
             var first = cars[0];
             Add(new SoundEntry
             {
-                Id = "car:" + first.Id,
+                Id = CarPrefix + first.Id,
                 Name = first.Name,
                 BankPath = first.BankPath,
                 GuidsText = first.GuidsText,
@@ -279,6 +293,10 @@ public sealed class SoundLibrary
                 Checksum = checksum
             });
         }
+
+        // A pin to a sound nobody has is no pin: the block falls back to the matcher, and the log says why
+        foreach (var (block, sound) in Overrides.Pins.OrderBy(p => p.Key, StringComparer.OrdinalIgnoreCase))
+            if (Get(sound) == null) _problems.Add($"{SoundsJson}: {block} is pinned to '{sound}', which is no sound here; the matcher picks instead");
 
         return read;
     }
