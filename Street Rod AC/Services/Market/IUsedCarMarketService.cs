@@ -11,13 +11,15 @@ namespace Street_Rod_AC.Services.Market
         /// Spawns new used car listings based on precedence and dealer locations.
         /// The engines of the cars are put together on a worker thread: that takes a moment.
         /// </summary>
-        Task<List<UsedCarListing>> SpawnListingsAsync(List<DealerLocation> dealers, DateTime currentDate);
+        /// <param name="priceMultiplier">The save's <see cref="GameRules.CarPriceMultiplier"/></param>
+        Task<List<UsedCarListing>> SpawnListingsAsync(List<DealerLocation> dealers, DateTime currentDate, double priceMultiplier);
 
         /// <summary>
         /// Refreshes the market: removes old listings, spawns new ones. The listings that are there are only
         /// looked at on the calling thread; the engines of the new ones are put together on a worker thread.
         /// </summary>
-        Task<List<UsedCarListing>> RefreshMarketAsync(List<UsedCarListing> currentListings, List<DealerLocation> dealers, DateTime currentDate);
+        /// <param name="priceMultiplier">The save's <see cref="GameRules.CarPriceMultiplier"/>, for the new listings</param>
+        Task<List<UsedCarListing>> RefreshMarketAsync(List<UsedCarListing> currentListings, List<DealerLocation> dealers, DateTime currentDate, double priceMultiplier);
 
         /// <summary>
         /// Gets available (not sold) listings

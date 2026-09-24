@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Street_Rod_AC.Dialogs;
+using Street_Rod_AC.Dialogs.Confirmation;
 using Street_Rod_AC.Dialogs.Information;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
@@ -8,6 +9,7 @@ using Street_Rod_AC.Screens.Shared;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Career;
 using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
@@ -28,6 +30,7 @@ namespace Street_Rod_AC.Screens.Newspaper
         private readonly IGameTimeService _timeService;
         private readonly IGameStateRepository _gameStateRepo;
         private readonly RaceSetupBuilder _raceSetup;
+        private readonly ICarSaleService _saleService;
         private readonly IAppLogger _logger;
 
         // True from the moment the player confirms an entry until the race is set up (or not): the paper stays
@@ -46,6 +49,10 @@ namespace Street_Rod_AC.Screens.Newspaper
         public ObservableCollection<EventInvitationViewModel> RaceInvitations { get; } = [];
         public bool HasRaceInvitations => RaceInvitations.Count > 0;
 
+        /// <summary>The player's own cars in the paper, and the buyers who called about them</summary>
+        public ObservableCollection<PlayerCarAdViewModel> PlayerAds { get; } = [];
+        public bool HasPlayerAds => PlayerAds.Count > 0;
+
         public NewspaperScreenViewModel(
             NavigationService navigationService,
             DialogService dialogService,
@@ -58,8 +65,10 @@ namespace Street_Rod_AC.Screens.Newspaper
             IGameTimeService timeService,
             IGameStateRepository gameStateRepo,
             RaceSetupBuilder raceSetup,
+            ICarSaleService saleService,
             bool skipAnimation = false)
         {
+            _saleService = saleService;
             _navigationService = navigationService;
             _dialogService = dialogService;
             _gameState = gameState;
@@ -97,6 +106,73 @@ namespace Street_Rod_AC.Screens.Newspaper
             _navigationService.NavigateToGarage(_gameState);
         }
 
+        private void LoadPlayerAds()
+        {
+            PlayerAds.Clear();
+            try
+            {
+                foreach (var ad in _gameState.NewspaperAds.PlayerCars)
+                {
+                    var car = _gameState.Player.Cars.FirstOrDefault(c => c.InstanceId == ad.CarInstanceId);
+                    if (car == null) continue;
+
+                    var definition = _catalogRepository.GetCar(car.DefinitionId);
+                    var name = definition != null ? $"{definition.Brand} {definition.Name}" : car.DefinitionId;
+                    var hasOffer = ad.Offer is { } offer && offer.Expires >= _gameState.Date;
+                    PlayerAds.Add(new PlayerCarAdViewModel(
+                        name,
+                        $"Asking ${ad.AskingPrice:N0}",
+                        hasOffer ? $"{CarSaleService.Capitalized(ad.Offer!.BuyerName)} offers ${ad.Offer.Amount:N0}, until {ad.Offer.Expires:ddd h tt}" : "No buyer has called yet",
+                        hasOffer,
+                        new RelayCommand(() => OnAcceptOffer(ad, name)),
+                        new RelayCommand(() => OnDeclineOffer(ad))));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not list the player's ads");
+            }
+
+            OnPropertyChanged(nameof(HasPlayerAds));
+        }
+
+        private void OnAcceptOffer(CarSaleAd ad, string carName)
+        {
+            if (ad.Offer is not { } offer) return;
+
+            _dialogService.ShowDialog(new ConfirmationDialogViewModel(_dialogService,
+                $"Sell the {carName} to {offer.BuyerName} for ${offer.Amount:N0}? The car is gone once it's sold.",
+                "Sell the Car",
+                async yes =>
+                {
+                    if (!yes) return;
+                    try
+                    {
+                        var result = await _saleService.AcceptOfferAsync(_gameState, ad);
+                        ShowSaleResult(result, result.Succeeded ? "Car Sold" : "No Sale");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, "Could not sell the car");
+                        ShowSaleResult(new SaleResult(SaleOutcome.Refused, $"The car could not be sold:\n\n{ex.Message}"), "No Sale");
+                    }
+                }));
+        }
+
+        private void OnDeclineOffer(CarSaleAd ad)
+        {
+            _saleService.DeclineOffer(_gameState, ad);
+            LoadPlayerAds();
+        }
+
+        private void ShowSaleResult(SaleResult result, string title)
+        {
+            LoadPlayerAds();
+            OnPropertyChanged(nameof(BankrollDisplay));
+            var message = result.SaveFailed ? result.Message + "\n\nThe game could not be saved: the details are in the log." : result.Message;
+            _dialogService.ShowDialog(new InformationDialogViewModel(_dialogService, message, title));
+        }
+
         private void LoadRaceInvitations()
         {
             RaceInvitations.Clear();
@@ -116,7 +192,8 @@ namespace Street_Rod_AC.Screens.Newspaper
                     eventInstance,
                     definition,
                     eligibleCars,
-                    currentTime);
+                    currentTime,
+                    _gameState.Rules.RacePrizeMultiplier);
 
                 RaceInvitations.Add(vm);
             }
@@ -275,12 +352,13 @@ namespace Street_Rod_AC.Screens.Newspaper
                 OpponentCarId = opponent.CarDefinitionId,
                 OpponentSkin = opponent.CarSkin,
                 OpponentCar = opponent.PoolOpponentCar,
-                OpponentAI = OpponentAIAdapter.ToAssettoCorsaAI(driver),
+                OpponentAI = OpponentAIAdapter.ToAssettoCorsaAI(driver, _gameState.Rules),
                 TrackId = track.Value.TrackId,
                 TrackConfig = track.Value.TrackConfig,
                 RaceType = definition.RaceType,
                 CashWager = 0, // Event rewards handled separately
                 IsPinkSlip = result.IsPinkSlip,
+                DamagePercent = _gameState.Rules.RaceDamagePercent,
                 EventId = result.EventId,
                 EventInstanceId = result.EventInstanceId,
                 IsEventOnlyOpponent = !opponent.IsPoolOpponent
@@ -327,6 +405,8 @@ namespace Street_Rod_AC.Screens.Newspaper
                 _logger.Error(ex, "Could not list the race invitations");
             }
 
+            LoadPlayerAds();
+
             // Only spend time when actually visiting (not returning from sub-screens)
             if (SkipEnterAnimation)
                 return;
@@ -336,7 +416,11 @@ namespace Street_Rod_AC.Screens.Newspaper
                 // Late in the evening that is the next morning, with another paper: the invitations are read
                 // again, and the new day is saved
                 var spent = await _timeService.SpendTimeAsync(_gameState, GameAction.VisitNewspaper);
-                if (spent.NewDayStarted) LoadRaceInvitations();
+                if (spent.NewDayStarted)
+                {
+                    LoadRaceInvitations();
+                    LoadPlayerAds();
+                }
                 OnPropertyChanged(nameof(BankrollDisplay));
 
                 if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);

@@ -71,6 +71,120 @@
                 </TextBox>
             </Grid>
 
+            <!-- Difficulty: a preset, and its figures for whoever wants to adjust them -->
+            <Border Width="600"
+                    Background="{StaticResource BgPanelCCBrush}"
+                    BorderBrush="{StaticResource BorderLightBrush}"
+                    BorderThickness="1"
+                    CornerRadius="5"
+                    Padding="20,12"
+                    Margin="0,0,0,10">
+                <Border.Resources>
+                    <Style x:Key="RulesLabel" TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                    </Style>
+                    <Style x:Key="RulesValue" TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="TextAlignment" Value="Right"/>
+                    </Style>
+                    <Style TargetType="RadioButton">
+                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                        <Setter Property="FontSize" Value="{StaticResource FontSizeBody}"/>
+                        <Setter Property="Margin" Value="0,0,25,0"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    </Style>
+                    <Style TargetType="CheckBox">
+                        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+                        <Setter Property="Margin" Value="0,4"/>
+                    </Style>
+                </Border.Resources>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Difficulty"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontSize="{StaticResource FontSizeBody}"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,25,0"/>
+                        <RadioButton Content="Easy" IsChecked="{Binding Rules.IsEasy, Mode=OneWay}"
+                                     Command="{Binding Rules.PickCommand}" CommandParameter="Easy"/>
+                        <RadioButton Content="Normal" IsChecked="{Binding Rules.IsNormal, Mode=OneWay}"
+                                     Command="{Binding Rules.PickCommand}" CommandParameter="Normal"/>
+                        <RadioButton Content="Hard" IsChecked="{Binding Rules.IsHard, Mode=OneWay}"
+                                     Command="{Binding Rules.PickCommand}" CommandParameter="Hard"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding Rules.Summary}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="{StaticResource FontSizeSmall}"
+                               TextWrapping="Wrap"
+                               Margin="0,6,0,0"/>
+
+                    <Expander Header="Adjust the figures"
+                              Foreground="{StaticResource TextSecondaryBrush}"
+                              FontSize="{StaticResource FontSizeSmall}"
+                              Margin="0,8,0,0">
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="170"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="60"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Car prices" Style="{StaticResource RulesLabel}"/>
+                        <Slider Grid.Row="0" Grid.Column="1" Value="{Binding Rules.CarPricePercent}" Minimum="50" Maximum="200"
+                                TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="0,4"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding Rules.CarPricePercent, StringFormat='{}{0}%'}" Style="{StaticResource RulesValue}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Part and repair prices" Style="{StaticResource RulesLabel}"/>
+                        <Slider Grid.Row="1" Grid.Column="1" Value="{Binding Rules.PartPricePercent}" Minimum="50" Maximum="200"
+                                TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="0,4"/>
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Rules.PartPricePercent, StringFormat='{}{0}%'}" Style="{StaticResource RulesValue}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Event prizes" Style="{StaticResource RulesLabel}"/>
+                        <Slider Grid.Row="2" Grid.Column="1" Value="{Binding Rules.PrizePercent}" Minimum="50" Maximum="200"
+                                TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="0,4"/>
+                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding Rules.PrizePercent, StringFormat='{}{0}%'}" Style="{StaticResource RulesValue}"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Wear and damage" Style="{StaticResource RulesLabel}"/>
+                        <Slider Grid.Row="3" Grid.Column="1" Value="{Binding Rules.WearPercent}" Minimum="25" Maximum="200"
+                                TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="0,4"/>
+                        <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding Rules.WearPercent, StringFormat='{}{0}%'}" Style="{StaticResource RulesValue}"/>
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Rivals' skill" Style="{StaticResource RulesLabel}"/>
+                        <Slider Grid.Row="4" Grid.Column="1" Value="{Binding Rules.OpponentSkill}" Minimum="-5" Maximum="5"
+                                TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="0,4"/>
+                        <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding Rules.OpponentSkill, StringFormat='{}{0:+0;-0;0}'}" Style="{StaticResource RulesValue}"/>
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Rivals' aggression" Style="{StaticResource RulesLabel}"/>
+                        <Slider Grid.Row="5" Grid.Column="1" Value="{Binding Rules.OpponentAggression}" Minimum="-50" Maximum="50"
+                                TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" Margin="0,4"/>
+                        <TextBlock Grid.Row="5" Grid.Column="2" Text="{Binding Rules.OpponentAggression, StringFormat='{}{0:+0;-0;0}'}" Style="{StaticResource RulesValue}"/>
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Pink slips" Style="{StaticResource RulesLabel}"/>
+                        <ComboBox Grid.Row="6" Grid.Column="1" Width="120" HorizontalAlignment="Left" Margin="0,4"
+                                  ItemsSource="{Binding Rules.PinkSlipFrequencies}"
+                                  SelectedItem="{Binding Rules.PinkSlipFrequency}"/>
+                        <CheckBox Grid.Row="7" Grid.ColumnSpan="3" Content="Rivals race each other every day"
+                                  IsChecked="{Binding Rules.RaceSimulationEnabled}"/>
+                        <CheckBox Grid.Row="8" Grid.ColumnSpan="3" Content="More racing in summer, less in winter"
+                                  IsChecked="{Binding Rules.SeasonalRacingEnabled}"/>
+                        <CheckBox Grid.Row="9" Grid.ColumnSpan="3" Content="Dealers restock their lots"
+                                  IsChecked="{Binding Rules.MarketRefreshEnabled}"/>
+                        </Grid>
+                    </Expander>
+                </StackPanel>
+            </Border>
+
             <!-- Error Message -->
             <TextBlock Text="{Binding ErrorMessage}"
                        Foreground="{StaticResource AccentPrimaryBrush}"

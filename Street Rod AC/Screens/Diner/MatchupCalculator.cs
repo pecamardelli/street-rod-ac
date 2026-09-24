@@ -16,17 +16,43 @@ namespace Street_Rod_AC.Screens.Diner
         /// <summary>The smallest cash wager: a drag race is a small bet, a road race a bigger one</summary>
         public static decimal MinimumWager(RaceType? raceType) => raceType == RaceType.DragRace ? 10m : 25m;
 
-        /// <summary>The house limit on a cash wager before either racer's money is counted</summary>
+        /// <summary>The house limit on a cash wager in the day, against a rival of ordinary standing, before either racer's money is counted</summary>
         public static decimal MaximumWager(RaceType? raceType) => raceType == RaceType.DragRace ? 100m : 250m;
 
+        /// <summary>From this hour of the game's day the street is racing for real money</summary>
+        public const int NightFromHour = 20;
+
+        /// <summary>How much more the stakes go at night</summary>
+        public const decimal NightStakes = 2m;
+
+        /// <summary>Reputation above which a rival plays for more: the stakes grow by one for every <see cref="ReputationPerStake"/> points over it</summary>
+        public const int StakesReputation = 50;
+
+        public const int ReputationPerStake = 25;
+
+        public static bool IsNight(DateTime gameTime) => gameTime.Hour >= NightFromHour;
+
         /// <summary>
-        /// The cash wager range for this race: the house limits, the top capped by what the poorer of the two
-        /// racers has. When that is less than the minimum, the minimum comes down with it.
+        /// How many times the house limit this race may go for: up to three times against the best-known rivals
+        /// (reputation 100), twice that at night
         /// </summary>
-        public static (decimal Min, decimal Max) WagerLimits(RaceType? raceType, decimal playerMoney, decimal opponentMoney)
+        public static decimal StakesFactor(int opponentReputation, DateTime? gameTime)
+        {
+            var standing = 1m + Math.Max(0, Math.Min(opponentReputation, 100) - StakesReputation) / (decimal)ReputationPerStake;
+            return gameTime is { } time && IsNight(time) ? standing * NightStakes : standing;
+        }
+
+        /// <summary>
+        /// The cash wager range for this race: the house limits, raised at night and against a rival with a name
+        /// (<see cref="StakesFactor"/>), the top capped by what the poorer of the two racers has. When that is less
+        /// than the minimum, the minimum comes down with it.
+        /// </summary>
+        public static (decimal Min, decimal Max) WagerLimits(RaceType? raceType, decimal playerMoney, decimal opponentMoney,
+            int opponentReputation = StakesReputation, DateTime? gameTime = null)
         {
             var min = MinimumWager(raceType);
-            var max = Math.Min(MaximumWager(raceType), Math.Min(playerMoney, opponentMoney));
+            var house = Math.Round(MaximumWager(raceType) * StakesFactor(opponentReputation, gameTime) / 5) * 5;
+            var max = Math.Min(house, Math.Min(playerMoney, opponentMoney));
             if (min > max) min = max;
             return (min, max);
         }

@@ -603,7 +603,7 @@ namespace Street_Rod_AC.Services.Race
             var playerCar = gameState.Player.Cars.FirstOrDefault(c => c.InstanceId == context.PlayerCarInstanceId);
             if (playerCar != null)
             {
-                var damage = ApplyCarDegradation(playerCar, outcome.Player, groupOf);
+                var damage = ApplyCarDegradation(playerCar, outcome.Player, groupOf, gameState.Rules.CarWearMultiplier);
                 if (damage.Count > 0) report = new PlayerMessage("Damage Report", string.Join("\n", damage));
                 playerCar.OdometerKM += RaceDistance(outcome.Player);
                 _logger.Debug("Player car updated: Odometer={Odometer}km, Engine={Engine}%, Transmission={Trans}%",
@@ -619,7 +619,7 @@ namespace Street_Rod_AC.Services.Race
             var opponentCar = opponent?.Cars.FirstOrDefault(c => c.InstanceId == context.OpponentCarInstanceId);
             if (opponentCar != null)
             {
-                ApplyCarDegradation(opponentCar, outcome.Opponent, groupOf);
+                ApplyCarDegradation(opponentCar, outcome.Opponent, groupOf, gameState.Rules.CarWearMultiplier);
                 opponentCar.OdometerKM += RaceDistance(outcome.Opponent);
                 _logger.Debug("Opponent car updated: Odometer={Odometer}km",
                     opponentCar.OdometerKM);
@@ -650,11 +650,11 @@ namespace Street_Rod_AC.Services.Race
         /// What the race did to one car. AC's report of the car (schema 1.2 on) goes onto its parts; an older file,
         /// which has none, takes the flat wear of before. Returns the report's lines for the player.
         /// </summary>
-        private List<string> ApplyCarDegradation(Car car, RaceParticipant participant, Func<string, string?>? groupOf)
+        private List<string> ApplyCarDegradation(Car car, RaceParticipant participant, Func<string, string?>? groupOf, double wearMultiplier)
         {
             if (participant.Condition is { } condition)
             {
-                var report = CarCondition.ApplyRace(car, condition, RaceDistance(participant), groupOf);
+                var report = CarCondition.ApplyRace(car, condition, RaceDistance(participant), groupOf, wearMultiplier);
                 _logger.Information("{Car}: {Report}", car.DefinitionId, report.Count == 0 ? "no damage" : string.Join(" ", report));
                 return report;
             }
@@ -677,7 +677,12 @@ namespace Street_Rod_AC.Services.Race
                     participant.Crash.MaxCrashIntensityG);
             }
 
-            // Apply degradation, kept in [0.0, 1.0]
+            // Apply degradation, as fast as the game's difficulty wears cars, kept in [0.0, 1.0]
+            var rate = GameRules.Sane(wearMultiplier);
+            engineDeg *= rate;
+            transDeg *= rate;
+            tireDeg *= rate;
+            bodyDeg *= rate;
             car.EngineHealth = Math.Clamp(car.EngineHealth - engineDeg, 0.0, 1.0);
             car.TransmissionHealth = Math.Clamp(car.TransmissionHealth - transDeg, 0.0, 1.0);
             car.TireCondition = Math.Clamp(car.TireCondition - tireDeg, 0.0, 1.0);
@@ -958,6 +963,9 @@ namespace Street_Rod_AC.Services.Race
             // Apply rewards if player won
             if (reward != null && outcome.PlayerWon)
             {
+                // What this game's difficulty makes of the prize
+                reward = reward.ScaledBy(gameState.Rules.RacePrizeMultiplier);
+
                 // Apply cash reward
                 if (reward.Cash > 0)
                 {

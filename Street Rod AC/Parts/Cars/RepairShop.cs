@@ -54,8 +54,10 @@ public static class RepairShop
     private const double Straight = 0.995;
 
     /// <param name="catalog">Null when there are no parts: only the body can be done</param>
-    public static List<RepairJob> Jobs(Car car, PartsCatalog? catalog)
+    /// <param name="priceMultiplier">The save's <see cref="GameRules.PartPriceMultiplier"/>, on the whole bill</param>
+    public static List<RepairJob> Jobs(Car car, PartsCatalog? catalog, double priceMultiplier = 1.0)
     {
+        var prices = GameRules.Sane(priceMultiplier);
         var jobs = new List<RepairJob>();
         Func<string, string?>? groupOf = catalog == null ? null : CarCondition.Groups(catalog);
         void Refresh()
@@ -68,7 +70,7 @@ public static class RepairShop
         if (body > 0.5)
         {
             var detail = CarCondition.IsTotaled(car) ? "Totaled: the whole body needs redoing" : $"Dents and scratches ({body:0} km/h of hits)";
-            jobs.Add(new RepairJob("Body work", detail, Labour + Math.Round(BodyCostPerKmh * (decimal)body),
+            jobs.Add(new RepairJob("Body work", detail, LabourAt(prices) + Math.Round(BodyCostPerKmh * (decimal)body * (decimal)prices),
                 body < SmallBodyJobKmh ? GameAction.GarageWorkMinor : GameAction.GarageWorkMajor,
                 () => { car.BodyDamageKmh = new double[CarCondition.Zones]; Refresh(); }));
         }
@@ -83,14 +85,14 @@ public static class RepairShop
             {
                 var life = CarCondition.EngineLife(car, groupOf) / CarCondition.NewEngineLife;
                 var detail = life <= 0 ? "Blown" : $"Damaged internals ({life * 100:0}% of its life left)";
-                jobs.Add(PartsJob("Engine rebuild", detail, torn, catalog, GameAction.GarageWorkMajor, Refresh));
+                jobs.Add(PartsJob("Engine rebuild", detail, torn, catalog, prices, GameAction.GarageWorkMajor, Refresh));
             }
         }
 
         if (gearbox is { Tear: < Straight })
         {
             var detail = gearbox.Tear < CarCondition.BrokenBelow ? "Wrecked" : $"Worn by missed shifts ({gearbox.Tear * 100:0}%)";
-            jobs.Add(PartsJob("Gearbox rebuild", detail, new[] { gearbox }, catalog,
+            jobs.Add(PartsJob("Gearbox rebuild", detail, new[] { gearbox }, catalog, prices,
                 gearbox.Tear < 0.5 ? GameAction.GarageWorkMajor : GameAction.GarageWorkMinor, Refresh));
         }
 
@@ -100,12 +102,12 @@ public static class RepairShop
             var name = RunningGear.CornerNames[i];
             var bent = new[] { corners[i].Spring, corners[i].Shock }.Where(p => p is { Tear: < Straight }).Select(p => p!).ToList();
             if (bent.Count > 0)
-                jobs.Add(PartsJob($"Straighten the {name} corner", "Bent in a hit", bent, catalog, GameAction.GarageWorkMinor, Refresh));
+                jobs.Add(PartsJob($"Straighten the {name} corner", "Bent in a hit", bent, catalog, prices, GameAction.GarageWorkMinor, Refresh));
 
             if (corners[i].Tyre is { Tear: < Straight } tyre && catalog.Get(tyre.DefinitionId) is { } tyreDefinition)
             {
                 // A blown tyre is not patched: the same tyre, new, goes on
-                jobs.Add(new RepairJob($"New {name} tyre", "Blown", Labour + PartPricing.Round(PartPricing.NewPrice(tyreDefinition)),
+                jobs.Add(new RepairJob($"New {name} tyre", "Blown", LabourAt(prices) + PartPricing.Round(PartPricing.NewPrice(tyreDefinition) * prices),
                     GameAction.GarageWorkMinor, () => { tyre.Tear = 1; tyre.Wear = 1; Refresh(); }));
             }
         }
@@ -113,12 +115,14 @@ public static class RepairShop
         return jobs;
     }
 
-    private static RepairJob PartsJob(string name, string detail, IReadOnlyList<PartInstance> parts, PartsCatalog catalog, GameAction time, Action refresh)
+    private static decimal LabourAt(double prices) => PartPricing.Round((double)Labour * prices);
+
+    private static RepairJob PartsJob(string name, string detail, IReadOnlyList<PartInstance> parts, PartsCatalog catalog, double prices, GameAction time, Action refresh)
     {
         var cost = parts.Sum(p => catalog.Get(p.DefinitionId) is { } definition
             ? PartPricing.NewPrice(definition) * PartShare * (1 - Math.Clamp(p.Tear, 0, 1))
             : 0);
-        return new RepairJob(name, detail, Labour + PartPricing.Round(cost), time, () =>
+        return new RepairJob(name, detail, LabourAt(prices) + PartPricing.Round(cost * prices), time, () =>
         {
             foreach (var part in parts) part.Tear = 1;
             refresh();

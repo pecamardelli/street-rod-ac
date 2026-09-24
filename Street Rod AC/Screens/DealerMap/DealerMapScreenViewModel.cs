@@ -120,7 +120,7 @@ namespace Street_Rod_AC.Screens.DealerMap
                 try
                 {
                     _gameState.UsedCarMarket = await _marketService.SpawnListingsAsync(
-                        _gameState.DealerLocations, _gameState.Date);
+                        _gameState.DealerLocations, _gameState.Date, _gameState.Rules.CarPriceMultiplier);
                     _logger.Information("Spawned {Count} listings for the map", _gameState.UsedCarMarket.Count);
                 }
                 catch (Exception ex)

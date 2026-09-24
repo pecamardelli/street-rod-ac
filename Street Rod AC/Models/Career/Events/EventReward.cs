@@ -51,6 +51,18 @@ namespace Street_Rod_AC.Models.Career.Events
         }
 
         /// <summary>
+        /// The reward as this game pays it: the cash scaled by the save's <see cref="GameState.GameRules.RacePrizeMultiplier"/>,
+        /// to the nearest $5. A copy: the event's definition is shared by every game.
+        /// </summary>
+        public EventReward ScaledBy(double prizeMultiplier) => new()
+        {
+            Cash = Math.Round(GameState.GameRules.Scale(Cash, prizeMultiplier) / 5) * 5,
+            Reputation = Reputation,
+            SpecialItem = SpecialItem,
+            SpecialItemDescription = SpecialItemDescription
+        };
+
+        /// <summary>
         /// Get a human-readable description of the reward
         /// </summary>
         public string GetDescription()

@@ -7,7 +7,7 @@ Everything the game writes is under `%AppData%\StreetRodAC`, never next to the e
 |------|------|
 | `Catalog\catalog.db` | The catalog database (`CatalogDatabase.DefaultPath`) |
 | `Saves\{name}.db` | One save per file (`SaveDatabase.DefaultSavesDirectory`) |
-| `settings.json` | `GameSettings` (`GameSettingsService`), written atomically |
+| `settings.json` | `GameSettings` (`GameSettingsService`), written atomically: only what is the same for every save (the AC folder, the last free-run track). A career's difficulty is in its save (`GameState.Rules`) |
 | `AcRestore\` | Originals of what a race changes in the AC install and cfg, until they are put back (see `docs/ac-integration/ini-modification.md`, `CarDataOverlay`) |
 
 Older versions kept `catalog.db` among the saves and `settings.json` next to the exe. Each is moved over once, the

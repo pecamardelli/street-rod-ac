@@ -40,6 +40,9 @@ namespace Street_Rod_AC.Screens.NewGame
             set => SetProperty(ref _errorMessage, value);
         }
 
+        /// <summary>The difficulty the career starts on</summary>
+        public GameRulesEditor Rules { get; } = new();
+
         public RelayCommand StartGameCommand { get; }
         public RelayCommand BackCommand { get; }
 
@@ -130,10 +133,10 @@ namespace Street_Rod_AC.Screens.NewGame
             GameState gameState;
             try
             {
-                gameState = _repository.CreateNew(saveName, playerName);
+                gameState = _repository.CreateNew(saveName, playerName, Rules.Build());
 
                 // Generate initial race events
-                _raceEventService.GenerateEvents(gameState.Career, gameState.Date);
+                _raceEventService.GenerateEvents(gameState.Career, gameState.Date, gameState.Rules.PinkSlipFactor);
             }
             catch (Exception ex)
             {

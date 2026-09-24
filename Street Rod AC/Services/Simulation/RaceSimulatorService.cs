@@ -30,6 +30,12 @@ namespace Street_Rod_AC.Services.Simulation
             _logger.Information("Starting race simulation for {Date}", currentDate);
 
             var result = new RaceSimulationResult();
+            if (!gameState.Rules.RaceSimulationEnabled)
+            {
+                _logger.Information("The rivals don't race each other in this game");
+                return result;
+            }
+
             var racers = GetEligibleRacers(gameState);
 
             if (racers.Count < 2)
@@ -45,7 +51,7 @@ namespace Street_Rod_AC.Services.Simulation
                 .ToList();
 
             // Apply seasonal modifier to max races
-            var seasonalModifier = GetSeasonalModifier(currentDate.Month);
+            var seasonalModifier = gameState.Rules.SeasonalRacingEnabled ? GetSeasonalModifier(currentDate.Month) : 1.0;
             var maxRaces = (int)Math.Ceiling(racersByPower.Count * seasonalModifier);
 
             _logger.Information("Eligible racers: {Count}, Max races for day: {MaxRaces}",
@@ -165,7 +171,7 @@ namespace Street_Rod_AC.Services.Simulation
             var raceType = isRoadRace ? "Road" : "Drag";
 
             // Calculate prize
-            var prize = CalculatePrize(racer1, racer2, car1, car2, isRoadRace);
+            var prize = CalculatePrize(racer1, racer2, car1, car2, isRoadRace, gameState.Rules);
             var isPinkSlip = prize < 0;
 
             // Determine winner
@@ -178,8 +184,9 @@ namespace Street_Rod_AC.Services.Simulation
             var loserCar = racer1Wins ? car2 : car1;
 
             // Apply car wear
-            ApplyRaceWear(car1, isRoadRace, racer1Wins);
-            ApplyRaceWear(car2, isRoadRace, !racer1Wins);
+            var wear = GameRules.Sane(gameState.Rules.CarWearMultiplier);
+            ApplyRaceWear(car1, isRoadRace, racer1Wins, wear);
+            ApplyRaceWear(car2, isRoadRace, !racer1Wins, wear);
 
             // Everything that can fail (the valuation reads catalog.db) is done before a single stat changes. The
             // scheduler runs a failed day again, and a day that had already counted its wins and moved its money
@@ -301,8 +308,9 @@ namespace Street_Rod_AC.Services.Simulation
                 location = gameState.DealerLocations?.FirstOrDefault()?.Id ?? "industrial_motors";
             }
 
-            // ListCar puts the price on the market's floor, so the prize and the price on the lot agree
-            return _market.ListCar(car, value, location, gameState.Date);
+            // ListCar puts the price on the market's floor. The lot asks what the car is worth, marked up or
+            // down like every other car on it by the game's difficulty
+            return _market.ListCar(car, GameRules.Scale(value, gameState.Rules.CarPriceMultiplier), location, gameState.Date);
         }
 
         /// <summary>
@@ -332,20 +340,25 @@ namespace Street_Rod_AC.Services.Simulation
             return _random.NextDouble() < Math.Clamp(roadRaceProbability, 0.2, 0.8);
         }
 
+        /// <summary>Share of road races between rivals run for pink slips on <see cref="PinkSlipFrequency.Medium"/></summary>
+        private const double RoadPinkSlipChance = 0.1;
+
         /// <summary>
         /// Calculate prize for a race
         /// </summary>
-        private double CalculatePrize(Racer racer1, Racer racer2, Car car1, Car car2, bool isRoadRace)
+        private double CalculatePrize(Racer racer1, Racer racer2, Car car1, Car car2, bool isRoadRace, GameRules rules)
         {
             if (isRoadRace)
             {
                 var avgCarValue = (double)(car1.PurchasePrice + car2.PurchasePrice) / 2;
-                var prob = _random.NextDouble();
 
+                // One road race in ten is for pink slips on Medium; the difficulty makes that rarer or more common
+                if (_random.NextDouble() < RoadPinkSlipChance * rules.PinkSlipFactor) return -1;
+
+                var prob = _random.NextDouble();
                 if (prob < 0.2) return Math.Max(50, avgCarValue * 0.05);      // 5% of car value
-                else if (prob < 0.6) return Math.Max(100, avgCarValue * 0.1); // 10% of car value
-                else if (prob < 0.9) return Math.Max(200, avgCarValue * 0.15); // 15% of car value
-                else return -1; // Pink slips
+                else if (prob < 0.65) return Math.Max(100, avgCarValue * 0.1); // 10% of car value
+                else return Math.Max(200, avgCarValue * 0.15);                 // 15% of car value
             }
             else
             {
@@ -393,9 +406,10 @@ namespace Street_Rod_AC.Services.Simulation
         /// <summary>
         /// Apply wear to car components after a race
         /// </summary>
-        private void ApplyRaceWear(Car car, bool isRoadRace, bool won)
+        /// <param name="rulesWear">The save's <see cref="GameRules.CarWearMultiplier"/></param>
+        private void ApplyRaceWear(Car car, bool isRoadRace, bool won, double rulesWear)
         {
-            var wearMultiplier = isRoadRace ? 1.5 : 1.0;
+            var wearMultiplier = (isRoadRace ? 1.5 : 1.0) * rulesWear;
             var winnerBonus = won ? 0.8 : 1.2; // Winners push less hard
 
             // Engine wear

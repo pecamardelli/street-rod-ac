@@ -223,7 +223,10 @@ namespace Street_Rod_AC.Services.Career
                 });
         }
 
-        public List<RaceEventInstance> GenerateEvents(CareerState career, DateTime currentTime)
+        /// <summary>How likely an eligible event is to turn up when events are generated</summary>
+        private const double EventChance = 0.5;
+
+        public List<RaceEventInstance> GenerateEvents(CareerState career, DateTime currentTime, double pinkSlipFactor = 1.0)
         {
             var newEvents = new List<RaceEventInstance>();
             var eligibleEvents = GetEligibleEvents(career).ToList();
@@ -260,8 +263,10 @@ namespace Street_Rod_AC.Services.Career
                 if (!shouldGenerate)
                     continue;
 
-                // Random chance to generate (not all eligible events appear each time)
-                if (_random.NextDouble() > 0.5 && eventDef.Schedule != EventSchedule.Permanent)
+                // Random chance to generate (not all eligible events appear each time); a pink-slip event
+                // turns up more or less often with the game's difficulty
+                var chance = eventDef.IsPinkSlip ? Math.Min(0.95, EventChance * pinkSlipFactor) : EventChance;
+                if (_random.NextDouble() > chance && eventDef.Schedule != EventSchedule.Permanent)
                     continue;
 
                 var instance = new RaceEventInstance

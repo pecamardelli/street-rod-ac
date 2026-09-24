@@ -41,6 +41,9 @@ namespace Street_Rod_AC.Screens.Shared
         public decimal CashWager { get; init; }
         public bool IsPinkSlip { get; init; }
 
+        /// <summary>AC's damage for the race, in percent: the save's <see cref="GameRules.RaceDamagePercent"/></summary>
+        public int DamagePercent { get; init; } = 100;
+
         /// <summary>The event raced for, or null for a street race</summary>
         public string? EventId { get; init; }
 
@@ -174,6 +177,7 @@ namespace Street_Rod_AC.Screens.Shared
                 RaceType = entry.RaceType,
                 CashWager = entry.CashWager,
                 IsPinkSlip = entry.IsPinkSlip,
+                DamagePercent = entry.DamagePercent,
                 CarData = carData
             };
 

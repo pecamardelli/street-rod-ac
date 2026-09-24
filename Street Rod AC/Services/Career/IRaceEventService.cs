@@ -31,7 +31,7 @@ namespace Street_Rod_AC.Services.Career
         /// <summary>
         /// Generate new events for the current time period (called by scheduler)
         /// </summary>
-        List<RaceEventInstance> GenerateEvents(CareerState career, DateTime currentTime);
+        List<RaceEventInstance> GenerateEvents(CareerState career, DateTime currentTime, double pinkSlipFactor = 1.0);
 
         /// <summary>
         /// Check if the player can enter a specific event with a specific car

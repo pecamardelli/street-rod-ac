@@ -189,6 +189,20 @@ namespace Street_Rod_AC.Screens.Diner
 
         public string WagerAmountDisplay => $"${WagerAmount:N0}";
 
+        /// <summary>Why the stakes are higher than usual: the hour, the rival's name; empty when they aren't</summary>
+        public string StakesNote
+        {
+            get
+            {
+                var reasons = new List<string>();
+                if (MatchupCalculator.IsNight(_gameState.Date)) reasons.Add("night");
+                if ((SelectedOpponent?.Opponent.Stats.Reputation ?? 0) > MatchupCalculator.StakesReputation) reasons.Add("a big name");
+                return reasons.Count == 0 ? string.Empty : $"Higher stakes: {string.Join(", ", reasons)}";
+            }
+        }
+
+        public bool HasStakesNote => IsCashBet && StakesNote.Length > 0;
+
         public bool CanAffordMinBet
         {
             get
@@ -536,11 +550,14 @@ namespace Street_Rod_AC.Screens.Diner
         {
             if (IsCashBet)
             {
-                // Wager limits vary by race type (drag $10-$100, road $25-$250), capped by both racers' money
+                // Wager limits vary by race type (drag $10-$100, road $25-$250), go up at night and against a
+                // rival with a name, and are capped by both racers' money
                 var (min, max) = MatchupCalculator.WagerLimits(
                     SelectedTrack?.RaceType,
                     _gameState.Player.Money,
-                    SelectedOpponent?.Opponent.Money ?? 0m);
+                    SelectedOpponent?.Opponent.Money ?? 0m,
+                    SelectedOpponent?.Opponent.Stats.Reputation ?? MatchupCalculator.StakesReputation,
+                    _gameState.Date);
 
                 MinWager = min;
                 MaxWager = max;
@@ -555,6 +572,8 @@ namespace Street_Rod_AC.Screens.Diner
             }
 
             // Notify affordability status
+            OnPropertyChanged(nameof(StakesNote));
+            OnPropertyChanged(nameof(HasStakesNote));
             OnPropertyChanged(nameof(CanAffordMinBet));
             OnPropertyChanged(nameof(InsufficientFundsMessage));
         }
@@ -641,7 +660,8 @@ namespace Street_Rod_AC.Screens.Diner
                 playerCar,
                 opponentCar,
                 isPinkSlip,
-                cashWager);
+                cashWager,
+                _gameState.Rules.PinkSlipFactor);
 
             if (!response.Accepted)
             {
@@ -663,12 +683,13 @@ namespace Street_Rod_AC.Screens.Diner
                 OpponentCarId = SelectedOpponent.CarDefinition.Id,
                 OpponentSkin = opponentCar.SkinId,
                 OpponentCar = opponentCar,
-                OpponentAI = OpponentAIAdapter.ToAssettoCorsaAI(opponent),
+                OpponentAI = OpponentAIAdapter.ToAssettoCorsaAI(opponent, _gameState.Rules),
                 TrackId = track.TrackId,
                 TrackConfig = track.ConfigurationId,
                 RaceType = track.RaceType,
                 CashWager = cashWager,
-                IsPinkSlip = isPinkSlip
+                IsPinkSlip = isPinkSlip,
+                DamagePercent = _gameState.Rules.RaceDamagePercent
             });
 
             // Setting the cars up takes a moment: a player who walked out meanwhile has called it off

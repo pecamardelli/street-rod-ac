@@ -236,7 +236,7 @@ namespace Street_Rod_AC.Screens.UsedParts
                 PartsShopTab.Used => _gameState.NewspaperAds.Parts
                     .Where(ad => catalog.Get(ad.Part.DefinitionId) != null)
                     .Select(ad => PartOfferViewModel.ForAd(ad, catalog.Get(ad.Part.DefinitionId)!)),
-                PartsShopTab.New => _shopService.Assortment.Select(p => PartOfferViewModel.ForNew(p, _shopService.NewPrice(p))),
+                PartsShopTab.New => _shopService.Assortment.Select(p => PartOfferViewModel.ForNew(p, _shopService.NewPrice(p, _gameState.Rules.PartPriceMultiplier))),
                 _ => _gameState.Player.Parts
                     .Where(p => catalog.Get(p.DefinitionId) != null)
                     .Select(p => PartOfferViewModel.ForSale(p, catalog.Get(p.DefinitionId)!, _shopService.TradeInPrice(p)))

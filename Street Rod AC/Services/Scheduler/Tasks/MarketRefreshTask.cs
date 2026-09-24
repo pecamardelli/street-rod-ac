@@ -5,7 +5,8 @@ using Street_Rod_AC.Services.Market;
 namespace Street_Rod_AC.Services.Scheduler.Tasks
 {
     /// <summary>
-    /// Refreshes the used car market daily
+    /// Refreshes the used car market daily, unless the save's rules turned that off
+    /// (<see cref="GameRules.MarketRefreshEnabled"/>): the lots then keep what they have until it is bought
     /// </summary>
     public class MarketRefreshTask : IScheduledTask
     {
@@ -23,6 +24,12 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
 
         public async Task ExecuteAsync(GameState gameState, DateTime currentDate)
         {
+            if (!gameState.Rules.MarketRefreshEnabled)
+            {
+                _logger.Debug("Market refresh is off for this game");
+                return;
+            }
+
             _logger.Information("Running daily market refresh for date {Date}", currentDate);
 
             var previousCount = gameState.UsedCarMarket.Count;
@@ -31,7 +38,8 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
             gameState.UsedCarMarket = await _marketService.RefreshMarketAsync(
                 gameState.UsedCarMarket,
                 gameState.DealerLocations,
-                currentDate);
+                currentDate,
+                gameState.Rules.CarPriceMultiplier);
 
             var newCount = gameState.UsedCarMarket.Count;
             var newAvailable = gameState.UsedCarMarket.Count(l => !l.IsSold);

@@ -177,6 +177,9 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// </summary>
         public RaceType RaceType { get; set; } = RaceType.DragRace;
 
+        /// <summary>AC's damage for the race, in percent (the difficulty's; 100 is AC's full rate)</summary>
+        public int DamagePercent { get; set; } = 100;
+
         /// <summary>The shape the player's car starts in (damage from earlier races); null starts it as AC would</summary>
         public RaceStartState? PlayerStart { get; set; }
 
@@ -203,6 +206,7 @@ namespace Street_Rod_AC.Services.Configuration.Models
                 OpponentAILevel = this.OpponentAILevel,
                 OpponentAIAggression = this.OpponentAIAggression,
                 RaceType = this.RaceType,
+                DamagePercent = this.DamagePercent,
                 PlayerStart = this.PlayerStart,
                 OpponentStart = this.OpponentStart,
                 ContextId = Metadata.TryGetValue("RaceContext", out var context) && context is RaceContext raceContext

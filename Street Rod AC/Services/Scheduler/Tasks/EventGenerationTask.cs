@@ -40,7 +40,8 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
             // Generate new events
             var newEvents = _eventService.GenerateEvents(
                 gameState.Career,
-                currentDate
+                currentDate,
+                gameState.Rules.PinkSlipFactor
             );
 
             _logger.Information(

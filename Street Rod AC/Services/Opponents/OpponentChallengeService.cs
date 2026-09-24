@@ -47,7 +47,8 @@ namespace Street_Rod_AC.Services.Opponents
             Car playerCar,
             Car opponentCar,
             bool isPinkSlip,
-            decimal cashWager = 0)
+            decimal cashWager = 0,
+            double pinkSlipFactor = 1.0)
         {
             _logger.Information("Evaluating challenge: {OpponentName} vs {PlayerName}, PinkSlip: {IsPinkSlip}, Wager: {Wager}",
                 opponent.Name, player.Name, isPinkSlip, cashWager);
@@ -81,7 +82,7 @@ namespace Street_Rod_AC.Services.Opponents
             // Evaluate based on bet type
             if (isPinkSlip)
             {
-                return EvaluatePinkSlipChallenge(opponent, player, playerCar, playerCarDef, opponentCar, opponentCarDef);
+                return EvaluatePinkSlipChallenge(opponent, player, playerCar, playerCarDef, opponentCar, opponentCarDef, pinkSlipFactor);
             }
             else
             {
@@ -98,7 +99,8 @@ namespace Street_Rod_AC.Services.Opponents
             Car playerCar,
             CarDefinition playerCarDef,
             Car opponentCar,
-            CarDefinition opponentCarDef)
+            CarDefinition opponentCarDef,
+            double pinkSlipFactor)
         {
             // What each car is worth as it stands: model, condition, engine. The same sum the market uses.
             var playerCarValue = ValueOf(playerCar, playerCarDef);
@@ -174,6 +176,9 @@ namespace Street_Rod_AC.Services.Opponents
             {
                 acceptanceChance += 0.15;
             }
+
+            // Where pink slips are rare (the game's difficulty), rivals are warier of staking their car
+            acceptanceChance += (pinkSlipFactor - 1) * 0.2;
 
             // Clamp to 5-95%
             acceptanceChance = Math.Clamp(acceptanceChance, 0.05, 0.95);

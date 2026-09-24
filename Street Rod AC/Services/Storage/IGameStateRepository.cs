@@ -50,7 +50,7 @@ namespace Street_Rod_AC.Services.Storage
             return headers;
         }
 
-        GameState CreateNew(string saveName, string playerName);
+        GameState CreateNew(string saveName, string playerName, GameRules? rules = null);
     }
 
     /// <summary>A save as the Load screen lists it: its player, money, game date and when it was last played</summary>

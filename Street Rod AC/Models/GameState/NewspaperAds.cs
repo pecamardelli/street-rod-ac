@@ -5,11 +5,42 @@ namespace Street_Rod_AC.Models.GameState
         public List<CarAd> Cars { get; set; }
         public List<PartAd> Parts { get; set; }
 
+        /// <summary>The player's own cars up for sale; see <see cref="Services.Market.CarSaleService"/></summary>
+        public List<CarSaleAd> PlayerCars { get; set; }
+
         public NewspaperAds()
         {
             Cars = [];
             Parts = [];
+            PlayerCars = [];
         }
+    }
+
+    /// <summary>
+    /// One of the player's cars in the classifieds. The car stays in the garage (and can still race) until a
+    /// buyer's offer is taken; the ad names it by its instance id.
+    /// </summary>
+    public class CarSaleAd
+    {
+        public Guid AdId { get; set; } = Guid.NewGuid();
+        public Guid CarInstanceId { get; set; }
+        public decimal AskingPrice { get; set; }
+
+        /// <summary>Game time</summary>
+        public DateTime PostedDate { get; set; }
+
+        /// <summary>The buyer on the phone, if there is one; a later caller takes the place of one who gave up</summary>
+        public CarOffer? Offer { get; set; }
+    }
+
+    /// <summary>What a buyer who answered an ad would pay, and until when</summary>
+    public class CarOffer
+    {
+        public string BuyerName { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+
+        /// <summary>Game time; after it the buyer has found another car</summary>
+        public DateTime Expires { get; set; }
     }
 
     public class CarAd

@@ -232,6 +232,14 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
         var what = LoadDescription;
         try
         {
+            // Never load from inside whatever asked for it. A binding can ask in the middle of a layout pass,
+            // where the dispatcher is locked and a wait doesn't pump; AcTools waits for the finalizers when it
+            // swaps a car (GCHelper.CleanUp), and a finalizer that needs the UI thread then hangs the game for good.
+            // After the yield this runs as a dispatcher operation of its own, where the wait pumps.
+            await Dispatcher.Yield(DispatcherPriority.Background);
+            if (!IsLoaded || !IsVisible || _failed || IsUpToDate) return;
+
+            what = LoadDescription;
             await LoadAsync();
         }
         catch (Exception ex)

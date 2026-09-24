@@ -2,22 +2,12 @@ namespace Street_Rod_AC.Services.Settings
 {
     /// <summary>
     /// Game-wide settings stored in settings.json
-    /// These settings persist across all save games
+    /// These settings persist across all save games. The rules of a career (prices, prizes, wear, how hard the
+    /// rivals drive) are not here: they belong to its save (<see cref="Models.GameState.GameRules"/>). Keys an older
+    /// settings.json still has for them are ignored.
     /// </summary>
     public class GameSettings
     {
-        // Economy Settings
-        public double CarPriceMultiplier { get; set; } = 1.0;
-        public double PartPriceMultiplier { get; set; } = 1.0;
-        public decimal StartingMoney { get; set; } = Models.GameState.Player.StartingMoney;
-        public double RacePrizeMultiplier { get; set; } = 1.0;
-
-        // Difficulty Settings
-        public int OpponentSkillModifier { get; set; } = 0;
-        public int OpponentAggressionModifier { get; set; } = 0;
-        public double CarWearMultiplier { get; set; } = 1.0;
-        public PinkSlipFrequency PinkSlipFrequency { get; set; } = PinkSlipFrequency.Medium;
-
         // Where the last free run went: "track" or "track/configuration"
         public string FreeRunTrack { get; set; } = string.Empty;
 
@@ -26,17 +16,5 @@ namespace Street_Rod_AC.Services.Settings
         /// Read once, when the settings load at start-up: a change takes effect at the next start.
         /// </summary>
         public string? AssettoCorsaPath { get; set; }
-
-        // Simulation Settings
-        public bool RaceSimulationEnabled { get; set; } = true;
-        public bool SeasonalRacingEnabled { get; set; } = true;
-        public bool MarketRefreshEnabled { get; set; } = true;
-    }
-
-    public enum PinkSlipFrequency
-    {
-        Low,
-        Medium,
-        High
     }
 }

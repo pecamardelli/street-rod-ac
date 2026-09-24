@@ -39,6 +39,8 @@ catalog order starves whole dealers.
 2. Remove unsold listings older than 14 days
 3. Top each dealer back up to its own target
 
+The save's rules can turn the daily refresh off (`GameRules.MarketRefreshEnabled`): the lots then keep what they have.
+
 ## Pricing
 What a car is worth has one formula, `CarValuation` (`Services/Market/CarValuation.cs`), used by the market, an
 opponent's car, a pink-slipped car going back on a lot and the pink-slip challenge logic:
@@ -47,7 +49,9 @@ opponent's car, a pink-slipped car going back on a lot and the pink-slip challen
   parts catalog; without it the engine counts as the factory one)
 - rounded to the nearest $100
 
-A listing's price is that times the dealer's random variation of ±20%.
+A listing's price is that times the dealer's random variation of ±20%, then times the save's
+`GameRules.CarPriceMultiplier` (the difficulty: 0.85 Easy, 1 Normal, 1.15 Hard). The multiplier is on what sellers
+ask, never on what a car is worth: a car the player sells fetches a share of its worth whatever the difficulty.
 
 ## Dealer Locations
 Ten dealers, defined in `Assets/Dealers/dealers.json` and read by `DealerCatalog`: Downtown Motors,
@@ -80,15 +84,33 @@ holds the confirmation and result dialogs).
 6. Spend `GameAction.BuyCar` time
 7. Save game state
 
+A car bought counts in `Player.Stats.CarsOwned`.
+
+## Selling Cars
+`CarSaleService` (`ICarSaleService`), from the garage's Sell button (`Dialogs/SellCar`):
+- **To a dealer**, on the spot: `DealerShare` (60%) of what the car is worth, one hour (`GameAction.SellCar`). The
+  trade-in lot (`TradeInLocation`) puts it on sale at its worth times `CarPriceMultiplier`.
+- **To the scrapyard**, the only buyer of a totaled car (`CarCondition.IsTotaled`): 15% of its worth, ±20% (the same
+  price every time for the same car, rolled from its instance id). It leaves the game.
+- **Through the paper**: an ad (`CarSaleAd` in `NewspaperAds.PlayerCars`) at the player's asking price ($100 up to
+  three times the car's worth) costs $10 and half an hour (`GameAction.PlaceAd`) and runs 14 days. The car stays in the
+  garage and can race. Each day (`CarAdsReviewTask`) a buyer may call: a 60% chance for a car asked at 90% of its worth
+  or less, 12 points less for each tenth more, nobody at 140%. A buyer pays the asking price up to the car's worth; over
+  it they haggle up to 15% off, never below the worth. An offer holds two days; the player takes it or turns it down in
+  the Sell dialog or under "Your Ads" in the newspaper. A buyer drives the car away: it leaves the game.
+
+A sale refuses a car that is out racing (`GameState.PendingRace`), moves the selected car on to another, and counts in
+`Player.Stats.CarsSold`.
+
 ## Cars Going Back on a Lot
 `ListCar(car, price, location, listedDate)` turns a car into a listing with its parts (engine, running gear), the
-seller's engine summary and whether it has been worked on. A pink-slipped car goes back this way at its `ValueOf`, to
+seller's engine summary and whether it has been worked on. A pink-slipped car goes back this way at its `ValueOf` (times `CarPriceMultiplier`), to
 `TradeInLocation(dealers)`: the roughest lot (lowest `conditionCenter`).
 
 ## Key Service
 `UsedCarMarketService` (`IUsedCarMarketService`):
-- `SpawnListingsAsync(dealers, date)` - Initial spawn
-- `RefreshMarketAsync(listings, dealers, date)` - Daily refresh. Engines are put together only for the listings that
+- `SpawnListingsAsync(dealers, date, priceMultiplier)` - Initial spawn
+- `RefreshMarketAsync(listings, dealers, date, priceMultiplier)` - Daily refresh. Engines are put together only for the listings that
   make it into the market, on a worker thread; the listings are looked at and handed back on the calling thread
 - `GetAvailableListings(listings)` - Filter unsold
 - `ListCar(car, price, location, listedDate)` - A car (with its parts) as a listing
@@ -98,6 +120,9 @@ seller's engine summary and whether it has been worked on. A pink-slipped car go
 ## Files
 - `Services/Market/UsedCarMarketService.cs`
 - `Services/Market/CarPurchaseService.cs`
+- `Services/Market/CarSaleService.cs`
+- `Services/Scheduler/Tasks/CarAdsReviewTask.cs`
+- `Dialogs/SellCar/SellCarDialogViewModel.cs`
 - `Services/Market/CarValuation.cs`
 - `Services/Dealers/DealerCatalog.cs`
 - `Assets/Dealers/dealers.json`

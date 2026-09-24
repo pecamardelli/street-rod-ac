@@ -133,7 +133,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
                 IsLoading = true;
                 try
                 {
-                    var listings = await _marketService.SpawnListingsAsync(_gameState.DealerLocations, _gameState.Date);
+                    var listings = await _marketService.SpawnListingsAsync(_gameState.DealerLocations, _gameState.Date, _gameState.Rules.CarPriceMultiplier);
                     _gameState.UsedCarMarket = listings;
                     _logger.Information("Spawned {ListingCount} initial listings", listings.Count);
                 }
@@ -259,7 +259,8 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
                 _gameState.UsedCarMarket = await _marketService.RefreshMarketAsync(
                     _gameState.UsedCarMarket,
                     _gameState.DealerLocations,
-                    _gameState.Date);
+                    _gameState.Date,
+                    _gameState.Rules.CarPriceMultiplier);
                 LoadListings();
 
                 _logger.Information("Market refresh completed");

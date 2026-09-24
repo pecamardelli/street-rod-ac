@@ -44,6 +44,7 @@ namespace Street_Rod_AC.Navigation
         private readonly ITalkService _talkService;
         private readonly IDealerCatalog _dealerCatalog;
         private readonly ICarPurchaseService _purchaseService;
+        private readonly ICarSaleService _saleService;
         private readonly IGameTimeService _timeService;
         private readonly ICarPartsService _carPartsService;
         private readonly IPartsShopService _partsShopService;
@@ -79,6 +80,7 @@ namespace Street_Rod_AC.Navigation
             ITalkService talkService,
             IDealerCatalog dealerCatalog,
             ICarPurchaseService purchaseService,
+            ICarSaleService saleService,
             IGameTimeService timeService,
             ICarPartsService carPartsService,
             IPartsShopService partsShopService,
@@ -103,6 +105,7 @@ namespace Street_Rod_AC.Navigation
             _talkService = talkService;
             _dealerCatalog = dealerCatalog;
             _purchaseService = purchaseService;
+            _saleService = saleService;
             _timeService = timeService;
             _carPartsService = carPartsService;
             _partsShopService = partsShopService;
@@ -240,6 +243,7 @@ namespace Street_Rod_AC.Navigation
                 _gameSettingsService,
                 _contentService,
                 _raceCarDataService,
+                _saleService,
                 skipAnimation));
 
         public bool NavigateToCarSelection(GameState gameState) => SafeNavigate("car list", () =>
@@ -277,6 +281,7 @@ namespace Street_Rod_AC.Navigation
                 _timeService,
                 _gameStateRepository,
                 _raceSetup,
+                _saleService,
                 skipAnimation));
 
         public bool NavigateToUsedCarMarket(GameState gameState) => SafeNavigate("used car ads", () =>

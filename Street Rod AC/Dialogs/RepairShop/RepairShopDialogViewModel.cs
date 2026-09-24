@@ -17,18 +17,21 @@ namespace Street_Rod_AC.Dialogs.RepairShop
         private readonly DialogService _dialogService;
         private readonly Car _car;
         private readonly PartsCatalog? _catalog;
+        private readonly double _priceMultiplier;
         private readonly Func<decimal> _money;
         private readonly Func<RepairJob, Task> _perform;
         private bool _busy;
 
         /// <param name="catalog">Null when there are no parts: only the body can be done</param>
+        /// <param name="priceMultiplier">The save's <see cref="GameRules.PartPriceMultiplier"/></param>
         /// <param name="perform">Takes the money, does the job, runs the clock and saves</param>
         public RepairShopDialogViewModel(DialogService dialogService, Car car, string carName, PartsCatalog? catalog,
-            Func<decimal> money, Func<RepairJob, Task> perform)
+            double priceMultiplier, Func<decimal> money, Func<RepairJob, Task> perform)
         {
             _dialogService = dialogService;
             _car = car;
             _catalog = catalog;
+            _priceMultiplier = priceMultiplier;
             _money = money;
             _perform = perform;
             CarName = carName;
@@ -58,7 +61,7 @@ namespace Street_Rod_AC.Dialogs.RepairShop
         private void Refresh()
         {
             Jobs.Clear();
-            foreach (var job in Parts.Cars.RepairShop.Jobs(_car, _catalog))
+            foreach (var job in Parts.Cars.RepairShop.Jobs(_car, _catalog, _priceMultiplier))
             {
                 Jobs.Add(new RepairJobRow(job, new AsyncRelayCommand(() => Do(job), () => !_busy && _money() >= job.Cost)));
             }

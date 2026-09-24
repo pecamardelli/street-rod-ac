@@ -36,11 +36,22 @@ namespace Street_Rod_AC.Services.Market
         /// distance between that standard and the middle of the range</summary>
         private const float DealerConditionPull = 1.4f;
 
-        public async Task<List<UsedCarListing>> SpawnListingsAsync(List<DealerLocation> dealers, DateTime currentDate)
+        public async Task<List<UsedCarListing>> SpawnListingsAsync(List<DealerLocation> dealers, DateTime currentDate, double priceMultiplier)
         {
             var listings = CreateListings(dealers, currentDate);
             await AddEnginesAsync(listings);
+            ApplyPriceMultiplier(listings, priceMultiplier);
             return listings;
+        }
+
+        /// <summary>
+        /// The difficulty's say in what the sellers ask (<see cref="GameRules.CarPriceMultiplier"/>): on the whole price,
+        /// the engine's modifications included, once the listing is complete
+        /// </summary>
+        private static void ApplyPriceMultiplier(List<UsedCarListing> listings, double priceMultiplier)
+        {
+            foreach (var listing in listings)
+                listing.Price = CarValuation.RoundToHundred(GameRules.Scale(listing.Price, priceMultiplier));
         }
 
         /// <summary>
@@ -198,7 +209,7 @@ namespace Street_Rod_AC.Services.Market
             return listings;
         }
 
-        public async Task<List<UsedCarListing>> RefreshMarketAsync(List<UsedCarListing> currentListings, List<DealerLocation> dealers, DateTime currentDate)
+        public async Task<List<UsedCarListing>> RefreshMarketAsync(List<UsedCarListing> currentListings, List<DealerLocation> dealers, DateTime currentDate, double priceMultiplier)
         {
             _logger.Information("Refreshing used car market for date {Date}", currentDate);
 
@@ -244,6 +255,7 @@ namespace Street_Rod_AC.Services.Market
                 if (fresh.Count > 0)
                 {
                     await AddEnginesAsync(fresh);
+                    ApplyPriceMultiplier(fresh, priceMultiplier);
                     kept.AddRange(fresh);
                 }
 

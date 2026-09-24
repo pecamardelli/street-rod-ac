@@ -38,6 +38,9 @@ namespace Street_Rod_AC.Services.Time
         /// <summary>Sell a car (1 hour)</summary>
         SellCar,
 
+        /// <summary>Phone an ad for a car in to the paper (30 min)</summary>
+        PlaceAd,
+
         /// <summary>Switch to a different car in the garage (15 min)</summary>
         SwitchCar,
 
@@ -68,6 +71,7 @@ namespace Street_Rod_AC.Services.Time
                 GameAction.GarageWorkMinor => 30,
                 GameAction.GarageWorkMajor => 120,
                 GameAction.SellCar => 60,
+                GameAction.PlaceAd => 30,
                 GameAction.SwitchCar => 15,
                 GameAction.FreeRun => 60,
                 _ => 30 // Default fallback

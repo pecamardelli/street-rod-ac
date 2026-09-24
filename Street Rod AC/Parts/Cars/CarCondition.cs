@@ -163,7 +163,9 @@ public static class CarCondition
     /// date. Returns what happened to the car, a line each, for the player.
     /// </summary>
     /// <param name="groupOf">Null when there is no parts catalog: the car's own figures take it all</param>
-    public static List<string> ApplyRace(Car car, RaceCarCondition condition, double distanceKm, Func<string, string?>? groupOf)
+    /// <param name="wearMultiplier">The save's <see cref="GameRules.CarWearMultiplier"/>, on the mileage wear. AC's own
+    /// damage is already the difficulty's (<see cref="GameRules.RaceDamagePercent"/>)</param>
+    public static List<string> ApplyRace(Car car, RaceCarCondition condition, double distanceKm, Func<string, string?>? groupOf, double wearMultiplier = 1.0)
     {
         var report = new List<string>();
         ApplyBody(car, condition, report);
@@ -172,7 +174,7 @@ public static class CarCondition
         {
             ApplyEngine(car, condition, groupOf, report);
             ApplyGearbox(car, condition, groupOf, report);
-            ApplyMileage(car, distanceKm);
+            ApplyMileage(car, distanceKm * GameRules.Sane(wearMultiplier));
         }
         else
         {
