@@ -14,7 +14,7 @@ Street Rod-style career mode for Assetto Corsa. External WPF manager handles all
 ### 2. AC Integration Layer
 - Launch AC via `acs.exe` (race) or `acShowroom.exe` (preview)
 - Generate race configurations via INI modification
-- Read race results from the SR Race Manager Lua app output
+- Read race results from the race mode's output (`apps/new-modes/sr_race`)
 - Never modify AC binaries or core files
 
 ### 3. Data/Persistence Layer

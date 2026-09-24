@@ -57,6 +57,6 @@ None (`HttpClient`/`WebClient` absent). Planned local LLM integration (`docs/ai-
 
 ## 7. Cross-unit trust boundaries
 
-- Lua app → `Documents\Assetto Corsa\out\sr_race_manager\*.json` → `RaceResultIngestionService` / `RaceResultValidator` → saves
+- Race mode (`apps/new-modes/sr_race`) → `Documents\Assetto Corsa\out\sr_race_manager\*.json` → `RaceResultIngestionService` / `RaceResultValidator` → saves
 - Converter → `Street Rod AC\Assets\Parts\**` (pack.json, KN5, aliases, builds) → `PartsCatalog` at runtime; EngineBench reads the same
 - Game ↔ AC process: `CarDataOverlay` + INI changes applied before launch, restored after `acs.exe` exits

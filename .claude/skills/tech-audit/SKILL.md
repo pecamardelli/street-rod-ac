@@ -62,7 +62,7 @@ dotnet sln "Street Rod AC.slnx" list
 dotnet list "Street Rod AC.slnx" package --include-transitive --format json
 
 # Non-.NET units: AC-side apps and scripts
-ls apps/lua tools/*.ps1   # apps/python was removed 2026-09-24; list it too if it ever comes back
+ls apps/new-modes apps/lua tools/*.ps1   # apps/python was removed 2026-09-24; list it too if it ever comes back
 ```
 
 For every .NET project capture from its `.csproj`: path, `OutputType`, `TargetFramework`, `Nullable`, `AllowUnsafeBlocks`, `UseWPF`/`UseWindowsForms`, `PackageReference`s (id + version), `Reference`s with `HintPath` (local DLLs — note path and whether it exists on disk), and **linked `<Compile Include="..\..\Street Rod AC\...">` items**. The tools compile game source by link: those files belong to the game project and must be audited once, under the game — a tool's audit covers only its own files plus how it uses the linked ones.
@@ -100,7 +100,7 @@ git ls-files | grep -iE '\.(db|pfx|snk|key|pem)$|secrets|\.env'   # things that 
 | ----------------------------------------------------------- | ------------------ |
 | `OutputType=WinExe` + `UseWPF`                              | WPF desktop app    |
 | `OutputType=Exe`, no UI                                     | CLI tool           |
-| `manifest.ini` + `*.lua` under `apps/lua`                   | CSP Lua app        |
+| `manifest.ini` + `*.lua` under `apps/lua` or `apps/new-modes` | CSP Lua app / mode |
 | Python AC app under `apps/python`                           | AC Python app (legacy; removed 2026-09-24, no unit exists) |
 | `*.ps1` under `tools/`                                      | Build/ops script   |
 
