@@ -543,8 +543,9 @@ public class CarViewport3D : D3DViewportBase
             _isLoadingParts = false;
         }
 
-        // Catch up with whatever changed in the meantime
-        if (Renderer != null && (!PartsVisible || _loadedCarDirectory != carDirectory || !ReferenceEquals(Engine, engine) || !ReferenceEquals(Gear, gear))) ApplyParts();
+        // Catch up with whatever changed in the meantime, a renderer rebuilt under it included (device lost, or a
+        // quick unload and load): its own load found this run in progress and left the parts to it
+        if (Renderer != null && (renderer != Renderer || !PartsVisible || _loadedCarDirectory != carDirectory || !ReferenceEquals(Engine, engine) || !ReferenceEquals(Gear, gear))) ApplyParts();
     }
 
     private static HashSet<Guid> IdsOf(IReadOnlyList<PlacedPart> nodes) =>
@@ -799,7 +800,8 @@ public class CarViewport3D : D3DViewportBase
             _isLoadingCandidates = false;
         }
 
-        if (Renderer != null && !ReferenceEquals(candidates, Candidates)) ApplyCandidates();
+        // Likewise a renderer rebuilt while the candidates were put together
+        if (Renderer != null && (renderer != Renderer || !ReferenceEquals(candidates, Candidates))) ApplyCandidates();
     }
 
     private void ClearCandidates(GarageRenderer renderer)

@@ -20,9 +20,9 @@ public sealed class EngineAudio
     public static EngineAudio Shared => SharedInstance.Value;
 
     /// <summary>The shared system, released at exit if it was ever made (<see cref="FmodLifetime"/>)</summary>
-    internal static void ShutdownShared()
+    internal static void ShutdownShared(DateTime deadline)
     {
-        if (SharedInstance.IsValueCreated) SharedInstance.Value.Shutdown();
+        if (SharedInstance.IsValueCreated) SharedInstance.Value.Shutdown(deadline);
     }
 
     private const int MaxChannels = 64;
@@ -30,15 +30,27 @@ public sealed class EngineAudio
     // A bank being let go of is waited for this long before the race goes ahead and tries to move it anyway
     private static readonly TimeSpan UnloadTimeout = TimeSpan.FromSeconds(5);
 
+    // A start that failed from a folder is tried again from it after this long: a device that was busy or missing a
+    // moment ago may be back, and a whole session of silence is too high a price for one bad moment
+    private static readonly TimeSpan RetryAfter = TimeSpan.FromMinutes(1);
+
     private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("EngineAudio");
+
+    // Everything that touches the system, the bank or the mixer holds it. Every holder lets go of it off the UI
+    // thread (ConfigureAwait(false)), so the exit, which waits for it on the UI thread, never waits on itself
     private readonly SemaphoreSlim _gate = new(1, 1);
     private IntPtr _system;
     private IntPtr _core;
     private bool _mixerSuspended;
-    private bool _shutDown;
+    private bool _resumeFailureTold;
 
-    // The AC folder FMOD could not be started from. Not tried again from there, but a new folder in the settings is
+    // Set by the exit, read by the worker between FMOD calls
+    private volatile bool _shutDown;
+
+    // The AC folder FMOD could not be started from, and when: not tried again from there for a while, but a new
+    // folder in the settings is at once
     private string? _failedFolder;
+    private DateTime _failedAt;
 
     // The car bank that is loaded, known by its path
     private IntPtr _bank;
@@ -59,10 +71,11 @@ public sealed class EngineAudio
     /// </summary>
     public async Task<EngineVoice?> LoadAsync(CarSound sound)
     {
-        await _gate.WaitAsync();
+        // Nothing here touches the UI: the gate is let go of on the worker, and the caller still resumes on its own
+        await _gate.WaitAsync().ConfigureAwait(false);
         try
         {
-            return await Task.Run(() => Load(sound));
+            return await Task.Run(() => Load(sound)).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -83,12 +96,31 @@ public sealed class EngineAudio
     /// </summary>
     public async Task UnloadAllAsync()
     {
-        await _gate.WaitAsync();
+        await UnloadUnderGateAsync();
+
+        // Back on the caller's thread (the UI's): whoever played the sound hears about it there
         try
         {
-            var bank = ReleaseBank();
-            if (bank != IntPtr.Zero) await Task.Run(() => WaitUntilUnloaded(bank));
-            SuspendMixer();
+            Released?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Something that played the engine sound failed on letting go of it");
+        }
+    }
+
+    private async Task UnloadUnderGateAsync()
+    {
+        await _gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            // All of it on the worker, and the gate let go of there too
+            await Task.Run(() =>
+            {
+                var bank = ReleaseBank();
+                if (bank != IntPtr.Zero) WaitUntilUnloaded(bank);
+                SuspendMixer();
+            }).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -97,15 +129,6 @@ public sealed class EngineAudio
         finally
         {
             _gate.Release();
-        }
-
-        try
-        {
-            Released?.Invoke();
-        }
-        catch (Exception ex)
-        {
-            _logger.Error(ex, "Something that played the engine sound failed on letting go of it");
         }
     }
 
@@ -117,14 +140,27 @@ public sealed class EngineAudio
 
     /// <summary>
     /// Releases the FMOD system for good, at exit: what plays, then the banks, then the system. After this nothing
-    /// loads. Never throws; waits a moment at most for a load in progress.
+    /// loads. Never throws. A load or unload in progress sees <see cref="_shutDown"/> and cuts itself short; one that
+    /// has not let go of the gate by <paramref name="deadline"/> keeps the system. A system left to the end of the
+    /// process is harmless, one freed while a worker is inside it crashes the exit.
     /// </summary>
-    internal void Shutdown()
+    internal void Shutdown(DateTime deadline)
     {
-        var entered = _gate.Wait(TimeSpan.FromSeconds(2));
+        _shutDown = true;
+
+        var entered = false;
         try
         {
-            _shutDown = true;
+            var wait = deadline - DateTime.UtcNow;
+            entered = _gate.Wait(wait > TimeSpan.Zero ? wait : TimeSpan.Zero);
+            if (!entered)
+            {
+                _logger.Warning("A sound was still loading or unloading at exit: FMOD is left to the end of the process rather than freed under it");
+                return;
+            }
+
+            // A rested mixer paces the Studio thread the release waits on (the bank unload just below among it)
+            ResumeMixer();
             ReleaseBank();
 
             var system = _system;
@@ -144,6 +180,12 @@ public sealed class EngineAudio
         }
     }
 
+    /// <summary>The exit has begun: the work in progress stops before its next FMOD call</summary>
+    private void ThrowIfShutDown()
+    {
+        if (_shutDown) throw new OperationCanceledException("the app is closing");
+    }
+
     private EngineVoice? Load(CarSound sound)
     {
         if (!EnsureSystem()) return null;
@@ -159,6 +201,7 @@ public sealed class EngineAudio
         if (_voice != null && string.Equals(_bankPath, bankPath, StringComparison.OrdinalIgnoreCase)) return _voice;
 
         UnloadBank();
+        ThrowIfShutDown();
 
         var started = DateTime.Now;
         Check(FMOD_Studio_System_LoadBankFile(_system, Utf8(bankPath), LoadBankNormal, out var bank), "load " + Path.GetFileName(bankPath));
@@ -166,7 +209,8 @@ public sealed class EngineAudio
         _bankPath = bankPath;
 
         var voice = new EngineVoice(this, _system, events);
-        voice.LoadSamples();
+        voice.LoadSamples(() => _shutDown);
+        ThrowIfShutDown();
         voice.Level = MeasureLevel(bankPath, events.Engine.Value);
         _voice = voice;
 
@@ -194,9 +238,9 @@ public sealed class EngineAudio
         if (_system != IntPtr.Zero) return true;
         if (_shutDown) return false;
 
-        // A folder that failed is not tried again; the player putting the right one in the settings is
+        // A folder that failed is not tried again for a while; the player putting the right one in the settings is
         var folder = AppSettings.Instance.AssettoCorsaPath;
-        if (string.Equals(_failedFolder, folder, StringComparison.OrdinalIgnoreCase)) return false;
+        if (string.Equals(_failedFolder, folder, StringComparison.OrdinalIgnoreCase) && DateTime.UtcNow - _failedAt < RetryAfter) return false;
 
         var system = IntPtr.Zero;
         try
@@ -217,6 +261,7 @@ public sealed class EngineAudio
             _system = system;
             _core = core;
             _mixerSuspended = false;
+            _resumeFailureTold = false;
             _failedFolder = null;
             return true;
         }
@@ -227,7 +272,8 @@ public sealed class EngineAudio
 
             // No sound is no reason to fail a screen: the engine just stays silent
             _failedFolder = folder;
-            _logger.Error(ex, "FMOD could not be started from {Folder}: engines will be silent", folder);
+            _failedAt = DateTime.UtcNow;
+            _logger.Error(ex, "FMOD could not be started from {Folder}: engines are silent for now (tried again in {Minutes} min)", folder, RetryAfter.TotalMinutes);
             return false;
         }
     }
@@ -255,13 +301,14 @@ public sealed class EngineAudio
     /// <summary>
     /// The unload is only queued: FMOD runs it on its own thread after an update, and only then is the file closed.
     /// A flush runs the queue there and then, where the DLL has it; either way the bank is watched until it is gone.
+    /// Cut short at exit: the file no longer has to be free for a race.
     /// </summary>
     private void WaitUntilUnloaded(IntPtr bank)
     {
         if (TryFlushCommands(_system) is { } flushed) Warn(flushed, "flush commands");
 
         var until = DateTime.Now + UnloadTimeout;
-        while (true)
+        while (!_shutDown)
         {
             Update();
 
@@ -279,17 +326,34 @@ public sealed class EngineAudio
         }
     }
 
+    // The mixer is rested and woken only under the gate, so never both at once. The two may run on different pool
+    // threads: FMOD's core API is thread safe as initialised here (no FMOD_INIT_THREAD_UNSAFE) and serialises calls.
+    // A suspend that fails is logged by Warn and leaves the flag down: the mixer just runs on.
     private void SuspendMixer()
     {
         if (_core == IntPtr.Zero || _mixerSuspended) return;
         if (TryMixerSuspend(_core) is { } result && Warn(result, "suspend mixer")) _mixerSuspended = true;
     }
 
+    /// <summary>
+    /// Wakes the mixer. The flag drops only once it is awake, so a failed wake is tried again by the next load. A
+    /// mixer left asleep is a mute garage, so the first failure is also said plainly, to be found in the log.
+    /// </summary>
     private void ResumeMixer()
     {
         if (_core == IntPtr.Zero || !_mixerSuspended) return;
-        if (TryMixerResume(_core) is { } result) Warn(result, "resume mixer");
-        _mixerSuspended = false;
+
+        var result = TryMixerResume(_core);
+        if (result is { } code && Warn(code, "resume mixer"))
+        {
+            _mixerSuspended = false;
+            return;
+        }
+
+        if (_resumeFailureTold) return;
+        _resumeFailureTold = true;
+        _logger.Information("The FMOD mixer could not be woken ({Reason}): garage engines stay silent until it is",
+            result is { } failed ? $"error {failed}" : "the DLL has no FMOD_System_MixerResume");
     }
 
     /// <summary>A voice that is no longer the loaded one must not touch FMOD</summary>
@@ -385,8 +449,8 @@ public sealed class EngineVoice : IDisposable
     internal string Describe() =>
         $"rpms to {MaxRpm:0}, throttle to {MaxThrottle:0.#}, {(Level == null ? "not measured" : $"evened out {EngineLoudness.GainDb(Level, 800, 0):+0.0;-0.0} dB at idle, {EngineLoudness.GainDb(Level, 3500, 0.5):+0.0;-0.0} at 3500 half, {EngineLoudness.GainDb(Level, 5500, 1):+0.0;-0.0} at 5500 flat out")}{(_limiter != IntPtr.Zero ? ", limiter" : "")}{(_backfire != IntPtr.Zero ? ", backfire" : "")}";
 
-    /// <summary>Reads the samples in now rather than on the first start, which would stutter</summary>
-    internal void LoadSamples()
+    /// <summary>Reads the samples in now rather than on the first start, which would stutter; stops waiting once <paramref name="stop"/> says so</summary>
+    internal void LoadSamples(Func<bool> stop)
     {
         foreach (var description in new[] { _engine, _limiter, _backfire })
         {
@@ -395,7 +459,7 @@ public sealed class EngineVoice : IDisposable
 
         // Samples load on FMOD's own thread; a big bank takes a while
         var until = DateTime.Now.AddSeconds(30);
-        while (DateTime.Now < until)
+        while (DateTime.Now < until && !stop())
         {
             Warn(FMOD_Studio_System_Update(_system), "update");
             if (FMOD_Studio_EventDescription_GetSampleLoadingState(_engine, out var state) != ResultOk || state != LoadingStateLoading) return;

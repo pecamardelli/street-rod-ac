@@ -36,6 +36,10 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
     // texture that finished loading), which is looked for this often.
     private static readonly TimeSpan IdlePollInterval = TimeSpan.FromMilliseconds(100);
 
+    // A scene rebuilt after a lost device that still draws this long after is sound again: a later loss (the next
+    // driver update, hours on) is rebuilt once more rather than failed
+    private static readonly TimeSpan RecoveryGrace = TimeSpan.FromMinutes(1);
+
     // A GPU that went away under the renderer: a driver update or reset (TDR), or a hung device. DXGI's own codes
     // (DEVICE_REMOVED, DEVICE_HUNG, DEVICE_RESET, DRIVER_INTERNAL_ERROR) and D3D9's (DEVICELOST, DEVICEREMOVED, DEVICEHUNG)
     private static readonly HashSet<int> DeviceLostCodes =
@@ -61,6 +65,7 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
     private bool _reloadRequested;
     private bool _failed;
     private bool _recovered;
+    private DateTime _recoveredAt;
     private bool _pumping;
     private TimeSpan _lastRenderingTime;
     private DateTime _animateUntil = DateTime.MinValue;
@@ -305,6 +310,9 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
 
         _renderer = renderer;
         _deviceWork = Task.CompletedTask;
+
+        // The size was taken when the renderer was made; a resize while it was loading found no renderer to tell
+        UpdateRendererSize();
         Invalidate();
         return true;
     }
@@ -451,6 +459,10 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
             }
 
             OnFramePresented();
+
+            // A scene that has drawn well for a while since it was rebuilt has earned another rebuild: a device lost
+            // again soon after is still a failure, so this cannot loop
+            if (_recovered && DateTime.Now - _recoveredAt >= RecoveryGrace) _recovered = false;
         }
         catch (Exception ex) when (!_recovered && IsDeviceLost(ex))
         {
@@ -458,6 +470,7 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
             // included, so it is built again from scratch, once: a device that keeps going is a failure after all.
             Logger.Warning(ex, "{Viewport}: the graphics device was lost, starting the scene again", ViewportName);
             _recovered = true;
+            _recoveredAt = DateTime.Now;
             DisposeRenderer(releaseDevice: true);
             Dispatcher.InvokeAsync(RequestLoad);
         }

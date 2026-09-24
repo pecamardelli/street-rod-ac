@@ -73,7 +73,12 @@ public sealed class PartScriptRuntime
     /// <summary>Parts that have a script which is not among the converted classes; to the other parts they are not there</summary>
     public List<InstalledPart> MissingScripts { get; } = new();
 
-    /// <summary>Parts whose script threw: they are left out, as if their script were missing</summary>
+    /// <summary>
+    /// Parts whose script threw. One that threw while it was made or tuned is left out, as if its script were
+    /// missing. One that threw later, in a call, stays in, half updated, for the other parts' scripts to go on
+    /// asking: taking it out half way through would change what they see mid-run. Either way its fault is among
+    /// <see cref="Faults"/>, which makes the engine's problem, so no figure it left behind reaches a race.
+    /// </summary>
     public List<InstalledPart> FaultedScripts { get; } = new();
 
     /// <summary>What went wrong running the scripts, one line each, for the engine's problem and the log</summary>
@@ -81,6 +86,12 @@ public sealed class PartScriptRuntime
 
     /// <summary>A script ran out of steps: what it left behind is half done</summary>
     public bool BudgetExhausted => _vm.BudgetExhausted;
+
+    /// <summary>Where the steps ran out (the entry method and the budget), when they did</summary>
+    public string? BudgetExhaustedIn => _vm.BudgetExhaustedIn;
+
+    /// <summary>Most steps one script entry took here: how close these parts come to the budget</summary>
+    public int PeakSteps => _vm.PeakSteps;
 
     public ScriptObject? ObjectOf(InstalledPart part) => _objects.GetValueOrDefault(part);
 

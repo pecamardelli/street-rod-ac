@@ -10,17 +10,35 @@ public static class FmodLifetime
 {
     private static int _shutDown;
 
+    // How long the exit waits, all told, for FMOD work in progress to let go
+    private static readonly TimeSpan WaitAtMost = TimeSpan.FromSeconds(1.5);
+
     /// <summary>
     /// Releases both systems: what plays, then the banks, then the system. Only the first call does anything, and it
-    /// never throws: an exit must go ahead whatever FMOD makes of it.
+    /// never throws: an exit must go ahead whatever FMOD makes of it. Both share one deadline, so a load or a
+    /// measurement in progress holds the exit up by <see cref="WaitAtMost"/> at most; one still inside FMOD by then
+    /// keeps its system (see <see cref="EngineAudio"/>).
     /// </summary>
     public static void Shutdown()
     {
         if (Interlocked.Exchange(ref _shutDown, 1) == 1) return;
 
+        var deadline = DateTime.UtcNow + WaitAtMost;
+
+        // A garage load measures its bank inside the garage's gate: the measurement hears of the exit first, so
+        // both can be let go of within the one wait
         try
         {
-            EngineAudio.ShutdownShared();
+            EngineLoudness.BeginShutdown();
+        }
+        catch
+        {
+            // Only a flag
+        }
+
+        try
+        {
+            EngineAudio.ShutdownShared(deadline);
         }
         catch
         {
@@ -29,7 +47,7 @@ public static class FmodLifetime
 
         try
         {
-            EngineLoudness.Shutdown();
+            EngineLoudness.Shutdown(deadline);
         }
         catch
         {

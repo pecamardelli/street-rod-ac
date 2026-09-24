@@ -1,4 +1,5 @@
 using System.IO;
+using Street_Rod_AC.Logging;
 using static Street_Rod_AC.Audio.FmodStudio;
 
 namespace Street_Rod_AC.Audio;
@@ -84,13 +85,20 @@ public static class EngineLoudness
     private const double WarmUpSeconds = 0.2;
     private const double ListenSeconds = 0.4;
 
+    private static readonly IAppLogger Logger = AppLoggerFactory.CreateLogger("EngineLoudness");
+
     private static readonly object Gate = new();
 
     private static IntPtr _system;
-    private static bool _shutDown;
 
-    // The AC folder the meter could not be started from: not tried again from there, a new folder is
+    // Set by the exit, read by a measurement between FMOD calls
+    private static volatile bool _shutDown;
+
+    // The AC folder the meter could not be started from, and when: not tried again from there for a while (a device
+    // busy a moment ago may be back), a new folder is at once
+    private static readonly TimeSpan RetryAfter = TimeSpan.FromMinutes(1);
     private static string? _failedFolder;
+    private static DateTime _failedAt;
 
     /// <summary>
     /// The level of an engine; null when it makes no sound to measure. Takes a fraction of a second per bank, so it
@@ -208,8 +216,15 @@ public static class EngineLoudness
 
     #endregion
 
+    /// <summary>The exit has begun: the measurement stops before its next FMOD call, and nothing of it is kept</summary>
+    private static void ThrowIfShutDown()
+    {
+        if (_shutDown) throw new OperationCanceledException("the app is closing");
+    }
+
     private static double? Listen(IntPtr description, float rpm, float throttle)
     {
+        ThrowIfShutDown();
         Check(FMOD_Studio_EventDescription_CreateInstance(description, out var instance), "create engine");
         try
         {
@@ -245,6 +260,7 @@ public static class EngineLoudness
         var until = DateTime.Now.AddSeconds(30);
         while (DateTime.Now < until)
         {
+            ThrowIfShutDown();
             FMOD_Studio_System_Update(_system);
             if (FMOD_Studio_EventDescription_GetSampleLoadingState(description, out var state) != ResultOk || state != LoadingStateLoading) return;
             Thread.Sleep(5);
@@ -255,7 +271,11 @@ public static class EngineLoudness
     {
         // A block is 1024 samples by default; a few too many updates only mix a little more
         var updates = (int)Math.Ceiling(seconds * SampleRate / 1024);
-        for (var i = 0; i < updates; i++) FMOD_Studio_System_Update(_system);
+        for (var i = 0; i < updates; i++)
+        {
+            ThrowIfShutDown();
+            FMOD_Studio_System_Update(_system);
+        }
     }
 
     private static float MaxRpm(IntPtr description) => ParameterMaximum(description, "rpms") ?? DefaultMaxRpm;
@@ -269,7 +289,7 @@ public static class EngineLoudness
 
         // Every bank would otherwise make, and leak, a system of its own trying again
         var folder = Configuration.AppSettings.Instance.AssettoCorsaPath;
-        if (string.Equals(_failedFolder, folder, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(_failedFolder, folder, StringComparison.OrdinalIgnoreCase) && DateTime.UtcNow - _failedAt < RetryAfter)
             throw new InvalidOperationException("the loudness meter could not be started from " + folder);
 
         var system = IntPtr.Zero;
@@ -295,21 +315,35 @@ public static class EngineLoudness
             // Half a system is still threads and memory (and the meter's DSP): it goes
             if (system != IntPtr.Zero) FMOD_Studio_System_Release(system);
             _failedFolder = folder;
+            _failedAt = DateTime.UtcNow;
             throw;
         }
     }
 
     /// <summary>
-    /// Releases the measuring system for good, at exit (<see cref="FmodLifetime"/>). Never throws; a measurement in
-    /// progress is given a moment to finish.
+    /// Tells a measurement in progress to stop at its next FMOD call; the exit says so before it waits on anything
     /// </summary>
-    internal static void Shutdown()
+    internal static void BeginShutdown() => _shutDown = true;
+
+    /// <summary>
+    /// Releases the measuring system for good, at exit (<see cref="FmodLifetime"/>). Never throws. A measurement in
+    /// progress cuts itself short; one still inside FMOD at <paramref name="deadline"/> keeps the system, since a
+    /// system left to the end of the process is harmless and one freed under a measurement crashes the exit.
+    /// </summary>
+    internal static void Shutdown(DateTime deadline)
     {
+        _shutDown = true;
+
         var entered = false;
         try
         {
-            Monitor.TryEnter(Gate, TimeSpan.FromSeconds(2), ref entered);
-            _shutDown = true;
+            var wait = deadline - DateTime.UtcNow;
+            Monitor.TryEnter(Gate, wait > TimeSpan.Zero ? wait : TimeSpan.Zero, ref entered);
+            if (!entered)
+            {
+                Logger.Warning("An engine was still being measured at exit: its FMOD system is left to the end of the process rather than freed under it");
+                return;
+            }
 
             // Nothing plays between measurements and each bank is unloaded after its own: releasing the system takes
             // common.bank and the meter with it

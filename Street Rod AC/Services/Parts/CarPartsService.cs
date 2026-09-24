@@ -35,8 +35,9 @@ namespace Street_Rod_AC.Services.Parts
         // Whether a race has the car's data changed right now (CarDataOverlay): what is read then is not the car's own
         private readonly Func<string, bool> _isCarDataApplied;
 
-        // Script faults are told once each: the same engine is evaluated again on every screen that shows it
-        private readonly ConcurrentDictionary<string, byte> _toldFaults = new();
+        // Script faults are told once each per car: the same engine is evaluated again on every screen that shows
+        // it, and the same faulting part on another car is another car to name
+        private readonly ConcurrentDictionary<(string Car, string Fault), byte> _toldFaults = new();
 
         /// <param name="isCarDataApplied">
         /// Whether a car's data is changed for a race right now; by default what <see cref="CarDataOverlay.IsApplied"/>
@@ -46,7 +47,9 @@ namespace Street_Rod_AC.Services.Parts
         {
             _catalogRepo = catalogRepo;
             _profileRepo = profileRepo;
-            _isCarDataApplied = isCarDataApplied ?? new CarDataOverlay().IsApplied;
+            // A new overlay per ask: it reads the AC and restore paths from the settings when it is made, and those
+            // may have changed since this service was
+            _isCarDataApplied = isCarDataApplied ?? (id => new CarDataOverlay().IsApplied(id));
             PartPricing.Scale = AppSettings.Instance.PartsPriceScale;
             _catalog = new Lazy<PartsCatalog>(LoadCatalog);
             _builds = new Lazy<EngineBuildIndex>(CreateIndex);
@@ -139,7 +142,7 @@ namespace Street_Rod_AC.Services.Parts
         {
             foreach (var fault in faults)
             {
-                if (_toldFaults.TryAdd(fault, 0)) _logger.Warning("{Car}: a part script faulted and was left out: {Fault}", carId, fault);
+                if (_toldFaults.TryAdd((carId, fault), 0)) _logger.Warning("{Car}: a part script faulted: {Fault}", carId, fault);
             }
         }
 

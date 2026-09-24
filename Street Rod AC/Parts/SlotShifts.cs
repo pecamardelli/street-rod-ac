@@ -25,7 +25,7 @@ public sealed class SlotShifts
     /// Why the file could not be read; null when it read (or is not there). The file is somebody's work in progress:
     /// while it does not read, it is never written over (<see cref="Save"/> refuses), so fixing it by hand loses nothing.
     /// </summary>
-    public string? Problem { get; private init; }
+    public string? Problem { get; private set; }
 
     public IEnumerable<(string PartId, int SlotId, float[] Offset)> All =>
         _shifts.SelectMany(p => p.Value.Select(s => (p.Key, s.Key, s.Value)));
@@ -102,13 +102,35 @@ public sealed class SlotShifts
         return applied;
     }
 
+    /// <summary>
+    /// Reads the file again after it failed to read: the shifts made since were added onto nothing, so the file's
+    /// own offsets are added onto them. False while it still does not read.
+    /// </summary>
+    private bool Recover()
+    {
+        var folder = System.IO.Path.GetDirectoryName(Path);
+        if (folder == null) return false;
+
+        var reread = Load(folder);
+        if (reread.Problem != null)
+        {
+            Problem = reread.Problem;
+            return false;
+        }
+
+        foreach (var (partId, slotId, offset) in reread.All) Add(partId, slotId, offset, save: false);
+        Problem = null;
+        return true;
+    }
+
     /// <returns>False when the file could not be written (a read-only content folder, the file open elsewhere)</returns>
     public bool Save()
     {
         if (Path == null) return true;
 
-        // What is in a file that did not read is not in memory: writing would throw it away
-        if (Problem != null) return false;
+        // What is in a file that did not read is not in memory: writing would throw it away. Unless it reads now
+        // (fixed by hand while the game runs): then what it holds joins what was shifted since, and saving resumes.
+        if (Problem != null && !Recover()) return false;
 
         try
         {

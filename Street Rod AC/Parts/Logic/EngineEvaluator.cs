@@ -100,7 +100,8 @@ public static class EngineEvaluator
 
         // A script that threw or ran out of steps left figures half made: whatever they come to is not the engine
         var faults = runtime.Faults.ToList();
-        if (runtime.BudgetExhausted) faults.Add("a part script ran out of steps (it loops, or does far more than a part should)");
+        if (runtime.BudgetExhausted)
+            faults.Add($"a part script ran out of steps in {runtime.BudgetExhaustedIn ?? "an unknown method"} (it loops, or does far more than a part should)");
         if (faults.Count > 0 && runtime.MissingScripts.Count == 0)
             problem = $"a part script failed: {faults[0]}{(faults.Count > 1 ? $" ({faults.Count} faults in all)" : "")}.";
 

@@ -15,7 +15,14 @@ public sealed record ScriptSlotRule(int Slot, string Message);
 public sealed class ScriptVm
 {
     private const int MaxDepth = 24;
-    private const int MaxSteps = 500_000;
+
+    // Classes initializing one inside another (see Statics): far more than any real chain, well short of the stack
+    private const int MaxStaticsNesting = 64;
+
+    // Steps one Instantiate or Call may take. Only a stop for scripts that loop: running out fails the engine, so
+    // it sits far above real work. The heaviest of the 161 catalog builds takes 29,227 in one entry (the GTO 389,
+    // 2026-09-24, PeakSteps); a player's tree bigger than any catalog build still has over 30 times that.
+    private const int MaxSteps = 1_000_000;
 
     // Text a script builds by adding strings together: a label or a message is a few dozen characters, and
     // s = s + s in a loop would double past any memory well inside the step budget
@@ -29,6 +36,14 @@ public sealed class ScriptVm
     // What one Run works with, handed on from run to run: runs nest (a call inside a call), so one set per level
     private readonly Stack<RunScratch> _scratch = new();
     private int _steps;
+
+    // Classes whose static initializers are running, one inside another (a static that reads a static of another
+    // class). Kept apart from the call depth, so a class first touched deep in a call still initializes as it
+    // always did; bounded on its own, so a chain of classes cannot run the native stack out.
+    private int _staticsNesting;
+
+    // What the running Instantiate or Call was entered for, for the log when it runs out of steps
+    private string? _entry;
 
     public ScriptVm(ScriptClassLoader loader, IScriptHost host)
     {
@@ -47,6 +62,15 @@ public sealed class ScriptVm
     public bool BudgetExhausted { get; private set; }
 
     /// <summary>
+    /// Where the budget ran out, when it did: the class and method the run was entered by and the steps taken, so a
+    /// log can tell a script that loops from a heavy one that merely needs more
+    /// </summary>
+    public string? BudgetExhaustedIn { get; private set; }
+
+    /// <summary>Most steps one Instantiate or Call has taken on this VM: how close the scripts come to the budget</summary>
+    public int PeakSteps { get; private set; }
+
+    /// <summary>
     /// For reading parts out of scripts with no game around: lists of parts are often filled inside branches nobody
     /// can decide here (one engine or another, at random). With this on, such a list and the resources put into it
     /// are kept although the branch is uncertain, and the first alternative wins. A game that runs the scripts for
@@ -57,15 +81,46 @@ public sealed class ScriptVm
     /// <summary>Creates an object: field initializers and constructor of every class of the chain, base classes first</summary>
     public ScriptObject Instantiate(IReadOnlyList<ScriptClass> chain, params ScriptValue[] arguments)
     {
-        _steps = 0;
-        return Construct(chain, arguments, 0);
+        var outer = Enter(chain.Count > 0 ? chain[0] : null, Constructor);
+        try
+        {
+            return Construct(chain, arguments, 0);
+        }
+        finally
+        {
+            Leave(outer);
+        }
     }
 
     /// <summary>Calls a method by name and argument count; unknown when the object has no such method</summary>
     public ScriptValue Call(ScriptObject target, string method, params ScriptValue[] arguments)
     {
+        var outer = Enter(target.Chain.Count > 0 ? target.Chain[0] : null, method);
+        try
+        {
+            return InvokeVirtual(target, 0, method, arguments, false, 0);
+        }
+        finally
+        {
+            Leave(outer);
+        }
+    }
+
+    // Each entry has the whole budget. A host may enter again from inside a native (none does today): what the
+    // outer entry was doing is put back when the inner one is done, a throw included
+    private (int StaticsNesting, string? Entry) Enter(ScriptClass? type, string method)
+    {
+        var outer = (_staticsNesting, _entry);
         _steps = 0;
-        return InvokeVirtual(target, 0, method, arguments, false, 0);
+        _staticsNesting = 0;
+        _entry = $"{type?.ClassName ?? "?"}.{method}";
+        return outer;
+    }
+
+    private void Leave((int StaticsNesting, string? Entry) outer)
+    {
+        PeakSteps = Math.Max(PeakSteps, Math.Min(_steps, MaxSteps));
+        (_staticsNesting, _entry) = outer;
     }
 
     #region Objects and calls
@@ -126,16 +181,27 @@ public sealed class ScriptVm
     /// </summary>
     /// <remarks>
     /// A static initializer that reads a static of another class runs that class's initializers first, and so on
-    /// down a chain of classes: each one is a level deeper, as a call is. Past the depth limit the class's statics
-    /// are unknown for now and not remembered, so a read from higher up later still gets them right.
+    /// down a chain of classes. The initializers run at the depth of whatever touched the class, as calls made
+    /// from there would (a plain constant initializes at any depth; a call in an initializer meets the call depth
+    /// limit like any other). The chain itself has its own limit, <see cref="MaxStaticsNesting"/>: past it the
+    /// class's statics are unknown for now and not remembered, so a read from higher up later still gets them right.
     /// </remarks>
     private ScriptObject Statics(IReadOnlyList<ScriptClass> chain, int depth)
     {
         if (_statics.TryGetValue(chain[0], out var holder)) return holder;
-        if (depth > MaxDepth) return new ScriptObject(chain);
+        if (_staticsNesting >= MaxStaticsNesting) return new ScriptObject(chain);
 
         _statics[chain[0]] = holder = new ScriptObject(chain);
-        for (var i = chain.Count - 1; i >= 0; i--) InitializeFields(holder, i, true, depth + 1);
+        _staticsNesting++;
+        try
+        {
+            for (var i = chain.Count - 1; i >= 0; i--) InitializeFields(holder, i, true, depth);
+        }
+        finally
+        {
+            _staticsNesting--;
+        }
+
         return holder;
     }
 
@@ -273,6 +339,8 @@ public sealed class ScriptVm
         {
             if (++_steps > MaxSteps)
             {
+                // Told once, where it first ran out: the runs above it stop at once and add nothing
+                if (!BudgetExhausted) BudgetExhaustedIn = $"{_entry} after {MaxSteps} steps";
                 BudgetExhausted = true;
                 return null;
             }
