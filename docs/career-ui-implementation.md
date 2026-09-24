@@ -545,7 +545,7 @@ public class EventOpponent
 {
     public string Name { get; set; }
     public string Nickname { get; set; }
-    public int Skill { get; set; }       // AC AI level (80-100)
+    public int Skill { get; set; }       // AC AI level (90-100)
     public int Aggression { get; set; }  // AC AI aggression (0-100)
     public string CarDefinitionId { get; set; }
     public string? CarSkin { get; set; }

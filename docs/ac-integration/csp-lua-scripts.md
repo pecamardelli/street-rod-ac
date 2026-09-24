@@ -150,6 +150,41 @@ The `sr_race` mode handles auto-start and auto-quit internally using CSP APIs. T
 | `ac.endSession()` | Working | Clean exit, returns to AC menu then AC closes |
 | Signal files | Removed | Was in Python app, didn't work reliably |
 | `ac.ext_quitAC()` | Untested | CSP extension, may not exist in all versions |
+| race.ini `[STREET_ROD] CONTEXT_ID` | Working | Launcher to Lua app: which race this is (see below) |
+| Result JSON | Working | Lua app to launcher, one file per race |
+
+### Race Result File (SR Race Manager)
+The app writes one file per race to `Documents\Assetto Corsa\out\sr_race_manager\<session_id>.json`: AC's own
+Documents folder (`ac.getFolder(ac.FolderID.ACDocuments)`), which is the known Documents folder the launcher reads even
+where Documents is redirected (OneDrive). The file is written as `<name>.tmp` and then renamed, so a file under the
+final name is always whole; the launcher ignores names that are not a UUID.
+
+Schema 1.1 added three fields to what 1.0 had (the launcher still reads 1.0 files, without them):
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `session.context_id` | string, may be absent | The race's `RaceContext.ContextId`, copied from race.ini `[STREET_ROD] CONTEXT_ID` (read with `ac.INIConfig.raceConfig()`); absent when race.ini had none |
+| `participants[].car_index` | int | AC's index of the car; 0 is the player's |
+| `participants[].is_player` | bool | True for the player's car |
+
+```json
+{
+  "metadata": { "schema_version": "1.1", "script_version": "...", "source": "sr_race_manager", "generated_at": "ISO8601" },
+  "session": { "session_id": "UUID", "context_id": "UUID of the race context", "track_id": "...", "duration_seconds": 12.3 },
+  "participants": [
+    { "driver_name": "...", "car_name": "...", "car_index": 0, "is_player": true, "performance": { }, "crash": { } }
+  ]
+}
+```
+
+How the launcher uses them (`RaceResultIngestionService`, `RaceResultProcessor`):
+- The player is the participant with `is_player`, never "the first in the list" (the list's order is not defined).
+- A file whose `context_id` does not match the race in hand is never applied with that race's context.
+- The race about to be driven is saved as `GameState.PendingRace` before AC starts. A result left over from a race
+  that ended badly is applied when a save is loaded, only if its `context_id` is that save's `PendingRace.ContextId`
+  (or it has no `context_id` and the save has a pending race); anything else is quarantined with the reason, never
+  applied to the wrong save. Processing a result, or the forfeit of a wager or pink-slip race that left no result,
+  clears `PendingRace`.
 
 ### Enabling SR Race Mode
 

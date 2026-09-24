@@ -62,6 +62,11 @@ ALWAYS restore original config after AC exits:
 - On error: restore
 - On crash: restore
 
+race.ini is backed up before it is changed and put back like the cars' data: in the launcher's `finally`, at start-up,
+when the game exits and from the fatal-exception handler (see [INI Modification](ini-modification.md), "Backup and
+restore"). A race writes `[STREET_ROD] CONTEXT_ID=<race context id>` into it, which the Lua app copies into its result
+file, so a result is only ever applied to the race (and the save) it belongs to (see [CSP Lua Scripts](csp-lua-scripts.md)).
+
 ## The cars' own data
 A race is driven on what the cars' parts make of them: `RaceCarDataService.Prepare(car)` turns the player's and the
 opponent's parts into data files (see `docs/systems/parts-system.md`, "Assetto Corsa export"), they ride on the
@@ -69,9 +74,18 @@ opponent's parts into data files (see `docs/systems/parts-system.md`, "Assetto C
 before `acs.exe`: originals kept under `%APPDATA%\StreetRodAC\AcRestore` with a manifest first, then the change.
 A packed car (`data.acd` only) is unpacked for the race and the folder removed after. `RestoreAll` runs in the
 launcher's `finally` and again at start-up (a crash leaves a manifest behind); a manifest that could not be restored is
-put back before that car's data is changed again. Two cars of one model share a folder: the diner prepares only the
-player's and the opponent drives it. A player's car with a problem (no engine that runs, a missing wheel) is stopped in
-the diner.
+put back before that car's data is changed again. The Assetto Corsa folder is a setting (`GameSettings.AssettoCorsaPath`,
+the Settings screen; `C:\GAMES\Street Rod AC` when not set), and every manifest records the absolute car folder it
+changed, so a restore goes back to the folder that was changed even after the setting moves.
+
+Two cars of one model do not share a folder: an opponent in the player's model races in a marked copy of the car
+folder, `<car>__sr_opponent` (`RaceSetupBuilder.RacesAs`, `CarDataOverlay.CreateClone`), with its own data and sound.
+The launcher makes the copies first, from the untouched originals, then applies the player's data to the car itself;
+race.ini names the copy as the opponent's `MODEL`. The marker file (`streetrod_clone.json`) goes in first and comes out
+last, every scanner of `content\cars` skips marked folders (`AcCarFolder.InstalledCars`), and `RestoreAll` deletes
+every copy after the race and at start-up. An opponent whose car cannot run races in a copy as its author made it
+(details: `docs/systems/parts-system.md`, "Two cars of one model"). A player's car with a problem (no engine that runs,
+a missing wheel) is stopped before the race.
 
 ## Key Services
 

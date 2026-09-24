@@ -49,11 +49,41 @@ Never modify untouched keys.
 
 ## IniModificationService
 
-| Method | Purpose |
+| Member | Purpose |
 |--------|---------|
-| ApplyIntent(intent) | Apply modification |
-| Backup() | Save original state |
-| Restore() | Revert to backup |
+| ApplyIntent(intent) | Keep the target file's original, then apply the modification |
+| RestoreAll() | Put back every cfg file an intent changed, as it was before the first change |
+| HasPendingRestore | Whether a changed cfg file is waiting to go back |
+
+## Backup and Restore
+The cfg files (`race.ini`, `showroom_start.ini`) are restored the way the cars' data is (`CarDataOverlay`):
+
+- **Keep first** (`AcConfigBackup.Keep`): before the first byte of a file changes, its original bytes (or the fact
+  that it did not exist) go to `%AppData%\StreetRodAC\AcRestore\~cfg`, with a manifest (`ini-manifest.json`)
+  flushed to disk. Only files under `Documents\Assetto Corsa\cfg` are ever kept or written.
+- **Once per race**: a file already kept (a second launch after a restore that failed) is not kept again, so what
+  goes back is always the user's own file, never ours.
+- **Then write**: through `SafeFile` (temp file, flushed, renamed over the old one). An edited file keeps its encoding
+  and every line but the ones changed (`IniText`); race.ini, which a race writes whole, is UTF-8 without a BOM.
+- **Restore** (`RestoreAll`), once AC has exited: in the launcher's `finally`, at start-up (a crash or a power cut
+  leaves the manifest behind), when the game exits, and from the fatal-exception handler. A file that did not exist
+  is deleted; one that did gets its original bytes back. Idempotent; a file that cannot go back stays kept for the
+  next call and is logged, and the others go back anyway. The `~cfg` folder has no car manifest, so the car-data
+  restore never takes it for a car.
+
+After a race the user's race.ini is what it was before: no `MODE=sr_race`, no `__CM_NEW_MODE_USED`, none of our cars,
+and a normal AC or Content Manager session is not affected.
+
+## Race Context Id
+A race's race.ini carries its context id, which the Lua app copies into its result file:
+
+```ini
+[STREET_ROD]
+CONTEXT_ID=<RaceContext.ContextId, "D" format>
+```
+
+`IniModificationService` writes it whenever the intent's `Metadata["RaceContext"]` holds a `RaceContext`. See
+[CSP Lua Scripts](csp-lua-scripts.md) for how the result carries it back.
 
 ## Intent Types
 
@@ -77,4 +107,7 @@ Never modify untouched keys.
 ## Files
 - `Services/Configuration/IniModificationService.cs`
 - `Services/Configuration/IIniModificationService.cs`
+- `Services/Configuration/AcConfigBackup.cs` (originals and manifest)
 - `Services/Configuration/Models/ModificationIntent.cs`
+- `Parts/Export/IniText.cs` (the one INI reader/writer, line-preserving)
+- `Helpers/SafeFile.cs` (atomic writes)

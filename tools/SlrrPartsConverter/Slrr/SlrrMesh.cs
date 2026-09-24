@@ -33,6 +33,10 @@ public sealed class SlrrSubMesh
 /// SLRR .scx mesh ("INVO" container). Version 3 is a flat list of material/vertex/index blocks with
 /// fixed 64-byte vertices; version 4 is a chunk table with a flexible vertex layout.
 /// Positions are converted from centimetres to metres on load.
+///
+/// Counts, offsets and sizes come from the file (mods are made by anyone), so each is checked against what is left of
+/// it before anything is allocated or read: a damaged or crafted mesh is an <see cref="InvalidDataException"/> for
+/// its part, never an allocation of gigabytes or a silently degenerate model.
 /// </summary>
 public sealed class SlrrMesh
 {
@@ -40,9 +44,13 @@ public sealed class SlrrMesh
 
     // Version 3
     private const int V3VertexSize = 64;
+    private const int V3TriangleSize = 12;
     private const int V3MaterialTexturesOffset = 0x2C;
     private const int V3MaterialReflectionSlot = 3;
     private const int MaterialNameSize = 32;
+
+    /// <summary>A version 3 material block reaches at least past its texture slots and holds its name at its end</summary>
+    private const int V3MaterialMinSize = V3MaterialTexturesOffset + (V3MaterialReflectionSlot + 1) * 2;
 
     // Version 4 chunk types
     private const int ChunkMaterial = 0;
@@ -90,6 +98,10 @@ public sealed class SlrrMesh
             var materialSize = BitConverter.ToInt32(data, position);
             if (materialSize <= 0) break;
 
+            // The material block holds the colour, the texture slots and, at its end, the name; the vertex count follows it
+            if (materialSize < V3MaterialMinSize || (long)position + materialSize + 4 > data.Length)
+                throw new InvalidDataException($"SCX material block of {materialSize} bytes at {position} does not fit the file");
+
             var sub = new SlrrSubMesh
             {
                 DiffuseColor = new Vector3(
@@ -105,6 +117,10 @@ public sealed class SlrrMesh
 
             var vertexCount = BitConverter.ToInt32(data, position);
             position += 4;
+            // The triangle count follows the vertices
+            if (vertexCount < 0 || vertexCount > (data.Length - position - 4) / V3VertexSize)
+                throw new InvalidDataException($"SCX vertex count {vertexCount} at {position - 4} does not fit the file");
+
             sub.Vertices = new SlrrVertex[vertexCount];
             for (var i = 0; i < vertexCount; i++, position += V3VertexSize)
             {
@@ -118,7 +134,10 @@ public sealed class SlrrMesh
 
             var triangleCount = BitConverter.ToInt32(data, position);
             position += 4;
-            sub.Indices = new int[triangleCount * 3];
+            if (triangleCount < 0 || triangleCount > (data.Length - position) / V3TriangleSize)
+                throw new InvalidDataException($"SCX triangle count {triangleCount} at {position - 4} does not fit the file");
+
+            sub.Indices = new int[checked(triangleCount * 3)];
             for (var i = 0; i < sub.Indices.Length; i++, position += 4)
             {
                 sub.Indices[i] = BitConverter.ToInt32(data, position);
@@ -134,13 +153,21 @@ public sealed class SlrrMesh
     {
         var mesh = new SlrrMesh();
         var chunkCount = BitConverter.ToInt32(data, 8);
+        if (chunkCount < 0 || chunkCount > (data.Length - 12) / 8)
+            throw new InvalidDataException($"SCX chunk count {chunkCount} does not fit the file");
+
         SlrrSubMesh? sub = null;
 
         for (var i = 0; i < chunkCount; i++)
         {
             var type = BitConverter.ToInt32(data, 12 + i * 8);
             var offset = BitConverter.ToInt32(data, 16 + i * 8);
+            if (offset < 0 || (long)offset + 8 > data.Length)
+                throw new InvalidDataException($"SCX chunk {i} at {offset} lies outside the file");
+
             var size = BitConverter.ToInt32(data, offset + 4);
+            if (size < 0 || (long)offset + size > data.Length)
+                throw new InvalidDataException($"SCX chunk {i} of {size} bytes at {offset} does not fit the file");
 
             switch (type)
             {
@@ -154,7 +181,12 @@ public sealed class SlrrMesh
                     break;
 
                 case ChunkIndices when sub != null:
+                    if (size < 12) throw new InvalidDataException($"SCX index chunk of {size} bytes at {offset} is too small");
+
                     var indexCount = BitConverter.ToInt32(data, offset + 8);
+                    if (indexCount < 0 || indexCount > (size - 12) / 2)
+                        throw new InvalidDataException($"SCX index count {indexCount} at {offset} does not fit its chunk of {size} bytes");
+
                     sub.Indices = new int[indexCount];
                     for (var j = 0; j < indexCount; j++)
                     {
@@ -178,6 +210,17 @@ public sealed class SlrrMesh
             var kind = (int)(key >> 24);
             var index = (int)(key & 0xFFFFFF);
             position += 4;
+
+            // An entry's payload may run past the chunk's end (a name at the very end does), never past the file's
+            var payload = kind switch
+            {
+                EntryValue or EntryFloat => 4,
+                EntryTexture => 28,
+                EntryName => MaterialNameSize,
+                _ => 0
+            };
+            if ((long)position + payload > data.Length)
+                throw new InvalidDataException($"SCX material entry at {position - 4} runs past the end of the file");
 
             switch (kind)
             {
@@ -221,9 +264,17 @@ public sealed class SlrrMesh
         var flags = BitConverter.ToUInt32(data, offset + 12);
         if (count <= 0 || (flags & FlagPosition) == 0) return;
 
+        if (size < 16) throw new InvalidDataException($"SCX vertex chunk of {size} bytes at {offset} is too small");
+
         var stride = (size - 16) / count;
         var normalOffset = 12 + ((flags & FlagBlendWeight) != 0 ? 4 : 0);
         var uvOffset = normalOffset + ((flags & FlagNormal) != 0 ? 12 : 0);
+
+        // A stride below what the layout needs reads one vertex's bytes as the next one's (0 reads the same bytes for
+        // all of them): a degenerate model, not a mesh
+        var minimumStride = uvOffset + ((flags & FlagUv) != 0 ? 8 : 0);
+        if (stride < minimumStride || 16 + (long)count * stride > size)
+            throw new InvalidDataException($"SCX vertex chunk at {offset}: {count} vertices of at least {minimumStride} bytes do not fit {size} bytes");
 
         sub.Vertices = new SlrrVertex[count];
         for (var i = 0; i < count; i++)

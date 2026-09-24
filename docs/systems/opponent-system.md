@@ -11,7 +11,7 @@ Stored in save file, evolves over time.
 
 | Property | Range | Purpose |
 |----------|-------|---------|
-| Skill | 80-100 | Overall driving ability |
+| Skill | 90-100 | Overall driving ability (the floor of 90 is deliberate, commit 61ca613: generation, evolution clamping and the adapter all keep to it) |
 | Aggression | 0-100 | Risk appetite |
 | Age, Gender | - | Personality modifiers |
 | Name, Portrait | - | Identity |
@@ -21,7 +21,7 @@ Generated fresh for each race, never persisted.
 
 | Input | Output |
 |-------|--------|
-| Skill → | AC AI_LEVEL |
+| Skill → | AC AI_LEVEL (clamped to 90-100) |
 | Aggression → | AC AI_AGGRESSION |
 
 ## Generation Modifiers

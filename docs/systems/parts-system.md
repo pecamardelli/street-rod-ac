@@ -38,10 +38,19 @@ private.
 
 ## Converter (`tools/SlrrPartsConverter`)
 
-`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>[*<count>],...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] [--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] [--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>,...] [--previous <earlier conversion>] [--twin <old part id>=<new part id or ->,...] [--measure <part id pattern>,...]`
+`SlrrPartsConverter <SLRR folder> <output folder> [pack filter] [--notes <folder>] [--replace <old pack>=<new pack>] [--drop <part id pattern>,...] [--rename <rpk pack>[:<selector>]=<pack id>,...] [--merge <part id pattern>=<part id>[*<count>],...] [--model <part id pattern>=<part id>,...] [--fit <part id pattern>:<slot>=<fitting>[+<fitting>],...] [--shift <part id pattern>:<slot>=<dx>/<dy>/<dz>,...] [--single <part id pattern>=<count>@<spacing>,...] [--pads <part id pattern>:<slot>=<fitting>*<count>@<spacing>@<dx>/<dy>/<dz>[@<air fitting>],...] [--name <part id pattern>=<display name>,...] [--shifts <slot_shifts.json kept for good>] [--absorb <slot_shifts.json written by the game>[;...]]... [--previous <earlier conversion>] [--twin <old part id>=<new part id or ->,...] [--measure <part id pattern>,...]`
 
 The content in use is made with `tools/convert-parts.ps1` (both Chrysler packs are installed in the SLRR folder, see
-"Replacing a pack"). It comes out as:
+"Replacing a pack"). The script takes the SLRR folder and the build notes folder from `-Slrr`/`-Notes` or the
+`SRAC_SLRR`/`SRAC_SLRR_NOTES` environment variables (no machine's paths are built in), stops when either is not there,
+builds the converter (Release) before it runs it, and exits with the converter's code: 0 for a clean run, 1 for a rule
+or folder it refused (nothing written), 2 when parts failed, packs were skipped or rpks could not be read (listed at
+the end of the output). The converter works everything out and writes the models and classes into a folder next to
+the output (`.Parts.converting`) first; only then are the models moved into each pack, `pack.json`, the aliases, the
+constants and `engine_builds.json` written whole (temp file and rename), and `_scripts` swapped for the new one. A run
+that stops half way leaves the content as the last run left it. Mod content paths (an rpk's `sourcefile`, a cfg, a
+script, an external rpk) that lead outside the SLRR folder count as missing and are reported, and a truncated rpk or
+mesh is reported and left out instead of ending the run. It comes out as:
 
 ```
 engines/chrysler, gm, ford, ford_six   the engine packs (GM has Pontiac and Cadillac too; ford_six is the Falcon's engine)

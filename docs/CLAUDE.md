@@ -68,7 +68,7 @@ NavigationService.NavigateTo[ScreenName](dependencies)
 ```
 
 ## Opponent System (AC-Agnostic)
-- `Opponent` model stores Skill (80-100) and Aggression (0-100)
+- `Opponent` model stores Skill (90-100; the floor of 90 is deliberate, commit 61ca613) and Aggression (0-100)
 - `OpponentAIAdapter` converts to AC AI parameters at runtime (never persisted)
 - Evolution happens after races via `OpponentEvolutionService`
 
@@ -85,7 +85,7 @@ NavigationService.NavigateTo[ScreenName](dependencies)
 | Crash Penalty Mode | `C:\GAMES\Street Rod AC\extension\lua\new-modes\crash-penalty-tournament\` | Penalty tracking (unused) |
 | FFB Limiter | `C:\GAMES\Street Rod AC\extension\lua\ffb-postprocess\upper-limit\` | Direct drive protection |
 | SR Race Manager (Lua app) | `apps\lua\sr_race_manager\` | Auto-start, crash detection, race results JSON, auto-quit |
-| Python Race App (legacy) | `apps\python\StreetRodRaceApp\` | Superseded by SR Race Manager, kept for reference |
+| Python Race App (removed) | was `apps\python\StreetRodRaceApp\` | Superseded by SR Race Manager; deleted 2026-09-24, in git history only |
 
 **Key Integration Points**:
 - Races launch with the `sr_race` CSP new-mode (set by `IniModificationService`)
@@ -120,5 +120,5 @@ NavigationService.NavigateTo[ScreenName](dependencies)
 - [Parts System](systems/parts-system.md)
 - [AC Launcher](ac-integration/launcher.md)
 - [CSP Lua Scripts](ac-integration/csp-lua-scripts.md)
-- [Python Race App (legacy)](ac-integration/python-app.md)
+- [Python Race App (removed, for reference)](ac-integration/python-app.md)
 - [Screens Index](screens/index.md)

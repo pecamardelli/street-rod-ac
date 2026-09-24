@@ -1,10 +1,25 @@
 # Data Storage
 
+## Where Things Live
+Everything the game writes is under `%AppData%\StreetRodAC`, never next to the exe (a build folder, or Program Files):
+
+| Path | What |
+|------|------|
+| `Catalog\catalog.db` | The catalog database (`CatalogDatabase.DefaultPath`) |
+| `Saves\{name}.db` | One save per file (`SaveDatabase.DefaultSavesDirectory`) |
+| `settings.json` | `GameSettings` (`GameSettingsService`), written atomically |
+| `AcRestore\` | Originals of what a race changes in the AC install and cfg, until they are put back (see `docs/ac-integration/ini-modification.md`, `CarDataOverlay`) |
+
+Older versions kept `catalog.db` among the saves and `settings.json` next to the exe. Each is moved over once, the
+first time the new version needs it: `catalog.db` from `Saves\` (under the catalog lock), `settings.json` from
+`AppDomain.BaseDirectory`. `catalog` is a reserved save name, and the save list ignores it and LiteDB's side files
+(`*-log`, `*-tmp`), so the catalog can never be loaded, overwritten or deleted as a save.
+
 ## Dual-Database Strategy
 
-### Catalog Database (`Data/Catalog.db`)
+### Catalog Database (`%AppData%\StreetRodAC\Catalog\catalog.db`)
 **Purpose:** Static game rules and content definitions
-**Access:** Read-only during gameplay
+**Access:** Read-only during gameplay; one opener at a time (`CatalogDatabase.Open`)
 
 | Collection | Model | Purpose |
 |------------|-------|---------|
@@ -12,7 +27,7 @@
 | carprofiles | CarProfile | Gameplay properties (price, precedence) |
 | tracks | TrackDefinition | Imported AC track identity |
 
-### Save Database (`Saves/{name}.db`)
+### Save Database (`%AppData%\StreetRodAC\Saves\{name}.db`)
 **Purpose:** Dynamic player progress
 **Access:** Read/Write
 
@@ -61,9 +76,12 @@
 - Profiles persist across AC content updates
 
 ## Files
+- `Services/Catalog/CatalogDatabase.cs`
 - `Services/Catalog/ContentCatalogRepository.cs`
 - `Services/Catalog/CarProfileRepository.cs`
-- `Services/GameState/GameStateRepository.cs`
+- `Services/Storage/GameStateRepository.cs`
+- `Services/Storage/SaveDatabase.cs`
+- `Services/Settings/GameSettingsService.cs`
 - `Models/Catalog/CarDefinition.cs`
 - `Models/Catalog/CarProfile.cs`
 - `Models/GameState/GameState.cs`
