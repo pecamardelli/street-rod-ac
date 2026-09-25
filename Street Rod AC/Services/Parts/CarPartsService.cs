@@ -243,18 +243,11 @@ namespace Street_Rod_AC.Services.Parts
                 racer.Parts.AddRange(shelf);
             }
 
-            // Cars and parts for sale: what no longer fits is not part of the offer, an engine that is gone takes
-            // the offer with it
-            changed += game.UsedCars.RemoveAll(c => c.Engine is { } e && Catalog.Get(e.DefinitionId) == null);
-            changed += game.UsedParts.RemoveAll(p => Catalog.Get(p.DefinitionId) == null);
+            // Cars and parts for sale: what no longer fits is not part of the offer
             changed += game.UsedCarMarket.RemoveAll(l => l.Parts.Any(p => Catalog.Get(p.DefinitionId) == null));
-            changed += game.NewspaperAds.Cars.RemoveAll(ad => ad.Car.Engine is { } e && Catalog.Get(e.DefinitionId) == null);
             changed += game.NewspaperAds.Parts.RemoveAll(ad => Catalog.Get(ad.Part.DefinitionId) == null);
 
-            var forSale = game.UsedCars.SelectMany(c => c.Parts)
-                .Concat(game.UsedParts)
-                .Concat(game.UsedCarMarket.SelectMany(l => l.Parts))
-                .Concat(game.NewspaperAds.Cars.SelectMany(ad => ad.Car.Parts))
+            var forSale = game.UsedCarMarket.SelectMany(l => l.Parts)
                 .Concat(game.NewspaperAds.Parts.Select(ad => ad.Part));
             changed += Renew(forSale, new List<PartInstance>());
 

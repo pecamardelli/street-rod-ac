@@ -119,6 +119,16 @@ namespace Street_Rod_AC.Models.GameState
         }
 
         /// <summary>
+        /// Brings the "current state" counters (reputation, cars owned) up to where the player stands. The events,
+        /// the milestones and the victory paths read them: a new game starts at 50 reputation, not at 0.
+        /// </summary>
+        public void SyncStanding(Player player)
+        {
+            SetCounter(MilestoneTrigger.ReputationReached, player.Stats.Reputation);
+            SetCounter(MilestoneTrigger.CarsOwned, player.Cars.Count);
+        }
+
+        /// <summary>
         /// Record a defeated opponent (for OpponentsDefeated milestone)
         /// </summary>
         public void RecordDefeatedOpponent(string opponentName)

@@ -381,20 +381,31 @@ in the police chance; hiding the cops from AC's HUD leaderboard. Any other car c
 - **Car history:** every car keeps its odometer, previous owners and wins, and its price reflects them.
 - **Parts that fail in the race:** an over-revved engine throws a rod in AC, and you find the damaged part on the workbench afterwards. Since step 2 the whole rotating assembly takes the damage together (the parts view shows it); singling out the one part that failed is still open.
 
-## Known gaps found in the analysis (not scheduled yet)
+## Step 7: career gaps (built on `feature/career-gaps`, not yet merged)
 
-- **No end-day button.** The day only ends when spending time goes past 22:00 (`GameTimeService`); `EndDayAsync` has no UI.
+The known gaps the analysis found, closed in one PR. **The user decided (2026-09-25):** only the picked victory
+path wins, and the player keeps racing after the win or goes to the main menu; about half the events become road
+races; the prize camshaft is the best one that fits. See `docs/career-system.md` ("Default Events", "Winning the
+Game") and `docs/systems/time-system.md`.
+
+- **End Day.** The garage's calendar panel has an End Day button: after asking, the rest of the day goes by, the
+  night's tasks run and the game is saved.
 - **Events:**
-  - all 10 events are drag races, with no track set;
-  - nothing caps how many events are open at once (the docs say 5);
-  - events that need reputation are hidden until the first decided race, because the `ReputationReached` counter starts at 0 while reputation starts at 50;
-  - the "rare_camshaft" special item is only logged (TODO in `RaceResultProcessor`);
-  - a pink-slip event can't take the player's car, because the event opponent has no garage.
-- **Victory:** any achieved condition wins whatever the player picked (`ActiveVictoryType` is only displayed), and winning sets `HasWonGame` without ending anything.
-- **Stats:** `Player.Stats.CarsOwned` only goes up on pink-slip wins, not on purchases.
-- **Unused data:** `GameState.UsedCars`, `GameState.UsedParts` and `NewspaperAds.Cars` are never filled.
-- **Unused screen code:** `UsedCarMarketScreenViewModel.RefreshMarketCommand` is never bound.
-- **Out-of-date docs:** `docs/career-system.md` "Not Yet Implemented" (all of it is built), `docs/systems/time-system.md`, the checkboxes in `docs/diner-refactoring-plan.md`.
+  - five are road races (Classic Showdown, Fifties Fever, Sixties Showdown, European Invasion, Chevy Challenge),
+    raced on an installed circuit; the other five stay at the strip;
+  - at most five invitations are open at once;
+  - the career's reputation and cars-owned counters follow the player (`CareerState.SyncStanding`), so events that
+    ask for reputation show from the first day;
+  - the prize camshaft is real: the dearest camshaft that fits the winning engine and beats its own, on the shelf,
+    or $500 when none does;
+  - a pink-slip event only draws a racer of the pool, who has a garage for the player's car.
+- **Victory:** only the picked path wins (any, with none picked); picking a path already reached wins at once. The
+  victory screen shows the career sheet, with Keep Racing and Main Menu.
+- **Cleared away:** `GameState.UsedCars`, `GameState.UsedParts`, `NewspaperAds.Cars` (never filled; old saves still
+  load) and the unbound `RefreshMarketCommand`. `Player.Stats.CarsOwned` already went up on purchases.
+- **Docs brought up to date:** `career-system.md`, `systems/time-system.md`, `diner-refactoring-plan.md`.
+
+Not yet seen by the user: the End Day button, the victory screen, a road-race event.
 
 ## Testing in AC without driving
 

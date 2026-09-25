@@ -351,6 +351,7 @@ namespace Street_Rod_AC.Services.Market
             player.Cars.Remove(car);
             gameState.NewspaperAds.PlayerCars.RemoveAll(ad => ad.CarInstanceId == car.InstanceId);
             player.Stats.CarsSold++;
+            gameState.Career.SyncStanding(player);
             if (player.SelectedCarInstanceId == car.InstanceId) player.SelectedCarInstanceId = player.Cars.FirstOrDefault()?.InstanceId;
         }
 

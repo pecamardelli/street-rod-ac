@@ -50,15 +50,24 @@ namespace Street_Rod_AC.Services.Career
             // Update dynamic victory conditions before checking
             UpdateDynamicConditions(gameState);
 
-            foreach (var condition in _victoryConditions.Values)
+            // The path the player set out on is the one that wins; with none picked (or one the game no longer
+            // knows), whichever is reached first
+            if (gameState.Career.ActiveVictoryType is { } active && _victoryConditions.TryGetValue(active, out var chosen))
             {
-                if (condition.IsAchieved(gameState.Career))
-                {
-                    return condition;
-                }
+                return chosen.IsAchieved(gameState.Career) ? chosen : null;
             }
 
-            return null;
+            return _victoryConditions.Values.FirstOrDefault(c => c.IsAchieved(gameState.Career));
+        }
+
+        public IVictoryCondition? ClaimVictory(GameState gameState)
+        {
+            if (gameState.Career.HasWonGame || CheckForVictory(gameState) is not { } victory)
+                return null;
+
+            gameState.Career.HasWonGame = true;
+            gameState.Career.WinningVictoryType = victory.VictoryType;
+            return victory;
         }
 
         public VictoryProgress GetProgress(string victoryType, CareerState career)

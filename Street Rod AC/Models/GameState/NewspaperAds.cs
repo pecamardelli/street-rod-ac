@@ -2,7 +2,6 @@ namespace Street_Rod_AC.Models.GameState
 {
     public class NewspaperAds
     {
-        public List<CarAd> Cars { get; set; }
         public List<PartAd> Parts { get; set; }
 
         /// <summary>The player's own cars up for sale; see <see cref="Services.Market.CarSaleService"/></summary>
@@ -10,7 +9,6 @@ namespace Street_Rod_AC.Models.GameState
 
         public NewspaperAds()
         {
-            Cars = [];
             Parts = [];
             PlayerCars = [];
         }
@@ -44,33 +42,6 @@ namespace Street_Rod_AC.Models.GameState
 
         /// <summary>Game time; after it the buyer has found another car</summary>
         public DateTime Expires { get; set; }
-    }
-
-    public class CarAd
-    {
-        public Guid AdId { get; set; }
-        public Car Car { get; set; }
-        public decimal AskingPrice { get; set; }
-        public string SellerName { get; set; }
-        /// <summary>Game time; set by whoever places the ad</summary>
-        public DateTime PostedDate { get; set; }
-        public int DaysActive { get; set; }
-
-        public CarAd()
-        {
-            AdId = Guid.NewGuid();
-            Car = new Car();
-            AskingPrice = 0m;
-            SellerName = "Unknown";
-            DaysActive = 0;
-        }
-
-        public CarAd(Car car, decimal askingPrice, string sellerName) : this()
-        {
-            Car = car;
-            AskingPrice = askingPrice;
-            SellerName = sellerName;
-        }
     }
 
     public class PartAd

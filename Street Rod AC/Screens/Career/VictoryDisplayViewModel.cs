@@ -31,7 +31,14 @@ namespace Street_Rod_AC.Screens.Career
 
         public double Opacity => IsUnlocked ? 1.0 : 0.6;
 
-        public bool CanSetActive => IsUnlocked && !IsAchieved;
+        /// <summary>The game is won already, by this path or another: there is nothing left to pursue</summary>
+        public bool GameWon { get; set; }
+
+        /// <summary>
+        /// Any unlocked path can be picked until the game is won; picking one already reached wins the game there
+        /// and then (only the picked path wins, so a path reached on the way waits for the player to pick it)
+        /// </summary>
+        public bool CanSetActive => IsUnlocked && !IsActive && !GameWon;
 
         /// <summary>
         /// Create a view model from a victory condition and career state
@@ -51,6 +58,7 @@ namespace Street_Rod_AC.Screens.Career
                 IsUnlocked = condition.IsUnlocked(career),
                 IsActive = isActive,
                 IsAchieved = condition.IsAchieved(career),
+                GameWon = career.HasWonGame,
                 ProgressPercentage = progress.Percentage,
                 ProgressText = progress.ProgressDescription,
                 CompletedSteps = progress.CompletedSteps,

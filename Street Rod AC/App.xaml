@@ -25,6 +25,7 @@
              xmlns:timeslip="clr-namespace:Street_Rod_AC.Dialogs.Timeslip"
              xmlns:repairShop="clr-namespace:Street_Rod_AC.Dialogs.RepairShop"
              xmlns:sellCar="clr-namespace:Street_Rod_AC.Dialogs.SellCar"
+             xmlns:victory="clr-namespace:Street_Rod_AC.Dialogs.Victory"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -139,6 +140,10 @@
 
             <DataTemplate DataType="{x:Type sellCar:SellCarDialogViewModel}">
                 <sellCar:SellCarDialogView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type victory:VictoryDialogViewModel}">
+                <victory:VictoryDialogView/>
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

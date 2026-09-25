@@ -70,6 +70,9 @@ namespace Street_Rod_AC.Screens.Garage
         public bool HasFreeRunTracks => FreeRunTracks.Count > 0;
         public RelayCommand SelectCarCommand { get; }
         public RelayCommand ShowCalendarCommand { get; }
+
+        /// <summary>Calls it a day: the rest of today goes by, and the game picks up tomorrow morning</summary>
+        public RelayCommand EndDayCommand { get; }
         public RelayCommand NewspaperCommand { get; }
         public RelayCommand CarDealersCommand { get; }
         public RelayCommand HitTheStreetsCommand { get; }
@@ -305,6 +308,7 @@ namespace Street_Rod_AC.Screens.Garage
             CollectCommand = new RelayCommand(OnCollect, CanCollect);
             SelectCarCommand = new RelayCommand(OnSelectCar);
             ShowCalendarCommand = new RelayCommand(OnShowCalendar);
+            EndDayCommand = new RelayCommand(OnEndDay, () => !_endingDay && !_launcher.IsExecutionLocked);
             NewspaperCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToNewspaper(_gameState)));
             CarDealersCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToDealerMap(_gameState)));
             HitTheStreetsCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToDiner(_gameState)));
@@ -723,6 +727,56 @@ namespace Street_Rod_AC.Screens.Garage
             finally
             {
                 _isLeaving = false;
+            }
+        }
+
+        private bool _endingDay;
+
+        /// <summary>Asks, then ends the day: the night's scheduled work runs, and the new day is saved</summary>
+        private void OnEndDay()
+        {
+            var left = _timeService.GetRemainingMinutesToday(_gameState);
+            var message = left > 0
+                ? $"Call it a day? The rest of today ({left / 60}h {left % 60:D2}m) goes by, and you pick up tomorrow at {_timeService.DayStartHour}:00 AM."
+                : $"Call it a day? You pick up tomorrow at {_timeService.DayStartHour}:00 AM.";
+
+            _dialogService.ShowDialog(new Dialogs.Confirmation.ConfirmationDialogViewModel(
+                _dialogService, message, "End the Day?",
+                confirmed =>
+                {
+                    if (confirmed) EndDay();
+                }));
+        }
+
+        private async void EndDay()
+        {
+            if (_endingDay) return;
+            _endingDay = true;
+            RelayCommand.RaiseCanExecuteChanged();
+
+            try
+            {
+                var result = await _timeService.EndDayAsync(_gameState);
+                _logger.Information("Day ended from the garage; now {Date}", _gameState.Date);
+                if (result.FailedTaskIds.Count > 0)
+                    _logger.Warning("The night's work did not all get done: {Tasks}", string.Join(", ", result.FailedTaskIds));
+
+                if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not end the day");
+                _dialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(
+                    _dialogService, $"The day could not be ended:\n\n{ex.Message}", "End of Day"));
+            }
+            finally
+            {
+                _endingDay = false;
+                RefreshCalendarDisplay();
+                OnPropertyChanged(nameof(BankrollDisplay));
+                // The night may have brought an offer for a car in the paper, or the impound's release date
+                OnPropertyChanged(nameof(SellButtonText));
+                RaiseImpoundChanged();
             }
         }
 

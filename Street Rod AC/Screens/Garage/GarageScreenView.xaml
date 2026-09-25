@@ -266,7 +266,16 @@
                                 <TextBlock Text="{Binding CurrentTimeDisplay}"
                                            FontSize="{StaticResource FontSizeSubheading}"
                                            FontWeight="SemiBold"
-                                           Foreground="{StaticResource AccentPrimaryBrush}"/>
+                                           Foreground="{StaticResource AccentPrimaryBrush}"
+                                           VerticalAlignment="Center"/>
+                                <Button Content="End Day"
+                                        Command="{Binding EndDayCommand}"
+                                        Style="{StaticResource DialogSecondaryButtonStyle}"
+                                        ToolTip="Call it a day: the game picks up tomorrow morning"
+                                        Height="30"
+                                        Padding="14,0"
+                                        Margin="20,0,0,0"
+                                        VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <!-- Calendar Grid -->

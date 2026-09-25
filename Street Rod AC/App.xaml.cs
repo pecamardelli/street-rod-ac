@@ -522,7 +522,7 @@ namespace Street_Rod_AC
 
                 foreach (var message in orphanedResult.PlayerMessages)
                 {
-                    DialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(DialogService, message.Text, message.Title));
+                    Dialogs.PlayerMessageDialogs.Show(DialogService, message, () => NavigationService.NavigateToMainMenu());
                 }
             }
             catch (Exception ex)

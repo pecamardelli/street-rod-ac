@@ -5,8 +5,14 @@ Game time progression with scheduled tasks that execute at intervals.
 
 ## Core Components
 
-### GameState.CurrentDate
-The in-game date. Advances when player performs activities.
+### GameState.Date
+The in-game date and time. Advances when the player does things (`GameAction` tariffs in
+`Services/Time/GameAction.cs`). The day runs from 8:00 to 22:00 (`GameTimeService`); time spent past 22:00 ends
+the day and the game picks up at 8:00 the next morning.
+
+### Ending the day
+The garage's calendar panel has an **End Day** button: after asking, `GameTimeService.EndDayAsync` skips the
+rest of the day to the next morning, the night's tasks run, and the game is saved.
 
 ### GameTimeScheduler
 Executes registered tasks when time advances.
@@ -35,7 +41,12 @@ Stored in `GameState.ScheduledTasks`:
 
 | Task | Interval | Purpose |
 |------|----------|---------|
+| OpponentReviewTask | 1 day | Rivals buy, repair, tune, go broke and come back |
+| RaceSimulatorTask | 1 day | Rivals race each other |
+| EventGenerationTask | 1 day | Clears expired invitations and opens new ones; counts `DaysPlayed` |
+| CarAdsReviewTask | 1 day | Buyers answer the player's car ads |
 | MarketRefreshTask | 1 day | Refresh used car market |
+| PartsAdsRefreshTask | 1 day | Refresh the used parts ads |
 
 ## Adding a New Task
 
@@ -55,16 +66,15 @@ Stored in `GameState.ScheduledTasks`:
    ```
 
 ## Time Advancement
-Activities that advance time should call:
-```csharp
-await Scheduler.OnTimeAdvancedAsync(gameState, oldDate, newDate);
-```
+Activities that advance time call `IGameTimeService.SpendTimeAsync` (a `GameAction` or minutes), which runs the
+scheduler once for each day that turns over. Nothing calls the scheduler directly.
 
 ## Files
 - `Services/Scheduler/GameTimeScheduler.cs`
 - `Services/Scheduler/IGameTimeScheduler.cs`
 - `Services/Scheduler/IScheduledTask.cs`
-- `Services/Scheduler/Tasks/MarketRefreshTask.cs`
+- `Services/Scheduler/Tasks/*.cs`
+- `Services/Time/GameTimeService.cs`
 - `Models/GameState/ScheduledTaskState.cs`
 
 ## Travel

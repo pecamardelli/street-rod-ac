@@ -254,7 +254,9 @@ namespace Street_Rod_AC.Screens.Newspaper
                 {
                     var errorDialog = new InformationDialogViewModel(
                         _dialogService,
-                        "No opponent available for this event.",
+                        eventDef.IsPinkSlip
+                            ? "Nobody is putting their pink slip up for this one today. Try again tomorrow."
+                            : "No opponent available for this event.",
                         "Cannot Enter Event");
                     _dialogService.ShowDialog(errorDialog);
                     return;
