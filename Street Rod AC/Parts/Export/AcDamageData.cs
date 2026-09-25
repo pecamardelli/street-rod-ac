@@ -56,5 +56,9 @@ public static class AcDamageData
         return files;
     }
 
+    /// <remarks>
+    /// Helpers.Unit.Clamp01 with ifNotFinite 0, kept here because EngineBench links this file without the helpers:
+    /// a bend or a wear that is not a number counts as none, so the data is left as the car had it
+    /// </remarks>
     private static double Clamp01(double value) => double.IsFinite(value) ? Math.Clamp(value, 0, 1) : 0;
 }

@@ -57,6 +57,7 @@ namespace Street_Rod_AC.Models.GameState
         /// <summary>What collecting the car from the impound costs; 0 when it is not impounded</summary>
         public decimal ImpoundFee { get; set; }
 
+        [LiteDB.BsonIgnore]
         public bool IsImpounded => ImpoundedUntil != null;
 
         /// <summary>

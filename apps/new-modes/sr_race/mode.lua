@@ -15,8 +15,8 @@
     the race; a rival's is held where it stopped, and the player still has to finish
   - Runs the police chase when the career sends cops (race.ini [STREET_ROD] POLICE): they wait hidden on the grid
     and come after the racers part way round the lap, with lights and a siren. A driver who stops with a cop on
-    top of them is busted; the player who stays far enough ahead for long enough gets away. With cops on their
-    tail the player has to lose them before the race is over, finish line or not
+    top of them is busted; the player who stays far enough ahead for long enough gets away. The line is home: a
+    player who crosses it with cops still on their tail got away (the harness pins this: the_line_is_home)
   - Reports the race to the career, one JSON file per race, written once, and quits Assetto Corsa
 
   Full control: every race, drag races too, is a one-lap race session (Street Corsa never asks AC for its drag
@@ -34,7 +34,8 @@
   to finish.
 ]]
 
-local SCRIPT_VERSION = "3.4.0"
+-- manifest.ini [ABOUT] VERSION goes with it
+local SCRIPT_VERSION = "3.5.0"
 -- 1.1: session.context_id, participants[].car_index and participants[].is_player
 -- 1.2: session.end_reason, participants[].false_start, participants[].condition
 -- 1.3: participants[].disqualified, session.race_type
@@ -232,9 +233,6 @@ local chase = nil
 
 -- The racers (never the police) in the order they crossed the line, by car index
 local finishOrder = {}
-
--- The player's race as decided at the line (true: won); nil before. A chase can go on past it.
-local raceWon = nil
 
 -- Forward declaration: endSession writes the output, which is defined further down
 local writeSessionOutput
@@ -592,13 +590,7 @@ local function crash(carIndex, data, g)
   if carIndex == 0 then
     playerCrashed = true
     ac.log(string.format('[Street Corsa] PLAYER CRASHED! Intensity: %.1fG', g))
-    if raceWon ~= nil then
-      -- Past the line, running from the cops: the race stands, and the cops have them
-      decideChase('player', 'BUSTED')
-      endSession('FINISHED', raceWon)
-    else
-      endSession('CRASH')
-    end
+    endSession('CRASH')
   else
     ac.log(string.format('[Street Corsa] Car %d crashed - Intensity: %.1fG', carIndex, g))
     holdAI(carIndex)
@@ -795,30 +787,30 @@ local function checkFalseStart()
 end
 
 -- The race is over when the player crosses the line, whoever got there first: the player always gets to finish.
--- With cops on their tail, the player still has to lose them: the race is decided at the line, and the session
--- ends with the chase.
+-- The session ends there too, chase or not: a cop still on the player's tail at the line has lost him.
 local function checkRaceFinish()
-  if raceEnded or raceWon ~= nil then return end
+  if raceEnded then return end
 
   local playerData = carData[0]
   if not playerData then return end
 
   if playerData.lapsCompleted >= 1 then
+    local won
     if #police > 0 then
       -- The police are in AC's race too, and one put down ahead can lead it: the racers' own order decides
-      raceWon = finishOrder[1] == 0
-      ac.log(string.format('[Street Corsa] Race finished - %s', raceWon and 'WON' or 'LOST'))
+      won = finishOrder[1] == 0
+      ac.log(string.format('[Street Corsa] Race finished - %s', won and 'WON' or 'LOST'))
     else
       local playerPosition = ac.getCarLeaderboardPosition(0)
       if playerPosition <= 0 then
         playerPosition = ac.getCar(0).racePosition
       end
-      raceWon = playerPosition == 1
+      won = playerPosition == 1
       ac.log(string.format('[Street Corsa] Race finished - Position: %d', playerPosition))
     end
 
     -- The line is home: a cop still after the player has lost him (endSession calls it a getaway)
-    endSession('FINISHED', raceWon)
+    endSession('FINISHED', won)
   end
 end
 
@@ -845,16 +837,19 @@ local function carCondition(carIndex)
   pcall(function() condition.oil_pressure = round(car.oilPressure, 2) end)
   pcall(function() condition.fuel_litres = round(car.fuel, 2) end)
 
+  -- One entry per corner, in AC's order, whatever fails to read: a wheel that cannot be read keeps its place, never
+  -- leaves a gap that moves the later wheels into the wrong corners. Each entry names its corner, which also keeps an
+  -- unread one an object in the JSON (an empty table is written as []).
   local wheels = {}
   for w = 0, 3 do
+    local entry = { wheel = w }
+    wheels[w + 1] = entry
     pcall(function()
       local wheel = car.wheels[w]
-      wheels[#wheels + 1] = {
-        tyre_wear = round(wheel.tyreWear, 4),
-        tyre_virtual_km = round(wheel.tyreVirtualKM, 3),
-        tyre_blown = wheel.isBlown,
-        suspension_damage = round(wheel.suspensionDamage, 4)
-      }
+      entry.tyre_wear = round(wheel.tyreWear, 4)
+      entry.tyre_virtual_km = round(wheel.tyreVirtualKM, 3)
+      entry.tyre_blown = wheel.isBlown
+      entry.suspension_damage = round(wheel.suspensionDamage, 4)
     end)
   end
   condition.wheels = wheels
@@ -1565,7 +1560,7 @@ local function updateChase(dt)
     local player = ac.getCar(0)
     if (player and player.speedKmh < 3) or sessionDuration - chase.pullOverAt >= PULL_OVER_SECONDS then
       chase.pullOverAt = nil
-      if raceWon ~= nil then endSession('FINISHED', raceWon) else endSession('BUSTED') end
+      endSession('BUSTED')
     end
     return
   end
@@ -1575,7 +1570,7 @@ local function updateChase(dt)
     if not ok then ac.log('[Street Corsa] Speed traps: ' .. tostring(err)) end
     if not chase.started then return end
   elseif not chase.started then
-    if raceWon == nil and carData[0].distanceKm * 1000 >= chase.spotMetres then
+    if carData[0].distanceKm * 1000 >= chase.spotMetres then
       local ok, err = pcall(startChase)
       if not ok then
         ac.log('[Street Corsa] The chase could not start: ' .. tostring(err))
@@ -1647,11 +1642,7 @@ local function updateChase(dt)
       for _, cop in ipairs(police) do
         if cop.target == 0 and (cop.state == 'CHASING' or cop.state == 'ROADBLOCK') then putAway(cop) end
       end
-      if raceWon ~= nil then
-        endSession('FINISHED', raceWon)
-      else
-        pcall(ac.setMessage, 'Got away', giveUp and 'The cops gave up on you. Now win the race!' or 'You lost the cops. Now win the race!')
-      end
+      pcall(ac.setMessage, 'Got away', giveUp and 'The cops gave up on you. Now win the race!' or 'You lost the cops. Now win the race!')
     end
   end
 

@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- xunit.v3 test projects are executables, run by Microsoft.Testing.Platform (global.json opts dotnet test in) -->
+    <OutputType>Exe</OutputType>
     <RootNamespace>StreetRodAC.Tests</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -16,8 +18,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+    <PackageReference Include="xunit.v3" Version="4.0.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

@@ -35,11 +35,13 @@ namespace Street_Rod_AC.Services.Configuration
         private readonly AcConfigBackup _backup;
         private readonly IAppLogger _logger;
 
-        public IniModificationService() : this(
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Assetto Corsa", "cfg"),
-            AppSettings.AcRestorePath)
+        public IniModificationService() : this(DefaultCfgDirectory, AppSettings.AcRestorePath)
         {
         }
+
+        /// <summary>AC's Documents\Assetto Corsa\cfg</summary>
+        public static string DefaultCfgDirectory =>
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Assetto Corsa", "cfg");
 
         /// <param name="cfgDirectory">AC's Documents\Assetto Corsa\cfg</param>
         /// <param name="restoreRoot">Where the originals wait (%AppData%\StreetRodAC\AcRestore)</param>

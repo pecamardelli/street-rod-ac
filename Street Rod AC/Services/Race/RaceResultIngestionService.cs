@@ -9,15 +9,20 @@ namespace Street_Rod_AC.Services.Race
 {
     /// <summary>
     /// Main orchestrator for race result ingestion pipeline
-    /// Implements 8-step pipeline for race result ingestion
+    /// Implements the ingestion pipeline: filter, validate, dedup, match the race, apply and save, archive
     ///
     /// A result file is tied to its race by the context id the launcher wrote into race.ini and the Lua app
     /// wrote back (K1). It is applied only with that race's context: the race just run, or the save's pending
-    /// race for a file left over when the app closed during a race. A file for any other race is quarantined
-    /// with the reason, so a leftover never pays out the current race's wager.
+    /// race for a file left over when the app closed during a race. A file for another race is never applied
+    /// here, so a leftover never pays out the current race's wager: it stays in the inbox for its own save (another
+    /// save's race), or is quarantined with the reason when this save has settled that race already or the file has
+    /// waited a month. Files that name no race are judged by their start time.
+    ///
+    /// A file is applied and saved while it is still in the inbox, and archived after: the app killed at any point
+    /// leaves either a race still to apply or one the next pass recognises as done, never a race without its file.
     ///
     /// A file that is there but cannot be dealt with right now (locked by a virus scanner just after the Lua
-    /// write, the dedup read or the archive move failing, the save failing) is never taken for "no result":
+    /// write, the dedup or settled check failing, the save failing) is never taken for "no result":
     /// it stays in the inbox, the race stays pending, and a later pass settles it. A race is forfeited only
     /// when AC ran, has exited, and no file of that race exists at all.
     /// </summary>
@@ -28,6 +33,12 @@ namespace Street_Rod_AC.Services.Race
         /// clock has whole seconds. A file that started before its race was even set up is from another race.
         /// </summary>
         private static readonly TimeSpan ContextClockSlack = TimeSpan.FromSeconds(5);
+
+        /// <summary>
+        /// How long a file of a race no loaded save is waiting on stays in the inbox for its own save. Older than
+        /// this (by the time it was written) it is taken for a leftover of a save that is gone, and quarantined.
+        /// </summary>
+        private static readonly TimeSpan LeftoverAge = TimeSpan.FromDays(30);
 
         private readonly IRaceResultValidator _validator;
         private readonly SessionDeduplicator _deduplicator;
@@ -385,6 +396,7 @@ namespace Street_Rod_AC.Services.Race
                     .ToList();
 
                 result.FilesIgnored = files.Length - candidates.Count;
+                await QuarantineOrphanedTempFilesAsync(files, context, result);
                 _logger.Information("{Count} candidate files after first-pass filtering ({Ignored} ignored)",
                     candidates.Count, result.FilesIgnored);
 
@@ -473,6 +485,11 @@ namespace Street_Rod_AC.Services.Race
                     return;
                 }
 
+                // Step 4a: A file of another race that is still open somewhere (another save's, or this save's once
+                // it is loaded again) is not this pass's to judge: it stays in the inbox for its own save
+                if (await IsLeftForItsOwnSaveAsync(file, raceResult, context, gameState, result))
+                    return;
+
                 // Step 4b: Does the file belong to the race in hand, and is that race still open? (A settled-check
                 // that cannot be read leaves the file for the next pass, as the dedup check does.)
                 var mismatch = ContextMismatch(raceResult, context);
@@ -500,7 +517,43 @@ namespace Street_Rod_AC.Services.Race
                     return;
                 }
 
-                // Step 5: Ownership transfer (atomic move)
+                WarnOnRaceTypeMismatch(raceResult, context!, file);
+
+                // Step 5: Processing, with the file still in the inbox. On the thread that owns the game state; the
+                // processor changes nothing before everything it needs from the file has been worked out, and saves
+                // the race with its session record in one transaction. Until that commits the file is where the next
+                // pass looks for it: the app killed at any point before leaves the race to be applied again, never
+                // forfeited for want of a file.
+                try
+                {
+                    var messages = _processor.ProcessRaceResult(raceResult, context!, gameState);
+                    result.PlayerMessages.AddRange(messages);
+                    _logger.Information("Successfully processed session {SessionId}", raceResult.Session.SessionId);
+                    result.FilesProcessed++;
+                }
+                catch (RaceNotSavedException ex)
+                {
+                    // The race is fine, the save was not: the game is as it was, and the file stays in the inbox
+                    // for the next pass
+                    _logger.Error(ex, "Session {SessionId} could not be saved - it is tried again on the next pass", raceResult.Session.SessionId);
+                    result.Errors.Add($"Saving failed for {file.Name}: {ex.Message}");
+                    result.FilesDeferred++;
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Failed to process session {SessionId}", raceResult.Session.SessionId);
+                    result.Errors.Add($"Processing failed for {file.Name}: {ex.Message}");
+
+                    // Quarantine the file for investigation
+                    await QuarantineFileAsync(file, "Processing failed", new[] { ex.Message });
+                    result.FilesQuarantined++;
+                    result.FilesQuarantinedForContext++;
+                    return;
+                }
+
+                // Step 6: Into the archive, now that the save has it. A file that cannot move stays in the inbox,
+                // where the next pass finds its session in the save and drops it as a duplicate.
                 var archivePath = GetArchivePath(raceResult.Session.SessionId, gameState);
                 try
                 {
@@ -513,51 +566,8 @@ namespace Street_Rod_AC.Services.Race
                 }
                 catch (Exception ex)
                 {
-                    // Still in the inbox (a lock, the archive folder unwritable): the next pass tries again
-                    _logger.Error(ex, "Failed to move file {FileName} to archive - it stays for the next pass", file.Name);
-                    result.Errors.Add($"Move failed for {file.Name}: {ex.Message}");
-                    result.FilesDeferred++;
-                    return;
-                }
-
-                // Step 6: Second-pass validation
-                var revalidation = await _validator.ValidateFileAsync(archivePath);
-                if (!revalidation.IsValid)
-                {
-                    _logger.Error("File {FileName} corrupted during move - quarantining", file.Name);
-                    await QuarantineFileAsync(new FileInfo(archivePath), revalidation);
-                    result.FilesQuarantined++;
-                    result.FilesQuarantinedForContext++;
-                    return;
-                }
-
-                // Step 7: Processing. On the thread that owns the game state; the processor changes nothing
-                // before everything it needs from the file has been worked out.
-                try
-                {
-                    var messages = _processor.ProcessRaceResult(raceResult, context!, gameState);
-                    result.PlayerMessages.AddRange(messages);
-                    _logger.Information("Successfully processed session {SessionId}", raceResult.Session.SessionId);
-                    result.FilesProcessed++;
-                }
-                catch (RaceNotSavedException ex)
-                {
-                    // The race is fine, the save was not: the game is as it was, and the file goes back to the
-                    // inbox for the next pass
-                    _logger.Error(ex, "Session {SessionId} could not be saved - it is tried again on the next pass", raceResult.Session.SessionId);
-                    result.Errors.Add($"Saving failed for {file.Name}: {ex.Message}");
-                    await ReturnToInboxAsync(archivePath, file);
-                    result.FilesDeferred++;
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error(ex, "Failed to process session {SessionId}", raceResult.Session.SessionId);
-                    result.Errors.Add($"Processing failed for {file.Name}: {ex.Message}");
-
-                    // Quarantine the file for investigation
-                    await QuarantineFileAsync(new FileInfo(archivePath), "Processing failed", new[] { ex.Message });
-                    result.FilesQuarantined++;
-                    result.FilesQuarantinedForContext++;
+                    _logger.Warning("Session {SessionId} is applied but {FileName} could not go to the archive ({Error}) - the next pass drops it as a duplicate",
+                        raceResult.Session.SessionId, file.Name, ex.Message);
                 }
             }
             catch (Exception ex)
@@ -570,20 +580,114 @@ namespace Street_Rod_AC.Services.Race
         }
 
         /// <summary>
-        /// A result whose save failed goes back from the archive to the inbox, where the next pass finds it. If it
-        /// cannot, it is quarantined with the reason (it is then kept, and its race is not taken for one without a
-        /// result).
+        /// True when the file has been dealt with here because it names a race other than the one in hand: left in
+        /// the inbox for its own save (counted as ignored), or quarantined when this save has already settled that
+        /// race or the file has waited longer than <see cref="LeftoverAge"/>. False for a file of the race in hand
+        /// and one without a readable context id, which the usual checks judge.
         /// </summary>
-        private async Task ReturnToInboxAsync(string archivePath, FileInfo original)
+        private async Task<bool> IsLeftForItsOwnSaveAsync(FileInfo file, RaceResultJson raceResult, RaceContext? context, GameState gameState, IngestionResult result)
         {
+            if (!Guid.TryParse(raceResult.Session.ContextId, out var fileContextId) || fileContextId == context?.ContextId)
+                return false;
+
+            bool settledHere;
             try
             {
-                File.Move(archivePath, original.FullName, overwrite: false);
+                settledHere = await _sessionRepository.IsContextSettledAsync(gameState.SaveName, fileContextId);
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "{FileName} could not go back to the inbox - quarantining it", original.Name);
-                await QuarantineFileAsync(new FileInfo(archivePath), "Saving failed and the file could not go back to the inbox", new[] { ex.Message });
+                _logger.Error(ex, "Could not check whether race {ContextId} was settled - {FileName} stays for the next pass", fileContextId, file.Name);
+                result.Errors.Add($"Settled check failed for {file.Name}: {ex.Message}");
+                result.FilesDeferred++;
+                return true;
+            }
+
+            string reason;
+            if (settledHere)
+            {
+                reason = $"it belongs to race {fileContextId}, which this save has already settled";
+            }
+            else if (OlderThan(file, LeftoverAge))
+            {
+                reason = $"it belongs to race {fileContextId}, and no save has taken it in {LeftoverAge.TotalDays:0} days";
+            }
+            else
+            {
+                // Another save's race (or a race of a save that is not loaded): quarantining it would forfeit that
+                // race when its save is loaded again
+                _logger.Information("File {FileName} belongs to race {FileContextId}, not a race of this save - left in the inbox for its own save",
+                    file.Name, fileContextId);
+                result.FilesIgnored++;
+                return true;
+            }
+
+            _logger.Warning("File {FileName} is not applied: {Reason} - quarantining", file.Name, reason);
+            await QuarantineFileAsync(file, "Not applied", new[] { reason });
+            result.FilesQuarantined++;
+            return true;
+        }
+
+        /// <summary>Whether the file was last written longer ago than <paramref name="age"/>; false when that cannot be read</summary>
+        private static bool OlderThan(FileInfo file, TimeSpan age)
+        {
+            try
+            {
+                file.Refresh();
+                return file.LastWriteTimeUtc < DateTime.UtcNow - age;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// The race mode writes <c>{session}.json.tmp</c> and renames it at once: one still there was cut short (AC
+        /// killed in between, or the rename failed). It is quarantined with a warning, and counts as the race in
+        /// hand's when it was written after that race was set up. Only once AC has exited: while it may run, the
+        /// file may be being written right now.
+        /// </summary>
+        private async Task QuarantineOrphanedTempFilesAsync(string[] files, RaceContext? context, IngestionResult result)
+        {
+            var temps = files.Where(f => f.EndsWith(".json.tmp", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (temps.Count == 0)
+                return;
+
+            if (_isAcRunning() != false)
+            {
+                _logger.Information("{Count} unfinished result file(s) in the inbox, and Assetto Corsa may be running: left alone", temps.Count);
+                return;
+            }
+
+            foreach (var path in temps)
+            {
+                var file = new FileInfo(path);
+                _logger.Warning("File {FileName} is a race result the race mode never finished writing - quarantining", file.Name);
+                var writtenForContext = context != null && WrittenSince(file, context);
+                await QuarantineFileAsync(file, "Unfinished result",
+                    new[] { "The race mode wrote this file but never renamed it to .json: Assetto Corsa was killed in between, or the rename failed" });
+                result.FilesIgnored--;
+                result.FilesQuarantined++;
+                if (writtenForContext) result.FilesQuarantinedForContext++;
+            }
+        }
+
+        /// <summary>
+        /// The file's race_type is the race the mode ran; the context's is the one the career set up. They should
+        /// agree. The context decides, so a mismatch is only logged.
+        /// </summary>
+        private void WarnOnRaceTypeMismatch(RaceResultJson raceResult, RaceContext context, FileInfo file)
+        {
+            var fileType = raceResult.Session.RaceType;
+            if (string.IsNullOrWhiteSpace(fileType))
+                return;
+
+            var expected = context.RaceType == RaceType.DragRace ? "DRAG" : "ROAD";
+            if (!string.Equals(fileType, expected, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.Warning("File {FileName} says the race was {FileRaceType}, but race {ContextId} is a {RaceType} ({Expected}) - applied as the race was set up",
+                    file.Name, fileType, context.ContextId, context.RaceType, expected);
             }
         }
 
@@ -665,6 +769,7 @@ namespace Street_Rod_AC.Services.Race
                 case ValidationFailureReason.InvalidTimestamp:
                 case ValidationFailureReason.InvalidParticipantCount:
                 case ValidationFailureReason.InvalidParticipantData:
+                case ValidationFailureReason.TooLarge:
                     // Quarantine - looks like our file but invalid. Which race it was cannot be read from it; one
                     // written after the race in hand was set up is taken to be that race's.
                     _logger.Warning("File {FileName} failed content validation - quarantining", file.Name);

@@ -101,6 +101,9 @@ namespace Street_Rod_AC.Screens.Career
         {
             Victories.Clear();
 
+            // As of now, not as of the last race
+            _victoryService.RefreshStanding(_gameState);
+
             foreach (var condition in _victoryService.GetAllVictoryConditions())
             {
                 var vm = VictoryDisplayViewModel.FromCondition(condition, _gameState.Career);

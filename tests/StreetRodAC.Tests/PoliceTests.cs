@@ -220,46 +220,13 @@ public sealed class PoliceTests : IDisposable
     private readonly RaceResultProcessorTests.FakeRepository _repository = new();
 
     private RaceResultProcessor Processor() =>
-        new(_repository, new RaceSessionRepository(new SaveDatabase(_temp.Combine("unused-saves"))), new NoCareer(), new NoEvents());
-
-    private sealed class NoCareer : Street_Rod_AC.Services.Career.ICareerProgressService
-    {
-        public Street_Rod_AC.Services.Career.CareerProgressResult CheckProgressAfterRace(GameState gameState) => new();
-    }
-
-    private sealed class NoEvents : Street_Rod_AC.Services.Career.IRaceEventService
-    {
-        public IEnumerable<Street_Rod_AC.Models.Career.Events.RaceEventDefinition> GetAllEventDefinitions() => [];
-        public Street_Rod_AC.Models.Career.Events.RaceEventDefinition? GetEventDefinition(string eventId) => null;
-        public IEnumerable<Street_Rod_AC.Models.Career.Events.RaceEventDefinition> GetEligibleEvents(CareerState career) => [];
-        public IEnumerable<Street_Rod_AC.Models.Career.Events.RaceEventInstance> GetActiveEvents(CareerState career, DateTime currentTime) => [];
-        public List<Street_Rod_AC.Models.Career.Events.RaceEventInstance> GenerateEvents(CareerState career, DateTime currentTime, double pinkSlipFactor = 1.0) => [];
-        public bool CanEnterEvent(string eventId, string carDefinitionId, Car? carInstance, CareerState career) => false;
-        public Street_Rod_AC.Models.Career.Events.EventReward? CompleteEvent(Guid eventInstanceId, bool playerWon, CareerState career, DateTime completedAt) => null;
-        public int CleanupExpiredEvents(CareerState career, DateTime currentTime) => 0;
-    }
+        new(_repository, new RaceSessionRepository(new SaveDatabase(_temp.Combine("unused-saves"))), new RaceFakes.FakeCareer(), new RaceFakes.FakeEvents());
 
     private static (GameState State, RaceContext Context, Car PlayerCar, Opponent Rival, Car RivalCar) World(decimal wager = 500m, bool pinkSlip = false)
     {
-        var state = GameState.CreateNew("Player");
-        state.SaveName = "test";
-        state.Date = Night;
-        var playerCar = new Car("car_a") { InstanceId = Guid.NewGuid(), EngineHealth = 1, TransmissionHealth = 1, BodyCondition = 1, TireCondition = 1 };
-        state.Player.Cars.Add(playerCar);
-        state.Player.SelectedCarInstanceId = playerCar.InstanceId;
-
-        var rival = new Opponent("Rival", 30, Gender.Male, 95, 50) { Money = 5000m };
-        var rivalCar = new Car("car_b") { InstanceId = Guid.NewGuid(), EngineHealth = 1, TransmissionHealth = 1, BodyCondition = 1, TireCondition = 1 };
-        rival.Cars.Add(rivalCar);
-        state.Racers.AddRacer(rival);
-
-        var context = new RaceContext
-        {
-            PlayerName = "Player", OpponentName = "Rival", PlayerCarInstanceId = playerCar.InstanceId, OpponentCarInstanceId = rivalCar.InstanceId,
-            CashWager = wager, IsPinkSlip = pinkSlip, TrackId = "ks_highlands", RaceType = RaceType.Circuit
-        };
-        state.PendingRace = context;
-        return (state, context, playerCar, rival, rivalCar);
+        var world = RaceFakes.World(wager, pinkSlip, RaceType.Circuit);
+        world.State.Date = Night;
+        return (world.State, world.Context, world.PlayerCar, world.Rival, world.RivalCar);
     }
 
     /// <summary>A road race the player won at the line, and how the chase went for each</summary>
@@ -382,14 +349,14 @@ public sealed class PoliceTests : IDisposable
     }
 
     [Fact]
-    public void An_impounded_car_cannot_be_sold()
+    public async Task An_impounded_car_cannot_be_sold()
     {
         var (state, _, car, _, _) = World();
         PoliceRules.Impound(car, Night, 0);
 
         // Refused before the market or the clock are asked anything
         var sale = new Street_Rod_AC.Services.Market.CarSaleService(null!, null!, _repository);
-        var result = sale.SellToDealerAsync(state, car).GetAwaiter().GetResult();
+        var result = await sale.SellToDealerAsync(state, car);
 
         Assert.False(result.Succeeded);
         Assert.Contains(car, state.Player.Cars);

@@ -1,6 +1,8 @@
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Parts;
 
@@ -28,7 +30,7 @@ namespace Street_Rod_AC.Services.Market
         /// (a car in better shape than the average one the base price stands for)
         /// </summary>
         public static decimal ConditionFactor(double condition) =>
-            0.5m + (decimal)Math.Clamp(double.IsFinite(condition) ? condition : 0, 0, 1) * 0.6m;
+            0.5m + (decimal)Unit.Clamp01(condition, ifNotFinite: 0) * 0.6m;
 
         /// <summary>One condition for the whole car: the average of engine, gearbox, body and tyres</summary>
         public static double ConditionOf(Car car) =>
@@ -48,6 +50,25 @@ namespace Street_Rod_AC.Services.Market
         public static decimal RoundToHundred(decimal price) => Math.Round(price / 100) * 100;
 
         /// <summary>
+        /// What this very car is worth, the one way every part of the game asks: its model's base price (see
+        /// <see cref="ValueOf"/>), or, for a model the catalog has no price for, what was paid for the car.
+        /// </summary>
+        /// <param name="profileOf">The profile of a car definition id</param>
+        /// <param name="definitionOf">The catalog entry of a car definition id; only asked for a priced model</param>
+        /// <param name="stockBuildOf">The factory build of a catalog entry; by default the parts service's</param>
+        public static decimal WorthOf(Car car, Func<string, CarProfile?> profileOf, Func<string, CarDefinition?> definitionOf,
+            ICarPartsService? parts, Func<CarDefinition, RatedBuild?>? stockBuildOf = null)
+        {
+            var profile = profileOf(car.DefinitionId);
+            if (profile == null || profile.BasePrice <= 0) return PaidFor(car);
+
+            return ValueOf(car, profile.BasePrice, parts, definitionOf(car.DefinitionId), stockBuildOf);
+        }
+
+        /// <summary>A car nobody can price is worth what was paid for it: the best guess there is</summary>
+        public static decimal PaidFor(Car car) => RoundToHundred(car.PurchasePrice);
+
+        /// <summary>
         /// What this very car is worth: its condition and, when the parts catalog is there, what has been done to
         /// its engine. The engine is weighed at new prices against the factory build's parts, scaled by the car's
         /// condition; putting the factory engine together to weigh it worn would take a dyno run.
@@ -55,10 +76,33 @@ namespace Street_Rod_AC.Services.Market
         /// <param name="basePrice">The profile's base price of the car's model</param>
         /// <param name="parts">Null, or no catalog: the engine is taken to be the factory one</param>
         /// <param name="definition">The car's catalog entry, to find its factory engine; null for the same</param>
-        public static decimal ValueOf(Car car, decimal basePrice, ICarPartsService? parts = null, CarDefinition? definition = null)
+        /// <param name="stockBuildOf">The factory build of a catalog entry; by default the parts service's</param>
+        public static decimal ValueOf(Car car, decimal basePrice, ICarPartsService? parts = null, CarDefinition? definition = null,
+            Func<CarDefinition, RatedBuild?>? stockBuildOf = null)
         {
             var condition = ConditionOf(car);
-            return Value(basePrice, condition, ModificationsOf(car, condition, parts, definition));
+            return Value(basePrice, condition, ModificationsOf(car, condition, parts, definition, stockBuildOf));
+        }
+
+        /// <summary>Worked on: the engine is not made of the factory build's parts</summary>
+        public static bool IsModified(PartInstance engine, RatedBuild stock)
+        {
+            var factory = stock.Build.Parts.Where(p => p.Part != null).Select(p => p.Part!).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            return !engine.SelfAndDescendants().All(p => factory.Contains(p.DefinitionId));
+        }
+
+        /// <summary>
+        /// What has been put into <paramref name="engine"/> beyond the factory build that shows in the car's worth:
+        /// its parts' new prices against the factory build's, scaled by the car's condition. The one rule for a
+        /// worked-on engine, on a lot and in anybody's hands.
+        /// </summary>
+        public static decimal EngineModifications(PartsCatalog catalog, PartInstance engine, RatedBuild stock, double condition)
+        {
+            var engineNew = engine.SelfAndDescendants().Sum(p => catalog.Get(p.DefinitionId) is { } d ? PartPricing.NewPrice(d) : 0);
+            var stockNew = stock.Build.Parts.Sum(p => p.Part != null && catalog.Get(p.Part) is { } d ? PartPricing.NewPrice(d) : 0);
+
+            var shape = Unit.Clamp01(condition, ifNotFinite: 0);
+            return ModificationsValue(engineNew * shape, stockNew * shape);
         }
 
         /// <remarks>
@@ -66,30 +110,21 @@ namespace Street_Rod_AC.Services.Market
         /// that must not fail over it - a pink-slip challenge in the diner, a race nobody watches - so a failure
         /// counts the engine as the factory one, the way a listing whose engine could not be described still sells.
         /// </remarks>
-        private static decimal ModificationsOf(Car car, double condition, ICarPartsService? parts, CarDefinition? definition)
+        private static decimal ModificationsOf(Car car, double condition, ICarPartsService? parts, CarDefinition? definition,
+            Func<CarDefinition, RatedBuild?>? stockBuildOf)
         {
             try
             {
-                return ModificationsOrThrow(car, condition, parts, definition);
+                if (parts is not { IsAvailable: true } || definition == null || car.Engine is not { } engine) return 0m;
+                if ((stockBuildOf ?? parts.GetStockBuild)(definition) is not { } stock) return 0m;
+
+                return EngineModifications(parts.Catalog, engine, stock, condition);
             }
             catch (Exception ex)
             {
                 Logger.Warning("Could not weigh the engine of a {CarId}; valued as the factory one: {Error}", car.DefinitionId, ex.Message);
                 return 0m;
             }
-        }
-
-        private static decimal ModificationsOrThrow(Car car, double condition, ICarPartsService? parts, CarDefinition? definition)
-        {
-            if (parts is not { IsAvailable: true } || definition == null || car.Engine is not { } engine) return 0m;
-            if (parts.GetStockBuild(definition) is not { } stock) return 0m;
-
-            var catalog = parts.Catalog;
-            var engineNew = engine.SelfAndDescendants().Sum(p => catalog.Get(p.DefinitionId) is { } d ? PartPricing.NewPrice(d) : 0);
-            var stockNew = stock.Build.Parts.Sum(p => p.Part != null && catalog.Get(p.Part) is { } d ? PartPricing.NewPrice(d) : 0);
-
-            var shape = Math.Clamp(double.IsFinite(condition) ? condition : 0, 0, 1);
-            return ModificationsValue(engineNew * shape, stockNew * shape);
         }
     }
 }

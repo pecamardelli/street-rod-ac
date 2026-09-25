@@ -68,15 +68,5 @@ namespace Street_Rod_AC.Models.Career.Events
         {
             return !IsCompleted && !IsExpired(currentTime) && currentTime >= AvailableFrom;
         }
-
-        /// <summary>
-        /// Mark the event as completed
-        /// </summary>
-        public void Complete(bool playerWon, DateTime completedAt)
-        {
-            IsCompleted = true;
-            PlayerWon = playerWon;
-            CompletedAt = completedAt;
-        }
     }
 }

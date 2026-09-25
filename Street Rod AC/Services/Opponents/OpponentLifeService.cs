@@ -58,9 +58,15 @@ namespace Street_Rod_AC.Services.Opponents
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("OpponentLife");
         private readonly Random _random = new();
 
+        // The day's catalog lookups: each model valued and named from the catalog once per review, not per car and line
+        private Func<Car, decimal>? _valueOf;
+        private Func<string, string>? _carNames;
+
         public async Task ReviewDayAsync(GameState gameState, DateTime currentDate)
         {
             _initialization?.EnsureKing(gameState);
+            _valueOf = _market.Valuer();
+            _carNames = CarNames.Book(_catalogRepo);
 
             var talk = new List<string>();
             var groupOf = PartGroups();
@@ -197,7 +203,9 @@ namespace Street_Rod_AC.Services.Opponents
         {
             while (racer.Cars.Count > 1)
             {
+                // Cars in the impound can't be sold: with nothing else to spare they wait
                 var spares = racer.Cars.Skip(1).Where(c => !c.IsImpounded).ToList();
+                if (spares.Count == 0) return;
                 var wreck = spares.FirstOrDefault(CarCondition.IsTotaled);
                 var sell = wreck ?? (racer.Cars.Count > OpponentRules.MaxCars ? spares.OrderBy(c => Score(c, groupOf)).First() : null);
                 if (sell == null) return;
@@ -477,16 +485,16 @@ namespace Street_Rod_AC.Services.Opponents
         {
             try
             {
-                return _market.ValueOf(car);
+                return (_valueOf ?? _market.ValueOf)(car);
             }
             catch (Exception ex)
             {
                 _logger.Warning("Could not value the {Car}; going by what was paid for it: {Error}", car.DefinitionId, ex.Message);
-                return CarValuation.ValueOf(car, car.PurchasePrice);
+                return CarValuation.PaidFor(car);
             }
         }
 
-        private string CarName(Car car) => CarNames.Of(_catalogRepo, car.DefinitionId);
+        private string CarName(Car car) => _carNames?.Invoke(car.DefinitionId) ?? CarNames.Of(_catalogRepo, car.DefinitionId);
 
         private static string Nickname(Opponent racer) => string.IsNullOrWhiteSpace(racer.Nickname) ? "" : $" \"{racer.Nickname}\"";
 

@@ -137,7 +137,7 @@ public static class Program
         run.Earlier = options.Previous == null ? null : EarlierConversion.Load(options.Previous);
         if (options.Previous != null && run.Earlier == null)
         {
-            Console.WriteLine($"{PreviousOption} names no converted content: {options.Previous}");
+            Console.WriteLine($"{PreviousOption} names no converted content, or content that does not read: {options.Previous}");
             return 1;
         }
 

@@ -1,3 +1,4 @@
+using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Parts.Scripting;
 
 namespace Street_Rod_AC.Parts.Logic;
@@ -46,7 +47,7 @@ public sealed class EngineReport
     /// <summary>Kilograms, all parts of the build</summary>
     public double Mass { get; init; }
 
-    /// <summary>What the parts cost new</summary>
+    /// <summary>What the parts cost new, in the game's money (<see cref="PartPricing.NewPrice"/>, before a career's price multiplier)</summary>
     public double Value { get; init; }
 
     public IReadOnlyList<PartDefinition> Unplaced { get; init; } = Array.Empty<PartDefinition>();
@@ -138,7 +139,7 @@ public static class EngineEvaluator
             ClutchCapacity = clutch == null ? 0 : Finite(runtime.ObjectOf(clutch)?.Number("maxF") ?? clutch.Definition.Number("maxF")),
             Turbocharged = parts.Any(p => p.Is("TurboCharger")),
             Mass = Finite(parts.Sum(p => (double)p.Definition.Mass)),
-            Value = Finite(parts.Sum(p => p.Definition.Number("value"))),
+            Value = Finite(parts.Sum(p => PartPricing.NewPrice(p.Definition))),
             ScriptFaults = faults,
             Unplaced = tree.Unplaced
         };

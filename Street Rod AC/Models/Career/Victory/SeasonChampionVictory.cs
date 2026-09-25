@@ -14,15 +14,8 @@ namespace Street_Rod_AC.Models.Career.Victory
         public string Name => "Season Champion";
         public string Description => $"Have the most wins of any racer by day {SEASON_END_DAY} to be crowned Season Champion.";
 
-        /// <summary>
-        /// Property to check against - set externally based on game state comparison
-        /// </summary>
-        public bool IsSeasonComplete { get; set; }
-
-        /// <summary>
-        /// Whether the player has the most wins - set externally
-        /// </summary>
-        public bool PlayerHasMostWins { get; set; }
+        // Whether the player has the most wins is the career's (CareerState.PlayerHasMostWins), kept up to date by the
+        // victory service
 
         public bool IsUnlocked(CareerState career)
         {
@@ -45,7 +38,7 @@ namespace Street_Rod_AC.Models.Career.Victory
             if (daysPlayed >= SEASON_END_DAY)
             {
                 progress.CompletedSteps.Add($"Reach day {SEASON_END_DAY}");
-                progress.ProgressDescription = PlayerHasMostWins
+                progress.ProgressDescription = career.PlayerHasMostWins
                     ? "You are the Season Champion!"
                     : "Season complete - another racer has more wins";
             }
@@ -62,7 +55,7 @@ namespace Street_Rod_AC.Models.Career.Victory
         {
             // Season must be complete AND player must have most wins
             // Note: The actual comparison with other racers must be done by the service
-            return IsUnlocked(career) && PlayerHasMostWins;
+            return IsUnlocked(career) && career.PlayerHasMostWins;
         }
     }
 }

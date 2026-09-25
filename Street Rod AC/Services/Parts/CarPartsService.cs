@@ -50,6 +50,7 @@ namespace Street_Rod_AC.Services.Parts
             // A new overlay per ask: it reads the AC and restore paths from the settings when it is made, and those
             // may have changed since this service was
             _isCarDataApplied = isCarDataApplied ?? (id => new CarDataOverlay().IsApplied(id));
+            // Every part price in the game, process-wide (see PartPricing.Scale): the app makes one parts service
             PartPricing.Scale = AppSettings.Instance.PartsPriceScale;
             _catalog = new Lazy<PartsCatalog>(LoadCatalog);
             _builds = new Lazy<EngineBuildIndex>(CreateIndex);

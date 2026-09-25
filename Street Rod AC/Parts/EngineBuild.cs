@@ -1,3 +1,4 @@
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 namespace Street_Rod_AC.Parts;
@@ -35,4 +36,15 @@ public class EngineBuild
     /// <summary>The engine block first, then everything that goes on it; parts outside the converted packs have no id</summary>
     [JsonProperty("parts")]
     public List<PartStockReference> Parts { get; set; } = new();
+
+    /// <summary>An engine_builds.json that says null for the name or the parts, or has a null part, reads as if it had none</summary>
+    [OnDeserialized]
+    internal void OnDeserialized(StreamingContext context)
+    {
+        Name ??= string.Empty;
+        Origin ??= string.Empty;
+        Source ??= string.Empty;
+        Parts ??= new();
+        Parts.RemoveAll(p => p is null);
+    }
 }

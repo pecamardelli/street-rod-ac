@@ -49,5 +49,12 @@ namespace Street_Rod_AC.Services.Career
         /// Check for newly unlocked victory conditions and update career state
         /// </summary>
         List<IVictoryCondition> CheckForNewUnlocks(CareerState career);
+
+        /// <summary>
+        /// Works out what the victories need from the whole game (how many racers there are, whether the player has
+        /// the most wins, the King's name) and keeps it on the career, where their progress reads it. Done on every
+        /// check for a victory; a screen that shows the victories may do it first to show them as of now.
+        /// </summary>
+        void RefreshStanding(GameState gameState);
     }
 }

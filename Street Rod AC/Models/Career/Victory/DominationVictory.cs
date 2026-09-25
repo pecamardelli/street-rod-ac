@@ -14,10 +14,7 @@ namespace Street_Rod_AC.Models.Career.Victory
         public string Name => "Total Domination";
         public string Description => "Defeat every opponent at least once to prove your complete dominance of the streets.";
 
-        /// <summary>
-        /// Total number of opponents in the game - set externally
-        /// </summary>
-        public int TotalOpponents { get; set; }
+        // The number of opponents is the career's (CareerState.TotalOpponents), kept up to date by the victory service
 
         public bool IsUnlocked(CareerState career)
         {
@@ -28,6 +25,7 @@ namespace Street_Rod_AC.Models.Career.Victory
         {
             var reputation = career.GetCounter(Milestones.MilestoneTrigger.ReputationReached);
             var defeated = career.DefeatedOpponentIds.Count;
+            var total = career.TotalOpponents;
 
             var progress = new VictoryProgress();
 
@@ -42,25 +40,25 @@ namespace Street_Rod_AC.Models.Career.Victory
             }
 
             // Domination progress
-            if (TotalOpponents > 0)
+            if (total > 0)
             {
-                var defeatPercentage = (defeated / (float)TotalOpponents) * 100f;
+                var defeatPercentage = (defeated / (float)total) * 100f;
 
-                if (defeated >= TotalOpponents)
+                if (defeated >= total)
                 {
-                    progress.CompletedSteps.Add($"Defeat all {TotalOpponents} opponents");
+                    progress.CompletedSteps.Add($"Defeat all {total} opponents");
                     progress.Percentage = 100f;
                     progress.ProgressDescription = "Total Domination achieved!";
                 }
                 else if (IsUnlocked(career))
                 {
-                    progress.RemainingSteps.Add($"Defeat {TotalOpponents - defeated} more opponents");
+                    progress.RemainingSteps.Add($"Defeat {total - defeated} more opponents");
                     progress.Percentage = defeatPercentage;
-                    progress.ProgressDescription = $"Opponents defeated: {defeated}/{TotalOpponents}";
+                    progress.ProgressDescription = $"Opponents defeated: {defeated}/{total}";
                 }
                 else
                 {
-                    progress.RemainingSteps.Add($"(Locked) Defeat all {TotalOpponents} opponents");
+                    progress.RemainingSteps.Add($"(Locked) Defeat all {total} opponents");
                     progress.Percentage = (reputation / (float)REQUIRED_REPUTATION) * 50f; // First 50% is unlock
                     progress.ProgressDescription = $"Unlock at {REQUIRED_REPUTATION} reputation";
                 }
@@ -79,7 +77,7 @@ namespace Street_Rod_AC.Models.Career.Victory
                 return false;
 
             // Must have defeated all opponents
-            return TotalOpponents > 0 && career.DefeatedOpponentIds.Count >= TotalOpponents;
+            return career.TotalOpponents > 0 && career.DefeatedOpponentIds.Count >= career.TotalOpponents;
         }
     }
 }

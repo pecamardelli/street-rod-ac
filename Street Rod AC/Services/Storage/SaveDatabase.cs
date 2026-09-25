@@ -24,6 +24,9 @@ namespace Street_Rod_AC.Services.Storage
         private static readonly string[] SideFileSuffixes = { "-log", "-tmp" };
 
         private readonly object _gate = new();
+
+        // The save format's mapper (see SaveMapper), this instance's own: it is only ever used under the lock
+        private readonly BsonMapper _mapper = SaveMapper.Create();
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger(LogCategory.Save);
         private LiteDatabase? _database;
         private string? _openSave;
@@ -107,7 +110,7 @@ namespace Street_Rod_AC.Services.Storage
                     Filename = path,
                     ReadOnly = true,
                     Connection = ConnectionType.Direct
-                });
+                }, _mapper);
                 return read(readOnly);
             }
         }
@@ -182,10 +185,34 @@ namespace Street_Rod_AC.Services.Storage
         {
             lock (_gate)
             {
-                if (_disposed) return;
-                _disposed = true;
-                CloseOpen();
+                DisposeUnderLock();
             }
+        }
+
+        /// <summary>
+        /// Dispose for the crash path: the thread that holds the lock may be the one that is stuck (a save on a UI
+        /// thread that no longer answers), so the lock is waited for only so long. False when it was not free in
+        /// time; the database is then left to the process's end (LiteDB's journal makes that safe).
+        /// </summary>
+        public bool TryDispose(TimeSpan wait)
+        {
+            if (!Monitor.TryEnter(_gate, wait)) return false;
+            try
+            {
+                DisposeUnderLock();
+                return true;
+            }
+            finally
+            {
+                Monitor.Exit(_gate);
+            }
+        }
+
+        private void DisposeUnderLock()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            CloseOpen();
         }
 
         private bool IsOpen(string saveName) =>
@@ -201,7 +228,7 @@ namespace Street_Rod_AC.Services.Storage
                 return _database;
 
             CloseOpen();
-            _database = new LiteDatabase(path);
+            _database = new LiteDatabase(path, _mapper);
             _openSave = saveName;
             _logger.Debug("Opened save database {SaveName}", saveName);
             return _database;

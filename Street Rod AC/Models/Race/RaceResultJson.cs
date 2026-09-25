@@ -120,6 +120,13 @@ namespace Street_Rod_AC.Models.Race
         /// </summary>
         [JsonProperty("end_reason")]
         public string? EndReason { get; set; }
+
+        /// <summary>
+        /// The kind of race the mode ran, as race.ini told it (schema 1.3): <c>DRAG</c> or <c>ROAD</c>. The race's
+        /// context decides; this is only checked against it. Null in older files.
+        /// </summary>
+        [JsonProperty("race_type")]
+        public string? RaceType { get; set; }
     }
 
     /// <summary>The <see cref="RaceSession.EndReason"/> values the race mode writes</summary>
@@ -222,7 +229,7 @@ namespace Street_Rod_AC.Models.Race
 
     /// <summary>
     /// Performance metrics for a participant
-    /// Includes lap times, speed, distance, and fuel data
+    /// Includes lap times, speed and distance (the fuel left is in the car's condition)
     /// </summary>
     public class ParticipantPerformance
     {
@@ -243,9 +250,6 @@ namespace Street_Rod_AC.Models.Race
 
         [JsonProperty("distance_km")]
         public double DistanceKm { get; set; }
-
-        [JsonProperty("fuel_consumed_liters")]
-        public double FuelConsumedLiters { get; set; }
     }
 
     /// <summary>
@@ -304,6 +308,10 @@ namespace Street_Rod_AC.Models.Race
 
     public class WheelCondition
     {
+        /// <summary>Which corner, 0 to 3 in AC's order (script 3.5); null in older files</summary>
+        [JsonProperty("wheel")]
+        public int? Wheel { get; set; }
+
         /// <summary>How much of the tread this race took, from 0; AC's tyres start every race new</summary>
         [JsonProperty("tyre_wear")]
         public double? TyreWear { get; set; }

@@ -294,7 +294,7 @@ namespace Street_Rod_AC.Services.Simulation
 
         /// <summary>
         /// What the pink-slipped car is worth. Never throws: a valuation that cannot be had (catalog.db busy or failing)
-        /// falls back to the car's condition times what was paid for it, so the race still settles today.
+        /// falls back to what was paid for it, as for a car the catalog has no price for, so the race still settles today.
         /// </summary>
         private decimal ValueOf(Car car)
         {
@@ -306,7 +306,7 @@ namespace Street_Rod_AC.Services.Simulation
             {
                 _logger.Warning("Could not value the pink-slipped {CarId}; going by what was paid for it: {Error}",
                     car.DefinitionId, ex.Message);
-                return CarValuation.ValueOf(car, car.PurchasePrice);
+                return CarValuation.PaidFor(car);
             }
         }
 

@@ -21,6 +21,7 @@ Street Rod-style career mode manager for Assetto Corsa. WPF app manages game log
 - **Errors**: Global handlers (dispatcher, AppDomain, unobserved tasks) in `App.xaml.cs`. A recoverable UI exception is logged and shown in a dialog; a fatal one runs the fatal path once (save the game, restore the AC install if AC is not running, shut FMOD down, close the save database, flush the log). Screens guard their own `async` paths; `AsyncRelayCommand` logs what escapes.
 - **AC Content**: Import to catalog, never modify AC installation. Two exceptions. The game's own race mode (`apps\new-modes\sr_race`) is installed into `extension\lua\new-modes\sr_race` before every race (`SrRaceMode`: written when it differs, left there, the old `apps\lua\sr_race_manager` app removed). And a race: a car's data files and engine sound, as its parts make them, go in through `CarDataOverlay` (originals kept with a manifest, put back in the launcher's `finally` and at start-up, once no AC process runs), and an opponent in the player's model races in a marked copy of the car folder that the same cleanup deletes. Anything that scans `content\cars` skips folders with the copy marker (`AcCarFolder.IsClone`).
 - **Logging**: Structured, via `IAppLogger`. Categories: App, Import, Market, Navigation, etc.
+- **Before a merge or push**: `tools/check.ps1` builds the whole solution (the tools compile game files by link, so a game change can break them) and runs the tests.
 
 ## Data Models
 

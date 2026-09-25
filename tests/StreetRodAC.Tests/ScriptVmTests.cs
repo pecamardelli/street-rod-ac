@@ -186,6 +186,47 @@ public sealed class ScriptVmTests : IDisposable
         File.WriteAllBytes(file, nonsense);
         ScriptClass.Load(file);
     }
+
+    // ---- Arrays and literals ----
+
+    /// <summary>float[] a = new float[3]; a[index] = 9; return a. Local 1; pool[3] is the array type</summary>
+    private static ScriptClass StoringAt(int index) => ClassWith(
+        [I(0x0B, 3), I(0x07, 31), I(0x06, 3), I(0x01, 1), I(0x08, 35),
+         I(0x0B, 9), I(0x0B, index), I(0x01, 1), I(0x20), I(0x08, 35),
+         I(0x01, 1), I(0x10)], "[F");
+
+    [Fact]
+    public void A_store_inside_the_array_is_made()
+    {
+        var array = Assert.IsType<ScriptArray>(Run(StoringAt(2), out _));
+        Assert.Equal(3, array.Length);
+        Assert.Equal(9, Assert.IsType<ScriptNumber>(array.Get(2)).Amount);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(-5)]
+    [InlineData(3)]
+    [InlineData(int.MaxValue)]
+    [InlineData(int.MinValue)]
+    public void A_store_outside_the_array_is_not_made(int index)
+    {
+        var array = Assert.IsType<ScriptArray>(Run(StoringAt(index), out _));
+        Assert.Empty(array.Items);
+    }
+
+    [Theory]
+    [InlineData(2.66f, 2.66)]
+    [InlineData(0.1f, 0.1)]
+    [InlineData(-1234.5f, -1234.5)]
+    [InlineData(3.4028235E+38f, 3.4028235E+38)]
+    public void A_float_literal_reads_as_the_number_written_not_its_float_approximation(float literal, double expected)
+    {
+        var result = Run(ClassWith([I(0x0A, BitConverter.SingleToInt32Bits(literal)), I(0x10)]), out _);
+        var number = Assert.IsType<ScriptNumber>(result);
+        Assert.Equal(expected, number.Amount);
+        Assert.False(number.IsInteger);
+    }
 }
 
 

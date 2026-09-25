@@ -78,6 +78,12 @@ namespace Street_Rod_AC.Models.GameState
         /// somebody's, relisted); the buyer's car must not be given a second factory set then
         /// </summary>
         public bool HasRunningGearAssigned { get; set; }
+
+        /// <summary>
+        /// The body's damage per zone, as on <see cref="Car.BodyDamageKmh"/>: a relisted car is sold with its dents.
+        /// Null on a car a dealer had from new stock, and on listings from before it was kept: a straight body.
+        /// </summary>
+        public double[]? BodyDamageKmh { get; set; }
     }
 
     /// <summary>

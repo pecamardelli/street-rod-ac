@@ -40,6 +40,10 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
     // driver update, hours on) is rebuilt once more rather than failed
     private static readonly TimeSpan RecoveryGrace = TimeSpan.FromMinutes(1);
 
+    // How long a started renderer may go without a front buffer to draw to. Under software rendering or a remote
+    // session D3DImage never offers one, and neither Ready nor Failed would come: the 2D fallback shows instead.
+    private static readonly TimeSpan FirstFrameTimeout = TimeSpan.FromSeconds(5);
+
     // A GPU that went away under the renderer: a driver update or reset (TDR), or a hung device. DXGI's own codes
     // (DEVICE_REMOVED, DEVICE_HUNG, DEVICE_RESET, DRIVER_INTERNAL_ERROR) and D3D9's (DEVICELOST, DEVICEREMOVED, DEVICEHUNG)
     private static readonly HashSet<int> DeviceLostCodes =
@@ -55,6 +59,7 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
     private readonly Vector _labelOffset;
     private readonly DispatcherTimer _resizeTimer;
     private readonly DispatcherTimer _idleTimer;
+    private readonly DispatcherTimer _firstFrameTimer;
 
     private GarageRenderer? _renderer;
 
@@ -123,6 +128,9 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
 
         _idleTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) { Interval = IdlePollInterval };
         _idleTimer.Tick += OnIdlePoll;
+
+        _firstFrameTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) { Interval = FirstFrameTimeout };
+        _firstFrameTimer.Tick += OnFirstFrameTimeout;
 
         Loaded += (_, _) =>
         {
@@ -242,6 +250,15 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
             what = LoadDescription;
             await LoadAsync();
         }
+        catch (Exception ex) when (!_recovered && IsDeviceLost(ex))
+        {
+            // The GPU went away while the scene was loading: built again from scratch, once, as the render loop does
+            Logger.Warning(ex, "{Viewport}: the graphics device was lost loading {What}, starting the scene again", ViewportName, what);
+            _recovered = true;
+            _recoveredAt = DateTime.Now;
+            DisposeRenderer(releaseDevice: true);
+            _ = Dispatcher.InvokeAsync(RequestLoad);
+        }
         catch (Exception ex)
         {
             // Leave the viewport transparent so whatever is behind it stays visible
@@ -318,6 +335,8 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
 
         _renderer = renderer;
         _deviceWork = Task.CompletedTask;
+        _firstFrameTimer.Stop();
+        _firstFrameTimer.Start();
 
         // The size was taken when the renderer was made; a resize while it was loading found no renderer to tell
         UpdateRendererSize();
@@ -480,13 +499,22 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
             _recovered = true;
             _recoveredAt = DateTime.Now;
             DisposeRenderer(releaseDevice: true);
-            Dispatcher.InvokeAsync(RequestLoad);
+            _ = Dispatcher.InvokeAsync(RequestLoad);
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "{Viewport} render loop failed", ViewportName);
             Fail();
         }
+    }
+
+    private void OnFirstFrameTimeout(object? sender, EventArgs e)
+    {
+        _firstFrameTimer.Stop();
+        if (_renderer == null || IsReady || _failed || _bridge.IsFrontBufferAvailable) return;
+
+        Logger.Warning("{Viewport}: no front buffer to draw to (software rendering or a remote session): showing the 2D view", ViewportName);
+        Fail();
     }
 
     private static bool IsDeviceLost(Exception ex)
@@ -536,6 +564,7 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
     {
         StopPump(idle: false);
         _resizeTimer.Stop();
+        _firstFrameTimer.Stop();
         _rock = null;
 
         var renderer = _renderer;

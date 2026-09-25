@@ -22,6 +22,9 @@ namespace Street_Rod_AC.Screens.CarSelection
         private readonly IGameTimeService _timeService;
         private readonly IAppLogger _logger;
 
+        // A pick under way: the switch is paid for once, and the screen is not left while the time is spent
+        private bool _selecting;
+
         public RelayCommand BackCommand { get; }
         public RelayCommand<CarSelectionItemViewModel> SelectCarCommand { get; }
 
@@ -54,12 +57,11 @@ namespace Street_Rod_AC.Screens.CarSelection
             _timeService = timeService;
             _logger = AppLoggerFactory.CreateLogger("CarSelection");
 
-            BackCommand = new RelayCommand(OnBack);
-            SelectCarCommand = new RelayCommand<CarSelectionItemViewModel>(OnSelectCar);
+            BackCommand = new RelayCommand(OnBack, () => !_selecting);
+            SelectCarCommand = new RelayCommand<CarSelectionItemViewModel>(OnSelectCar, _ => !_selecting);
 
+            // The cars are loaded in Enter
             _cars = new ObservableCollection<CarSelectionItemViewModel>();
-
-            LoadPlayerCars();
         }
 
         private void LoadPlayerCars()
@@ -90,41 +92,58 @@ namespace Street_Rod_AC.Screens.CarSelection
 
         private async void OnSelectCar(CarSelectionItemViewModel? selectedCar)
         {
-            if (selectedCar == null)
+            if (selectedCar == null || _selecting)
                 return;
 
-            // Only spend time if actually switching to a different car
-            var isActuallySwitching = _gameState.Player.SelectedCarInstanceId != selectedCar.CarInstance.InstanceId;
-
-            _logger.Information("Selected car {CarId} (Instance: {InstanceId})",
-                selectedCar.CarDefinition.Id, selectedCar.CarInstance.InstanceId);
-
-            // Update game state
-            _gameState.Player.SelectedCarInstanceId = selectedCar.CarInstance.InstanceId;
-
-            // Spend time for switching cars (15 min). Waited for before saving: late in the day that is the
-            // next morning, and what the new day brings belongs in the save.
-            if (isActuallySwitching)
+            _selecting = true;
+            RelayCommand.RaiseCanExecuteChanged();
+            try
             {
+                // Only spend time if actually switching to a different car
+                var isActuallySwitching = _gameState.Player.SelectedCarInstanceId != selectedCar.CarInstance.InstanceId;
+
+                _logger.Information("Selected car {CarId} (Instance: {InstanceId})",
+                    selectedCar.CarDefinition.Id, selectedCar.CarInstance.InstanceId);
+
+                // Update game state
+                _gameState.Player.SelectedCarInstanceId = selectedCar.CarInstance.InstanceId;
+
+                // Spend time for switching cars (15 min). Waited for before saving: late in the day that is the
+                // next morning, and what the new day brings belongs in the save.
+                if (isActuallySwitching)
+                {
+                    try
+                    {
+                        await _timeService.SpendTimeAsync(_gameState, GameAction.SwitchCar);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, "Could not spend the time for switching cars");
+                    }
+                }
+
+                // Save game state to persist the selection
                 try
                 {
-                    await _timeService.SpendTimeAsync(_gameState, GameAction.SwitchCar);
+                    if (!string.IsNullOrEmpty(_gameState.SaveName))
+                    {
+                        _gameStateRepo.Save(_gameState, _gameState.SaveName);
+                        _logger.Information("Game state saved after car selection");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error(ex, "Could not spend the time for switching cars");
+                    _logger.Error(ex, "Failed to save game state after car selection");
                 }
-            }
-
-            // Save game state to persist the selection
-            try
-            {
-                _gameStateRepo.Save(_gameState, _gameState.SaveName);
-                _logger.Information("Game state saved after car selection");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Failed to save game state after car selection");
+                _logger.Error(ex, "Could not switch cars");
+            }
+            finally
+            {
+                _selecting = false;
+                RelayCommand.RaiseCanExecuteChanged();
             }
 
             // Navigate back to garage screen; the navigation service catches and reports a garage that will not open
@@ -141,6 +160,8 @@ namespace Street_Rod_AC.Screens.CarSelection
         {
             base.Enter();
             _logger.Information("Entered car selection screen");
+
+            LoadPlayerCars();
         }
 
         public override void Exit()
@@ -162,7 +183,7 @@ namespace Street_Rod_AC.Screens.CarSelection
 
         public string DisplayName => $"{CarDefinition.Brand} {CarDefinition.Name}";
         public string YearDisplay => $"({CarDefinition.Year ?? 0})";
-        public string ConditionDisplay => $"Condition: {(int)(CarInstance.EngineHealth * 100)}%";
+        public string ConditionDisplay => $"Condition: {Shared.ConditionDisplay.Of(CarInstance).Percent}";
         public string MileageDisplay => $"Mileage: {CarInstance.OdometerKM:N0} km";
         public bool HasPreviewImage => !string.IsNullOrEmpty(PreviewImagePath);
     }

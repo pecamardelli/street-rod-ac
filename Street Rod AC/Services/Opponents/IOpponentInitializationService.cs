@@ -20,12 +20,5 @@ namespace Street_Rod_AC.Services.Opponents
         /// and his car. Nothing when there is no King among the definitions.
         /// </summary>
         void EnsureKing(GameState gameState);
-
-        /// <summary>
-        /// Get random selection of opponents
-        /// </summary>
-        /// <param name="count">Number of opponents to select</param>
-        /// <returns>List of randomly selected opponents</returns>
-        List<Opponent> GetRandomOpponents(int count);
     }
 }

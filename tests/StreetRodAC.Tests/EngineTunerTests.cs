@@ -1,6 +1,8 @@
+using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Cars;
-using Xunit.Abstractions;
+using Street_Rod_AC.Parts.Logic;
+using Street_Rod_AC.Parts.Scripting;
 
 namespace StreetRodAC.Tests;
 
@@ -22,7 +24,7 @@ public class EngineTunerTests(ITestOutputHelper output)
         var before = stock.Report.Dyno!.MaxPowerHp;
 
         var started = DateTime.Now;
-        var result = EngineTuner.TuneUp(catalog, Builds.Value, PartTrees.Clone(stock.Root, keepIds: true), 1_000_000m, 1.0, new Random(7));
+        var result = EngineTuner.TuneUp(catalog, Builds.Value, stock.Root, 1_000_000m, 1.0, new Random(7));
         output.WriteLine($"{buildId}: {(DateTime.Now - started).TotalMilliseconds:0} ms");
 
         Assert.NotNull(result);
@@ -52,9 +54,74 @@ public class EngineTunerTests(ITestOutputHelper output)
 
         foreach (var budget in new[] { 50m, 200m, 800m })
         {
-            var result = EngineTuner.TuneUp(catalog, Builds.Value, PartTrees.Clone(stock.Root, keepIds: true), budget, 1.0, new Random(3));
+            var result = EngineTuner.TuneUp(catalog, Builds.Value, stock.Root, budget, 1.0, new Random(3));
             output.WriteLine($"${budget}: {(result == null ? "nothing" : string.Join(", ", result.Upgrades.Select(u => $"{u.Change} ${u.Cost}")))}");
             if (result != null) Assert.True(result.Cost <= budget);
+        }
+    }
+
+    [Fact]
+    public void Several_rounds_never_swap_away_a_bolt_on_already_paid_for()
+    {
+        var catalog = Catalog.Value;
+        var multiRound = 0;
+        foreach (var buildId in new[] { "chrysler-v8-pack/chrysler-la-340-275-hp", "script-ford-l6/ford-221-132-hp" })
+        {
+            var stock = EngineFactory.CreateStock(catalog, Build(buildId), 0.8, new Random(1))!;
+            var before = Describe(stock.Root);
+
+            foreach (var seed in Enumerable.Range(1, 6))
+            {
+                var result = EngineTuner.TuneUp(catalog, Builds.Value, stock.Root, 1_000_000m, 1.0, new Random(seed), maxUpgrades: 4);
+                if (result == null) continue;
+                output.WriteLine($"{buildId} #{seed}: {string.Join(", ", result.Upgrades.Select(u => $"{u.Group}: {u.Change}"))}");
+
+                // A block swap throws the old engine's parts away: it may only come first
+                Assert.DoesNotContain(result.Upgrades.Skip(1), u => u.Group == EngineTuner.BlockGroup);
+                // Each round starts from the engine the one before made
+                for (var i = 1; i < result.Upgrades.Count; i++)
+                    Assert.Equal(result.Upgrades[i - 1].PowerAfter, result.Upgrades[i].PowerBefore);
+                Assert.Equal(result.Upgrades[^1].PowerAfter, result.Report.Dyno!.MaxPowerHp);
+                if (result.Upgrades.Count > 1) multiRound++;
+            }
+
+            // The engine handed in is left as it was: the tuned one is a copy
+            Assert.Equal(before, Describe(stock.Root));
+        }
+
+        Assert.True(multiRound > 0, "no run tuned more than once: the test proves nothing");
+
+        static string Describe(PartInstance root) =>
+            string.Join("|", root.SelfAndDescendants().Select(p => $"{p.InstanceId}:{p.DefinitionId}:{p.ParentSlot}:{p.OwnSlot}:{p.Children.Count}"));
+    }
+
+    [Fact]
+    public void A_saved_tuning_key_outside_an_array_is_left_alone()
+    {
+        var catalog = Catalog.Value;
+        var stock = EngineFactory.CreateStock(catalog, Build("chrysler-v8-pack/chrysler-la-340-275-hp"), 0.8, new Random(1))!;
+        var tree = PartTrees.ToInstalled(catalog, stock.Root)!;
+
+        // The parts whose scripts hold a "ratio" array (the gearbox)
+        var untuned = new PartScriptRuntime(catalog, tree.Root);
+        var withRatios = tree.Root.SelfAndDescendants()
+            .Where(p => untuned.ObjectOf(p)?.Fields.GetValueOrDefault("ratio") is ScriptArray { Length: > 1 })
+            .ToList();
+        Assert.NotEmpty(withRatios);
+
+        foreach (var part in withRatios)
+        {
+            part.Tuning["ratio[-5]"] = 9;
+            part.Tuning["ratio[100000]"] = 9;
+            part.Tuning["ratio[1]"] = 3.25;
+        }
+
+        var tuned = new PartScriptRuntime(catalog, tree.Root);
+        foreach (var part in withRatios)
+        {
+            var ratios = Assert.IsType<ScriptArray>(tuned.ObjectOf(part)!.Fields["ratio"]);
+            Assert.All(ratios.Items.Keys, index => Assert.True(ratios.Holds(index), $"ratio[{index}] of {ratios.Length}"));
+            Assert.Equal(3.25, Assert.IsType<ScriptNumber>(ratios.Get(1)).Amount);
         }
     }
 }

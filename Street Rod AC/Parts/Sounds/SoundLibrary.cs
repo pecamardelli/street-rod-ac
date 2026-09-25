@@ -188,7 +188,7 @@ public sealed class SoundLibrary
         }
         else
         {
-            bank = Directory.GetFiles(folder, "*.bank").OrderBy(f => f).FirstOrDefault();
+            bank = Directory.GetFiles(folder, "*.bank").OrderBy(f => f, StringComparer.OrdinalIgnoreCase).FirstOrDefault();
         }
 
         var guids = Path.Combine(folder, AcCarSound.GuidsFileName);
@@ -352,9 +352,13 @@ public sealed class SoundLibrary
         {
             limiter = new IniText(AcCarDataReader.ReadFile(folder, "engine.ini")).GetNumber("ENGINE_DATA", "LIMITER");
         }
-        catch (Exception)
+        catch (FileNotFoundException)
         {
-            // No readable data: the bank's ceiling stays unknown
+            // No data at all: the bank's ceiling stays unknown
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException)
+        {
+            _problems.Add($"{id}: its engine.ini could not be read ({ex.Message}); the limiter of its sound is unknown");
         }
 
         var engine = facts?.Invoke(id, brand, name, bhp);

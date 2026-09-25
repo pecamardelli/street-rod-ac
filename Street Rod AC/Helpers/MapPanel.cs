@@ -95,13 +95,14 @@ public class MapPanel : System.Windows.Controls.Panel
     /// it takes the whole of that side and gives back on the other, which is the only way to keep the shapes
     /// equal without stretching.
     /// </summary>
-    private Rect Fit(Rect anchor, double panelAspect)
-    {
-        var imageWidth = ImagePixelWidth;
-        var imageHeight = ImagePixelHeight;
+    private Rect Fit(Rect anchor, double panelAspect) => Fit(anchor, panelAspect, ImagePixelWidth, ImagePixelHeight);
 
-        if (imageWidth <= 0 || imageHeight <= 0 || panelAspect <= 0 ||
-            anchor.Width <= 0 || anchor.Height <= 0)
+    /// <summary><see cref="Fit(Rect, double)"/> for a picture of the given size in pixels; static for the tests</summary>
+    internal static Rect Fit(Rect anchor, double panelAspect, double imageWidth, double imageHeight)
+    {
+        // Written as "not greater than zero" so a NaN (a panel not yet measured) leaves the anchor as it is too
+        if (!(imageWidth > 0) || !(imageHeight > 0) || !(panelAspect > 0) || !double.IsFinite(panelAspect) ||
+            !(anchor.Width > 0) || !(anchor.Height > 0))
         {
             return anchor;
         }

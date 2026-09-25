@@ -24,9 +24,9 @@ namespace Street_Rod_AC.Models.GameState
 
         /// <summary>
         /// Reputation score (0-100) based on race performance
-        /// Higher reputation indicates a more feared/respected racer
+        /// Higher reputation indicates a more feared/respected racer. A new racer starts neutral.
         /// </summary>
-        public int Reputation { get; set; }
+        public int Reputation { get; set; } = 50;
 
         /// <summary>
         /// Bonus reputation earned from event victories
@@ -55,31 +55,10 @@ namespace Street_Rod_AC.Models.GameState
         public const int PoliceEscapeBonus = 2;
         public const int MaxPoliceEscapeBonus = 10;
 
-        public RacerStats()
-        {
-            Wins = 0;
-            Losses = 0;
-            Races = 0;
-            TotalEarnings = 0m;
-            TotalLosses = 0m;
-            PinkSlipsWon = 0;
-            PinkSlipsLost = 0;
-            CarsOwned = 0;
-            CarsSold = 0;
-            Reputation = 50; // Start at neutral reputation
-
-            // Initialize drag race stats
-            DragWins = 0;
-            DragLosses = 0;
-            DragRaces = 0;
-
-            // Initialize road race stats
-            RoadWins = 0;
-            RoadLosses = 0;
-            RoadRaces = 0;
-        }
-
+        [LiteDB.BsonIgnore]
         public double WinRate => Races > 0 ? (double)Wins / Races : 0.0;
+
+        [LiteDB.BsonIgnore]
         public decimal NetEarnings => TotalEarnings - TotalLosses;
 
         /// <summary>

@@ -145,10 +145,18 @@ namespace Street_Rod_AC.Screens.Garage
         /// <summary>Works the engine out again: the car changed, or what is in it</summary>
         private async void RefreshEngine()
         {
-            var version = ++_engineVersion;
-            var car = SelectedCar;
-            var spec = car == null ? null : await Services.Parts.EngineSpecs.ForAsync(_partsService, car.CarInstance, car.DisplayName);
-            if (version == _engineVersion) SelectedEngine = spec;
+            // Nothing may escape an async void
+            try
+            {
+                var version = ++_engineVersion;
+                var car = SelectedCar;
+                var spec = car == null ? null : await Services.Parts.EngineSpecs.ForAsync(_partsService, car.CarInstance, car.DisplayName);
+                if (version == _engineVersion) SelectedEngine = spec;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not work out the selected car's engine");
+            }
         }
 
         public string SelectedCarDisplay
@@ -469,9 +477,10 @@ namespace Street_Rod_AC.Screens.Garage
         /// </summary>
         private async Task OnFreeRun()
         {
-            if (SelectedCar == null || FreeRunTrack is not { } track) return;
+            // Read once: the selection can change while the parts are checked and AC runs
+            if (SelectedCar is not { } selected || FreeRunTrack is not { } track) return;
 
-            var car = SelectedCar.CarInstance;
+            var car = selected.CarInstance;
             _logger.Information("Free run: {Car} on {Track}", car.DefinitionId, track.Key);
 
             try
@@ -507,7 +516,7 @@ namespace Street_Rod_AC.Screens.Garage
 
                 var intent = new FreeRunLaunchIntent
                 {
-                    CarId = SelectedCar.CarDefinition.Id,
+                    CarId = selected.CarDefinition.Id,
                     SkinId = car.SkinId,
                     PlayerName = _gameState.Player.Name,
                     TrackId = track.TrackId,
@@ -611,36 +620,44 @@ namespace Street_Rod_AC.Screens.Garage
         /// <summary>Pays the impound, brings the car home and saves; an hour goes by getting there and back</summary>
         private async void OnCollect()
         {
-            if (SelectedCar is not { } selected || !CanCollect()) return;
-
-            var car = selected.CarInstance;
-            _gameState.Player.Money -= car.ImpoundFee;
-            _gameState.Player.Stats.TotalLosses += car.ImpoundFee;
-            _logger.Information("Collected {Car} from the impound for ${Fee}", car.DefinitionId, car.ImpoundFee);
-            PoliceRules.Release(car);
-
             try
             {
-                await _timeService.SpendTimeAsync(_gameState, GameAction.CollectFromImpound);
+                if (SelectedCar is not { } selected || !CanCollect()) return;
+
+                var car = selected.CarInstance;
+                _gameState.Player.Money -= car.ImpoundFee;
+                _gameState.Player.Stats.TotalLosses += car.ImpoundFee;
+                _logger.Information("Collected {Car} from the impound for ${Fee}", car.DefinitionId, car.ImpoundFee);
+                PoliceRules.Release(car);
+
+                try
+                {
+                    await _timeService.SpendTimeAsync(_gameState, GameAction.CollectFromImpound);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning("Could not spend the time for the impound: {Error}", ex.Message);
+                }
+
+                try
+                {
+                    if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Could not save the game after collecting the car");
+                }
+
+                Workbench.SetCar(car);
+                RefreshCalendarDisplay();
+                OnPropertyChanged(nameof(BankrollDisplay));
+                RaiseImpoundChanged();
             }
             catch (Exception ex)
             {
-                _logger.Warning("Could not spend the time for the impound: {Error}", ex.Message);
+                // Nothing may escape an async void
+                _logger.Error(ex, "Could not collect the car from the impound");
             }
-
-            try
-            {
-                if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Could not save the game after collecting the car");
-            }
-
-            Workbench.SetCar(car);
-            RefreshCalendarDisplay();
-            OnPropertyChanged(nameof(BankrollDisplay));
-            RaiseImpoundChanged();
         }
 
         private void RaiseImpoundChanged()
@@ -772,11 +789,19 @@ namespace Street_Rod_AC.Screens.Garage
             finally
             {
                 _endingDay = false;
-                RefreshCalendarDisplay();
-                OnPropertyChanged(nameof(BankrollDisplay));
-                // The night may have brought an offer for a car in the paper, or the impound's release date
-                OnPropertyChanged(nameof(SellButtonText));
-                RaiseImpoundChanged();
+                // Nothing may escape an async void, the refresh included
+                try
+                {
+                    RefreshCalendarDisplay();
+                    OnPropertyChanged(nameof(BankrollDisplay));
+                    // The night may have brought an offer for a car in the paper, or the impound's release date
+                    OnPropertyChanged(nameof(SellButtonText));
+                    RaiseImpoundChanged();
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Could not refresh the garage after the end of the day");
+                }
             }
         }
 
@@ -898,10 +923,7 @@ namespace Street_Rod_AC.Screens.Garage
         public string DisplayName => $"{CarDefinition.Brand} {CarDefinition.Name}";
         public string YearDisplay => CarDefinition.Year?.ToString() ?? "Unknown";
         /// <summary>What is worst about the car, or its overall shape: the one condition the market prices it by</summary>
-        public string ConditionDisplay =>
-            Parts.Cars.CarCondition.IsTotaled(CarInstance) ? "Totaled"
-            : CarInstance.EngineHealth <= 0 ? "Blown engine"
-            : $"{(int)(Services.Market.CarValuation.ConditionOf(CarInstance) * 100)}%";
+        public string ConditionDisplay => Shared.ConditionDisplay.Of(CarInstance).Percent;
         public string MileageDisplay => $"{CarInstance.OdometerKM:N0} km";
         public bool HasPreviewImage => !string.IsNullOrEmpty(PreviewImagePath);
     }

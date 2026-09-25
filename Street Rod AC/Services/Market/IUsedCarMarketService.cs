@@ -47,6 +47,13 @@ namespace Street_Rod_AC.Services.Market
         /// <summary>What the car is worth (<see cref="CarValuation"/>): its model's base price, its condition, its engine</summary>
         decimal ValueOf(Car car);
 
+        /// <summary>
+        /// <see cref="ValueOf"/> for a review that values car after car (a day of the rivals', the classifieds): each
+        /// model is looked up in the catalog once. For one review only, on one thread; a later edit of a profile is
+        /// not seen by it.
+        /// </summary>
+        Func<Car, decimal> Valuer() => ValueOf;
+
         /// <summary>The id of the dealer that takes in the cars nobody asked about: the roughest lot of <paramref name="dealers"/></summary>
         string TradeInLocation(IReadOnlyList<DealerLocation>? dealers);
     }

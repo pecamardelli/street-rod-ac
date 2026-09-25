@@ -73,13 +73,16 @@ namespace Street_Rod_AC.Screens.Diner
         /// <summary>
         /// Horsepower, weight and power to weight side by side, each with who it favours. A stat neither car
         /// states is left out. Spec text is read by <see cref="AcSpecs"/>, the one parser for ui_car.json numbers.
+        /// A car's own dyno figure (<see cref="Models.GameState.Car.PowerHp"/>), when it has one, beats the spec
+        /// sheet: it is what the parts on the car make.
         /// </summary>
-        public static List<MatchupStatViewModel> Compare(CarDefinition playerCar, CarDefinition opponentCar)
+        public static List<MatchupStatViewModel> Compare(CarDefinition playerCar, CarDefinition opponentCar,
+            double? playerPowerHp = null, double? opponentPowerHp = null)
         {
             var stats = new List<MatchupStatViewModel>();
 
-            var playerPower = AcSpecs.ParsePower(playerCar.Specs?.Bhp) ?? 0;
-            var opponentPower = AcSpecs.ParsePower(opponentCar.Specs?.Bhp) ?? 0;
+            var playerPower = PowerOf(playerPowerHp, playerCar);
+            var opponentPower = PowerOf(opponentPowerHp, opponentCar);
             var playerWeight = AcSpecs.ParseWeight(playerCar.Specs?.Weight) ?? 0;
             var opponentWeight = AcSpecs.ParseWeight(opponentCar.Specs?.Weight) ?? 0;
 
@@ -108,6 +111,9 @@ namespace Street_Rod_AC.Screens.Diner
 
             return stats;
         }
+
+        private static double PowerOf(double? dyno, CarDefinition car) =>
+            dyno is { } hp && hp > 0 && double.IsFinite(hp) ? hp : AcSpecs.ParsePower(car.Specs?.Bhp) ?? 0;
 
         /// <summary>-1 opponent ahead, 0 level, 1 player ahead; flipped when lower is better</summary>
         public static int AdvantageOf(double playerValue, double opponentValue, bool higherIsBetter)

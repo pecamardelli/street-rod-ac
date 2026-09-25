@@ -86,11 +86,11 @@
                 VerticalAlignment="Top"
                 Margin="20,94,0,0"/>
 
-        <!-- Main Content -->
+        <!-- Main Content: 800 wide at most, narrower on a small or high-DPI screen so it keeps clear of the side buttons -->
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="4*" MaxWidth="800"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
@@ -105,7 +105,7 @@
                 <Button x:Name="CarDisplayButton"
                     Grid.Row="0"
                     Command="{Binding SelectCarCommand}"
-                    HorizontalAlignment="Center"
+                    HorizontalAlignment="Stretch"
                     Margin="0,80,0,20"
                     Cursor="Hand">
                 <Button.Style>
@@ -119,7 +119,7 @@
                                            BorderThickness="2"
                                            CornerRadius="5"
                                            Padding="30,15"
-                                           Width="800">
+                                           MaxWidth="800">
                                         <Border.Effect>
                                             <DropShadowEffect Color="Black"
                                                             Direction="270"
@@ -158,8 +158,8 @@
                     BorderBrush="{StaticResource BorderLightBrush}"
                     BorderThickness="2"
                     CornerRadius="5"
-                    HorizontalAlignment="Center"
-                    Width="800"
+                    HorizontalAlignment="Stretch"
+                    MaxWidth="800"
                     Margin="0,0,0,40">
                 <!-- Shown for the calendar, or as the 2D fallback when the 3D garage could not start -->
                 <Border.Style>
@@ -367,20 +367,26 @@
             <!-- Floating Car Bar (3D controls + car details) -->
             <StackPanel x:Name="CarInfoBar"
                         Grid.Row="1"
-                        Width="800"
-                        HorizontalAlignment="Center"
+                        MaxWidth="800"
+                        HorizontalAlignment="Stretch"
                         VerticalAlignment="Bottom"
                         Margin="0,0,0,42"
                         Visibility="{Binding ActivePanel, Converter={StaticResource GaragePanelToVisibilityConverter}, ConverterParameter=CarPreview}">
                 <!-- 3D Viewport Controls: the engine on the left, the view toggles on the right -->
                 <Grid Margin="0,0,0,8"
                       Visibility="{Binding HasCar, ElementName=Viewport3D, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <!-- The engine takes 340 when there is room and gives way to the toggles when there is not -->
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10*" MaxWidth="340"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
                 <controls:EnginePanel x:Name="EnginePanel"
-                                      Width="340"
-                                      HorizontalAlignment="Left"
+                                      Grid.Column="0"
                                       VerticalAlignment="Bottom"
                                       Engine="{Binding SelectedEngine}"/>
-                <StackPanel Orientation="Horizontal"
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Bottom">
                     <ToggleButton Content="Lights"

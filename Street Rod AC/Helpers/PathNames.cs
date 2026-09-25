@@ -12,16 +12,43 @@ public static class PathNames
 {
     private static readonly char[] Invalid = Path.GetInvalidFileNameChars();
 
+    // Windows' device names: a file called any of these, whatever its extension, opens the device instead
+    private static readonly HashSet<string> Reserved = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "CON", "PRN", "AUX", "NUL",
+        "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+        "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+    };
+
     /// <summary>
     /// A single folder or file name made from free text (a player's name): invalid characters become '_',
-    /// runs of them collapse, and it is trimmed and capped. Never empty.
+    /// runs of them collapse, and it is trimmed and capped. A device name (a player called "Con") gets a '_'
+    /// after it. Never empty.
     /// </summary>
     public static string Sanitize(string? name, int maxLength = 50, string fallback = "unnamed")
     {
         var parts = (name ?? string.Empty).Split(Invalid, StringSplitOptions.RemoveEmptyEntries);
-        var joined = string.Join("_", parts).Trim().TrimEnd('.');
-        if (joined.Length > maxLength) joined = joined[..maxLength].Trim().TrimEnd('.');
-        return joined.Length == 0 || joined is "." or ".." ? fallback : joined;
+        var joined = TrimEnds(string.Join("_", parts));
+        if (joined.Length > maxLength) joined = TrimEnds(joined[..maxLength]);
+        if (joined.Length == 0 || joined is "." or "..") return fallback;
+
+        // Windows ignores what follows the first dot, and spaces before it, when it looks for a device
+        var dot = joined.IndexOf('.');
+        var stem = dot < 0 ? joined : joined[..dot];
+        return Reserved.Contains(stem.TrimEnd()) ? stem.TrimEnd() + "_" + (dot < 0 ? "" : joined[dot..]) : joined;
+    }
+
+    /// <summary>No spaces at either end and no dots at the end, however they are mixed ("abc . ." is "abc")</summary>
+    private static string TrimEnds(string text)
+    {
+        var trimmed = text.Trim().TrimEnd('.');
+        while (trimmed.Length != text.Length)
+        {
+            text = trimmed;
+            trimmed = text.Trim().TrimEnd('.');
+        }
+
+        return trimmed;
     }
 
     /// <summary>

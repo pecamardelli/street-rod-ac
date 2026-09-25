@@ -21,6 +21,12 @@ namespace Street_Rod_AC.Services.Race.Validation
             @"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}\.json$",
             RegexOptions.Compiled);
 
+        /// <summary>
+        /// The largest result file that is read. The race mode writes a few kilobytes; anything near this is not
+        /// its result, and reading it whole into memory is not worth the risk.
+        /// </summary>
+        public const long MaxFileBytes = 1024 * 1024;
+
         public RaceResultValidator()
         {
             _logger = AppLoggerFactory.CreateLogger(LogCategory.RaceIngestion);
@@ -121,6 +127,14 @@ namespace Street_Rod_AC.Services.Race.Validation
                 return ValidationResult.Failure(
                     ValidationFailureReason.ZeroSize,
                     "File is empty (0 bytes)");
+            }
+
+            if (fileInfo.Length > MaxFileBytes)
+            {
+                _logger.Warning("File {FileName} is {Bytes} bytes, more than a result file can be - not read", fileInfo.Name, fileInfo.Length);
+                return ValidationResult.Failure(
+                    ValidationFailureReason.TooLarge,
+                    $"File is {fileInfo.Length} bytes, over the {MaxFileBytes} byte limit for a race result");
             }
 
             return new ValidationResult { IsValid = true };

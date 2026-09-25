@@ -4,13 +4,14 @@ namespace Street_Rod_AC.Services.Race
 {
     /// <summary>
     /// Service for ingesting race result files from AC Lua app (sr_race_manager)
-    /// Implements the 8-step ingestion pipeline from guidelines
+    /// Implements the ingestion pipeline from guidelines
     /// </summary>
     public interface IRaceResultIngestionService
     {
         /// <summary>
         /// Ingest race results from the AC output folder into the loaded game. A file is applied only with the
-        /// context it belongs to (its context_id); anything else is quarantined, never applied to this race.
+        /// context it belongs to (its context_id), never to another race: a file of another save's race stays in
+        /// the inbox for that save, one of a race this save has settled already (or a month old) is quarantined.
         /// Needs a loaded game: without one the files stay where they are.
         /// </summary>
         /// <param name="raceContext">The race just run; null uses the save's pending race</param>
@@ -88,13 +89,14 @@ namespace Street_Rod_AC.Services.Race
         public int FilesQuarantined { get; set; }
 
         /// <summary>
-        /// Files completely ignored (non-UUID, foreign data)
+        /// Files completely ignored (non-UUID, foreign data), and result files of a race of another save, left in
+        /// the inbox for it
         /// </summary>
         public int FilesIgnored { get; set; }
 
         /// <summary>
         /// Result files that are there but could not be dealt with now (locked or unreadable, the dedup or settled
-        /// check failing, the archive move or the save failing). They stay in the inbox for the next pass; a race
+        /// check failing, or the save failing). They stay in the inbox for the next pass; a race
         /// with one of these is never taken for a race without a result.
         /// </summary>
         public int FilesDeferred { get; set; }

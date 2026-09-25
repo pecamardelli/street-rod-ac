@@ -1,3 +1,4 @@
+using System.Globalization;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Services.Scheduler;
@@ -11,6 +12,9 @@ namespace Street_Rod_AC.Services.Time
     {
         private readonly IGameTimeScheduler _scheduler;
         private readonly IAppLogger _logger;
+
+        /// <summary>The game speaks US English, whatever the machine's culture: "8:00 AM", "June 3, 1971"</summary>
+        private static readonly CultureInfo DisplayCulture = CultureInfo.GetCultureInfo("en-US");
 
         /// <summary>
         /// One spend at a time. The clock moves first and the day's tasks run after it with awaits in between
@@ -68,8 +72,8 @@ namespace Street_Rod_AC.Services.Time
             gameState.UpdateTime(newTime);
 
             _logger.Debug("Time advanced: {Previous} -> {New}",
-                previousTime.ToString("h:mm tt"),
-                newTime.ToString("h:mm tt"));
+                previousTime.ToString("h:mm tt", DisplayCulture),
+                newTime.ToString("h:mm tt", DisplayCulture));
 
             return new TimeSpendResult
             {
@@ -124,12 +128,12 @@ namespace Street_Rod_AC.Services.Time
 
         public string GetFormattedTime(GameState gameState)
         {
-            return gameState.Date.ToString("h:mm tt");
+            return gameState.Date.ToString("h:mm tt", DisplayCulture);
         }
 
         public string GetFormattedDate(GameState gameState)
         {
-            return gameState.Date.ToString("MMMM d, yyyy");
+            return gameState.Date.ToString("MMMM d, yyyy", DisplayCulture);
         }
 
         private async Task<TimeSpendResult> AdvanceToNextMorningAsync(
@@ -151,8 +155,8 @@ namespace Street_Rod_AC.Services.Time
 
             _logger.Information(
                 "Day ended. Advancing from {Previous} to {Next} ({Days} day(s) passed)",
-                previousTime.ToString("MMM d h:mm tt"),
-                nextMorning.ToString("MMM d h:mm tt"),
+                previousTime.ToString("MMM d h:mm tt", DisplayCulture),
+                nextMorning.ToString("MMM d h:mm tt", DisplayCulture),
                 daysPassed);
 
             // Update game state

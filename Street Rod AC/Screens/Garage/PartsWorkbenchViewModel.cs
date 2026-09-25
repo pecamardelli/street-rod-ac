@@ -424,6 +424,7 @@ namespace Street_Rod_AC.Screens.Garage
                 if (catalog == null || live == null) return;
 
                 var evaluation = ++_evaluation;
+                var car = _car;
 
                 // On a tree of its own: the one on screen belongs to the UI thread
                 var saved = live.Saved[live.Root];
@@ -431,6 +432,9 @@ namespace Street_Rod_AC.Screens.Garage
                 if (evaluation != _evaluation) return;
 
                 _report = report;
+
+                // The car's dyno figure, as the rivals' is kept: the diner's matchup reads it, and the next save keeps it
+                if (car != null) car.PowerHp = Services.Market.UsedCarMarketService.PowerOf(report);
                 NotifySheet();
             }
             catch (Exception ex)

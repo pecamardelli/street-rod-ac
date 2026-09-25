@@ -39,16 +39,6 @@ namespace Street_Rod_AC.Services.Scheduler
             return failed;
         }
 
-        public async Task ExecuteAllTasksAsync(GameState gameState, DateTime currentDate)
-        {
-            _logger.Information("Force executing all {Count} scheduled tasks", _tasks.Count);
-
-            foreach (var task in _tasks)
-            {
-                await ExecuteTaskAsync(gameState, task, currentDate);
-            }
-        }
-
         private bool IsTaskDue(GameState gameState, IScheduledTask task, DateTime currentDate)
         {
             var taskState = GetOrCreateTaskState(gameState, task.TaskId);

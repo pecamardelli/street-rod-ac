@@ -76,48 +76,6 @@ public class OpponentRulesTests
 
 public class OpponentLifeServiceTests
 {
-    /// <summary>No parts catalog: the cars are judged on their own figures, the body shop still works</summary>
-    private sealed class NoParts : ICarPartsService
-    {
-        public PartsCatalog Catalog => throw new NotSupportedException();
-        public EngineBuildIndex Builds => throw new NotSupportedException();
-        public bool IsAvailable => false;
-        public Task WarmUpAsync() => Task.CompletedTask;
-        public RatedBuild? GetStockBuild(CarDefinition car) => null;
-        public bool EnsureParts(Car car) => false;
-        public Task<bool> EnsurePartsAsync(Car car) => Task.FromResult(false);
-        public bool BringUpToDate(GameState game) => false;
-        public BuiltEngine? CreateUsedEngine(CarDefinition car, double condition) => null;
-        public string? Describe(PartInstance engine, EngineReport? report) => null;
-        public EngineReport? Evaluate(Car car) => null;
-        public SoundLibrary Sounds => throw new NotSupportedException();
-        public CarSound? ChooseSound(Car car, EngineReport? report) => null;
-        public double? FactoryEngineMass(Car car) => null;
-        public AcCarSpecs? Specs(string carDefinitionId) => null;
-        public (RunningGearFactory.AxleParts Front, RunningGearFactory.AxleParts Rear)? FactoryRunningGear(Car car) => null;
-    }
-
-    private sealed class FakeMarket : IUsedCarMarketService
-    {
-        public decimal Value { get; set; } = 1000m;
-        public List<Car> Listed { get; } = [];
-
-        public decimal ValueOf(Car car) => Value;
-        public string TradeInLocation(IReadOnlyList<DealerLocation>? dealers) => "industrial_motors";
-        public List<DealerLocation> GetDefaultDealers() => [];
-
-        public UsedCarListing ListCar(Car car, decimal price, string location, DateTime listedDate)
-        {
-            Listed.Add(car);
-            return new UsedCarListing { CarDefinitionId = car.DefinitionId, Price = price, DealerLocation = location, ListedDate = listedDate };
-        }
-
-        public Task<List<UsedCarListing>> SpawnListingsAsync(List<DealerLocation> dealers, DateTime currentDate, double priceMultiplier) => throw new NotSupportedException();
-        public Task<List<UsedCarListing>> RefreshMarketAsync(List<UsedCarListing> currentListings, List<DealerLocation> dealers, DateTime currentDate, double priceMultiplier) => throw new NotSupportedException();
-        public List<UsedCarListing> GetAvailableListings(List<UsedCarListing> allListings) => allListings;
-        public List<UsedCarListing> GetListingsByDealer(List<UsedCarListing> allListings, string dealerLocationId) => allListings;
-    }
-
     private sealed class NoCatalog : IContentCatalogRepository
     {
         public void UpsertCar(CarDefinition car) { }
@@ -132,7 +90,7 @@ public class OpponentLifeServiceTests
         public int GetCarCount() => 0;
     }
 
-    private readonly FakeMarket _market = new();
+    private readonly FakeMarket _market = new(1000m);
     private readonly OpponentLifeService _life;
     private readonly GameState _state;
 
@@ -178,6 +136,21 @@ public class OpponentLifeServiceTests
         Assert.Equal(1100m, racer.Money);
         Assert.Equal(RacerStatus.ReadyToRace, racer.Status);
         Assert.Contains(_state.StreetTalk, t => t.Text.Contains("Ann bought"));
+    }
+
+    [Fact]
+    public async Task Too_many_cars_with_every_spare_in_the_impound_waits_and_the_day_goes_on()
+    {
+        var driven = GoodCar();
+        var spares = Enumerable.Range(0, OpponentRules.MaxCars).Select(i => new Car($"car_impounded_{i}") { ImpoundedUntil = _state.Date.AddDays(30) }).ToArray();
+        var racer = Racer("Ivy", 500m, RacerStatus.Retired, [driven, .. spares]);
+
+        await _life.ReviewDayAsync(_state, _state.Date);
+
+        Assert.Equal(OpponentRules.MaxCars + 1, racer.Cars.Count);
+        Assert.Same(driven, racer.Cars[0]);
+        Assert.Empty(_market.Listed);
+        Assert.Equal(RacerStatus.ReadyToRace, racer.Status); // the rest of the review ran
     }
 
     [Fact]
@@ -247,7 +220,7 @@ public class OpponentLifeServiceTests
         await _life.ReviewDayAsync(_state, _state.Date);
 
         Assert.Equal(new[] { strong, middle }, racer.Cars);
-        Assert.Equal(new[] { weak }, _market.Listed);
+        Assert.Equal(new[] { weak }, _market.Listed.Select(l => l.Car));
         Assert.Equal(1000m + 600m, racer.Money); // a dealer's 60%
         Assert.Single(_state.UsedCarMarket);
     }

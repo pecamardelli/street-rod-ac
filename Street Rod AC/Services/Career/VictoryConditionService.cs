@@ -47,8 +47,7 @@ namespace Street_Rod_AC.Services.Career
 
         public IVictoryCondition? CheckForVictory(GameState gameState)
         {
-            // Update dynamic victory conditions before checking
-            UpdateDynamicConditions(gameState);
+            RefreshStanding(gameState);
 
             // The path the player set out on is the one that wins; with none picked (or one the game no longer
             // knows), whichever is reached first
@@ -62,7 +61,14 @@ namespace Street_Rod_AC.Services.Career
 
         public IVictoryCondition? ClaimVictory(GameState gameState)
         {
-            if (gameState.Career.HasWonGame || CheckForVictory(gameState) is not { } victory)
+            if (gameState.Career.HasWonGame)
+            {
+                // Won already: the Career screen still shows where the player stands
+                RefreshStanding(gameState);
+                return null;
+            }
+
+            if (CheckForVictory(gameState) is not { } victory)
                 return null;
 
             gameState.Career.HasWonGame = true;
@@ -110,25 +116,18 @@ namespace Street_Rod_AC.Services.Career
         }
 
         /// <summary>
-        /// Update victory conditions that need external data (total opponents, season status, etc.)
+        /// The figures the victories need from the whole game (how many racers, who has the most wins, the King's
+        /// name), put on the career where every victory reads them
         /// </summary>
-        private void UpdateDynamicConditions(GameState gameState)
+        public void RefreshStanding(GameState gameState)
         {
-            // Update Domination victory with total opponent count
-            if (_victoryConditions.TryGetValue("Domination", out var domination) &&
-                domination is DominationVictory dominationVictory &&
-                _getTotalOpponents != null)
-            {
-                dominationVictory.TotalOpponents = _getTotalOpponents(gameState);
-            }
+            var career = gameState.Career;
+            if (_getTotalOpponents != null) career.TotalOpponents = _getTotalOpponents(gameState);
+            if (_playerHasMostWins != null) career.PlayerHasMostWins = _playerHasMostWins(gameState);
 
-            // Update Season Champion victory
-            if (_victoryConditions.TryGetValue("SeasonChampion", out var season) &&
-                season is SeasonChampionVictory seasonVictory &&
-                _playerHasMostWins != null)
-            {
-                seasonVictory.PlayerHasMostWins = _playerHasMostWins(gameState);
-            }
+            var racers = gameState.Racers;
+            career.KingName = racers.ReadyToRace.Values.Concat(racers.Retired.Values).Concat(racers.Inactive.Values)
+                .OfType<Opponent>().FirstOrDefault(o => o.IsKing)?.Name ?? career.KingName;
         }
     }
 }

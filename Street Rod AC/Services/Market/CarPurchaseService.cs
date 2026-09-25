@@ -1,6 +1,7 @@
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Parts;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
@@ -99,17 +100,7 @@ namespace Street_Rod_AC.Services.Market
                 _logger.Error(ex, "Could not spend the time for buying the car");
             }
 
-            var saveFailed = false;
-            try
-            {
-                _gameStateRepository.Save(gameState, gameState.SaveName);
-                _logger.Information("Game state saved after purchase");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Failed to save game state after purchase");
-                saveFailed = true;
-            }
+            var saveFailed = !GameSaves.TrySave(_gameStateRepository, gameState, _logger, "a purchase");
 
             return new PurchaseResult(PurchaseOutcome.Bought,
                 $"Congratulations! You've purchased a {carDef.Brand} {carDef.Name} for ${listing.Price:N0}.\n\n" +
@@ -122,25 +113,38 @@ namespace Street_Rod_AC.Services.Market
         /// car), paid the listing's price on <paramref name="date"/>. Older listings carry no parts; the car is then
         /// given its factory ones (<see cref="ICarPartsService.EnsureParts"/>), which is the buyer's to do.
         /// </summary>
-        public static Car CarFrom(UsedCarListing listing, DateTime date) => new()
+        public static Car CarFrom(UsedCarListing listing, DateTime date)
         {
-            InstanceId = Guid.NewGuid(),
-            DefinitionId = listing.CarDefinitionId,
-            SkinId = listing.SkinId,
-            PurchasePrice = listing.Price,
-            PurchaseDate = date,
-            OdometerKM = listing.Mileage,
-            // Map single condition to health metrics
-            EngineHealth = listing.Condition,
-            TransmissionHealth = listing.Condition,
-            BodyCondition = listing.Condition,
-            TireCondition = listing.Condition,
-            // What was for sale is what gets bought; older listings carry no parts and get the factory engine
-            Parts = listing.Parts,
-            HasPartsAssigned = listing.Parts.Count > 0,
-            HasRunningGearAssigned = listing.HasRunningGearAssigned,
-            PowerHp = listing.PowerHp
-        };
+            var car = new Car
+            {
+                InstanceId = Guid.NewGuid(),
+                DefinitionId = listing.CarDefinitionId,
+                SkinId = listing.SkinId,
+                PurchasePrice = listing.Price,
+                PurchaseDate = date,
+                OdometerKM = listing.Mileage,
+                // Map single condition to health metrics
+                EngineHealth = listing.Condition,
+                TransmissionHealth = listing.Condition,
+                BodyCondition = listing.Condition,
+                TireCondition = listing.Condition,
+                // What was for sale is what gets bought; older listings carry no parts and get the factory engine
+                Parts = listing.Parts,
+                HasPartsAssigned = listing.Parts.Count > 0,
+                HasRunningGearAssigned = listing.HasRunningGearAssigned,
+                PowerHp = listing.PowerHp
+            };
+
+            // A relisted car comes with its dents; the body's figure is then the dents', not the listing's average
+            if (listing.BodyDamageKmh is { Length: > 0 } body)
+            {
+                car.BodyDamageKmh = body;
+                car.BodyDamageKmh = CarCondition.Body(car); // four sane zones, a copy of the car's own
+                car.BodyCondition = CarCondition.BodyCondition(car);
+            }
+
+            return car;
+        }
 
         /// <summary>The car that was for sale, with the parts it came with, or its factory engine if it came without</summary>
         private async Task<Car> CreateCarAsync(Models.GameState.GameState gameState, UsedCarListing listing)

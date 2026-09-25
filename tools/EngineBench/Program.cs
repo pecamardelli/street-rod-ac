@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts;
 using Street_Rod_AC.Parts.Cars;
@@ -232,7 +233,8 @@ public static class Program
         Dictionary<string, string> files;
         try
         {
-            files = AcEngineData.Generate(report, name => File.Exists(Path.Combine(carData, name)) ? File.ReadAllText(Path.Combine(carData, name)) : null);
+            // Read and written in Latin-1, as the game does: AC's files are ANSI, and UTF-8 would mangle a mod's accents
+            files = AcEngineData.Generate(report, AcCarDataReader.ForFolder(carData));
         }
         catch (FileNotFoundException ex)
         {
@@ -241,7 +243,7 @@ public static class Program
         }
 
         Directory.CreateDirectory(output);
-        foreach (var (name, content) in files) File.WriteAllText(Path.Combine(output, name), content);
+        foreach (var (name, content) in files) File.WriteAllText(Path.Combine(output, name), content, Encoding.Latin1);
 
         Console.WriteLine($"{build.Name}: {report.Dyno!.MaxPowerHp:0} hp, {report.GearRatios.Count} gears -> {string.Join(", ", files.Keys)} in {output}");
         return 0;
@@ -533,7 +535,7 @@ public static class Program
         if (output != null)
         {
             Directory.CreateDirectory(output);
-            foreach (var (name, content) in result.Files) File.WriteAllText(Path.Combine(output, name), content);
+            foreach (var (name, content) in result.Files) File.WriteAllText(Path.Combine(output, name), content, Encoding.Latin1);
         }
 
         return result.CanDrive ? 0 : 1;

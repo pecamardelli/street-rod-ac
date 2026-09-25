@@ -25,8 +25,19 @@ public static class PartPricing
     /// <summary>
     /// From the money of the part scripts to the money of the game. The scripts price parts in the dollars of
     /// the source game's day; the game's cars cost what cars cost in 1970.
+    ///
+    /// Process-wide on purpose: every price in the game is one of these, asked for from anywhere without a service
+    /// at hand. The game sets it once, from its settings (<c>AppSettings.PartsPriceScale</c>), when the parts
+    /// service is made; the tools that link this file (EngineBench) have no settings and price in the scripts'
+    /// own dollars at 1. A value that is not a positive number (a hand-edited settings file) counts as 1.
     /// </summary>
-    public static double Scale { get; set; } = 1.0;
+    public static double Scale
+    {
+        get => _scale;
+        set => _scale = double.IsFinite(value) && value > 0 ? value : 1.0;
+    }
+
+    private static double _scale = 1.0;
 
     public static double NewPrice(PartDefinition part)
     {

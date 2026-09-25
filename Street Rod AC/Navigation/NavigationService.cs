@@ -134,7 +134,7 @@ namespace Street_Rod_AC.Navigation
         /// throws is left again for the screen the player came from. Either way the error is logged and the
         /// player told, instead of the exception ending the game. False when the player did not get there.
         /// </summary>
-        private bool SafeNavigate(string screenName, Func<IScreen> create)
+        internal bool SafeNavigate(string screenName, Func<IScreen> create)
         {
             IScreen screen;
             try
@@ -255,7 +255,8 @@ namespace Street_Rod_AC.Navigation
                 _gameStateRepository,
                 _timeService));
 
-        public bool NavigateToDiner(GameState gameState) => SafeNavigate("diner", () =>
+        /// <param name="returning">Back from a race: the visit was paid for on the way in, so no time is spent</param>
+        public bool NavigateToDiner(GameState gameState, bool returning = false) => SafeNavigate("diner", () =>
             new Screens.Diner.DinerScreenViewModel(
                 this,
                 _dialogService,
@@ -266,7 +267,8 @@ namespace Street_Rod_AC.Navigation
                 _talkService,
                 _timeService,
                 _gameStateRepository,
-                _raceSetup));
+                _raceSetup,
+                returning));
 
         public bool NavigateToNewspaper(GameState gameState, bool skipAnimation = false) => SafeNavigate("newspaper", () =>
             new Screens.Newspaper.NewspaperScreenViewModel(

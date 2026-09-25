@@ -213,16 +213,25 @@ namespace Street_Rod_AC.Services.Career
 
         public IEnumerable<RaceEventInstance> GetActiveEvents(CareerState career, DateTime currentTime)
         {
+            // Everything the stored state holds, and the track and opponent from the definition, as GenerateEvents
+            // gives them to a new instance
             return career.ActiveEvents
                 .Where(e => e.IsAvailable(currentTime))
-                .Select(e => new RaceEventInstance
+                .Select(e =>
                 {
-                    InstanceId = e.InstanceId,
-                    EventDefinitionId = e.EventDefinitionId,
-                    AvailableFrom = e.AvailableFrom,
-                    ExpiresAt = e.ExpiresAt,
-                    IsCompleted = e.IsCompleted,
-                    PlayerWon = e.PlayerWon
+                    var definition = GetEventDefinition(e.EventDefinitionId);
+                    return new RaceEventInstance
+                    {
+                        InstanceId = e.InstanceId,
+                        EventDefinitionId = e.EventDefinitionId,
+                        AvailableFrom = e.AvailableFrom,
+                        ExpiresAt = e.ExpiresAt,
+                        IsCompleted = e.IsCompleted,
+                        PlayerWon = e.PlayerWon,
+                        CompletedAt = e.CompletedAt,
+                        TrackId = definition?.TrackId,
+                        OpponentName = definition?.SpecificOpponent
+                    };
                 });
         }
 
@@ -237,8 +246,7 @@ namespace Street_Rod_AC.Services.Career
             var newEvents = new List<RaceEventInstance>();
             var eligibleEvents = GetEligibleEvents(career).ToList();
 
-            // Remove expired events first
-            CleanupExpiredEvents(career, currentTime);
+            // Expired events are cleared by the caller first (EventGenerationTask), not twice a day
 
             // The paper has room for a few at a time; the order they are looked at is shuffled, so a full paper
             // is not always the same few

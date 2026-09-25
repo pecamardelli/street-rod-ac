@@ -212,7 +212,7 @@
                                                     <TextBlock Text="{Binding ProgressText}"
                                                                FontSize="{StaticResource FontSizeCaption}"
                                                                FontWeight="Bold"
-                                                               Foreground="White"
+                                                               Foreground="{StaticResource TextPrimaryBrush}"
                                                                HorizontalAlignment="Center"
                                                                VerticalAlignment="Center"/>
                                                 </Grid>

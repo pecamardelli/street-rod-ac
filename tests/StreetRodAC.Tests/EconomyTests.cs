@@ -162,27 +162,6 @@ public class CarSaleServiceTests
 {
     private const decimal Worth = 2000m;
 
-    private sealed class FakeMarket : IUsedCarMarketService
-    {
-        public decimal Value { get; set; } = Worth;
-        public List<(Car Car, decimal Price, string Location)> Listed { get; } = [];
-
-        public decimal ValueOf(Car car) => Value;
-        public string TradeInLocation(IReadOnlyList<DealerLocation>? dealers) => "industrial_motors";
-        public List<DealerLocation> GetDefaultDealers() => [new() { Id = "industrial_motors", Name = "Industrial Motors" }];
-
-        public UsedCarListing ListCar(Car car, decimal price, string location, DateTime listedDate)
-        {
-            Listed.Add((car, price, location));
-            return new UsedCarListing { CarDefinitionId = car.DefinitionId, Price = price, DealerLocation = location, ListedDate = listedDate };
-        }
-
-        public Task<List<UsedCarListing>> SpawnListingsAsync(List<DealerLocation> dealers, DateTime currentDate, double priceMultiplier) => throw new NotSupportedException();
-        public Task<List<UsedCarListing>> RefreshMarketAsync(List<UsedCarListing> currentListings, List<DealerLocation> dealers, DateTime currentDate, double priceMultiplier) => throw new NotSupportedException();
-        public List<UsedCarListing> GetAvailableListings(List<UsedCarListing> allListings) => allListings;
-        public List<UsedCarListing> GetListingsByDealer(List<UsedCarListing> allListings, string dealerLocationId) => allListings;
-    }
-
     private sealed class FakeTime : IGameTimeService
     {
         public List<GameAction> Spent { get; } = [];
@@ -205,7 +184,7 @@ public class CarSaleServiceTests
         public Task<TimeSpendResult> EndDayAsync(GameState gameState) => Task.FromResult(new TimeSpendResult());
     }
 
-    private readonly FakeMarket _market = new();
+    private readonly FakeMarket _market = new(Worth, [new() { Id = "industrial_motors", Name = "Industrial Motors" }]);
     private readonly FakeTime _time = new();
     private readonly CarSaleService _service;
     private readonly GameState _state;

@@ -44,6 +44,9 @@ namespace Street_Rod_AC.Screens.DealerMap
         private readonly IGameTimeService _timeService;
         private readonly IAppLogger _logger;
 
+        // A drive under way: the trip is paid for once, and the map is not left while the time is spent
+        private bool _isDriving;
+
         public RelayCommand BackCommand { get; }
         public RelayCommand<DealerPinViewModel> VisitDealerCommand { get; }
 
@@ -94,8 +97,8 @@ namespace Street_Rod_AC.Screens.DealerMap
             _timeService = timeService;
             _logger = AppLoggerFactory.CreateLogger("DealerMap");
 
-            BackCommand = new RelayCommand(OnBack);
-            VisitDealerCommand = new RelayCommand<DealerPinViewModel>(OnVisitDealer);
+            BackCommand = new RelayCommand(OnBack, () => !_isDriving);
+            VisitDealerCommand = new RelayCommand<DealerPinViewModel>(OnVisitDealer, _ => !_isDriving);
 
             // The map is filled in Enter, after the screen before it has been left
         }
@@ -206,7 +209,7 @@ namespace Street_Rod_AC.Screens.DealerMap
 
         private void OnVisitDealer(DealerPinViewModel? pin)
         {
-            if (pin == null) return;
+            if (pin == null || _isDriving) return;
 
             // A drive that does not fit in what is left of the day costs the rest of it: the player gets
             // there, looks round, and comes back tomorrow morning. That is a fair trade for a long trip to
@@ -233,21 +236,38 @@ namespace Street_Rod_AC.Screens.DealerMap
 
         private async void DriveTo(DealerPinViewModel pin)
         {
-            _logger.Information("Driving out to {Dealer}: {Minutes} minutes there and back",
-                pin.Name, pin.TravelMinutes);
+            // One drive at a time: a second click while the time is spent would pay for the trip twice
+            if (_isDriving) return;
+            _isDriving = true;
+            RelayCommand.RaiseCanExecuteChanged();
 
             try
             {
-                // The hours go before the lot is shown, so the clock on the way in is the time you arrived
-                await _timeService.SpendTimeAsync(_gameState, pin.TravelMinutes);
+                _logger.Information("Driving out to {Dealer}: {Minutes} minutes there and back",
+                    pin.Name, pin.TravelMinutes);
+
+                try
+                {
+                    // The hours go before the lot is shown, so the clock on the way in is the time you arrived
+                    await _timeService.SpendTimeAsync(_gameState, pin.TravelMinutes);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Could not spend the time for the drive to {Dealer}", pin.Name);
+                }
+
+                // Guarded by the navigation service: a lot that will not open is reported and the map stays
+                _navigationService.NavigateToDealerLot(_gameState, pin.Id);
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Could not spend the time for the drive to {Dealer}", pin.Name);
+                _logger.Error(ex, "Could not drive out to {Dealer}", pin.Name);
             }
-
-            // Guarded by the navigation service: a lot that will not open is reported and the map stays
-            _navigationService.NavigateToDealerLot(_gameState, pin.Id);
+            finally
+            {
+                _isDriving = false;
+                RelayCommand.RaiseCanExecuteChanged();
+            }
         }
 
         private void OnBack()

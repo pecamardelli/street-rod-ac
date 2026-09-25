@@ -10,6 +10,7 @@ namespace Street_Rod_AC.Models.Career.Victory
     {
         public const int REQUIRED_WINS = 10;
         public const int REQUIRED_REPUTATION = 50;
+        /// <summary>The King's name in the opponent definitions, for a career that has not looked his name up yet</summary>
         public const string KING_NAME = "The King";
 
         public string VictoryType => "King";
@@ -28,7 +29,7 @@ namespace Street_Rod_AC.Models.Career.Victory
         {
             var wins = career.GetCounter(Milestones.MilestoneTrigger.TotalWins);
             var reputation = career.GetCounter(Milestones.MilestoneTrigger.ReputationReached);
-            var kingDefeated = career.DefeatedOpponentIds.Contains(KING_NAME);
+            var kingDefeated = IsKingDefeated(career);
 
             var progress = new VictoryProgress();
 
@@ -81,7 +82,14 @@ namespace Street_Rod_AC.Models.Career.Victory
         public bool IsAchieved(CareerState career)
         {
             // Must be unlocked AND have defeated The King
-            return IsUnlocked(career) && career.DefeatedOpponentIds.Contains(KING_NAME);
+            return IsUnlocked(career) && IsKingDefeated(career);
         }
+
+        /// <summary>
+        /// Beaten racers are kept by name: the King's is the racer marked as the King (CareerState.KingName, looked up
+        /// by the victory service), whatever the definitions call him; his usual name for a career that has none yet
+        /// </summary>
+        private static bool IsKingDefeated(CareerState career) =>
+            career.DefeatedOpponentIds.Contains(string.IsNullOrEmpty(career.KingName) ? KING_NAME : career.KingName);
     }
 }

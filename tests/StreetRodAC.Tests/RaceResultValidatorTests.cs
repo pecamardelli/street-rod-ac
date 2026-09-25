@@ -24,7 +24,7 @@ public sealed class RaceResultValidatorTests : IDisposable
             ["performance"] = new JObject
             {
                 ["final_position"] = position, ["laps_completed"] = 1, ["best_lap_time_ms"] = 12000.5,
-                ["total_race_time_ms"] = 12000.5, ["max_speed_kmh"] = 180.2, ["distance_km"] = 0.402, ["fuel_consumed_liters"] = 0.3
+                ["total_race_time_ms"] = 12000.5, ["max_speed_kmh"] = 180.2, ["distance_km"] = 0.402
             },
             ["crash"] = new JObject { ["crashed"] = false, ["crash_intensities_g"] = new JArray(), ["max_crash_intensity_g"] = 0.0 }
         };
@@ -197,5 +197,19 @@ public sealed class RaceResultValidatorTests : IDisposable
         var noName = Fixture();
         noName["participants"]![0]!["driver_name"] = " ";
         Assert.False((await Validate(noName)).IsValid);
+    }
+
+    [Fact]
+    public async Task A_file_over_a_megabyte_is_rejected_without_being_read()
+    {
+        // A good file, padded past the cap: it is its size that fails it
+        var json = Fixture();
+        json["padding"] = new string(' ', (int)RaceResultValidator.MaxFileBytes);
+        var result = await Validate(json);
+
+        Assert.False(result.IsValid);
+        Assert.Equal(ValidationFailureReason.TooLarge, result.FailureReason);
+        Assert.Contains("byte limit", Assert.Single(result.Errors));
+        Assert.True((await Validate(Fixture())).IsValid);
     }
 }

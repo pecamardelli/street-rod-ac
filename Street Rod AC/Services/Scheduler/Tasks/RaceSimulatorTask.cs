@@ -38,9 +38,10 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
 
             // What the street talks about: cars changing hands and cars wrecked
             var talk = new List<string>();
+            var carName = _catalogRepo == null ? (Func<string, string>)(id => id) : CarNames.Book(_catalogRepo);
             foreach (var race in result.Races)
             {
-                var car = race.LoserCar == null ? "car" : _catalogRepo == null ? race.LoserCar.DefinitionId : CarNames.Of(_catalogRepo, race.LoserCar.DefinitionId);
+                var car = race.LoserCar == null ? "car" : carName(race.LoserCar.DefinitionId);
                 if (race.IsPinkSlip)
                 {
                     _logger.Information("Pink slip race! {Winner} won {Loser}'s car", race.WinnerName, race.LoserName);

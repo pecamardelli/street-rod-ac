@@ -56,6 +56,9 @@ public sealed record ScriptArray(int Length, string? ElementType = null) : Scrip
         Items.TryGetValue(index, out var item) ? item
         : index >= 0 && index < Length ? ScriptTypes.Default(ElementType)
         : Unknown;
+
+    /// <summary>Whether the index is one of the array's elements: a store outside them is not made, as in Java it would not be</summary>
+    public bool Holds(double index) => index >= 0 && index < Length;
 }
 
 /// <summary>What the declared type of a field, local, parameter or array element does to a value</summary>

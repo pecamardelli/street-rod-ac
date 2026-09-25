@@ -84,13 +84,21 @@ namespace Street_Rod_AC.Services
             }
         }
 
+        /// <summary>A clean-up, never worth a race: one that fails (a file locked or denied) is logged and tried next time</summary>
         private void RemoveRetiredApp(string acRoot)
         {
             var app = Path.Combine(acRoot, RetiredApp);
-            if (!Directory.Exists(app)) return;
+            try
+            {
+                if (!Directory.Exists(app)) return;
 
-            Directory.Delete(app, recursive: true);
-            _logger.Information("Removed the old race manager app from {App}: the race mode does its work now", app);
+                Directory.Delete(app, recursive: true);
+                _logger.Information("Removed the old race manager app from {App}: the race mode does its work now", app);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _logger.Warning(ex, "Could not remove the old race manager app from {App}; the race goes ahead, the next one tries again", app);
+            }
         }
     }
 }

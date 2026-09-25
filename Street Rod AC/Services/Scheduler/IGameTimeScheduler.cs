@@ -20,10 +20,5 @@ namespace Street_Rod_AC.Services.Scheduler
         /// <param name="newDate">Date after advancement</param>
         /// <returns>The ids of the due tasks that failed; they are tried again on the next day</returns>
         Task<IReadOnlyList<string>> OnTimeAdvancedAsync(GameState gameState, DateTime previousDate, DateTime newDate);
-
-        /// <summary>
-        /// Force execution of all tasks (useful for new game initialization)
-        /// </summary>
-        Task ExecuteAllTasksAsync(GameState gameState, DateTime currentDate);
     }
 }

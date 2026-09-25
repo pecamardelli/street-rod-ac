@@ -1,3 +1,4 @@
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts.Logic;
 
@@ -56,11 +57,11 @@ public static class EngineTuner
 
     /// <summary>What the mail order asks for a new part, in the game's prices</summary>
     public static decimal NewPrice(PartDefinition part, double priceMultiplier) =>
-        PartPricing.Round(PartPricing.NewPrice(part) * GameRules.Sane(priceMultiplier));
+        PartPricing.Round(PartPricing.NewPrice(part) * Multiplier.Sane(priceMultiplier));
 
     /// <summary>
-    /// Tunes <paramref name="engine"/> in place (hand in a copy) with up to <paramref name="maxUpgrades"/> upgrades
-    /// whose parts together cost no more than <paramref name="budget"/>. Null when nothing is worth doing.
+    /// A tuned copy of <paramref name="engine"/> (which is left as it is) with up to <paramref name="maxUpgrades"/>
+    /// upgrades whose parts together cost no more than <paramref name="budget"/>. Null when nothing is worth doing.
     /// </summary>
     /// <param name="maxTrials">Most dyno runs spent on looking; each takes a few milliseconds</param>
     public static TuneResult? TuneUp(PartsCatalog catalog, EngineBuildIndex builds, PartInstance engine, decimal budget,
@@ -154,8 +155,9 @@ public static class EngineTuner
             }
         }
 
-        // The block swap: a bigger engine of the same family, used, with what goes with it
-        if (!doneGroups.Contains(BlockGroup) && trials > 0 && builds.Runnable.FirstOrDefault(b => b.BlockId.Equals(root.DefinitionId, StringComparison.OrdinalIgnoreCase)) is { Family.Length: > 0 } current)
+        // The block swap: a bigger engine of the same family, used, with what goes with it. Only on an engine not yet
+        // tuned: the swap throws away the old engine's parts, and a bolt-on bought this round would go with them
+        if (doneGroups.Count == 0 && trials > 0 && builds.Runnable.FirstOrDefault(b => b.BlockId.Equals(root.DefinitionId, StringComparison.OrdinalIgnoreCase)) is { Family.Length: > 0 } current)
         {
             var bigger = builds.Runnable
                 .Where(b => b.Family == current.Family && b.PowerHp >= power * (1 + MinGain) && b.PowerHp <= power * MaxSwapPower)
@@ -181,7 +183,7 @@ public static class EngineTuner
     /// <summary>A used engine out of the paper: its parts at a used shop's price</summary>
     public static decimal UsedEnginePrice(PartsCatalog catalog, RatedBuild build, double priceMultiplier) =>
         PartPricing.Round(build.Build.Parts.Sum(p => p.Part != null && catalog.Get(p.Part) is { } d ? PartPricing.NewPrice(d) : 0)
-                          * PartPricing.UsedShopFactor * UsedEngineCondition * GameRules.Sane(priceMultiplier));
+                          * PartPricing.UsedShopFactor * UsedEngineCondition * Multiplier.Sane(priceMultiplier));
 
     /// <summary>What a shop pays for a part that came off, with or without what is on it</summary>
     private static decimal TradeIn(PartsCatalog catalog, PartInstance part, bool withChildren)

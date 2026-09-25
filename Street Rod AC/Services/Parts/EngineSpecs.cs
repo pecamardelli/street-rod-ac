@@ -3,6 +3,7 @@ using Street_Rod_AC.Audio;
 using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Parts.Export;
 
 namespace Street_Rod_AC.Services.Parts
@@ -19,18 +20,41 @@ namespace Street_Rod_AC.Services.Parts
         /// The engine of a car, worked out away from the UI thread. Null when the car has no engine to start (or
         /// the parts catalog is not there).
         /// </summary>
-        public static Task<EngineSpec?> ForAsync(ICarPartsService parts, Car car, string name) => Task.Run(() =>
+        public static Task<EngineSpec?> ForAsync(ICarPartsService parts, Car car, string name)
         {
-            try
+            // The worker gets a copy made here, on the caller's thread: the car's own parts may be changed on the
+            // workbench while the dyno runs
+            var copy = Snapshot(car);
+            return Task.Run(() =>
             {
-                return For(parts, car, name);
-            }
-            catch (Exception ex)
-            {
-                Logger.Warning("{Car}: the engine cannot be started in the garage: {Error}", car.DefinitionId, ex.Message);
-                return null;
-            }
-        });
+                try
+                {
+                    return For(parts, copy, name);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning("{Car}: the engine cannot be started in the garage: {Error}", copy.DefinitionId, ex.Message);
+                    return null;
+                }
+            });
+        }
+
+        /// <summary>The car with copies of its parts (their ids kept), for a worker thread to evaluate</summary>
+        private static Car Snapshot(Car car) => new(car.DefinitionId)
+        {
+            InstanceId = car.InstanceId,
+            SkinId = car.SkinId,
+            OdometerKM = car.OdometerKM,
+            EngineHealth = car.EngineHealth,
+            TransmissionHealth = car.TransmissionHealth,
+            BodyCondition = car.BodyCondition,
+            TireCondition = car.TireCondition,
+            BodyDamageKmh = car.BodyDamageKmh?.ToArray() ?? new double[4],
+            Parts = car.Parts.Select(p => PartTrees.Clone(p, keepIds: true)).ToList(),
+            HasPartsAssigned = car.HasPartsAssigned,
+            HasRunningGearAssigned = car.HasRunningGearAssigned,
+            PowerHp = car.PowerHp
+        };
 
         /// <summary>
         /// A car for sale, as it is: its own parts, or the factory's when the offer came without any (an older save)

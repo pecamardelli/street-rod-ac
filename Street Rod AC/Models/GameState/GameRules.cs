@@ -1,4 +1,5 @@
 using LiteDB;
+using Street_Rod_AC.Helpers;
 
 namespace Street_Rod_AC.Models.GameState
 {
@@ -107,12 +108,10 @@ namespace Street_Rod_AC.Models.GameState
             _ => 1.0
         };
 
-        /// <summary>A price scaled by a multiplier, never negative; a multiplier out of a hand-edited save counts as 1</summary>
-        public static decimal Scale(decimal price, double multiplier) =>
-            Math.Max(0m, price * (decimal)Sane(multiplier));
+        /// <summary>A price scaled by a multiplier, never negative; see <see cref="Multiplier.Scale"/></summary>
+        public static decimal Scale(decimal price, double multiplier) => Multiplier.Scale(price, multiplier);
 
-        /// <summary>A multiplier that is not a positive, finite number (a save edited by hand) counts as 1</summary>
-        public static double Sane(double multiplier) =>
-            double.IsFinite(multiplier) && multiplier > 0 ? Math.Min(multiplier, 100) : 1.0;
+        /// <summary>A multiplier that is not a positive, finite number (a save edited by hand) counts as 1; see <see cref="Multiplier.Sane"/></summary>
+        public static double Sane(double multiplier) => Multiplier.Sane(multiplier);
     }
 }

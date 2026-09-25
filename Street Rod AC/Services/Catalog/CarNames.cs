@@ -23,6 +23,16 @@ namespace Street_Rod_AC.Services.Catalog
             return carDefinitionId;
         }
 
+        /// <summary>
+        /// <see cref="Of(IContentCatalogRepository, string)"/> with each car looked up once: for a review that names
+        /// car after car. For that review only, on one thread.
+        /// </summary>
+        public static Func<string, string> Book(IContentCatalogRepository catalog)
+        {
+            var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            return id => names.TryGetValue(id, out var name) ? name : names[id] = Of(catalog, id);
+        }
+
         public static string Of(CarDefinition definition)
         {
             var name = definition.Brand.Length == 0 || definition.Name.StartsWith(definition.Brand, StringComparison.OrdinalIgnoreCase)

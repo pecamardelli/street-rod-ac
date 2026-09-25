@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Street Rod AC"
         WindowStyle="None"
-        AllowsTransparency="True"
+        ResizeMode="NoResize"
         WindowState="Maximized"
         Background="{StaticResource BgDarkBrush}"
         x:Name="MainWindowRoot">

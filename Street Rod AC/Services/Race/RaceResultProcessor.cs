@@ -176,11 +176,11 @@ namespace Street_Rod_AC.Services.Race
         /// </summary>
         private sealed class RaceStateSnapshot
         {
-            // Its own mapper (the same defaults as the one the saves use), used under a lock: LiteDB builds a type's
+            // Its own mapper (made like the one the saves use), used under a lock: LiteDB builds a type's
             // mapping on first use and a second thread can see it half-built, which would make a snapshot that
             // silently drops members. The shared global mapper is also used by the catalog and the saves on
             // other threads.
-            private static readonly BsonMapper Mapper = new();
+            private static readonly BsonMapper Mapper = SaveMapper.Create();
 
             private BsonDocument _player = null!;
             private BsonDocument _racers = null!;

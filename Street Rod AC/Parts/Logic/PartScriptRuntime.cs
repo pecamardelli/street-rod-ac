@@ -135,6 +135,7 @@ public sealed class PartScriptRuntime
     /// <summary>Result of the last dyno run on the DynoData object of a block</summary>
     public DynoResult? DynoResultOf(ScriptObject dynoData) => _dynoResults.GetValueOrDefault(dynoData);
 
+    /// <summary>A saved tuning value put on the part's script; a key for an element the array doesn't have ("ratio[-5]") is left alone</summary>
     private static void Tune(ScriptObject instance, string field, double value)
     {
         var bracket = field.IndexOf('[');
@@ -144,7 +145,8 @@ public sealed class PartScriptRuntime
             instance.Fields[field] = new ScriptNumber(value, isInteger);
         }
         else if (instance.Fields.GetValueOrDefault(field[..bracket]) is ScriptArray array
-                 && int.TryParse(field[(bracket + 1)..].TrimEnd(']'), NumberStyles.Integer, CultureInfo.InvariantCulture, out var index))
+                 && int.TryParse(field[(bracket + 1)..].TrimEnd(']'), NumberStyles.Integer, CultureInfo.InvariantCulture, out var index)
+                 && array.Holds(index))
         {
             array.Items[index] = new ScriptNumber(value, false);
         }

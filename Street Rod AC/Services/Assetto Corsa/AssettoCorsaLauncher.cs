@@ -744,30 +744,37 @@ namespace Street_Rod_AC.Services
             return lastExit;
         }
 
-        /// <summary>Car data, copies and cfg files back as they were; each part on its own, logged, never throws</summary>
-        private int RestoreInstall()
+        private int RestoreInstall() => RestoreInstall(_carData, _iniService, _logger);
+
+        /// <summary>
+        /// Car data, copies and cfg files back as they were: the cars first, then the cfg files, each part on its own
+        /// (one that fails does not stop the other), logged, never throws. Returns how many went back. The launcher
+        /// and the app's start-up and exit paths all put the install back through here; only call it when no AC
+        /// process runs.
+        /// </summary>
+        public static int RestoreInstall(CarDataOverlay? carData, IIniModificationService? iniService, IAppLogger? logger)
         {
             var restored = 0;
             try
             {
-                var cars = _carData.RestoreAll();
-                if (cars > 0) _logger.Information("Data of {Count} car(s) put back, copies taken away", cars);
+                var cars = carData?.RestoreAll() ?? 0;
+                if (cars > 0) logger?.Information("Data of {Count} car(s) put back, copies taken away", cars);
                 restored += cars;
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Could not put the cars' data back");
+                logger?.Error(ex, "Could not put the cars' data back");
             }
 
             try
             {
-                var files = _iniService.RestoreAll();
-                if (files > 0) _logger.Information("{Count} cfg file(s) put back", files);
+                var files = iniService?.RestoreAll() ?? 0;
+                if (files > 0) logger?.Information("{Count} cfg file(s) put back", files);
                 restored += files;
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Could not put the cfg files back");
+                logger?.Error(ex, "Could not put the cfg files back");
             }
 
             return restored;

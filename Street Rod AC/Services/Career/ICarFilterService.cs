@@ -21,20 +21,9 @@ namespace Street_Rod_AC.Services.Career
             Func<string, CarDefinition?> definitionLookup);
 
         /// <summary>
-        /// Find all car definitions that match a filter
-        /// </summary>
-        IEnumerable<CarDefinition> FindMatchingDefinitions(ICarFilter filter,
-            IEnumerable<CarDefinition> definitions);
-
-        /// <summary>
         /// Check if any car in a collection matches the filter
         /// </summary>
         bool HasMatchingCar(ICarFilter filter, IEnumerable<Car> cars,
             Func<string, CarDefinition?> definitionLookup);
-
-        /// <summary>
-        /// Create a filter from a type name and parameters (for deserialization)
-        /// </summary>
-        ICarFilter? CreateFilter(string filterType, Dictionary<string, object>? parameters = null);
     }
 }

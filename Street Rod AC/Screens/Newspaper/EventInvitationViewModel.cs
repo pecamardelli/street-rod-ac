@@ -133,19 +133,7 @@ namespace Street_Rod_AC.Screens.Newspaper
             {
                 InstanceId = car.InstanceId,
                 DisplayName = displayName,
-                ConditionText = GetConditionText(car.BodyCondition)
-            };
-        }
-
-        private static string GetConditionText(double condition)
-        {
-            return condition switch
-            {
-                >= 0.9 => "Excellent condition",
-                >= 0.7 => "Good condition",
-                >= 0.5 => "Fair condition",
-                >= 0.3 => "Poor condition",
-                _ => "Needs repair"
+                ConditionText = Shared.ConditionDisplay.Of(car).Sentence
             };
         }
     }

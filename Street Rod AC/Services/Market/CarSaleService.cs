@@ -240,6 +240,7 @@ namespace Street_Rod_AC.Services.Market
             var gone = ads.RemoveAll(ad =>
                 gameState.Player.Cars.All(c => c.InstanceId != ad.CarInstanceId) || (currentDate - ad.PostedDate).TotalDays > AdDays);
 
+            var valueOf = _market.Valuer();
             foreach (var ad in ads)
             {
                 if (ad.Offer is { } old && old.Expires < currentDate) ad.Offer = null;
@@ -249,7 +250,7 @@ namespace Street_Rod_AC.Services.Market
                 decimal value;
                 try
                 {
-                    value = _market.ValueOf(car);
+                    value = valueOf(car);
                 }
                 catch (Exception ex)
                 {
@@ -370,20 +371,6 @@ namespace Street_Rod_AC.Services.Market
             return !Save(gameState);
         }
 
-        private bool Save(GameState gameState)
-        {
-            if (string.IsNullOrEmpty(gameState.SaveName)) return true;
-
-            try
-            {
-                _gameStateRepository.Save(gameState, gameState.SaveName);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Could not save the game after a sale");
-                return false;
-            }
-        }
+        private bool Save(GameState gameState) => GameSaves.TrySave(_gameStateRepository, gameState, _logger, "a sale");
     }
 }

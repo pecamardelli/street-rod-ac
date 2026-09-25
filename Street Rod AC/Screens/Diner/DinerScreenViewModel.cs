@@ -37,6 +37,9 @@ namespace Street_Rod_AC.Screens.Diner
         private readonly RaceSetupBuilder _raceSetup;
         private readonly IAppLogger _logger;
 
+        // Back from a race: the player never left, so the visit is not paid for again
+        private readonly bool _returning;
+
         public RelayCommand GarageCommand { get; }
         public RelayCommand<OpponentDisplayViewModel> SelectOpponentCommand { get; }
         public RelayCommand<TrackCardViewModel> SelectTrackCommand { get; }
@@ -291,8 +294,10 @@ namespace Street_Rod_AC.Screens.Diner
             ITalkService talkService,
             IGameTimeService timeService,
             IGameStateRepository gameStateRepo,
-            RaceSetupBuilder raceSetup)
+            RaceSetupBuilder raceSetup,
+            bool returning = false)
         {
+            _returning = returning;
             _navigationService = navigationService;
             _dialogService = dialogService;
             _gameState = gameState;
@@ -578,9 +583,10 @@ namespace Street_Rod_AC.Screens.Diner
 
             // Get player's selected car
             CarDefinition? playerCarDef = null;
+            Models.GameState.Car? playerCar = null;
             if (_gameState.Player.SelectedCarInstanceId != null)
             {
-                var playerCar = _gameState.Player.Cars.FirstOrDefault(c =>
+                playerCar = _gameState.Player.Cars.FirstOrDefault(c =>
                     c.InstanceId == _gameState.Player.SelectedCarInstanceId);
                 if (playerCar != null)
                 {
@@ -594,7 +600,8 @@ namespace Street_Rod_AC.Screens.Diner
                 return;
             }
 
-            foreach (var stat in MatchupCalculator.Compare(playerCarDef, SelectedOpponent.CarDefinition))
+            foreach (var stat in MatchupCalculator.Compare(playerCarDef, SelectedOpponent.CarDefinition,
+                         playerCar?.PowerHp, SelectedOpponent.Opponent.Cars.FirstOrDefault()?.PowerHp))
             {
                 MatchupStats.Add(stat);
             }
@@ -809,6 +816,8 @@ namespace Street_Rod_AC.Screens.Diner
             {
                 _logger.Error(ex, "Could not list the racers at the diner");
             }
+
+            if (_returning) return;
 
             try
             {

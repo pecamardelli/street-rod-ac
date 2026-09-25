@@ -287,20 +287,11 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
         public string DisplayName => $"{CarDefinition.Brand} {CarDefinition.Name}";
         public string YearDisplay => CarDefinition.Year?.ToString() ?? "Unknown";
         public string PriceDisplay => $"${Listing.Price:N0}";
-        public string ConditionDisplay => $"{(int)(Listing.Condition * 100)}%";
+        public string ConditionDisplay => Shared.ConditionDisplay.Of(Listing.Condition).Percent;
         public string MileageDisplay => $"{Listing.Mileage:N0} km";
 
         /// <summary>The condition in a word, for the purchase question</summary>
-        public string ConditionLabel => ConditionLabelFor(Listing.Condition);
-
-        public static string ConditionLabelFor(float condition)
-        {
-            if (condition >= 0.9f) return "Excellent";
-            if (condition >= 0.75f) return "Good";
-            if (condition >= 0.6f) return "Fair";
-            if (condition >= 0.4f) return "Poor";
-            return "Very Poor";
-        }
+        public string ConditionLabel => Shared.ConditionDisplay.Of(Listing.Condition).Label;
 
         /// <summary>What is under the hood, with a word on it when somebody has been at it</summary>
         public string EngineDisplay => Listing.EngineSummary == null

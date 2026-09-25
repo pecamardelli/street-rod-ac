@@ -123,6 +123,34 @@ public class PartDefinition
 
     [JsonProperty("source_script")]
     public string? SourceScript { get; set; }
+
+    /// <summary>
+    /// A pack.json that says null for a list (or has a null in one) gets it empty: the catalog's mating index is
+    /// built once, and one null in it would fail every lookup after
+    /// </summary>
+    [OnDeserialized]
+    internal void OnDeserialized(StreamingContext context)
+    {
+        Name ??= string.Empty;
+        ClassChain = NonNull(ClassChain);
+        Properties ??= new();
+        Derived ??= new();
+        SlotRoles ??= new();
+        StockParts = NonNull(StockParts);
+        RequiredSlots = NonNull(RequiredSlots);
+        Categories = NonNull(Categories);
+        Slots = NonNull(Slots);
+        Config ??= new();
+        foreach (var key in Config.Where(c => c.Value == null).Select(c => c.Key).ToList()) Config.Remove(key);
+    }
+
+    /// <summary>The list without its nulls; an empty one for null</summary>
+    internal static List<T> NonNull<T>(List<T>? values) where T : class
+    {
+        if (values == null) return new();
+        values.RemoveAll(v => v is null);
+        return values;
+    }
 }
 
 public class PartSlot
@@ -189,13 +217,21 @@ public class PartSlot
 
     /// <summary>
     /// Position and rotation are read as [0], [1], [2] everywhere (the assembler, the layout, slot shifts): a
-    /// pack.json that has fewer, more or none gets exactly three, the missing ones zero
+    /// pack.json that has fewer, more or none gets exactly three, the missing ones zero. Lists it says null for
+    /// come out empty.
     /// </summary>
     [OnDeserialized]
     internal void OnDeserialized(StreamingContext context)
     {
         Position = ThreeOf(Position);
         Rotation = ThreeOf(Rotation);
+
+        // Null lists (or nulls in them) out of a pack.json: as in PartDefinition, empty
+        Name ??= string.Empty;
+        AttachesTo = PartDefinition.NonNull(AttachesTo);
+        CompatibleWith = PartDefinition.NonNull(CompatibleWith);
+        Fits = PartDefinition.NonNull(Fits);
+        Takes = PartDefinition.NonNull(Takes);
 
         static float[] ThreeOf(float[]? values) =>
             values is { Length: 3 } ? values : new[] { At(values, 0), At(values, 1), At(values, 2) };

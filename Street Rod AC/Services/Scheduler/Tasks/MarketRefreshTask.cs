@@ -41,11 +41,20 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
             var previousCount = gameState.UsedCarMarket.Count;
             var previousAvailable = gameState.UsedCarMarket.Count(l => !l.IsSold);
 
-            gameState.UsedCarMarket = await _marketService.RefreshMarketAsync(
-                gameState.UsedCarMarket,
+            // The refresh reads the listings before it awaits the new cars' engines; a car listed meanwhile (a rival
+            // sold one, the player traded one in) is not in what it returns and would be lost with the old list
+            var live = gameState.UsedCarMarket;
+            var seen = live.Select(l => l.Id).ToHashSet();
+
+            var refreshed = await _marketService.RefreshMarketAsync(
+                live,
                 gameState.DealerLocations,
                 currentDate,
                 gameState.Rules.CarPriceMultiplier);
+
+            var returned = refreshed.Select(l => l.Id).ToHashSet();
+            refreshed.AddRange(gameState.UsedCarMarket.Where(l => !seen.Contains(l.Id) && !returned.Contains(l.Id)).ToList());
+            gameState.UsedCarMarket = refreshed;
 
             var newCount = gameState.UsedCarMarket.Count;
             var newAvailable = gameState.UsedCarMarket.Count(l => !l.IsSold);

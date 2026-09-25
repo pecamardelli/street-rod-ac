@@ -126,8 +126,11 @@ public sealed class SaveDatabaseTests : IDisposable
             _repository.Save(state, "Dan");
         }
 
-        foreach (var n in new[] { 1, 2, 3 })
-            Assert.True(System.IO.File.Exists(Path.Combine(Saves, $"Dan.db.backup{n}")), $"backup{n}");
+        // Once per session: the copy from before this session's first write, not pushed out by the writes after it
+        Assert.True(System.IO.File.Exists(Path.Combine(Saves, "Dan.db.backup1")));
+        Assert.False(System.IO.File.Exists(Path.Combine(Saves, "Dan.db.backup2")));
+        using (var backup = new LiteDB.LiteDatabase(new LiteDB.ConnectionString { Filename = Path.Combine(Saves, "Dan.db.backup1"), ReadOnly = true }))
+            Assert.Equal(Player.StartingMoney, backup.GetCollection("gamestate").FindById(1)["Player"]["Money"].AsDecimal);
         Assert.Equal(3m, _repository.Load("Dan")!.Player.Money);
     }
 

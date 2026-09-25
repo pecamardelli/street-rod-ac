@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using Street_Rod_AC.Logging;
 
@@ -7,18 +6,21 @@ namespace StreetRodAC.Tests;
 /// <summary>
 /// Runs before any test. The game's classes take their logger from <see cref="AppLoggerFactory"/>, which throws
 /// until <c>Initialize()</c> has run, and <c>Initialize()</c> writes log files under %AppData%\StreetRodAC\Logs.
-/// The tests must never touch the user's folders, so the factory is marked initialized with Serilog's default
-/// (silent) logger instead. See the report: this is the "needs a seam" for AppLoggerFactory.
+/// The tests must never touch the user's folders, so the factory is set up on Serilog's default (silent) logger
+/// instead, through the seam made for it.
+///
+/// LiteDB's shared mapper builds a type's mapping the first time it meets it, and two tests meeting the same type
+/// at once can see it half built. The types the saves are made of are mapped here, once, before any test runs.
 /// </summary>
 internal static class TestLogging
 {
     [ModuleInitializer]
     internal static void SilenceLogging()
     {
-        Serilog.Log.Logger = new Serilog.LoggerConfiguration().CreateLogger();
-        var initialized = typeof(AppLoggerFactory).GetField("_isInitialized", BindingFlags.NonPublic | BindingFlags.Static)
-                          ?? throw new InvalidOperationException("AppLoggerFactory._isInitialized is gone: the test logging hook needs updating");
-        initialized.SetValue(null, true);
+        AppLoggerFactory.InitializeSilent();
+
+        LiteDB.BsonMapper.Global.ToDocument(new Street_Rod_AC.Models.Race.ProcessedRaceSession());
+        LiteDB.BsonMapper.Global.ToDocument(new Street_Rod_AC.Models.GameState.GameState());
     }
 }
 

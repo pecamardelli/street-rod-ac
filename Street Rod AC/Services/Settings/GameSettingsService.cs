@@ -20,6 +20,9 @@ namespace Street_Rod_AC.Services.Settings
 
         public GameSettings Current => _currentSettings;
 
+        /// <summary>The settings file: where the AC folder can be set by hand when the game cannot start to show its Settings screen</summary>
+        public string SettingsPath => _settingsPath;
+
         public GameSettingsService() : this(Path.Combine(AppSettings.AppDataPath, SettingsFileName),
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, SettingsFileName))
         {

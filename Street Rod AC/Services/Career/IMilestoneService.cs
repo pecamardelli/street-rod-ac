@@ -19,11 +19,6 @@ namespace Street_Rod_AC.Services.Career
         MilestoneDefinition? GetMilestone(string milestoneId);
 
         /// <summary>
-        /// Get milestones by category
-        /// </summary>
-        IEnumerable<MilestoneDefinition> GetMilestonesByCategory(string category);
-
-        /// <summary>
         /// Get progress for a specific milestone
         /// </summary>
         MilestoneProgress GetProgress(string milestoneId, CareerState career);

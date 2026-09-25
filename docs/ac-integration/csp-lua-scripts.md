@@ -303,14 +303,14 @@ Schema 1.2 (the race mode) added:
 |-------|------|---------|
 | `session.end_reason` | string | `FINISHED`, `CRASH`, `FALSE_START` or `ABANDONED` (`EndReasons` in C#) |
 | `participants[].false_start` | bool | This car jumped the start |
-| `participants[].condition` | object | What the race left of the car, as AC tracks it: `body_damage_kmh[4]`, `engine_life` (1000 new, 0 dead), `gearbox_damage`, `water_temperature_c`, `oil_temperature_c`, `oil_pressure`, `fuel_litres`, `wheels[4]` (`tyre_wear`, `tyre_virtual_km`, `tyre_blown`, `suspension_damage`). Each field read on its own; the launcher puts it on the car's parts (see "Damage" below). Oil temperature and pressure read near 0 on a stock car: CSP fills them only for cars with a script |
+| `participants[].condition` | object | What the race left of the car, as AC tracks it: `body_damage_kmh[4]`, `engine_life` (1000 new, 0 dead), `gearbox_damage`, `water_temperature_c`, `oil_temperature_c`, `oil_pressure`, `fuel_litres`, `wheels[4]` (`wheel` 0..3 as FL, FR, RL, RR, so a wheel that could not be read never moves the others, `tyre_wear`, `tyre_virtual_km`, `tyre_blown`, `suspension_damage`). Each field read on its own; the launcher puts it on the car's parts (see "Damage" below). Oil temperature and pressure read near 0 on a stock car: CSP fills them only for cars with a script |
 
 Schema 1.3 added:
 
 | Field | Type | Meaning |
 |-------|------|---------|
 | `session.end_reason` | string | Now also `DISQUALIFIED` |
-| `session.race_type` | string | `DRAG` or `ROAD`, from race.ini (not read by the launcher, which has the race's context) |
+| `session.race_type` | string | `DRAG` or `ROAD`, from race.ini. The launcher checks it against the race's context and logs a mismatch (the file is still applied) |
 | `participants[].disqualified` | bool | This car hit the other one out of its own lane in a drag race |
 
 Schema 1.4 added:
@@ -331,7 +331,7 @@ Schema 1.5 added:
 
 ```json
 {
-  "metadata": { "schema_version": "1.5", "script_version": "3.4.0", "source": "sr_race_manager", "generated_at": "ISO8601" },
+  "metadata": { "schema_version": "1.5", "script_version": "3.5.0", "source": "sr_race_manager", "generated_at": "ISO8601" },
   "session": { "session_id": "UUID", "context_id": "UUID of the race context", "track_id": "...", "duration_seconds": 12.3, "end_reason": "FINISHED" },
   "participants": [
     { "driver_name": "...", "car_name": "...", "car_index": 0, "is_player": true, "false_start": false,

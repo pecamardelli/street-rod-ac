@@ -207,9 +207,42 @@ namespace Street_Rod_AC.Services.Configuration
             if (manifest?.Files != null) return manifest;
 
             var aside = $"{_keep}.unreadable-{DateTime.Now:yyyyMMdd-HHmmss}";
-            Directory.Move(_keep, aside);
+            try
+            {
+                Directory.Move(_keep, aside);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // A scanner or a sync client holding a kept file: a race must not wait on that. What can be copied
+                // goes aside, and the manifest leaves the keep folder, so a new race starts a manifest of its own.
+                _logger.Warning(ex, "The keep folder {Keep} could not be set aside whole; its files are copied to {Aside} instead", _keep, aside);
+                CopyAsideAndDropManifest(aside);
+            }
+
             _logger.Error("The INI restore manifest was empty or unreadable: nothing was put back. The kept files are under {Aside}", aside);
             return null;
+        }
+
+        /// <summary>
+        /// The fallback when the keep folder cannot be moved: every file that can be read is copied to
+        /// <paramref name="aside"/>, then the manifest is deleted. Throws only when the manifest cannot go either.
+        /// </summary>
+        private void CopyAsideAndDropManifest(string aside)
+        {
+            Directory.CreateDirectory(aside);
+            foreach (var file in Directory.GetFiles(_keep))
+            {
+                try
+                {
+                    File.Copy(file, Path.Combine(aside, Path.GetFileName(file)), overwrite: true);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    _logger.Warning(ex, "{File} could not be copied aside; it stays in {Keep}", file, _keep);
+                }
+            }
+
+            File.Delete(ManifestPath);
         }
 
         private void WriteManifest(Manifest manifest) =>

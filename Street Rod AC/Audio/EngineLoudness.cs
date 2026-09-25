@@ -189,9 +189,10 @@ public static class EngineLoudness
             // again: played from, it would throw every frame
             foreach (var key in _cache.Where(e => !IsWholeGrid(e.Value)).Select(e => e.Key).ToList()) _cache.Remove(key);
         }
-        catch
+        catch (Exception ex)
         {
             // A cache that does not read is measured again
+            Logger.Warning(ex, "The engine loudness cache could not be read: every bank is measured again");
             _cache = new();
         }
 
@@ -206,11 +207,13 @@ public static class EngineLoudness
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(CachePath)!);
-            File.WriteAllText(CachePath, System.Text.Json.JsonSerializer.Serialize(cache, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            // Written whole or not at all: a file cut off halfway would have every bank measured again
+            Helpers.SafeFile.WriteAllText(CachePath, System.Text.Json.JsonSerializer.Serialize(cache, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
         }
-        catch
+        catch (Exception ex)
         {
             // Not remembered: measured again next time, no harm
+            Logger.Warning(ex, "The engine loudness cache could not be saved");
         }
     }
 
@@ -261,7 +264,7 @@ public static class EngineLoudness
         while (DateTime.Now < until)
         {
             ThrowIfShutDown();
-            FMOD_Studio_System_Update(_system);
+            Warn(FMOD_Studio_System_Update(_system), "update meter");
             if (FMOD_Studio_EventDescription_GetSampleLoadingState(description, out var state) != ResultOk || state != LoadingStateLoading) return;
             Thread.Sleep(5);
         }
@@ -274,7 +277,7 @@ public static class EngineLoudness
         for (var i = 0; i < updates; i++)
         {
             ThrowIfShutDown();
-            FMOD_Studio_System_Update(_system);
+            Warn(FMOD_Studio_System_Update(_system), "update meter");
         }
     }
 
@@ -295,6 +298,8 @@ public static class EngineLoudness
         var system = IntPtr.Zero;
         try
         {
+            // The imports resolve to the AC install's DLLs only once they are loaded; a no-op when they are
+            FmodStudio.Load(folder);
             Check(FMOD_Studio_System_Create(out system, HeaderVersion), "create");
             Check(FMOD_Studio_System_GetLowLevelSystem(system, out var core), "core system");
             Check(FMOD_System_SetOutput(core, OutputNoSoundNrt), "silent output");

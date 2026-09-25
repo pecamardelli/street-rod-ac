@@ -1,3 +1,4 @@
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Models.Race;
 
@@ -27,6 +28,9 @@ public static class CarCondition
 
     /// <summary>A body that has taken this much, all zones together, is a write-off (a 200 km/h wreck reports 205 on two zones)</summary>
     public const double TotaledKmh = 200;
+
+    /// <summary>The most a zone holds: a hand-edited save's 1e29 would make a repair bill no decimal can hold</summary>
+    public const double MaxZoneKmh = 1000;
 
     /// <summary>AC's life of a new engine</summary>
     public const double NewEngineLife = 1000;
@@ -58,7 +62,7 @@ public static class CarCondition
     {
         var zones = new double[Zones];
         var saved = car.BodyDamageKmh ?? Array.Empty<double>();
-        for (var i = 0; i < Zones && i < saved.Length; i++) zones[i] = Clean(saved[i]);
+        for (var i = 0; i < Zones && i < saved.Length; i++) zones[i] = Math.Min(Clean(saved[i]), MaxZoneKmh);
         return zones;
     }
 
@@ -180,7 +184,7 @@ public static class CarCondition
         var wasTotaled = zones.Sum() >= TotaledKmh;
         for (var i = 0; i < Zones && i < reported.Count; i++)
         {
-            var now = Math.Min(Clean(reported[i]), 1000);
+            var now = Math.Min(Clean(reported[i]), MaxZoneKmh);
             if (now > zones[i] + 0.5) report.Add($"Body: the {ZoneNames[i]} took a {now - zones[i]:0} km/h hit.");
             zones[i] = Math.Max(zones[i], now);
         }
@@ -298,7 +302,8 @@ public static class CarCondition
         car.BodyCondition = BodyCondition(car);
     }
 
-    private static double Clamp01(double value) => double.IsFinite(value) ? Math.Clamp(value, 0, 1) : 1;
+    /// <summary>A part's figure that is not a number counts as new: nothing measured it worn</summary>
+    private static double Clamp01(double value) => Unit.Clamp01(value, ifNotFinite: 1);
 
     /// <summary>A reported figure, not negative and a number</summary>
     private static double Clean(double value) => double.IsFinite(value) ? Math.Max(0, value) : 0;

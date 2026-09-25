@@ -20,6 +20,9 @@ namespace Street_Rod_AC.Services.Opponents
         private readonly IAppLogger _logger;
         private readonly Random _random;
 
+        /// <summary>The opponent definitions were read and hold no King: not read again every day of the session</summary>
+        private bool _noKingDefined;
+
         /// <summary>What the King has in the bank</summary>
         public const decimal KingMoney = 20000m;
 
@@ -129,10 +132,12 @@ namespace Street_Rod_AC.Services.Opponents
         {
             var racers = gameState.Racers;
             if (racers.ReadyToRace.Values.Concat(racers.Retired.Values).Concat(racers.Inactive.Values).Any(r => r is Opponent { IsKing: true })) return;
+            if (_noKingDefined) return;
 
             var king = _opponentRepository.LoadAllOpponents().FirstOrDefault(o => o.IsKing);
             if (king == null)
             {
+                _noKingDefined = true;
                 _logger.Warning("No King among the opponent definitions: the King victory can't be won");
                 return;
             }
@@ -199,23 +204,6 @@ namespace Street_Rod_AC.Services.Opponents
 
             FinishCar(car, definition, profile);
             return car;
-        }
-
-        /// <summary>
-        /// Get random selection of opponents
-        /// </summary>
-        public List<Opponent> GetRandomOpponents(int count)
-        {
-            var allOpponents = _opponentRepository.LoadAllOpponents();
-
-            if (count >= allOpponents.Count)
-            {
-                return allOpponents;
-            }
-
-            // Shuffle and take first N
-            var shuffled = allOpponents.OrderBy(x => _random.Next()).ToList();
-            return [.. shuffled.Take(count)];
         }
 
         /// <summary>
@@ -316,9 +304,10 @@ namespace Street_Rod_AC.Services.Opponents
             {
                 SkinId = skinId,
                 OdometerKM = mileage,
+                // The gearbox and the body are the parts' and the damage's once FinishCar has worked the figures out
                 EngineHealth = condition,
-                TransmissionHealth = condition + (float)_random.NextDouble() * 0.1f - 0.05f,
-                BodyCondition = condition + (float)_random.NextDouble() * 0.1f - 0.05f,
+                TransmissionHealth = condition,
+                BodyCondition = 1.0,
                 TireCondition = 0.6f + (float)_random.NextDouble() * 0.3f, // Tires vary more
                 PurchaseDate = today.AddDays(-_random.Next(30, 365)) // Owned for 1 month to 1 year, in game time
             };

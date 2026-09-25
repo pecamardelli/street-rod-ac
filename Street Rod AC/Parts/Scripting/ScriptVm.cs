@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace Street_Rod_AC.Parts.Scripting;
 
 /// <summary>"Nothing works without a part on this slot", found by running a check method; with the script's own words</summary>
@@ -359,7 +357,7 @@ public sealed class ScriptVm
                         locals.Types[declaredLocal] = declaredType;
                     break;
                 case 0x09: stack.Add(new ScriptText(type.Text(instruction.Operand) ?? string.Empty)); break;
-                case 0x0A: stack.Add(new ScriptNumber(ToDouble(instruction.FloatOperand), false)); break;
+                case 0x0A: stack.Add(new ScriptNumber(instruction.Literal, false)); break;
                 case 0x0B: stack.Add(new ScriptNumber(instruction.Operand, true)); break;
                 case 0x0C: stack.Add(ScriptValue.Null); break;
                 case 0x0D: stack.Add(ScriptValue.Unknown); break;
@@ -636,8 +634,19 @@ public sealed class ScriptVm
     /// <summary>A marker announces an object path of Length - 1 elements (the_car.make = marker 2, the_car, then the member)</summary>
     private static bool PathIsOpen(List<ScriptValue> stack)
     {
-        var marker = stack.FindLastIndex(v => v is Marker);
+        var marker = LastMarker(stack);
         return marker >= 0 && stack.Count - 1 - marker < ((Marker)stack[marker]).Length - 1;
+    }
+
+    // Asked on every member access: a plain loop, no lambda or enumerator
+    private static int LastMarker(List<ScriptValue> stack)
+    {
+        for (var i = stack.Count - 1; i >= 0; i--)
+        {
+            if (stack[i] is Marker) return i;
+        }
+
+        return -1;
     }
 
     /// <summary>
@@ -648,20 +657,29 @@ public sealed class ScriptVm
     {
         target = null;
 
-        var marker = stack.FindLastIndex(v => v is Marker);
+        var marker = LastMarker(stack);
         if (marker < 0) return false;
 
         var length = ((Marker)stack[marker]).Length;
         if (stack.Count - 1 - marker != length - 1) return false;
-        if (stack.Skip(marker + 1).Any(v => v is ArgumentCount)) return false;
-
-        var elements = stack.Skip(marker + 1).ToList();
-        stack.RemoveRange(marker, stack.Count - marker);
-        if (elements.Count == 0) return false;
-
-        var current = elements[0] is PathField first ? Resolve(new FieldRef(self, first.Name), locals) : Resolve(elements[0], locals);
-        foreach (var element in elements.Skip(1))
+        for (var i = marker + 1; i < stack.Count; i++)
         {
+            if (stack[i] is ArgumentCount) return false;
+        }
+
+        // The path is followed where it lies on the stack, then taken off
+        var start = marker + 1;
+        var end = stack.Count;
+        if (start == end)
+        {
+            stack.RemoveAt(marker);
+            return false;
+        }
+
+        var current = stack[start] is PathField first ? Resolve(new FieldRef(self, first.Name), locals) : Resolve(stack[start], locals);
+        for (var i = start + 1; i < end; i++)
+        {
+            var element = stack[i];
             current = (current, element) switch
             {
                 (ScriptReference reference, PathField field) => Resolve(new FieldRef(reference.Target, field.Name), locals),
@@ -671,6 +689,7 @@ public sealed class ScriptVm
             };
         }
 
+        stack.RemoveRange(marker, end - marker);
         target = current;
         return true;
     }
@@ -732,8 +751,9 @@ public sealed class ScriptVm
                 break;
 
             case ElementRef element when !unsure || FirstAlternativeWins && original is ScriptResource:
+                // A store outside the array (Java would throw) is not made, as other operations the VM can't do are not
                 if (Resolve(element.Array, locals) is ScriptArray array && Resolve(element.Index, locals) is ScriptNumber { IsInteger: true } position
-                    && (!unsure || !array.Items.ContainsKey((int)position.Amount)))
+                    && array.Holds(position.Amount) && (!unsure || !array.Items.ContainsKey((int)position.Amount)))
                     array.Items[(int)position.Amount] = ScriptTypes.Convert(original, array.ElementType);
                 break;
         }
@@ -746,10 +766,6 @@ public sealed class ScriptVm
         ScriptUnknown => null,
         _ => true
     };
-
-    /// <summary>Script literals are floats; 2.66 should not turn into 2.6600000858</summary>
-    private static double ToDouble(float value) =>
-        double.Parse(value.ToString("R", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
 
     #endregion
 

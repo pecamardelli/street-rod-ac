@@ -189,11 +189,6 @@ namespace Street_Rod_AC.Services.Career
             return _milestones.TryGetValue(milestoneId, out var milestone) ? milestone : null;
         }
 
-        public IEnumerable<MilestoneDefinition> GetMilestonesByCategory(string category)
-        {
-            return _milestones.Values.Where(m => m.Category == category);
-        }
-
         public MilestoneProgress GetProgress(string milestoneId, CareerState career)
         {
             var milestone = GetMilestone(milestoneId);

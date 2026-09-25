@@ -42,7 +42,7 @@
             <TextBlock Text="{Binding StatusMessage}"
                        FontSize="{StaticResource FontSizeScreenTitle}"
                        FontWeight="Bold"
-                       Foreground="White"
+                       Foreground="{StaticResource TextPrimaryBrush}"
                        HorizontalAlignment="Center"/>
 
             <!-- The way out when AC hangs -->

@@ -38,8 +38,9 @@ public class AppSettings
 
     /// <summary>
     /// Path to the Assetto Corsa installation directory. Set from the settings when they load (see
-    /// <c>GameSettingsService</c>), before anything reads the install; a change takes effect at the next start,
-    /// since the car-data overlay and the catalog are built on the folder they started with.
+    /// <c>GameSettingsService</c>), before anything reads the install. The car-data overlay and the catalog are
+    /// built on the folder they started with, so for them a change takes effect at the next start; the engine
+    /// sounds (<c>EngineAudio</c>, <c>EngineLoudness</c>) load their banks from the new folder at once.
     /// </summary>
     public string AssettoCorsaPath { get; set; }
 

@@ -1,3 +1,4 @@
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
@@ -317,7 +318,7 @@ namespace Street_Rod_AC.Services.Market
                 CarDefinitionId = car.DefinitionId,
                 Price = CarValuation.RoundToHundred(Math.Max(price, MinListPrice)),
                 Mileage = double.IsFinite(car.OdometerKM) ? (int)Math.Clamp(car.OdometerKM, 0, int.MaxValue) : 0,
-                Condition = (float)(double.IsFinite(condition) ? Math.Clamp(condition, 0, 1) : 0),
+                Condition = (float)Unit.Clamp01(condition, ifNotFinite: 0),
                 SkinId = string.IsNullOrEmpty(car.SkinId) ? "default" : car.SkinId,
                 ListedDate = listedDate,
                 DealerLocation = location,
@@ -325,7 +326,8 @@ namespace Street_Rod_AC.Services.Market
 
                 // The car goes with everything on it; the buyer gets exactly this car
                 Parts = car.Parts,
-                HasRunningGearAssigned = car.HasRunningGearAssigned
+                HasRunningGearAssigned = car.HasRunningGearAssigned,
+                BodyDamageKmh = CarCondition.BodyTotal(car) > 0 ? CarCondition.Body(car) : null
             };
 
             if (listing.Parts.Count > 0 && car.Engine is { } engine && _partsService is { IsAvailable: true } parts)
@@ -336,11 +338,9 @@ namespace Street_Rod_AC.Services.Market
                     listing.EngineSummary = parts.Describe(engine, report);
                     listing.PowerHp = PowerOf(report);
 
-                    // Worked on when the engine is not made of the factory build's parts
                     if (_catalogRepo.GetCar(car.DefinitionId) is { } carDef && parts.GetStockBuild(carDef) is { } stock)
                     {
-                        var factory = stock.Build.Parts.Where(p => p.Part != null).Select(p => p.Part!).ToHashSet(StringComparer.OrdinalIgnoreCase);
-                        listing.IsModified = !engine.SelfAndDescendants().All(p => factory.Contains(p.DefinitionId));
+                        listing.IsModified = CarValuation.IsModified(engine, stock);
                     }
                 }
                 catch (Exception ex)
@@ -356,16 +356,31 @@ namespace Street_Rod_AC.Services.Market
         /// <summary>The dyno's horsepower; 0 for an engine that does not run</summary>
         public static double PowerOf(Street_Rod_AC.Parts.Logic.EngineReport? report) => report is { Runs: true } ? report.Dyno!.MaxPowerHp : 0;
 
-        public decimal ValueOf(Car car)
-        {
-            var profile = _profileRepo.GetProfile(car.DefinitionId);
-            if (profile == null || profile.BasePrice <= 0)
-            {
-                // A car the catalog cannot price: what was paid for it is the best guess there is
-                return CarValuation.RoundToHundred(car.PurchasePrice);
-            }
+        public decimal ValueOf(Car car) =>
+            CarValuation.WorthOf(car, _profileRepo.GetProfile, _catalogRepo.GetCar, _partsService);
 
-            return CarValuation.ValueOf(car, profile.BasePrice, _partsService, _catalogRepo.GetCar(car.DefinitionId));
+        public Func<Car, decimal> Valuer()
+        {
+            // Each model's profile, catalog entry and factory build read once, not once per car and per ask. Only
+            // those: the cars themselves change as the review goes (a repair, a new engine) and are weighed each time.
+            var profiles = new Dictionary<string, CarProfile?>(StringComparer.OrdinalIgnoreCase);
+            var definitions = new Dictionary<string, CarDefinition?>(StringComparer.OrdinalIgnoreCase);
+            var stockBuilds = new Dictionary<string, RatedBuild?>(StringComparer.OrdinalIgnoreCase);
+            var parts = _partsService;
+
+            return car => CarValuation.WorthOf(car,
+                id => Remembered(profiles, id, _profileRepo.GetProfile),
+                id => Remembered(definitions, id, _catalogRepo.GetCar),
+                parts,
+                definition => Remembered(stockBuilds, definition.Id, _ => parts!.GetStockBuild(definition)));
+        }
+
+        private static T? Remembered<T>(Dictionary<string, T?> seen, string key, Func<string, T?> read)
+        {
+            if (seen.TryGetValue(key, out var known)) return known;
+            var value = read(key);
+            seen[key] = value;
+            return value;
         }
 
         private const string TradeInFallbackId = "industrial_motors";
@@ -449,14 +464,16 @@ namespace Street_Rod_AC.Services.Market
                 listing.Parts.Add(engine.Root);
                 listing.EngineSummary = parts.Describe(engine.Root, engine.Report);
                 listing.PowerHp = PowerOf(engine.Report);
-                listing.IsModified = engine.IsModified;
 
-                // Random.Shared: this runs on a worker thread, the service's own Random belongs to the caller's
-                if (engine.IsModified && parts.GetStockBuild(carDef) is { } stockBuild
-                    && EngineFactory.CreateStock(parts.Catalog, stockBuild, listing.Condition, Random.Shared) is { } stock)
+                // Worked on, and what that adds, by the same rules the car is valued by once it is somebody's
+                if (parts.GetStockBuild(carDef) is { } stockBuild)
                 {
-                    listing.Price += CarValuation.RoundToHundred(CarValuation.ModificationsValue(
-                        PartPricing.WorthOfAssembly(parts.Catalog, engine.Root), PartPricing.WorthOfAssembly(parts.Catalog, stock.Root)));
+                    listing.IsModified = CarValuation.IsModified(engine.Root, stockBuild);
+                    if (listing.IsModified)
+                    {
+                        listing.Price += CarValuation.RoundToHundred(
+                            CarValuation.EngineModifications(parts.Catalog, engine.Root, stockBuild, listing.Condition));
+                    }
                 }
             }
             catch (Exception ex)

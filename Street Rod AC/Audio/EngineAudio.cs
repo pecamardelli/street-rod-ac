@@ -413,7 +413,10 @@ public sealed class EngineVoice : IDisposable
     private IntPtr _engineInstance;
     private IntPtr _limiterInstance;
     private bool _limiterOn;
-    private bool _disposed;
+
+    // The voice is driven from the UI thread, but a bank released before a race disposes it on a pool thread:
+    // an instance made while that happens is let go by whoever takes it out of its field first (TakeOver)
+    private volatile bool _disposed;
 
     internal EngineVoice(EngineAudio owner, IntPtr system, EngineEvents events)
     {
@@ -473,8 +476,24 @@ public sealed class EngineVoice : IDisposable
         if (!Warn(FMOD_Studio_EventDescription_CreateInstance(_engine, out var instance), "create engine")) return;
 
         _engineInstance = instance;
+        if (_disposed)
+        {
+            ReleaseNow(ref _engineInstance, "engine");
+            return;
+        }
+
         Set(rpm, throttle);
         Warn(FMOD_Studio_EventInstance_Start(instance), "start engine");
+    }
+
+    /// <summary>Stops and releases the instance in <paramref name="field"/> if it is still there to take</summary>
+    private static void ReleaseNow(ref IntPtr field, string what)
+    {
+        var instance = Interlocked.Exchange(ref field, IntPtr.Zero);
+        if (instance == IntPtr.Zero) return;
+
+        Warn(FMOD_Studio_EventInstance_Stop(instance, StopImmediate), "stop " + what);
+        Warn(FMOD_Studio_EventInstance_Release(instance), "release " + what);
     }
 
     /// <param name="throttle">0..1; scaled to the bank's own range</param>
@@ -506,7 +525,14 @@ public sealed class EngineVoice : IDisposable
         if (on)
         {
             if (_limiterInstance == IntPtr.Zero && Warn(FMOD_Studio_EventDescription_CreateInstance(_limiter, out var instance), "create limiter"))
+            {
                 _limiterInstance = instance;
+                if (_disposed)
+                {
+                    ReleaseNow(ref _limiterInstance, "limiter");
+                    return;
+                }
+            }
             if (_limiterInstance != IntPtr.Zero) Warn(FMOD_Studio_EventInstance_Start(_limiterInstance), "start limiter");
         }
         else if (_limiterInstance != IntPtr.Zero)
@@ -531,34 +557,26 @@ public sealed class EngineVoice : IDisposable
     public void Stop()
     {
         SetLimiter(false);
-        if (_engineInstance == IntPtr.Zero) return;
 
-        if (!_disposed)
-        {
-            Warn(FMOD_Studio_EventInstance_Stop(_engineInstance, StopAllowFadeout), "stop engine");
-            Warn(FMOD_Studio_EventInstance_Release(_engineInstance), "release engine");
+        // Taken out of the field: whoever takes it releases it, this or Dispose, never both
+        var instance = Interlocked.Exchange(ref _engineInstance, IntPtr.Zero);
+        if (instance == IntPtr.Zero) return;
 
-            // FMOD acts on the stop at its next update, and the runner's clock may already be stopping: without one
-            // here the engine goes on sounding, frozen at its last rpm
-            _owner.Update();
-        }
+        Warn(FMOD_Studio_EventInstance_Stop(instance, StopAllowFadeout), "stop engine");
+        Warn(FMOD_Studio_EventInstance_Release(instance), "release engine");
 
-        _engineInstance = IntPtr.Zero;
+        // FMOD acts on the stop at its next update, and the runner's clock may already be stopping: without one
+        // here the engine goes on sounding, frozen at its last rpm
+        if (!_disposed) _owner.Update();
     }
 
     public void Dispose()
     {
         if (_disposed) return;
 
-        foreach (var instance in new[] { _engineInstance, _limiterInstance })
-        {
-            if (instance == IntPtr.Zero) continue;
-            Warn(FMOD_Studio_EventInstance_Stop(instance, StopImmediate), "stop engine");
-            Warn(FMOD_Studio_EventInstance_Release(instance), "release engine");
-        }
-
-        _engineInstance = IntPtr.Zero;
-        _limiterInstance = IntPtr.Zero;
+        // Flagged first: an instance the UI thread makes from here on is released by the UI thread itself
         _disposed = true;
+        ReleaseNow(ref _engineInstance, "engine");
+        ReleaseNow(ref _limiterInstance, "limiter");
     }
 }

@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
   <!-- The part logic is the game's; the bench only drives it from the command line -->
@@ -28,10 +28,11 @@
     <Compile Include="..\..\Street Rod AC\Parts\Sounds\*.cs" Link="Parts\Sounds\%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <!-- The game's plain-BCL helpers the linked part code uses (and the tool itself): atomic writes, paths kept inside a root -->
+  <!-- The game's plain-BCL helpers the linked part code uses (and the tool itself): atomic writes, paths kept inside a root, the career's multipliers -->
   <ItemGroup>
     <Compile Include="..\..\Street Rod AC\Helpers\SafeFile.cs" Link="Helpers\SafeFile.cs" />
     <Compile Include="..\..\Street Rod AC\Helpers\PathNames.cs" Link="Helpers\PathNames.cs" />
+    <Compile Include="..\..\Street Rod AC\Helpers\Multiplier.cs" Link="Helpers\Multiplier.cs" />
   </ItemGroup>
 
 </Project>

@@ -20,7 +20,7 @@ namespace Street_Rod_AC.Models.GameState
         [BsonId]
         public int Id { get; set; } = 1; // Single record per save file
 
-        // Time System - Game world time (starts in 1963)
+        // Time System - Game world time (starts in June 1970, see StartingYear)
         public DateTime Date { get; set; }
 
         // Player
@@ -69,7 +69,7 @@ namespace Street_Rod_AC.Models.GameState
             var gameStart = GetStartingDateTime();
             var now = DateTime.Now;
 
-            // Game world time (1963)
+            // Game world time (1970)
             Date = gameStart;
 
             Player = new Player("Player");
@@ -97,11 +97,6 @@ namespace Street_Rod_AC.Models.GameState
                 Date = GetStartingDateTime(),
                 Rules = rules ?? new GameRules()
             };
-
-            // TODO: Initialize used car market
-            // TODO: Initialize used parts market
-            // TODO: Initialize AI racers
-            // TODO: Initialize newspaper ads
 
             return state;
         }

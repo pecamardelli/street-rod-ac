@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -20,6 +21,13 @@ public readonly record struct ScriptConstant(ScriptConstantKind Kind, string? Te
 public readonly record struct ScriptInstruction(byte Op, int Line, int Operand)
 {
     public float FloatOperand => BitConverter.Int32BitsToSingle(Operand);
+
+    /// <summary>The float literal a 0x0A pushes, as the double it reads as; worked out once, not every time it runs</summary>
+    public double Literal { get; } = Op == 0x0A ? ToDouble(BitConverter.Int32BitsToSingle(Operand)) : 0;
+
+    /// <summary>Script literals are floats; 2.66 should not turn into 2.6600000858</summary>
+    private static double ToDouble(float value) =>
+        double.Parse(value.ToString("R", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
 }
 
 public sealed record ScriptField(int Flags, string Name, string Signature, int Tree)

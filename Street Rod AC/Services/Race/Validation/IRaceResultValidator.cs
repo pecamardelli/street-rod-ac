@@ -151,6 +151,12 @@ namespace Street_Rod_AC.Services.Race.Validation
         /// Participants array does not have exactly 2 entries for drag race
         /// Action: Quarantine
         /// </summary>
-        InvalidParticipantCount
+        InvalidParticipantCount,
+
+        /// <summary>
+        /// Bigger than any result the race mode writes (<see cref="RaceResultValidator.MaxFileBytes"/>); not read
+        /// Action: Quarantine
+        /// </summary>
+        TooLarge
     }
 }

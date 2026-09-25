@@ -188,8 +188,8 @@ public static class SlrrKn5Builder
             indices[i] = target;
         }
 
-        if (vertices.Count == 0) return sub;
-
+        // Not one index was in range: nothing to draw, and the build skips a submesh without triangles
+        // (handing back the original would write its dangling indices into the KN5)
         return new SlrrSubMesh
         {
             MaterialName = sub.MaterialName,
@@ -198,7 +198,7 @@ public static class SlrrKn5Builder
             DiffuseColor = sub.DiffuseColor,
             Glossiness = sub.Glossiness,
             Vertices = vertices.ToArray(),
-            Indices = indices
+            Indices = vertices.Count == 0 ? Array.Empty<int>() : indices
         };
     }
 

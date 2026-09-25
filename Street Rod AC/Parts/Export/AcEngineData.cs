@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Text;
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Parts.Logic;
 
 namespace Street_Rod_AC.Parts.Export;
@@ -78,7 +79,10 @@ public static class AcEngineData
 
         // A build without a limiter revs as far as its curve goes
         var limiter = report.LimiterRpm > 0 ? report.LimiterRpm : dyno.Curve[^1].Rpm;
-        var curveFile = engine.Get("HEADER", "POWER_CURVE") is { Length: > 0 } existing ? existing : DefaultPowerCurve;
+        // The car's own curve file keeps its name, if it is a plain .lut name: it becomes a file the caller writes,
+        // so a mod's engine.ini must not send it out of the data folder or over one of the .ini files
+        var curveFile = engine.Get("HEADER", "POWER_CURVE") is { Length: > 0 } existing && PathNames.IsSafeSegment(existing)
+            && existing.EndsWith(".lut", StringComparison.OrdinalIgnoreCase) ? existing : DefaultPowerCurve;
 
         var turbo = Turbo(report, dyno);
         files[curveFile] = PowerCurve(dyno, options.DrivetrainEfficiency, turbo);

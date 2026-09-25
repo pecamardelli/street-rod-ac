@@ -22,10 +22,11 @@ namespace Street_Rod_AC.Services.Catalog
 
         /// <summary>
         /// Goes into a Generated profile's DefinitionHash with the car's own hash. Moved on when the way specs are
-        /// read changes (2: lb and kW converted, instead of read as kg and hp), so every generated price is worked out
-        /// again once with the new reading. The formula is deterministic: a car whose specs read the same keeps its price.
+        /// read or priced changes (2: lb and kW converted, instead of read as kg and hp; 3: priced from hp per tonne,
+        /// where hp per kg had put every car on the $5,000 floor), so every generated price is worked out again once.
+        /// The formula is deterministic: a car whose specs read the same keeps its price.
         /// </summary>
-        private const string SpecsReading = "specs2";
+        private const string SpecsReading = "specs3";
 
         private static string DefinitionHashOf(CarDefinition car) => $"{car.ContentHash}|{SpecsReading}";
 
@@ -131,13 +132,13 @@ namespace Street_Rod_AC.Services.Catalog
                 precedence += 0.2f; // Common brands
             }
 
-            // Performance tier based on power/weight
+            // Performance tier based on power/weight, in hp per tonne
             var powerWeight = CalculatePowerToWeightRatio(carDefinition);
             if (powerWeight > 300) // Exotic performance
             {
                 precedence -= 0.2f;
             }
-            else if (powerWeight < 100) // Economy cars
+            else if (powerWeight > 0 && powerWeight < 100) // Economy cars (0 is a car without specs)
             {
                 precedence += 0.2f;
             }
@@ -212,6 +213,11 @@ namespace Street_Rod_AC.Services.Catalog
 
         // Helper methods
 
+        /// <summary>
+        /// What a car's power to weight is worth before brand, year and source: $7,000 at 70 hp per tonne (an
+        /// economy car), rising a little faster than the power, as the power to weight to the 1.3: about $18,000
+        /// at 150 hp/t (a muscle car) and $57,000 at 350 hp/t (a supercar). Dearer the quicker, always.
+        /// </summary>
         private decimal CalculatePowerWeightPrice(CarDefinition carDef)
         {
             var powerToWeight = CalculatePowerToWeightRatio(carDef);
@@ -219,16 +225,18 @@ namespace Street_Rod_AC.Services.Catalog
             if (powerToWeight <= 0)
             {
                 // No specs available, use conservative default
-                return 15000m;
+                return NoSpecsPrice;
             }
 
-            // Base formula: (BHP / Weight_kg) × 1000
-            // This gives us a starting point
-            var basePrice = (decimal)powerToWeight * 1000m;
-
-            return basePrice;
+            return (decimal)(ReferencePrice * Math.Pow(powerToWeight / ReferenceHpPerTonne, PriceExponent));
         }
 
+        private const decimal NoSpecsPrice = 15000m;
+        private const double ReferencePrice = 7000;
+        private const double ReferenceHpPerTonne = 70;
+        private const double PriceExponent = 1.3;
+
+        /// <summary>Power to weight in hp per tonne, 0 when the specs don't give it</summary>
         private float CalculatePowerToWeightRatio(CarDefinition carDef)
         {
             if (carDef.Specs == null)
@@ -247,7 +255,7 @@ namespace Street_Rod_AC.Services.Catalog
                 return 0f;
             }
 
-            return (float)(bhp / weightKg);
+            return (float)(bhp * 1000 / weightKg);
         }
 
         private float GetBrandMultiplier(string brand)

@@ -70,6 +70,26 @@ namespace Street_Rod_AC.Models.GameState
 
         #endregion
 
+        #region Standing on the street
+
+        // Worked out from the whole game by the victory service (RefreshStanding) and kept here, so that a victory's
+        // progress read from the career alone (the Career screen) shows them, after a load too. Saves from before
+        // them load with the defaults until the next refresh.
+
+        /// <summary>How many racers there are to beat, for the Domination victory</summary>
+        public int TotalOpponents { get; set; }
+
+        /// <summary>Whether the player has more wins than any other racer, for the Season Champion victory</summary>
+        public bool PlayerHasMostWins { get; set; }
+
+        /// <summary>
+        /// The King's name, as <see cref="DefeatedOpponentIds"/> holds the racers beaten; null when the game has no
+        /// King (or has not looked yet), and the King's usual name counts
+        /// </summary>
+        public string? KingName { get; set; }
+
+        #endregion
+
         /// <summary>
         /// Initialize default career state for a new game
         /// </summary>

@@ -21,20 +21,9 @@ namespace Street_Rod_AC.Services
         public static string NameOf(string executable) => Path.GetFileNameWithoutExtension(executable);
 
         /// <summary>True when any process of the given name runs; never throws</summary>
-        public static bool IsRunning(string processName)
-        {
-            try
-            {
-                var processes = Process.GetProcessesByName(processName);
-                foreach (var process in processes) process.Dispose();
-                return processes.Length > 0;
-            }
-            catch (Exception)
-            {
-                // Not knowing is treated as running: the cost is a restore left for later, never one under the game
-                return true;
-            }
-        }
+        public static bool IsRunning(string processName) =>
+            // Not knowing is treated as running: the cost is a restore left for later, never one under the game
+            Query(processName) ?? true;
 
         /// <summary>True when the race or the showroom runs</summary>
         public static bool AnyRunning() => IsRunning(Race) || IsRunning(Showroom);

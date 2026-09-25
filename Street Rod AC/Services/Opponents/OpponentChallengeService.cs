@@ -373,13 +373,8 @@ namespace Street_Rod_AC.Services.Opponents
         }
 
         /// <summary>The car's worth by <see cref="CarValuation"/>; a model without a price is worth what was paid for the car</summary>
-        private decimal ValueOf(Car car, CarDefinition definition)
-        {
-            var profile = _carProfileRepository.GetProfile(definition.Id);
-            if (profile == null || profile.BasePrice <= 0) return CarValuation.RoundToHundred(car.PurchasePrice);
-
-            return CarValuation.ValueOf(car, profile.BasePrice, _partsService, definition);
-        }
+        private decimal ValueOf(Car car, CarDefinition definition) =>
+            CarValuation.WorthOf(car, _carProfileRepository.GetProfile, _ => definition, _partsService);
 
         #region Message Generation
 

@@ -137,10 +137,18 @@ namespace Street_Rod_AC.Screens.RaceLoading
 
             ReturnFromRace(towed: messages.Any(m => m.TowedToGarage));
 
-            // One at a time, over the screen the player came back to: the dialog service queues them
+            // One at a time, over the screen the player came back to: the dialog service queues them. Each on its
+            // own, so one that cannot be shown does not lose the rest
             foreach (var message in messages)
             {
-                Dialogs.PlayerMessageDialogs.Show(_dialogService, message, () => _navigationService.NavigateToMainMenu());
+                try
+                {
+                    Dialogs.PlayerMessageDialogs.Show(_dialogService, message, () => _navigationService.NavigateToMainMenu());
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Could not show a message from the race");
+                }
             }
         }
 
@@ -214,23 +222,28 @@ namespace Street_Rod_AC.Screens.RaceLoading
         }
 
         /// <summary>
-        /// Back to the diner, or to the garage when the diner cannot be opened. A player whose car was towed home
-        /// after a crash goes to the garage, where the car is.
+        /// Back to the diner, or to the garage when the diner cannot be opened, or to the main menu when neither
+        /// can: the player is never left on this screen. A player whose car was towed home after a crash goes to
+        /// the garage, where the car is.
         /// </summary>
         private void ReturnFromRace(bool towed)
         {
             if (towed)
             {
                 _logger.Information("The car was towed home after a crash: navigating to the garage");
-                _navigationService.NavigateToGarage(_gameState, skipAnimation: true);
-                return;
+                if (_navigationService.NavigateToGarage(_gameState, skipAnimation: true)) return;
+            }
+            else
+            {
+                _logger.Information("Navigating back to diner");
+                if (_navigationService.NavigateToDiner(_gameState, returning: true)) return;
+
+                _logger.Warning("The diner could not be opened after the race: going to the garage");
+                if (_navigationService.NavigateToGarage(_gameState, skipAnimation: true)) return;
             }
 
-            _logger.Information("Navigating back to diner");
-            if (_navigationService.NavigateToDiner(_gameState)) return;
-
-            _logger.Warning("The diner could not be opened after the race: going to the garage");
-            _navigationService.NavigateToGarage(_gameState, skipAnimation: true);
+            _logger.Warning("The garage could not be opened after the race either: going to the main menu");
+            _navigationService.NavigateToMainMenu();
         }
     }
 }

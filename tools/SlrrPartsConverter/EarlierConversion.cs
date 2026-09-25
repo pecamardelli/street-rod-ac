@@ -25,7 +25,7 @@ public sealed class EarlierConversion
         _aliases = aliases;
     }
 
-    /// <summary>Null when the folder holds no converted pack</summary>
+    /// <summary>Null when the folder holds no converted pack, or a file of it does not read (said on the console)</summary>
     public static EarlierConversion? Load(string folder)
     {
         if (!Directory.Exists(folder)) return null;
@@ -33,20 +33,43 @@ public sealed class EarlierConversion
         var parts = new List<(string, string[], int)>();
         foreach (var file in Directory.EnumerateFiles(folder, PartPack.FileName, SearchOption.AllDirectories))
         {
-            var pack = JsonConvert.DeserializeObject<PartPack>(File.ReadAllText(file));
+            if (!TryRead<PartPack>(file, out var pack)) return null;
             if (pack == null) continue;
 
-            var rpks = pack.Source.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
-            parts.AddRange(pack.Parts.Select(p => (p.Id, rpks, p.SourceTypeId)));
+            // A hand-edited pack may say null where a list or a name goes
+            var rpks = (pack.Source ?? string.Empty).Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
+            parts.AddRange((pack.Parts ?? new()).Where(p => p != null && !string.IsNullOrWhiteSpace(p.Id)).Select(p => (p.Id, rpks, p.SourceTypeId)));
         }
 
         if (parts.Count == 0) return null;
 
         var aliasesFile = Path.Combine(folder, PartPack.AliasesFileName);
-        var aliases = File.Exists(aliasesFile)
-            ? JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(aliasesFile))
-            : null;
-        return new EarlierConversion(parts, new Dictionary<string, string>(aliases ?? new(), StringComparer.OrdinalIgnoreCase));
+        Dictionary<string, string>? aliases = null;
+        if (File.Exists(aliasesFile) && !TryRead(aliasesFile, out aliases)) return null;
+
+        var kept = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (gone, current) in aliases ?? new())
+        {
+            if (!string.IsNullOrWhiteSpace(current)) kept[gone] = current;
+        }
+
+        return new EarlierConversion(parts, kept);
+    }
+
+    /// <summary>A JSON file of the earlier run; false (and the file named on the console) when it does not read</summary>
+    private static bool TryRead<T>(string file, out T? value) where T : class
+    {
+        try
+        {
+            value = JsonConvert.DeserializeObject<T>(File.ReadAllText(file));
+            return true;
+        }
+        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+        {
+            Console.WriteLine($"{file} could not be read: {ex.Message}");
+            value = null;
+            return false;
+        }
     }
 
     /// <summary>

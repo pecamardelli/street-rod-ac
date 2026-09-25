@@ -1,4 +1,8 @@
+using System.Runtime.CompilerServices;
 using System.Windows;
+
+// The tests reach the seams made for them (AppLoggerFactory.InitializeSilent)
+[assembly: InternalsVisibleTo("StreetRodAC.Tests")]
 
 [assembly: ThemeInfo(
     ResourceDictionaryLocation.None,            //where theme specific resource dictionaries are located

@@ -123,8 +123,14 @@ public sealed class PartsCatalog
         try
         {
             if (File.Exists(buildsFile))
-                catalog.EngineBuilds = (JsonConvert.DeserializeObject<List<EngineBuild>>(File.ReadAllText(buildsFile)) ?? new List<EngineBuild>())
-                    .Where(b => b != null).ToList();
+            {
+                // A build without an id can't be found again (cars and saves name builds by it): left out, the rest stand
+                var builds = JsonConvert.DeserializeObject<List<EngineBuild?>>(File.ReadAllText(buildsFile)) ?? new();
+                var named = builds.Where(b => b != null && !string.IsNullOrWhiteSpace(b.Id)).Select(b => b!).ToList();
+                if (named.Count < builds.Count)
+                    catalog._problems.Add($"{EngineBuild.FileName}: {builds.Count - named.Count} build(s) without an id are left out");
+                catalog.EngineBuilds = named;
+            }
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {

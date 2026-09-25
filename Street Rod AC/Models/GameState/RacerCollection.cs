@@ -77,6 +77,7 @@ namespace Street_Rod_AC.Models.GameState
             }
         }
 
+        [LiteDB.BsonIgnore]
         public int TotalCount => Inactive.Count + Retired.Count + ReadyToRace.Count;
     }
 }

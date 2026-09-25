@@ -90,6 +90,12 @@ namespace Street_Rod_AC
         // A wait for AC to exit (to put the install back and settle a pending race) is under way
         private int _waitingForAcExit;
 
+        /// <summary>Held for the life of the process: a second copy of the game would restore the install under the first</summary>
+        private const string SingleInstanceName = @"Local\StreetCorsa.SingleInstance";
+
+        // Kept referenced so it is not collected (and released) while the app runs; the OS lets go of it at the end
+        private static Mutex? _singleInstance;
+
         // Recoverable UI exceptions lately: a handler failing over and over (a render callback) is not recoverable
         private readonly Queue<DateTime> _recentUiErrors = new();
         private bool _closeAfterRace;
@@ -129,6 +135,16 @@ namespace Street_Rod_AC
 
         public App()
         {
+            // One copy of the game at a time, before anything is touched: a second one would put the install back at
+            // start-up in the middle of the first one's race, and could not open the save the first one holds
+            _singleInstance = new Mutex(initiallyOwned: true, SingleInstanceName, out var firstInstance);
+            if (!firstInstance)
+            {
+                System.Windows.MessageBox.Show("Street Corsa is already running.", "Street Corsa",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                Environment.Exit(0);
+            }
+
             // Force English culture for the entire application
             var englishCulture = new CultureInfo("en-US");
             CultureInfo.DefaultThreadCurrentCulture = englishCulture;
@@ -144,8 +160,8 @@ namespace Street_Rod_AC
             // Initialize logging FIRST
             AppLoggerFactory.Initialize();
 
-            // Then the last line of defence: an exception nobody catches (14 of the async void handlers let them
-            // through) must not end the app with the AC install still changed for a race and the game unsaved
+            // Then the last line of defence, a backstop behind the handlers' own guards: an exception nobody catches
+            // must not end the app with the AC install still changed for a race and the game unsaved
             DispatcherUnhandledException += OnDispatcherUnhandledException;
             AppDomain.CurrentDomain.UnhandledException += OnDomainUnhandledException;
             TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
@@ -284,12 +300,13 @@ namespace Street_Rod_AC
                 logger.Error("Assetto Corsa installation not found at path: {ACPath}",
                     AppSettings.Instance.AssettoCorsaPath);
 
-                var errorDialog = new Dialogs.Information.InformationDialogViewModel(
-                    DialogService,
-                    $"Assetto Corsa installation not found at:\n{AppSettings.Instance.AssettoCorsaPath}\n\n" +
-                    "Please verify the installation path in the configuration.",
-                    "Installation Not Found");
-                DialogService.ShowDialog(errorDialog);
+                // A message box, not the game's dialog: that one does not wait, and the app is about to close. The
+                // Settings screen cannot be reached from here, so the message says where the folder is set by hand.
+                ShowStartupError(
+                    $"Assetto Corsa was not found at:\n{AppSettings.Instance.AssettoCorsaPath}\n\n" +
+                    $"Set the Assetto Corsa folder as \"AssettoCorsaPath\" in\n{GameSettingsService.SettingsPath}\n" +
+                    "(for example \"AssettoCorsaPath\": \"D:\\\\Games\\\\assettocorsa\") and start Street Corsa again.",
+                    "Assetto Corsa Not Found");
                 Shutdown();
                 return;
             }
@@ -312,6 +329,8 @@ namespace Street_Rod_AC
             {
                 RestoreInstall(logger);
             }
+
+            SweepTempFiles(logger);
 
             logger.Information("Assetto Corsa installation validated at {ACPath}",
                 AppSettings.Instance.AssettoCorsaPath);
@@ -355,11 +374,11 @@ namespace Street_Rod_AC
             {
                 logger.Critical(ex, "Critical error during content import");
 
-                var errorDialog = new Dialogs.Information.InformationDialogViewModel(
-                    DialogService,
-                    $"Error importing Assetto Corsa content:\n{ex.Message}",
+                ShowStartupError(
+                    $"Error importing Assetto Corsa content:\n{ex.Message}\n\n" +
+                    $"The Assetto Corsa folder is set as \"AssettoCorsaPath\" in\n{GameSettingsService.SettingsPath}\n\n" +
+                    "The details are in the log.",
                     "Import Error");
-                DialogService.ShowDialog(errorDialog);
                 Shutdown();
                 return;
             }
@@ -381,6 +400,19 @@ namespace Street_Rod_AC
                     "Assetto Corsa is still running from an earlier session.\n\n" +
                     "The cars' data and race settings it was started with go back once it closes; races can start after that.",
                     "Assetto Corsa Is Running"));
+            }
+        }
+
+        /// <summary>A start-up failure the app closes on, in a message box that waits for the player; never throws</summary>
+        private static void ShowStartupError(string message, string title)
+        {
+            try
+            {
+                System.Windows.MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception)
+            {
+                // No window to show it in either; the log has it
             }
         }
 
@@ -410,24 +442,28 @@ namespace Street_Rod_AC
         /// </summary>
         private void RestoreInstall(IAppLogger? logger)
         {
-            try
-            {
-                var restored = CarDataOverlay?.RestoreAll() ?? 0;
-                if (restored > 0) logger?.Warning("Data of {Count} car(s) put back from an earlier race", restored);
-            }
-            catch (Exception ex)
-            {
-                logger?.Error(ex, "Could not put the cars' data back");
-            }
+            var restored = AssettoCorsaLauncher.RestoreInstall(CarDataOverlay, IniModificationService, logger);
+            if (restored > 0) logger?.Warning("{Count} car(s) and file(s) put back from an earlier race", restored);
+        }
 
+        /// <summary>
+        /// Temp files an atomic write left when it was cut short (a kill, the power), in the folders the game writes
+        /// into: AC's cfg folder, the keep folder of what a race changed, the settings' folder and the race mode's
+        /// folder in the install. Never throws.
+        /// </summary>
+        private static void SweepTempFiles(IAppLogger logger)
+        {
             try
             {
-                var restored = IniModificationService?.RestoreAll() ?? 0;
-                if (restored > 0) logger?.Warning("{Count} AC cfg file(s) put back from an earlier race", restored);
+                var removed = Helpers.SafeFile.SweepTemps(Services.Configuration.IniModificationService.DefaultCfgDirectory)
+                    + Helpers.SafeFile.SweepTemps(AppSettings.AcRestorePath, recursive: true)
+                    + Helpers.SafeFile.SweepTemps(AppSettings.AppDataPath)
+                    + Helpers.SafeFile.SweepTemps(SrRaceMode.InstalledFolder(AppSettings.Instance.AssettoCorsaPath));
+                if (removed > 0) logger.Information("Removed {Count} temp file(s) left by writes cut short", removed);
             }
             catch (Exception ex)
             {
-                logger?.Error(ex, "Could not put the AC cfg files back");
+                logger.Warning(ex, "Could not clean up temp files left by writes cut short");
             }
         }
 
@@ -681,13 +717,15 @@ namespace Street_Rod_AC
                 // Logging never started: the steps still run
             }
 
-            ShutDownCleanly(logger);
+            ShutDownCleanly(logger, fatal: true);
         }
 
         /// <summary>
-        /// The way out, normal or not: save, restore, FMOD, the database, the log. Every step guarded.
+        /// The way out, normal or not: save, restore, FMOD, the database, the log. Every step guarded. On the crash
+        /// path the log is flushed before the database closes, and the close waits for the database's lock only so
+        /// long: a thread stuck holding it must not keep what was logged about the crash off the disk.
         /// </summary>
-        private void ShutDownCleanly(IAppLogger? logger)
+        private void ShutDownCleanly(IAppLogger? logger, bool fatal = false)
         {
             // Save current game state if one is loaded. On the UI thread, which owns the state: the crash path can
             // run on any thread (a pool thread, an FMOD callback) while the UI thread is changing the game. A UI
@@ -736,6 +774,26 @@ namespace Street_Rod_AC
             catch (Exception ex)
             {
                 logger?.Error(ex, "FMOD did not shut down cleanly");
+            }
+
+            if (fatal)
+            {
+                logger?.Information("Closing the save's database; the log is flushed first");
+                AppLoggerFactory.Shutdown();
+                try
+                {
+                    // Nothing is logged from here on: the log is closed
+                    if (GameStateRepository is GameStateRepository repository)
+                        repository.Database.TryDispose(FatalPathWait);
+                    else
+                        (GameStateRepository as IDisposable)?.Dispose();
+                }
+                catch (Exception)
+                {
+                    // The process is ending; LiteDB's journal covers a close that did not happen
+                }
+
+                return;
             }
 
             // After the final save: the save's database closes

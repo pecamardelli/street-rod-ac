@@ -8,18 +8,29 @@ the mode uses it. What comes out is the result file the mode writes, which each 
 It checks the mode's own logic: when the patrol shows up, who is busted, who gets away, the roadblock, what the
 result says. Not how CSP's AI drives, which only the game can show.
 
-    pip install lupa
+It runs the mode on LuaJIT, as CSP does (lupa's luajit21 runtime), and writes its JSON as CSP's encoder (rxi's
+json.lua) does: an empty table is [], strings are escaped, a sparse array or a key that is not a string is an error.
+
+    python -m pip install -r tools/sr_race_harness/requirements.txt
     python tools/sr_race_harness/test_chase.py
+    python tools/sr_race_harness/test_chase.py --golden   (writes the C# contract fixture again, see golden_file)
 """
 
 import json
 import os
 import sys
 
-import lupa
+try:
+    import lupa.luajit21 as lupa
+except ImportError:
+    import lupa
+    print('WARNING: lupa has no LuaJIT 2.1 runtime here: running on plain Lua, which is not what CSP runs')
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODE = os.path.join(HERE, '..', '..', 'apps', 'new-modes', 'sr_race', 'mode.lua')
+# What the mode writes, as the C# side's contract test reads it (RaceResultContractTests)
+GOLDEN = os.path.join(HERE, '..', '..', 'tests', 'StreetRodAC.Tests', 'Fixtures', 'sr_race_result.json')
+GOLDEN_CONTEXT_ID = '6f1c2d3e-4b5a-4c6d-8e7f-90a1b2c3d4e5'
 
 STUB = r'''
 local world = ...
@@ -60,7 +71,7 @@ local function pointAt(s, lateral)
   return vec3(R * math.cos(a), 0, R * math.sin(a)):addScaled(right, lateral or 0), dir, right
 end
 local function progressOf(v)
-  local a = math.atan(v.z, v.x)
+  local a = (math.atan2 or math.atan)(v.z, v.x)
   return wrap(a * R) / L
 end
 
@@ -168,27 +179,59 @@ physics = {
   raycastTrack = function(pos) return pos.y end,
 }
 render = { circle = function() end }
+-- CSP's JSON.stringify is rxi's json.lua encoder: this is its encode, as it is
 JSON = {}
-function JSON.stringify(v)
-  local t = type(v)
-  if t == 'nil' then return 'null' end
-  if t == 'boolean' or t == 'number' then return tostring(v) end
-  if t == 'string' then return string.format('%q', v) end
-  if #v > 0 or next(v) == nil then
-    if next(v) == nil then return '{}' end
-    local parts = {}
-    for _, x in ipairs(v) do parts[#parts + 1] = JSON.stringify(x) end
-    return '[' .. table.concat(parts, ',') .. ']'
+local BS = string.char(92) -- a backslash, spelled out: this Lua sits in a Python string
+local escapes = { [BS] = BS .. BS, ['"'] = BS .. '"', [string.char(8)] = BS .. 'b', [string.char(12)] = BS .. 'f',
+  [string.char(10)] = BS .. 'n', [string.char(13)] = BS .. 'r', [string.char(9)] = BS .. 't' }
+local function escape(c) return escapes[c] or string.format(BS .. 'u%04x', c:byte()) end
+local encode
+local function encodeTable(val, stack)
+  stack = stack or {}
+  if stack[val] then error('circular reference') end
+  stack[val] = true
+  local res = {}
+  if rawget(val, 1) ~= nil or next(val) == nil then
+    -- An array: keys 1..n and nothing else
+    local n = 0
+    for k in pairs(val) do
+      if type(k) ~= 'number' then error('invalid table: mixed or invalid key types') end
+      n = n + 1
+    end
+    if n ~= #val then error('invalid table: sparse array') end
+    for _, v in ipairs(val) do res[#res + 1] = encode(v, stack) end
+    stack[val] = nil
+    return '[' .. table.concat(res, ',') .. ']'
   end
-  local parts = {}
-  for k, x in pairs(v) do parts[#parts + 1] = string.format('%q', tostring(k)) .. ':' .. JSON.stringify(x) end
-  return '{' .. table.concat(parts, ',') .. '}'
+  for k, v in pairs(val) do
+    if type(k) ~= 'string' then error('invalid table: mixed or invalid key types') end
+    res[#res + 1] = encode(k, stack) .. ':' .. encode(v, stack)
+  end
+  stack[val] = nil
+  return '{' .. table.concat(res, ',') .. '}'
 end
+encode = function(val, stack)
+  local t = type(val)
+  if t == 'nil' then return 'null' end
+  if t == 'boolean' then return tostring(val) end
+  if t == 'string' then return '"' .. (val:gsub('[%c"' .. BS .. ']', escape)) .. '"' end
+  if t == 'number' then
+    if val ~= val or val <= -math.huge or val >= math.huge then error("unexpected number value '" .. tostring(val) .. "'") end
+    return string.format('%.14g', val)
+  end
+  if t == 'table' then return encodeTable(val, stack) end
+  error("unexpected type '" .. t .. "'")
+end
+function JSON.stringify(v) return encode(v) end
 io.createDir = function() end
 io.save = function(p, s) saved[p] = s; return true end
 io.move = function(a, b) saved[b] = saved[a]; saved[a] = nil; return true end
 io.deleteFile = function(p) saved[p] = nil end
 os.preciseClock = os.clock
+-- The mode seeds from the clock and a heap address, so each run would place its traps elsewhere and a test could
+-- pass or fail by chance: the harness pins the seed, and every run is the same race
+local randomseed = math.randomseed
+math.randomseed = function() randomseed(1970) end
 function setInterval(f, t) timers[#timers + 1] = { f = f, every = t, due = t }; return #timers end
 function clearInterval(id) if timers[id] then timers[id].dead = true end end
 function setTimeout(f, t) timers[#timers + 1] = { f = f, due = t, once = true }; return #timers end
@@ -343,9 +386,10 @@ def each_racer_gets_a_trap_of_his_own():
 
 
 def only_the_rival_is_seen_and_the_player_finishes_clean():
-    # One trap. The rival is faster, goes past it first and stops later on; the player never has a cop after him
+    # One trap. The rival is faster, goes past it first and stops later on (7.7 km, past the last spot a trap can
+    # take); the player never has a cop after him
     ini = dict(TRAPS_INI, **{'STREET_ROD.POLICE': '2'})
-    result, log, _, _ = run('rival seen', 3, ini, lambda t: 25, lambda t: 35 if t < 200 else 0, lambda t, i: 45,
+    result, log, _, _ = run('rival seen', 3, ini, lambda t: 25, lambda t: 35 if t < 220 else 0, lambda t, i: 45,
                             max_seconds=700, length=8000.0)
     pursuit = result['pursuit']
     check('the trap saw the rival', 'saw car 1 go by' in log, log)
@@ -362,8 +406,43 @@ def no_room_for_traps_means_a_patrol():
     check('and the chase ran', result['pursuit']['started'], log)
 
 
+def paths(value, prefix=''):
+    """Every key the file has, as a path (participants[].crash.crashed): its shape, whatever the values"""
+    if isinstance(value, dict):
+        found = {prefix} if prefix else set()
+        for key, item in value.items():
+            found |= paths(item, f'{prefix}.{key}' if prefix else key)
+        return found
+    if isinstance(value, list):
+        found = {prefix + '[]'}
+        for item in value:
+            found |= paths(item, prefix + '[]')
+        return found
+    return {prefix}
+
+
+def golden_file(write=False):
+    # The C# side reads this file as the mode's contract (RaceResultContractTests): a road race with the police,
+    # won at the line after getting away. The file must have the shape the mode writes now; --golden writes it again.
+    ini = dict(POLICE_INI, **{'STREET_ROD.CONTEXT_ID': GOLDEN_CONTEXT_ID})
+    result, log, _, _ = run('golden', 4, ini, lambda t: 30, lambda t: 20, lambda t, i: 12)
+    if write:
+        with open(GOLDEN, 'w', encoding='utf-8', newline='\n') as f:
+            json.dump(result, f, indent=2, sort_keys=True)
+            f.write('\n')
+        print(f'wrote {os.path.normpath(GOLDEN)}')
+    with open(GOLDEN, encoding='utf-8') as f:
+        golden = json.load(f)
+    missing, extra = paths(result) - paths(golden), paths(golden) - paths(result)
+    check(f'the golden file has the shape the mode writes (run with --golden to write it again); '
+          f'written but not in it: {sorted(missing)}, in it but not written: {sorted(extra)}', not missing and not extra, log)
+    check('every wheel has its place', [w['wheel'] for w in result['participants'][0]['condition']['wheels']] == [0, 1, 2, 3], log)
+
+
 if __name__ == '__main__':
-    for test in (overtaken_and_busted, escaped_after_the_roadblocks, rival_overtaken_the_player_gets_away, the_line_is_home, no_police_no_pursuit,
+    if '--golden' in sys.argv:
+        golden_file(write=True)
+    for test in (golden_file, overtaken_and_busted, escaped_after_the_roadblocks, rival_overtaken_the_player_gets_away, the_line_is_home, no_police_no_pursuit,
                  trap_sees_the_player_who_is_then_busted, each_racer_gets_a_trap_of_his_own,
                  only_the_rival_is_seen_and_the_player_finishes_clean, no_room_for_traps_means_a_patrol):
         test()

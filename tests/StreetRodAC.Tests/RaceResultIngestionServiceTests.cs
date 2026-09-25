@@ -1,8 +1,6 @@
 using Newtonsoft.Json.Linq;
-using Street_Rod_AC.Models.Career.Events;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Models.Race;
-using Street_Rod_AC.Services.Career;
 using Street_Rod_AC.Services.Race;
 using Street_Rod_AC.Services.Race.Validation;
 using Street_Rod_AC.Services.Storage;
@@ -34,57 +32,26 @@ public sealed class RaceResultIngestionServiceTests : IDisposable
         _temp.Dispose();
     }
 
-    private sealed class FakeCareer : ICareerProgressService
-    {
-        public CareerProgressResult CheckProgressAfterRace(GameState gameState) => new();
-    }
-
-    private sealed class FakeEvents : IRaceEventService
-    {
-        public IEnumerable<RaceEventDefinition> GetAllEventDefinitions() => [];
-        public RaceEventDefinition? GetEventDefinition(string eventId) => null;
-        public IEnumerable<RaceEventDefinition> GetEligibleEvents(CareerState career) => [];
-        public IEnumerable<RaceEventInstance> GetActiveEvents(CareerState career, DateTime currentTime) => [];
-        public List<RaceEventInstance> GenerateEvents(CareerState career, DateTime currentTime, double pinkSlipFactor = 1.0) => [];
-        public bool CanEnterEvent(string eventId, string carDefinitionId, Car? carInstance, CareerState career) => false;
-        public EventReward? CompleteEvent(Guid eventInstanceId, bool playerWon, CareerState career, DateTime completedAt) => null;
-        public int CleanupExpiredEvents(CareerState career, DateTime currentTime) => 0;
-    }
-
     private string Inbox => _temp.Combine("inbox");
     private string Quarantine => _temp.Combine("quarantine");
 
-    private RaceResultIngestionService Service(GameState state, bool? acRunning = false) => new(
+    private RaceResultIngestionService Service(GameState state, bool? acRunning = false, string? archive = null) => new(
         new RaceResultValidator(),
         new SessionDeduplicator(_sessions),
-        new RaceResultProcessor(_repository, _sessions, new FakeCareer(), new FakeEvents()),
+        new RaceResultProcessor(_repository, _sessions, new RaceFakes.FakeCareer(), new RaceFakes.FakeEvents()),
         _sessions,
         () => state,
         Inbox,
         Quarantine,
-        _temp.Combine("archive"),
+        archive ?? _temp.Combine("archive"),
         () => acRunning);
 
-    private static (GameState State, RaceContext Context, Opponent Rival) World(decimal wager = 100m, bool launched = true)
+    private static (GameState State, RaceContext Context, Opponent Rival) World(decimal wager = 100m, bool launched = true, string saveName = "t")
     {
-        var state = GameState.CreateNew("Player");
-        state.SaveName = "t";
-        var playerCar = new Car("car_a") { InstanceId = Guid.NewGuid(), EngineHealth = 1, TransmissionHealth = 1, BodyCondition = 1, TireCondition = 1 };
-        state.Player.Cars.Add(playerCar);
-        var rival = new Opponent("Rival", 30, Gender.Male, 95, 50) { Money = 5000m };
-        var rivalCar = new Car("car_b") { InstanceId = Guid.NewGuid(), EngineHealth = 1, TransmissionHealth = 1, BodyCondition = 1, TireCondition = 1 };
-        rival.Cars.Add(rivalCar);
-        state.Racers.AddRacer(rival);
-
-        var context = new RaceContext
-        {
-            PlayerName = "Player", OpponentName = "Rival", PlayerCarInstanceId = playerCar.InstanceId,
-            OpponentCarInstanceId = rivalCar.InstanceId, CashWager = wager, TrackId = "ks_drag", RaceType = RaceType.DragRace,
-            CreatedAt = DateTime.Now.AddMinutes(-5),
-            LaunchedAt = launched ? DateTime.Now.AddMinutes(-4) : null
-        };
-        state.PendingRace = context;
-        return (state, context, rival);
+        var world = RaceFakes.World(wager, saveName: saveName);
+        world.Context.CreatedAt = DateTime.Now.AddMinutes(-5);
+        world.Context.LaunchedAt = launched ? DateTime.Now.AddMinutes(-4) : null;
+        return (world.State, world.Context, world.Rival);
     }
 
     /// <summary>A result file in the inbox: the player wins, for <paramref name="contextId"/> (none: no context_id)</summary>
@@ -117,16 +84,17 @@ public sealed class RaceResultIngestionServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task Another_races_file_is_quarantined_and_a_launched_race_without_a_file_is_forfeited()
+    public async Task Another_saves_file_is_left_in_the_inbox_and_a_launched_race_without_a_file_is_forfeited()
     {
         var (state, context, rival) = World(wager: 250m);
-        ResultFile(Guid.NewGuid());
+        var other = ResultFile(Guid.NewGuid());
 
         var result = await Service(state).ProcessOrphanedResultsAsync();
 
         Assert.Equal(0, result.FilesProcessed);
-        Assert.Equal(1, result.FilesQuarantined);
-        Assert.Equal(0, result.FilesQuarantinedForContext);
+        Assert.Equal(0, result.FilesQuarantined);
+        Assert.Equal(1, result.FilesIgnored);
+        Assert.True(File.Exists(other));
         Assert.True(result.ForfeitApplied);
         Assert.Null(state.PendingRace);
         Assert.Equal(5000m + 250m, rival.Money);
@@ -252,7 +220,8 @@ public sealed class RaceResultIngestionServiceTests : IDisposable
     public async Task The_launchers_pass_counts_only_its_own_races_quarantined_files()
     {
         var (state, context, _) = World();
-        ResultFile(Guid.NewGuid());
+        // A month-old file of a race no save took: quarantined, and not this race's
+        File.SetLastWriteTimeUtc(ResultFile(Guid.NewGuid()), DateTime.UtcNow.AddDays(-40));
         _temp.File(Path.Combine("inbox", Guid.NewGuid() + ".json"), "{ not json");
 
         var result = await Service(state).IngestResultsAsync(context);
@@ -263,29 +232,16 @@ public sealed class RaceResultIngestionServiceTests : IDisposable
         Assert.Equal(0, result.FilesProcessed);
     }
 
-    /// <summary>A repository whose saves fail (the disk is full); everything else is not needed here</summary>
-    private sealed class FailingSaves : IGameStateRepository
-    {
-        public void Save(GameState state, string saveName, Action<LiteDB.LiteDatabase>? sameTransaction) =>
-            throw new InvalidOperationException("disk full");
-        public void Save(GameState state, string saveName) => Save(state, saveName, null);
-        public GameState? Load(string saveName) => throw new NotSupportedException();
-        public bool Exists(string saveName) => throw new NotSupportedException();
-        public void Delete(string saveName) => throw new NotSupportedException();
-        public List<string> ListSaves() => throw new NotSupportedException();
-        public GameState CreateNew(string saveName, string playerName, GameRules? rules = null) => throw new NotSupportedException();
-        public void Dispose() { }
-    }
-
     [Fact]
-    public async Task A_race_whose_save_fails_goes_back_to_the_inbox_and_the_state_is_as_before()
+    public async Task A_race_whose_save_fails_stays_in_the_inbox_and_the_state_is_as_before()
     {
         var (state, context, rival) = World();
         var file = ResultFile(context.ContextId);
         var moneyBefore = state.Player.Money;
         var service = new RaceResultIngestionService(
             new RaceResultValidator(), new SessionDeduplicator(_sessions),
-            new RaceResultProcessor(new FailingSaves(), _sessions, new FakeCareer(), new FakeEvents()),
+            new RaceResultProcessor(new RaceResultProcessorTests.FakeRepository { Throw = new InvalidOperationException("disk full") }, _sessions,
+                new RaceFakes.FakeCareer(), new RaceFakes.FakeEvents()),
             _sessions, () => state, Inbox, Quarantine, _temp.Combine("archive"), () => false);
 
         var result = await service.IngestResultsAsync(context);
@@ -301,5 +257,113 @@ public sealed class RaceResultIngestionServiceTests : IDisposable
         Assert.Equal(5000m, state.Racers.Find("Rival")!.Money);
         Assert.False(await _sessions.IsContextSettledAsync("t", context.ContextId));
         _ = rival;
+    }
+
+    // ----- files of other saves, archiving after the save, unfinished files -----
+
+    [Fact]
+    public async Task Another_saves_file_waits_in_the_inbox_and_counts_when_its_own_save_is_loaded()
+    {
+        // Save "a" ran a race and was closed before its result came in
+        var (stateA, contextA, rivalA) = World(saveName: "a");
+        var file = ResultFile(contextA.ContextId);
+
+        // Save "b" is loaded with nothing pending, then a new game runs a race of its own
+        var (stateB, _, _) = World(saveName: "b");
+        stateB.PendingRace = null;
+        var inB = await Service(stateB).ProcessOrphanedResultsAsync();
+        Assert.Equal(0, inB.FilesQuarantined);
+        Assert.Equal(1, inB.FilesIgnored);
+        Assert.True(File.Exists(file));
+
+        var (stateNew, contextNew, _) = World(saveName: "new");
+        var inNew = await Service(stateNew).IngestResultsAsync(contextNew);
+        Assert.Equal(0, inNew.FilesQuarantined + inNew.FilesProcessed + inNew.FilesDeferred);
+        Assert.True(File.Exists(file));
+
+        // Save "a" again: its race counts, and is not forfeited
+        var inA = await Service(stateA).ProcessOrphanedResultsAsync();
+        Assert.Equal(1, inA.FilesProcessed);
+        Assert.False(inA.ForfeitApplied);
+        Assert.Null(stateA.PendingRace);
+        Assert.Equal(5000m - 100m, rivalA.Money);
+        Assert.Empty(Directory.GetFiles(Inbox));
+    }
+
+    [Fact]
+    public async Task A_second_file_of_a_race_this_save_has_settled_is_quarantined()
+    {
+        var (state, context, rival) = World();
+        ResultFile(context.ContextId);
+        await Service(state).ProcessOrphanedResultsAsync();
+        Assert.Null(state.PendingRace);
+
+        // Another session of the same race
+        var second = ResultFile(context.ContextId);
+        var result = await Service(state).ProcessOrphanedResultsAsync();
+
+        Assert.Equal(1, result.FilesQuarantined);
+        Assert.False(File.Exists(second));
+        Assert.Equal(5000m - 100m, rival.Money);
+    }
+
+    [Fact]
+    public async Task A_race_applied_but_not_archived_counts_once_and_its_file_is_dropped_on_the_next_pass()
+    {
+        var (state, context, rival) = World();
+        var file = ResultFile(context.ContextId);
+        // The archive "folder" is a file: nothing moves into it, as when the app is killed right after the save
+        var blocked = _temp.File("archive-blocked", "not a folder");
+
+        var first = await Service(state, archive: blocked).ProcessOrphanedResultsAsync();
+
+        Assert.Equal(1, first.FilesProcessed);
+        Assert.False(first.RetryLater);
+        Assert.Null(state.PendingRace);
+        Assert.True(File.Exists(file));
+        Assert.True(await _sessions.IsContextSettledAsync("t", context.ContextId));
+
+        var second = await Service(state).ProcessOrphanedResultsAsync();
+
+        Assert.Equal(0, second.FilesProcessed);
+        Assert.Equal(1, second.FilesDuplicate);
+        Assert.False(File.Exists(file));
+        Assert.Equal(5000m - 100m, rival.Money);
+    }
+
+    [Fact]
+    public async Task An_unfinished_result_is_quarantined_once_AC_is_closed_and_voids_its_race()
+    {
+        var (state, context, rival) = World(wager: 250m);
+        var tmp = _temp.File(Path.Combine("inbox", Guid.NewGuid() + ".json.tmp"), "{ \"metadata\": {");
+
+        // While AC may still be writing it, it is left alone
+        await Service(state, acRunning: true).ProcessOrphanedResultsAsync();
+        Assert.True(File.Exists(tmp));
+        Assert.Same(context, state.PendingRace);
+
+        var result = await Service(state).ProcessOrphanedResultsAsync();
+
+        Assert.False(File.Exists(tmp));
+        Assert.True(File.Exists(Path.Combine(Quarantine, Path.GetFileName(tmp))));
+        Assert.Equal(1, result.FilesQuarantinedForContext);
+        Assert.False(result.ForfeitApplied);
+        Assert.Null(state.PendingRace);
+        Assert.Equal(5000m, rival.Money);
+    }
+
+    [Fact]
+    public async Task A_file_that_names_another_kind_of_race_is_applied_as_the_race_was_set_up()
+    {
+        var (state, context, rival) = World();
+        var file = ResultFile(context.ContextId);
+        var json = JObject.Parse(File.ReadAllText(file));
+        json["session"]!["race_type"] = "ROAD";
+        File.WriteAllText(file, json.ToString());
+
+        var result = await Service(state).ProcessOrphanedResultsAsync();
+
+        Assert.Equal(1, result.FilesProcessed);
+        Assert.Equal(5000m - 100m, rival.Money);
     }
 }

@@ -88,7 +88,18 @@ internal static partial class FmodStudio
                 throw new FileNotFoundException($"FMOD is not in the Assetto Corsa folder: {folder}");
 
             var coreHandle = NativeLibrary.Load(core);
-            var handle = NativeLibrary.Load(studio);
+            IntPtr handle;
+            try
+            {
+                handle = NativeLibrary.Load(studio);
+            }
+            catch
+            {
+                // Let go of the core again: every retry would otherwise add a reference to it
+                NativeLibrary.Free(coreHandle);
+                throw;
+            }
+
             if (!_resolverSet)
             {
                 NativeLibrary.SetDllImportResolver(typeof(FmodStudio).Assembly, (name, _, _) =>

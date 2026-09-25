@@ -12,6 +12,11 @@ namespace Street_Rod_AC.Services.Storage
         private const int BackupCount = 3;
 
         private readonly IOpponentInitializationService? _opponentInitializationService;
+
+        // Saves backed up this session. The backups rotate once per session, at a save's first write: rotating on every
+        // write (a race alone writes several times) would push a good copy out within a minute, before anybody could
+        // notice that the save went bad.
+        private readonly HashSet<string> _backedUp = new(StringComparer.OrdinalIgnoreCase);
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger(LogCategory.Save);
 
         /// <param name="database">
@@ -66,8 +71,8 @@ namespace Street_Rod_AC.Services.Storage
 
             try
             {
-                // Create backup before saving
-                CreateBackup(saveName, dbPath);
+                // The session's first write to this save keeps what was there before it
+                BackUpOnce(saveName, dbPath);
 
                 state.LastPlayedDate = DateTime.Now;
                 Database.InTransaction(saveName, db =>
@@ -92,6 +97,7 @@ namespace Street_Rod_AC.Services.Storage
                 return;
 
             Database.Close(saveName);
+            lock (_backedUp) _backedUp.Remove(saveName);
 
             // The save, LiteDB's journal and rebuild files next to it, and its backups
             foreach (var file in Database.FilesOf(saveName))
@@ -186,10 +192,24 @@ namespace Street_Rod_AC.Services.Storage
         /// <summary>Closes the open save; call it after the last save on exit</summary>
         public void Dispose() => Database.Dispose();
 
-        private void CreateBackup(string saveName, string dbPath)
+        private void BackUpOnce(string saveName, string dbPath)
+        {
+            lock (_backedUp)
+            {
+                if (_backedUp.Contains(saveName)) return;
+            }
+
+            if (CreateBackup(saveName, dbPath))
+            {
+                lock (_backedUp) _backedUp.Add(saveName);
+            }
+        }
+
+        /// <summary>True when a backup was made; a save not on disk yet has nothing to back up, and a failure is logged</summary>
+        private bool CreateBackup(string saveName, string dbPath)
         {
             if (!File.Exists(dbPath))
-                return;
+                return false;
 
             try
             {
@@ -206,11 +226,13 @@ namespace Street_Rod_AC.Services.Storage
 
                 // The save may be open: copied through its owner, checkpointed and with no write in progress
                 Database.CopyTo(saveName, backup1);
+                return true;
             }
             catch (Exception ex)
             {
-                // Backup failure shouldn't prevent saving
+                // Backup failure shouldn't prevent saving; the next save tries again
                 _logger.Warning(ex, "Could not back up save {SaveName} before saving", saveName);
+                return false;
             }
         }
     }

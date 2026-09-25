@@ -774,7 +774,17 @@ public class CarViewport3D : D3DViewportBase
 
                 if (placed.Count == 0) return (null, Array.Empty<MountCandidate>());
 
-                var built = PartAssembler.BuildModel(catalog, "candidates", placed);
+                AssemblyModel built;
+                try
+                {
+                    built = PartAssembler.BuildModel(catalog, "candidates", placed);
+                }
+                catch (InvalidOperationException)
+                {
+                    // BuildModel's "no part has a model": nothing made it into the model, nothing to show or click
+                    return (null, Array.Empty<MountCandidate>());
+                }
+
                 return (built, built.Nodes.Select(n => ownerOf[n.Source!]).ToArray());
             });
 
@@ -785,11 +795,6 @@ public class CarViewport3D : D3DViewportBase
                 _shownCandidates = candidates;
                 AnimateFor(AnimationWindow);
             }
-        }
-        catch (InvalidOperationException)
-        {
-            // Nothing made it into the model: nothing to show, nothing to click
-            ClearCandidates(renderer);
         }
         catch (Exception ex)
         {
@@ -812,21 +817,29 @@ public class CarViewport3D : D3DViewportBase
         Invalidate();
     }
 
+    /// <summary>Runs from property callbacks, so nothing may escape it</summary>
     private void ApplySelection()
     {
-        if (Renderer == null) return;
-
-        // The model on screen may still be the one of the tree before: the same part is known by its id there
-        var selected = SelectedPart;
-        var node = -1;
-        for (var i = 0; selected != null && i < _partNodes.Count; i++)
+        try
         {
-            var source = _partNodes[i].Source;
-            if (ReferenceEquals(source, selected) || (source != null && selected.InstanceId != Guid.Empty && source.InstanceId == selected.InstanceId)) node = i;
-        }
+            if (Renderer == null) return;
 
-        Renderer.SelectedPart = node < 0 ? null : node;
-        InvalidateIfDirty();
+            // The model on screen may still be the one of the tree before: the same part is known by its id there
+            var selected = SelectedPart;
+            var node = -1;
+            for (var i = 0; selected != null && i < _partNodes.Count; i++)
+            {
+                var source = _partNodes[i].Source;
+                if (ReferenceEquals(source, selected) || (source != null && selected.InstanceId != Guid.Empty && source.InstanceId == selected.InstanceId)) node = i;
+            }
+
+            Renderer.SelectedPart = node < 0 ? null : node;
+            InvalidateIfDirty();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Could not show the selected part");
+        }
     }
 
     private static CarAnchors? GetAnchors(Kn5RenderableCar carNode)
@@ -840,36 +853,52 @@ public class CarViewport3D : D3DViewportBase
         return new CarAnchors(points[0], points[1], points[2], points[3]);
     }
 
+    /// <summary>Runs from property callbacks, so nothing may escape it: a broken skin folder leaves the skin as it was</summary>
     private void ApplySkin()
     {
-        if (Renderer == null || string.IsNullOrEmpty(_loadedCarDirectory)) return;
-
-        var skinId = SkinId;
-        if (string.IsNullOrEmpty(skinId)) return;
-
-        if (Directory.Exists(Path.Combine(_loadedCarDirectory, "skins", skinId)))
+        try
         {
-            Renderer.SelectSkin(skinId);
-            Invalidate();
+            if (Renderer == null || string.IsNullOrEmpty(_loadedCarDirectory)) return;
+
+            var skinId = SkinId;
+            if (string.IsNullOrEmpty(skinId)) return;
+
+            if (Directory.Exists(Path.Combine(_loadedCarDirectory, "skins", skinId)))
+            {
+                Renderer.SelectSkin(skinId);
+                Invalidate();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Could not put on skin {Skin}", SkinId ?? "(none)");
         }
     }
 
+    /// <summary>Runs from property callbacks, so nothing may escape it</summary>
     private void ApplyCarState()
     {
-        var renderer = Renderer;
-        if (renderer == null) return;
-
-        renderer.AutoRotate = AutoRotate;
-
-        var carNode = renderer.CarNode;
-        if (carNode != null)
+        try
         {
-            carNode.HeadlightsEnabled = HeadlightsOn;
-            if (carNode.HasLeftDoorAnimation) carNode.LeftDoorOpen = DoorsOpen;
-            if (carNode.HasRightDoorAnimation) carNode.RightDoorOpen = DoorsOpen;
-        }
+            var renderer = Renderer;
+            if (renderer == null) return;
 
-        AnimateFor(AnimationWindow);
+            renderer.AutoRotate = AutoRotate;
+
+            var carNode = renderer.CarNode;
+            if (carNode != null)
+            {
+                carNode.HeadlightsEnabled = HeadlightsOn;
+                if (carNode.HasLeftDoorAnimation) carNode.LeftDoorOpen = DoorsOpen;
+                if (carNode.HasRightDoorAnimation) carNode.RightDoorOpen = DoorsOpen;
+            }
+
+            AnimateFor(AnimationWindow);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Could not set the lights, doors or turntable");
+        }
     }
 
     #endregion

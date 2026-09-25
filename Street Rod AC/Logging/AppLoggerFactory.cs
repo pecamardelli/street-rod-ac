@@ -56,6 +56,22 @@ namespace Street_Rod_AC.Logging
         }
 
         /// <summary>
+        /// For the tests: loggers write to Serilog's silent default, and no log folder is made under the user's
+        /// %AppData%. Does nothing once the real logging is up.
+        /// </summary>
+        internal static void InitializeSilent()
+        {
+            lock (_lock)
+            {
+                if (_isInitialized)
+                    return;
+
+                Log.Logger = new LoggerConfiguration().CreateLogger();
+                _isInitialized = true;
+            }
+        }
+
+        /// <summary>
         /// Creates a categorized logger for a specific component.
         /// </summary>
         /// <param name="category">The category/context for the logger</param>

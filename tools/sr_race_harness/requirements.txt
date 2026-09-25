@@ -1,0 +1,2 @@
+# The race mode harness (test_chase.py): lupa ships the LuaJIT 2.1 runtime CSP runs (lupa.luajit21)
+lupa==2.8

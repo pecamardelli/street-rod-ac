@@ -20,6 +20,9 @@ public partial class EnginePanel : System.Windows.Controls.UserControl
     private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("EngineAudio");
     private Window? _window;
 
+    // The needle's colour below the redline: looked up once, not on every tach update (every frame while revving)
+    private Brush? _accentBrush;
+
     public EnginePanel()
     {
         Runner = new EngineRunner();
@@ -110,7 +113,7 @@ public partial class EnginePanel : System.Windows.Controls.UserControl
         RedZone.Width = Math.Max(0, width * (1 - Runner.RedlineFraction));
         Needle.Fill = Runner.RpmFraction >= Runner.RedlineFraction - 0.005
             ? Brushes.Red
-            : (Brush)FindResource("AccentPrimaryBrush");
+            : _accentBrush ??= (Brush)FindResource("AccentPrimaryBrush");
     }
 
     private void OnStartClick(object sender, RoutedEventArgs e) => Runner.Toggle();

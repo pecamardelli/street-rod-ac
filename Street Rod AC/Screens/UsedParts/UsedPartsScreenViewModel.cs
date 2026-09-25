@@ -214,14 +214,35 @@ namespace Street_Rod_AC.Screens.UsedParts
 
                 // Late in the evening that is the next morning, with another paper
                 if (spent.NewDayStarted) LoadOffers();
+
+                // The time spent, and the new day it may end in, belong in the save
+                if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Could not spend the time for the parts pages");
+                _logger.Error(ex, "Could not spend and save the time for the parts pages");
             }
         }
 
+        /// <summary>
+        /// The rows for the page, kind and search picked. Called from property setters bound to the view, so
+        /// nothing may escape: a page that cannot be listed says so and stays empty.
+        /// </summary>
         private void LoadOffers()
+        {
+            try
+            {
+                FillOffers();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not list the parts for the {Tab} page", _tab);
+                Offers.Clear();
+                StatusText = "The parts could not be listed.";
+            }
+        }
+
+        private void FillOffers()
         {
             Offers.Clear();
             if (!_shopService.IsAvailable)
@@ -292,7 +313,7 @@ namespace Street_Rod_AC.Screens.UsedParts
 
             try
             {
-                _gameStateRepo.Save(_gameState, _gameState.SaveName);
+                if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
             }
             catch (Exception ex)
             {
