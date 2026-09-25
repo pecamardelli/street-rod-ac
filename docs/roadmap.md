@@ -432,7 +432,7 @@ a police chase. Left out: the end of the game, kept for the first release.
 
 **Started before step 8 was done (2026-09-25):** the user plays the checklist while step 9 is built.
 
-### Step 9: a new main screen (built on `feature/main-screen`, 2026-09-25, not yet seen by the user)
+### Step 9: a new main screen (done, PR #23, merged as `7ff1fda`)
 From `docs/ideas.txt`. Owned or catalog cars picked at random stand in a showroom, filmed with slow camera moves (like
 Gran Turismo's menus). Over it, a fade to black rises from the bottom to about half the screen, and New Game, Load Game
 and Settings are semi-transparent cards that fade in and out; the screen never navigates away to show them. It builds
@@ -449,6 +449,11 @@ picture shows until the first frame, and whenever there is nothing to show.
 bottom 80%); several cars in each room (a lineup of 3–4, the camera staying with one at a time and keeping clear of
 the others); the screen opens black, and the old picture only comes up when there is nothing to show. Also found:
 encrypted car mods (scrambled normals) are now left out of the catalog, see `docs/systems/catalog-system.md`.
+
+**Reviewed before the merge (2026-09-25):** an xhigh code review found 15 issues, all fixed in the PR. The worst was the
+garage's navigation tiles throwing on hover. The others: Esc closing every card, cards opened as safely as screens, a
+broken room skipped rather than ending the showroom, the central car in the main slot. Build and tests pass; not yet
+tried in the game.
 
 ### Step 10: the world remembers
 Three features that read the same saved race sessions (`RaceSessionRepository`), so they go in one PR:
