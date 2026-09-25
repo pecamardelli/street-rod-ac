@@ -42,6 +42,9 @@ namespace Street_Rod_AC.Models.GameState
         /// <summary>What the racers have been up to, newest last: the diner's "word on the street"</summary>
         public List<StreetTalkItem> StreetTalk { get; set; }
 
+        /// <summary>What the paper has written about the races, newest last (<see cref="Services.News.NewsWriter"/>)</summary>
+        public List<NewsArticle> News { get; set; }
+
         // Career Progression
         public CareerState Career { get; set; }
 
@@ -80,6 +83,7 @@ namespace Street_Rod_AC.Models.GameState
             DealerLocations = [];
             ScheduledTasks = [];
             StreetTalk = [];
+            News = [];
             Career = CareerState.CreateNew();
             Rules = new GameRules();
 

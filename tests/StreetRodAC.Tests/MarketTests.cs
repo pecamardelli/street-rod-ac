@@ -43,7 +43,7 @@ public class MarketTests
         car.BodyCondition = CarCondition.BodyCondition(car);
 
         var listing = _market.ListCar(car, 5000m, "industrial_motors", new DateTime(1971, 6, 1));
-        var bought = CarPurchaseService.CarFrom(listing, new DateTime(1971, 6, 2));
+        var bought = CarPurchaseService.CarFrom(listing, new DateTime(1971, 6, 2), "Player");
 
         Assert.Equal(new double[] { 30, 0, 12.5, 0 }, bought.BodyDamageKmh);
         Assert.Equal(CarCondition.BodyCondition(car), bought.BodyCondition, 6);
@@ -57,7 +57,7 @@ public class MarketTests
         Assert.Null(listing.BodyDamageKmh);
 
         var old = new UsedCarListing { CarDefinitionId = "car_a", Condition = 0.7f };
-        var bought = CarPurchaseService.CarFrom(old, new DateTime(1971, 6, 2));
+        var bought = CarPurchaseService.CarFrom(old, new DateTime(1971, 6, 2), "Player");
         Assert.Equal(0, CarCondition.BodyTotal(bought));
         Assert.Equal(0.7, bought.BodyCondition, 5);
     }

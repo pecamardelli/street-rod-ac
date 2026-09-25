@@ -327,7 +327,10 @@ namespace Street_Rod_AC.Services.Market
                 // The car goes with everything on it; the buyer gets exactly this car
                 Parts = car.Parts,
                 HasRunningGearAssigned = car.HasRunningGearAssigned,
-                BodyDamageKmh = CarCondition.BodyTotal(car) > 0 ? CarCondition.Body(car) : null
+                BodyDamageKmh = CarCondition.BodyTotal(car) > 0 ? CarCondition.Body(car) : null,
+
+                // Its past goes with it: who had it, how it raced
+                History = car.History?.Copy() ?? new CarHistory()
             };
 
             if (listing.Parts.Count > 0 && car.Engine is { } engine && _partsService is { IsAvailable: true } parts)
@@ -411,7 +414,8 @@ namespace Street_Rod_AC.Services.Market
 
             var condition = GenerateCondition(definition);
             var mileage = GenerateMileage();
-            var price = CalculatePrice(profile.BasePrice, condition);
+            var history = new CarHistory { EarlierOwners = GenerateEarlierOwners(mileage) };
+            var price = CalculatePrice(profile.BasePrice, condition, CarValuation.HistoryFactor(history, mileage));
 
             // Get random skin from available skins
             var skinId = "default";
@@ -430,7 +434,8 @@ namespace Street_Rod_AC.Services.Market
                 SkinId = skinId,
                 ListedDate = currentDate,
                 DealerLocation = dealer.Id,
-                IsSold = false
+                IsSold = false,
+                History = history
             };
 
             return listing;
@@ -514,11 +519,20 @@ namespace Street_Rod_AC.Services.Market
             return _random.Next(MinMileage, MaxMileage + 1);
         }
 
-        private decimal CalculatePrice(decimal basePrice, float condition)
+        /// <summary>
+        /// Who had the car before the lot did: one owner for a car that has not gone far, one more for every
+        /// <see cref="KmPerEarlierOwner"/> or so
+        /// </summary>
+        private int GenerateEarlierOwners(int mileage) =>
+            1 + (int)Math.Floor(mileage / KmPerEarlierOwner * _random.NextDouble() * 2);
+
+        private const double KmPerEarlierOwner = 40_000;
+
+        private decimal CalculatePrice(decimal basePrice, float condition, decimal history)
         {
-            // What the car is worth (the one condition curve every price in the game uses), and then what this
-            // dealer makes of it on the day: a random variation of ±20%
-            var price = basePrice * CarValuation.ConditionFactor(condition);
+            // What the car is worth (the one condition curve every price in the game uses, and a little for its
+            // past), and then what this dealer makes of it on the day: a random variation of ±20%
+            var price = basePrice * CarValuation.ConditionFactor(condition) * history;
             var variation = 1.0m + ((decimal)_random.NextDouble() * (decimal)PriceVariationPercent * 2) - (decimal)PriceVariationPercent;
             price *= variation;
 

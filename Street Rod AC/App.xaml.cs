@@ -235,7 +235,7 @@ namespace Street_Rod_AC
             var raceResultValidator = new Services.Race.Validation.RaceResultValidator();
             var sessionRepository = new Services.Race.RaceSessionRepository(saveDatabase);
             var sessionDeduplicator = new Services.Race.Validation.SessionDeduplicator(sessionRepository);
-            var raceResultProcessor = new Services.Race.RaceResultProcessor(GameStateRepository, sessionRepository, CareerProgressService, RaceEventService, CarPartsService);
+            var raceResultProcessor = new Services.Race.RaceResultProcessor(GameStateRepository, sessionRepository, CareerProgressService, RaceEventService, CarPartsService, catalog: CatalogRepository);
             RaceResultIngestionService = new Services.Race.RaceResultIngestionService(
                 raceResultValidator,
                 sessionDeduplicator,

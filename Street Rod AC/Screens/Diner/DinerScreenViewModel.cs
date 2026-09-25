@@ -441,8 +441,8 @@ namespace Street_Rod_AC.Screens.Diner
                 SelectedOpponent = opponentVm;
                 _logger.Information("Selected opponent: {Name}", opponentVm.Name);
 
-                // The King races for pink slips and nothing else
-                if (opponentVm.Opponent.IsKing) IsPinkSlipBet = true;
+                // The King races for pink slips and nothing else, and a rival who wants a rematch wants the pink slips
+                if (opponentVm.Opponent.IsKing || opponentVm.WantsRematch) IsPinkSlipBet = true;
 
                 // Update wager limits based on opponent's money
                 UpdateWagerLimits();
@@ -468,6 +468,7 @@ namespace Street_Rod_AC.Screens.Diner
                     }
                 }
 
+                var grudge = opponentVm.Opponent.Grudge;
                 var context = new TalkContext
                 {
                     Opponent = opponentVm.Opponent,
@@ -475,7 +476,11 @@ namespace Street_Rod_AC.Screens.Diner
                     OpponentCar = opponentVm.CarDefinition,
                     PlayerCar = playerCarDef,
                     Trigger = trigger,
-                    SelectedTrackName = SelectedTrack?.DisplayName
+                    IsPinkSlipBet = IsPinkSlipBet,
+                    SelectedTrackName = SelectedTrack?.DisplayName,
+                    Grudge = grudge,
+                    GrudgeCarName = grudge == null ? null : CarNames.Of(_catalogRepository, grudge.CarDefinitionId),
+                    PlayerHasGrudgeCar = grudge != null && _gameState.Player.Cars.Any(c => c.InstanceId == grudge.CarInstanceId)
                 };
 
                 OpponentMessage = await _talkService.GetMessageAsync(context);

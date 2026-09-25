@@ -66,6 +66,9 @@ namespace Street_Rod_AC.Models.GameState
         /// </summary>
         public DateTime PurchaseDate { get; set; }
 
+        /// <summary>Who has owned the car and how it has raced; see <see cref="CarHistory"/></summary>
+        public CarHistory History { get; set; } = new();
+
         public Car()
         {
             InstanceId = Guid.NewGuid();

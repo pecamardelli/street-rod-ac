@@ -157,7 +157,15 @@ namespace Street_Rod_AC.Services.Opponents
             king.Stats.Reputation = king.Stats.CalculateReputation();
 
             var car = CreateKingCar(carPool ?? BuildCarPool(), gameState.Date);
-            if (car != null) king.Cars.Add(car);
+            if (car != null)
+            {
+                // The car everybody on the street has lost to: his since he had it, and it shows in its worth
+                car.History.ChangeHands(king.Name, car.PurchaseDate, CarAcquisition.Unknown);
+                car.History.Races = king.Stats.Races - _random.Next(0, 10);
+                car.History.Wins = car.History.Races - _random.Next(1, 4);
+                car.History.PinkSlipsWon = king.Stats.PinkSlipsWon;
+                king.Cars.Add(car);
+            }
 
             racers.AddRacer(king);
             _logger.Information("{King} is in town, in a {Car} ({Power:0} hp)", king.Name, car?.DefinitionId ?? "(no car)", car?.PowerHp ?? 0);
@@ -311,6 +319,10 @@ namespace Street_Rod_AC.Services.Opponents
                 TireCondition = 0.6f + (float)_random.NextDouble() * 0.3f, // Tires vary more
                 PurchaseDate = today.AddDays(-_random.Next(30, 365)) // Owned for 1 month to 1 year, in game time
             };
+
+            // A car that has done that many miles has been through a few hands before theirs
+            car.History.EarlierOwners = 1 + _random.Next(0, 1 + mileage / 50_000);
+            car.History.ChangeHands(opponent.Name, car.PurchaseDate, CarAcquisition.Unknown);
 
             // A used engine, now and then worked on, like the ones on the lots
             if (_parts is { IsAvailable: true } parts)

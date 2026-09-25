@@ -6,6 +6,8 @@ using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Models.Race;
 using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Career;
+using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.News;
 using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Parts;
 using Street_Rod_AC.Services.Police;
@@ -35,7 +37,9 @@ namespace Street_Rod_AC.Services.Race
         private readonly IRaceEventService _raceEventService;
         private readonly ICarPartsService? _parts;
         private readonly IOpponentEvolutionService _evolution;
+        private readonly IContentCatalogRepository? _catalog;
         private readonly IAppLogger _logger;
+        private readonly Random _random = new();
 
         // Car health degradation constants (per race), for result files without the car's condition (before schema 1.2)
         private const double BASE_ENGINE_DEGRADATION = 0.01;        // -1%
@@ -61,7 +65,8 @@ namespace Street_Rod_AC.Services.Race
             ICareerProgressService careerProgressService,
             IRaceEventService raceEventService,
             ICarPartsService? parts = null,
-            IOpponentEvolutionService? evolution = null)
+            IOpponentEvolutionService? evolution = null,
+            IContentCatalogRepository? catalog = null)
         {
             _gameStateRepository = gameStateRepository;
             _sessionRepository = sessionRepository;
@@ -69,6 +74,7 @@ namespace Street_Rod_AC.Services.Race
             _raceEventService = raceEventService;
             _parts = parts;
             _evolution = evolution ?? new OpponentEvolutionService();
+            _catalog = catalog;
             _logger = AppLoggerFactory.CreateLogger(LogCategory.RaceIngestion);
         }
 
@@ -88,7 +94,7 @@ namespace Street_Rod_AC.Services.Race
             _logger.Information("Race outcome: {WinCondition} - Winner: {Winner}",
                 outcome.WinCondition, outcome.Winner?.DriverName ?? "None");
 
-            var processedSession = CreateProcessedSession(result, outcome, context, startedAt);
+            var processedSession = CreateProcessedSession(result, outcome, context, startedAt, gameState.Date);
 
             // 2. Apply the race to the game, once
             // (wear first: a pink slip may move the car to its new owner)
@@ -188,6 +194,10 @@ namespace Street_Rod_AC.Services.Race
             private RaceContext? _pendingRace;
             private DateTime _lastPlayed;
 
+            // Never changed once written: the lists are copied, the items shared
+            private List<StreetTalkItem> _streetTalk = null!;
+            private List<NewsArticle> _news = null!;
+
             public static RaceStateSnapshot Take(GameState gameState)
             {
                 lock (Mapper)
@@ -198,7 +208,9 @@ namespace Street_Rod_AC.Services.Race
                         _racers = Mapper.ToDocument(gameState.Racers),
                         _career = Mapper.ToDocument(gameState.Career),
                         _pendingRace = gameState.PendingRace,
-                        _lastPlayed = gameState.LastPlayedDate
+                        _lastPlayed = gameState.LastPlayedDate,
+                        _streetTalk = [.. gameState.StreetTalk ?? []],
+                        _news = [.. gameState.News ?? []]
                     };
                 }
             }
@@ -221,6 +233,8 @@ namespace Street_Rod_AC.Services.Race
                 gameState.Career = career;
                 gameState.PendingRace = _pendingRace;
                 gameState.LastPlayedDate = _lastPlayed;
+                gameState.StreetTalk = [.. _streetTalk];
+                gameState.News = [.. _news];
             }
         }
 
@@ -248,6 +262,7 @@ namespace Street_Rod_AC.Services.Race
                 SessionStartTime = context.CreatedAt,
                 WinCondition = outcome.WinCondition.ToString()
             };
+            Describe(processedSession, context, gameState.Date);
 
             var messages = new List<PlayerMessage>();
             ApplyAndSave(gameState, saveName, processedSession, () =>
@@ -282,8 +297,15 @@ namespace Street_Rod_AC.Services.Race
         /// </summary>
         private StakesMoved ApplyRace(GameState gameState, RaceDecision outcome, RaceContext context, List<PlayerMessage> messages)
         {
+            // How things stood before the race, for the paper
+            var before = new StandingBefore(
+                gameState.Player.Stats.Reputation,
+                FindRacer(gameState, context.OpponentName)?.Stats.Reputation ?? 0,
+                gameState.Player.Stats.Wins == 0);
+
             // Apply stat updates
             ApplyStatUpdates(gameState, outcome, context);
+            RecordCarHistory(gameState, outcome, context);
 
             // Handle wager/pink slip transfer
             var moved = new StakesMoved(false, false);
@@ -291,6 +313,9 @@ namespace Street_Rod_AC.Services.Race
             {
                 moved = ApplyWagerTransfer(gameState, outcome, context);
             }
+
+            // A rival remembers a pink slip lost to the player; a rematch settles it
+            var grudge = ApplyGrudge(gameState, outcome, context, moved);
 
             // The police: fines, the impound, a name for getting away. After the stakes, which may have moved the cars.
             if (outcome.Pursuit is { Started: true } pursuit)
@@ -335,6 +360,9 @@ namespace Street_Rod_AC.Services.Race
 
             // Handle opponent status changes (e.g., if they lost their only car)
             UpdateOpponentStatus(gameState, context);
+
+            // The paper writes it up, when there is a story in it
+            WriteUp(gameState, outcome, context, moved, grudge, before);
 
             // The race is settled: it is no longer waiting for a result
             if (gameState.PendingRace == null || gameState.PendingRace.ContextId == context.ContextId)
@@ -864,6 +892,7 @@ namespace Street_Rod_AC.Services.Race
                         opponent.Cars.Remove(opponentCar);
                         gameState.Player.Cars.Add(opponentCar);
                         gameState.Player.Stats.CarsOwned++;
+                        opponentCar.History.ChangeHands(gameState.Player.Name, gameState.Date, CarAcquisition.PinkSlip);
                         carMoved = true;
 
                         _logger.Information("Player won {OpponentName}'s {CarDef} in pink slip race",
@@ -883,6 +912,7 @@ namespace Street_Rod_AC.Services.Race
                     {
                         gameState.Player.Cars.Remove(playerCar);
                         opponent.Cars.Add(playerCar);
+                        playerCar.History.ChangeHands(opponent.Name, gameState.Date, CarAcquisition.PinkSlip);
                         carMoved = true;
 
                         // Clear selected car if lost
@@ -913,9 +943,10 @@ namespace Street_Rod_AC.Services.Race
             RaceResultJson result,
             RaceDecision outcome,
             RaceContext context,
-            DateTime startedAt)
+            DateTime startedAt,
+            DateTime gameDate)
         {
-            return new ProcessedRaceSession
+            return Describe(new ProcessedRaceSession
             {
                 SessionId = result.Session.SessionId,
                 ProcessedAt = DateTime.Now,
@@ -930,7 +961,132 @@ namespace Street_Rod_AC.Services.Race
                 SessionStartTime = startedAt,
                 DurationSeconds = result.Session.DurationSeconds,
                 WinCondition = outcome.WinCondition.ToString()
+            }, context, gameDate);
+        }
+
+        /// <summary>Who raced whom in what, when in the game, and what for: the race as the game's history keeps it</summary>
+        private static ProcessedRaceSession Describe(ProcessedRaceSession session, RaceContext context, DateTime gameDate)
+        {
+            session.GameDate = gameDate;
+            session.PlayerName = context.PlayerName;
+            session.OpponentName = context.OpponentName;
+            session.PlayerCarInstanceId = context.PlayerCarInstanceId;
+            session.OpponentCarInstanceId = context.OpponentCarInstanceId;
+            session.RaceType = context.RaceType.ToString();
+            session.EventId = context.EventId;
+            return session;
+        }
+
+        /// <summary>The player's and the rival's standing before the race: the paper tells an upset or a first win by it</summary>
+        private readonly record struct StandingBefore(int PlayerReputation, int RivalReputation, bool NoWinsYet);
+
+        /// <summary>What the race did about a rival's grudge: a rematch was raced, the rival wants the car back now</summary>
+        private readonly record struct GrudgeOutcome(bool Rematch, bool Started);
+
+        /// <summary>A settled race goes into both cars' histories, whoever owns them after it</summary>
+        private void RecordCarHistory(GameState gameState, RaceDecision outcome, RaceContext context)
+        {
+            if (!outcome.IsDecided) return;
+
+            gameState.Player.Cars.FirstOrDefault(c => c.InstanceId == context.PlayerCarInstanceId)
+                ?.History.RecordRace(outcome.PlayerWon, context.IsPinkSlip);
+
+            if (!context.IsEventOnlyOpponent)
+            {
+                FindRacer(gameState, context.OpponentName)?.Cars.FirstOrDefault(c => c.InstanceId == context.OpponentCarInstanceId)
+                    ?.History.RecordRace(!outcome.PlayerWon, context.IsPinkSlip);
+            }
+        }
+
+        /// <summary>
+        /// A pink-slip race with a rival who wanted a rematch settles it, win or lose; a rival who has just lost their
+        /// car to the player wants a rematch (<see cref="Grudges"/>). The street hears about both.
+        /// </summary>
+        private GrudgeOutcome ApplyGrudge(GameState gameState, RaceDecision outcome, RaceContext context, StakesMoved moved)
+        {
+            if (!outcome.IsDecided || !context.IsPinkSlip || context.IsEventOnlyOpponent) return default;
+            if (FindRacer(gameState, context.OpponentName) is not Opponent rival) return default;
+
+            var talk = new List<string>();
+            var rematch = Grudges.WantsRematch(rival);
+            if (Grudges.Settle(rival, rivalWon: !outcome.PlayerWon, gameState.Player.Name) is { } settled) talk.Add(settled);
+
+            var started = false;
+            if (outcome.PlayerWon && moved.Car
+                && gameState.Player.Cars.FirstOrDefault(c => c.InstanceId == context.OpponentCarInstanceId) is { } taken)
+            {
+                talk.Add(Grudges.Start(rival, taken, gameState.Date, gameState.Player.Name, CarName(taken.DefinitionId)));
+                started = true;
+                _logger.Information("{Rival} wants a rematch for the {Car} until {Until}", rival.Name, taken.DefinitionId, rival.Grudge!.Until);
+            }
+
+            OpponentLifeService.AddTalk(gameState, gameState.Date, talk);
+            return new GrudgeOutcome(rematch, started);
+        }
+
+        /// <summary>The piece the paper writes about the race, when there is a story in it</summary>
+        private void WriteUp(GameState gameState, RaceDecision outcome, RaceContext context, StakesMoved moved, GrudgeOutcome grudge, StandingBefore before)
+        {
+            var rival = FindRacer(gameState, context.OpponentName);
+            var facts = new PlayerRaceFacts
+            {
+                Date = gameState.Date,
+                PlayerName = gameState.Player.Name,
+                RivalName = context.OpponentName,
+                RivalIsKing = rival is Opponent { IsKing: true },
+                PlayerReputation = before.PlayerReputation,
+                RivalReputation = before.RivalReputation,
+                PlayerCar = CarName(CarDefinitionOf(gameState, context.PlayerCarInstanceId)),
+                RivalCar = CarName(CarDefinitionOf(gameState, context.OpponentCarInstanceId)),
+                IsDrag = context.RaceType == RaceType.DragRace,
+                Decided = outcome.IsDecided,
+                PlayerWon = outcome.PlayerWon,
+                PinkSlip = context.IsPinkSlip && moved.Car,
+                CashWager = moved.Cash ? context.CashWager : 0m,
+                PlayerCrashed = outcome.WinCondition == WinCondition.PlayerCrashed,
+                RivalCrashed = outcome.WinCondition == WinCondition.OpponentCrashed,
+                PlayerBusted = outcome.Pursuit?.PlayerBusted == true,
+                RivalBusted = outcome.Pursuit?.RivalBusted == true,
+                PlayerEscaped = outcome.Pursuit?.PlayerEscaped == true,
+                EventName = EventName(context.EventId),
+                Rematch = grudge.Rematch,
+                RivalSwearsRevenge = grudge.Started,
+                FirstWin = before.NoWinsYet
             };
+
+            if (NewsWriter.PlayerRace(facts, _random) is { } article)
+            {
+                NewsWriter.Add(gameState, gameState.Date, [article]);
+                _logger.Information("The paper writes it up: {Headline}", article.Headline);
+            }
+        }
+
+        /// <summary>The model of a car in the race, whoever has it now: after a pink slip it has changed garages</summary>
+        private static string CarDefinitionOf(GameState gameState, Guid carInstanceId)
+        {
+            var racers = gameState.Racers.ReadyToRace.Values.Concat(gameState.Racers.Retired.Values).Concat(gameState.Racers.Inactive.Values);
+            var car = gameState.Player.Cars.Concat(racers.SelectMany(r => r.Cars)).FirstOrDefault(c => c.InstanceId == carInstanceId);
+            return car?.DefinitionId ?? string.Empty;
+        }
+
+        private string CarName(string definitionId)
+        {
+            if (string.IsNullOrEmpty(definitionId)) return "car";
+            return _catalog == null ? definitionId : CarNames.Of(_catalog, definitionId);
+        }
+
+        private string? EventName(string? eventId)
+        {
+            if (string.IsNullOrEmpty(eventId)) return null;
+            try
+            {
+                return _raceEventService.GetEventDefinition(eventId)?.Name;
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Could not name event {EventId} for the paper: {Error}", eventId, ex.Message);
+                return null;
+            }
         }
 
         /// <summary>

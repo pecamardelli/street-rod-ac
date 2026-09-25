@@ -84,6 +84,12 @@ namespace Street_Rod_AC.Models.GameState
         /// Null on a car a dealer had from new stock, and on listings from before it was kept: a straight body.
         /// </summary>
         public double[]? BodyDamageKmh { get; set; }
+
+        /// <summary>
+        /// The car's history, as on <see cref="Car.History"/>: a relisted car keeps it, and new stock comes with the
+        /// owners it had before. Empty on listings from before it was kept.
+        /// </summary>
+        public CarHistory History { get; set; } = new();
     }
 
     /// <summary>

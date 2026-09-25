@@ -35,6 +35,7 @@ namespace Street_Rod_AC.Screens.Shared
                    $"Price: ${car.Listing.Price:N0}\n" +
                    $"Condition: {car.ConditionLabel}\n" +
                    $"Mileage: {car.Listing.Mileage:N0} km\n" +
+                   $"History: {car.HistoryDisplay}\n" +
                    $"Dealer: {car.DealerName}\n\n" +
                    $"Your bankroll: ${bankroll:N0}";
         }

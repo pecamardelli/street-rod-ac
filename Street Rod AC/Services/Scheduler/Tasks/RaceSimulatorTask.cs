@@ -1,6 +1,7 @@
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.News;
 using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Simulation;
 
@@ -14,6 +15,7 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
         private readonly RaceSimulatorService _simulatorService;
         private readonly IContentCatalogRepository? _catalogRepo;
         private readonly IAppLogger _logger;
+        private readonly Random _random = new();
 
         public string TaskId => "race_simulator";
         public int IntervalDays => 1;
@@ -36,8 +38,9 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
                 "Race simulation complete. Races simulated: {TotalRaces}",
                 result.TotalRaces);
 
-            // What the street talks about: cars changing hands and cars wrecked
+            // What the street talks about, and the paper writes up: cars changing hands and cars wrecked
             var talk = new List<string>();
+            var news = new List<NewsArticle>();
             var carName = _catalogRepo == null ? (Func<string, string>)(id => id) : CarNames.Book(_catalogRepo);
             foreach (var race in result.Races)
             {
@@ -53,9 +56,14 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
                 {
                     talk.Add($"{race.LoserName} wrecked the {car} in a {race.RaceType.ToLowerInvariant()} race against {race.WinnerName}.");
                 }
+
+                if (NewsWriter.RivalRace(currentDate, race.WinnerName, race.LoserName, car, race.RaceType == "Drag", race.IsPinkSlip,
+                        race.LoserCrashed, race.LoserCar?.History.Wins ?? 0, _random) is { } article)
+                    news.Add(article);
             }
 
             OpponentLifeService.AddTalk(gameState, currentDate, talk);
+            NewsWriter.Add(gameState, currentDate, news);
             return Task.CompletedTask;
         }
     }

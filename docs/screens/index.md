@@ -13,7 +13,7 @@
 | Garage | `Screens/Garage/` | In-game hub: 3D garage with the selected car, overlay buttons to every other in-game screen |
 | CarSelection | `Screens/CarSelection/` | Select car for activity |
 | Diner | `Screens/Diner/` | Meet opponents, accept challenges |
-| Newspaper | `Screens/Newspaper/` | Used car ads, news |
+| Newspaper | `Screens/Newspaper/` | Street News (articles on the last 3 days' races, `NewsWriter`), race invitations, used car and parts ads, the player's ads |
 | DealerMap | `Screens/DealerMap/` | The city, with a pin per dealer |
 | DealerLot | `Screens/DealerLot/` | One dealer's cars parked in 3D; click one to look at it |
 | UsedCarMarket | `Screens/UsedCarMarket/` | Browse/buy used cars as a flat list |

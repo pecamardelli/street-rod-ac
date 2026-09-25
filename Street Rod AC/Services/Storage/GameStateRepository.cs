@@ -53,6 +53,7 @@ namespace Street_Rod_AC.Services.Storage
                     state.Rules ??= new GameRules();
                     state.NewspaperAds.PlayerCars ??= [];
                     state.StreetTalk ??= [];
+                    HistoryUpgrade.BringUpToDate(state);
                 }
 
                 return state;

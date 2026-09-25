@@ -27,6 +27,11 @@
                            FontSize="{StaticResource FontSizeBody}">
                     <Run Text="{Binding CarName, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding ValueDisplay, Mode=OneWay}"/>
                 </TextBlock>
+                <TextBlock Text="{Binding HistoryDisplay}"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           FontSize="{StaticResource FontSizeSmall}"
+                           TextWrapping="Wrap"
+                           Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
 

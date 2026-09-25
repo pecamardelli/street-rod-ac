@@ -111,9 +111,10 @@ namespace Street_Rod_AC.Services.Market
         /// <summary>
         /// The car that was for sale, as whoever buys it gets it: the parts it came with (the listing's list moves to the
         /// car), paid the listing's price on <paramref name="date"/>. Older listings carry no parts; the car is then
-        /// given its factory ones (<see cref="ICarPartsService.EnsureParts"/>), which is the buyer's to do.
+        /// given its factory ones (<see cref="ICarPartsService.EnsureParts"/>), which is the buyer's to do. The car's
+        /// history comes with it, <paramref name="buyer"/> its newest owner.
         /// </summary>
-        public static Car CarFrom(UsedCarListing listing, DateTime date)
+        public static Car CarFrom(UsedCarListing listing, DateTime date, string buyer)
         {
             var car = new Car
             {
@@ -132,8 +133,10 @@ namespace Street_Rod_AC.Services.Market
                 Parts = listing.Parts,
                 HasPartsAssigned = listing.Parts.Count > 0,
                 HasRunningGearAssigned = listing.HasRunningGearAssigned,
-                PowerHp = listing.PowerHp
+                PowerHp = listing.PowerHp,
+                History = listing.History?.Copy() ?? new CarHistory()
             };
+            car.History.ChangeHands(buyer, date, CarAcquisition.Dealer);
 
             // A relisted car comes with its dents; the body's figure is then the dents', not the listing's average
             if (listing.BodyDamageKmh is { Length: > 0 } body)
@@ -149,7 +152,7 @@ namespace Street_Rod_AC.Services.Market
         /// <summary>The car that was for sale, with the parts it came with, or its factory engine if it came without</summary>
         private async Task<Car> CreateCarAsync(Models.GameState.GameState gameState, UsedCarListing listing)
         {
-            var carInstance = CarFrom(listing, gameState.Date);
+            var carInstance = CarFrom(listing, gameState.Date, gameState.Player.Name);
 
             try
             {

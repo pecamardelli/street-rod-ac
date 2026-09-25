@@ -20,6 +20,8 @@ namespace Street_Rod_AC.Services.Talk
         {
             return context.Trigger switch
             {
+                TalkTrigger.OpponentSelected when context.Grudge != null => GetGrudgeMessages(context),
+                TalkTrigger.BetTypeChanged when context.IsPinkSlipBet && context.Grudge != null => GetRematchMessages(context),
                 TalkTrigger.OpponentSelected => GetGreetingMessages(context),
                 TalkTrigger.TrackSelected => GetTrackSelectedMessages(context),
                 TalkTrigger.BetTypeChanged when context.IsPinkSlipBet => GetPinkSlipMessages(context),
@@ -103,6 +105,42 @@ namespace Street_Rod_AC.Services.Talk
                 "Two evenly matched racers. I like it."
             };
         }
+
+        /// <summary>A rival who lost a pink slip to the player, and wants a rematch</summary>
+        private List<string> GetGrudgeMessages(TalkContext context)
+        {
+            var car = context.GrudgeCarName ?? "car";
+            var lines = new List<string>
+            {
+                "You and me aren't done. Pink slips, whenever you're ready.",
+                "I've been waiting for you. Rematch. Pink slips.",
+                "You got lucky last time. Let's go again, for the pinks."
+            };
+
+            if (context.PlayerHasGrudgeCar)
+            {
+                lines.Add($"That's my {car} you're driving around. I want it back.");
+                lines.Add($"Enjoying my {car}? Put its pink slip on the table and we'll see how long you keep it.");
+            }
+            else
+            {
+                lines.Add($"You took my {car}. I'll take whatever you're driving now.");
+            }
+
+            if (context.Opponent.Aggression >= 70)
+                lines.Add("Everybody at this diner knows what you did. Race me.");
+
+            return lines;
+        }
+
+        /// <summary>The same rival, when the player puts the pink slip on the table</summary>
+        private List<string> GetRematchMessages(TalkContext context) =>
+        [
+            "Now we're talking. I've been waiting for this.",
+            "Pink slips. Just like last time, except this time I win.",
+            "That's what I wanted to hear.",
+            context.PlayerHasGrudgeCar ? $"Say goodbye to my {context.GrudgeCarName ?? "car"}. It's coming home." : "Your turn to walk home."
+        ];
 
         private List<string> GetTrackSelectedMessages(TalkContext context)
         {

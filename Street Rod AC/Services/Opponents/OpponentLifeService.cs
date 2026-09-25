@@ -84,6 +84,10 @@ namespace Street_Rod_AC.Services.Opponents
 
             Activate(gameState, currentDate, groupOf, talk);
 
+            // A rematch nobody came for is off
+            Grudges.Lapse(gameState.Racers.ReadyToRace.Values.Concat(gameState.Racers.Retired.Values).Concat(gameState.Racers.Inactive.Values).OfType<Opponent>(),
+                currentDate, _carNames, talk);
+
             await TuneAsync(gameState, groupOf, talk);
 
             AddTalk(gameState, currentDate, talk);
@@ -255,7 +259,7 @@ namespace Street_Rod_AC.Services.Opponents
             listing.SoldDate = date;
             racer.Money -= listing.Price;
 
-            var car = CarPurchaseService.CarFrom(listing, date);
+            var car = CarPurchaseService.CarFrom(listing, date, racer.Name);
             listing.Parts = [];
             try
             {

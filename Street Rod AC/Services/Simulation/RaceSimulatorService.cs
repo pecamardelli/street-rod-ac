@@ -90,7 +90,7 @@ namespace Street_Rod_AC.Services.Simulation
                 usedRacers.Add(opponent.Name);
 
                 // Simulate the race
-                var raceResult = SimulateRace(challenger, opponent, gameState);
+                var raceResult = SimulateRace(challenger, opponent, gameState, currentDate);
                 result.Races.Add(raceResult);
                 result.TotalRaces++;
 
@@ -173,7 +173,7 @@ namespace Street_Rod_AC.Services.Simulation
         /// <summary>
         /// Simulate a single race between two racers
         /// </summary>
-        private SimulatedRaceResult SimulateRace(Racer racer1, Racer racer2, GameState gameState)
+        private SimulatedRaceResult SimulateRace(Racer racer1, Racer racer2, GameState gameState, DateTime date)
         {
             var car1 = racer1.Cars[0];
             var car2 = racer2.Cars[0];
@@ -209,7 +209,9 @@ namespace Street_Rod_AC.Services.Simulation
             ApplyRaceWear(car1, isRoadRace, racer1Wins, wear, groupOf, crashed && !racer1Wins);
             ApplyRaceWear(car2, isRoadRace, !racer1Wins, wear, groupOf, crashed && racer1Wins);
 
-            // Handle race results: every race counts, and it counts for its own kind as well
+            // Handle race results: every race counts, and it counts for its own kind as well; the cars remember it too
+            winnerCar.History.RecordRace(won: true, isPinkSlip);
+            loserCar.History.RecordRace(won: false, isPinkSlip);
             winner.Stats.Wins++;
             loser.Stats.Losses++;
             winner.Stats.Races++;
@@ -247,6 +249,7 @@ namespace Street_Rod_AC.Services.Simulation
                 loser.Cars.Remove(loserCar);
                 winner.Cars.Add(loserCar);
                 winner.Stats.CarsOwned++;
+                loserCar.History.ChangeHands(winner.Name, date, CarAcquisition.PinkSlip);
 
                 // Without a car the loser sits it out until they can buy one
                 if (loser.Cars.Count == 0)
@@ -288,7 +291,8 @@ namespace Street_Rod_AC.Services.Simulation
                 IsPinkSlip = isPinkSlip,
                 CarWon = carWon,
                 LoserCrashed = crashed,
-                LoserCar = loserCar
+                LoserCar = loserCar,
+                WinnerCar = winnerCar
             };
         }
 
@@ -578,5 +582,8 @@ namespace Street_Rod_AC.Services.Simulation
 
         /// <summary>The car the loser raced (now the winner's, in a pink-slip race)</summary>
         public Car? LoserCar { get; set; }
+
+        /// <summary>The car the winner raced</summary>
+        public Car? WinnerCar { get; set; }
     }
 }
