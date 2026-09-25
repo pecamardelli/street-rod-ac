@@ -29,8 +29,8 @@ design. Steps are meant to be vertical slices, one PR each, to `dev` (remote `gi
 Not yet tested by the user in a race: a clean drag race to the finish, a disqualification for contact either way, a
 crashed rival being held, a false start on a road race, `assists.ini` coming back after the race.
 
-**Done: step 2, damage, timeslips and the repair shop** (PR #18, `feature/damage`, open against `dev` on
-2026-09-24; one PR, the user's choice). See `docs/ac-integration/csp-lua-scripts.md` "Damage" and
+**Done: step 2, damage, timeslips and the repair shop** (PR #18, merged as `d1106a2`; built
+on 2026-09-24 as one PR, the user's choice). See `docs/ac-integration/csp-lua-scripts.md` "Damage" and
 `docs/systems/parts-system.md` "Damage and repairs".
 - **The user decided:**
   - AC's damage at 100%;
@@ -267,7 +267,7 @@ ported is the daily life cycle:
   - `MatchupCalculator` compares catalog horsepower, not what's under the hood: use the dyno.
   - Add "The King" as a boss at the top of a reputation ladder. The King victory can't be won today, because no racer is called "The King" (`KingVictory.cs:13, 84`).
 
-## Step 6: police chases (built on `feature/police-chases`, not yet merged)
+## Step 6: police chases (done, PR #21, merged as `fc450b8`)
 
 **The user decided (2026-09-24):**
 - real AI cops (design (c) below), not a ghost or a text roll;
@@ -381,7 +381,7 @@ in the police chance; hiding the cops from AC's HUD leaderboard. Any other car c
 - **Car history:** every car keeps its odometer, previous owners and wins, and its price reflects them.
 - **Parts that fail in the race:** an over-revved engine throws a rod in AC, and you find the damaged part on the workbench afterwards. Since step 2 the whole rotating assembly takes the damage together (the parts view shows it); singling out the one part that failed is still open.
 
-## Step 7: career gaps (built on `feature/career-gaps`, not yet merged)
+## Step 7: career gaps (done, PR #22, merged as `6aa3d39`)
 
 The known gaps the analysis found, closed in one PR. **The user decided (2026-09-25):** only the picked victory
 path wins, and the player keeps racing after the win or goes to the main menu; about half the events become road

@@ -1,0 +1,21 @@
+1. Damage:
+	- I want it to be as real as possible. Everything that AC takes into consideration should be ported to the game. Even engine temperature, oil pressure, etc. We should map everything AC tracks and find the best way to use it in the game.
+	- Visual damage: I'd really love to have it! Analyze what's possible. Even scratches in the body will work for me.
+	- Breaks during race: a battered engine, suspension, gearbox, etc should leave the racer out and make him loose the race. It might happen that all races suffer breakages. That would be a draw then, what do you say?
+	
+2. I like it! LEt's add it.
+
+3. We have the race-explorer project that implements crash detection and control locking. It considers a crash a collision above 10G, which is fine for Test Drive mode, but for SR I'd raise it to 15G because maybe the car can go on and finish.
+- Quitting the game is a forfeit, the player loses.
+- A False start should be a no contest but drains reputation away. Street Rod didn't considered this a loss.
+
+4. Yes to all except the starting money. I'm testing the game so we will modify it when we have a first release.
+
+5. Also yes to all! Take a look at the Street Rod Remake that I was building with Game Maker Studio: C:\Users\Administrator\GameMakerProjects\street-rod.
+- Opponents should be fully alive. Even when they broke, there's a possibility that they get more money somehow and be back to the races.
+- They should buy cars from the dealers or the newspaper just like the player.
+- They should tune their cars according to their budget. I know it's more complex logic, but we can do it, my man!
+
+6. I really love the police chase idea! I was about to propose that to you for the Test Drive Mode! let's analyze it and see what can be done. I saw a couple of police cars mods from that era.
+
+7. I really love your new ideas!!
