@@ -21,6 +21,14 @@ is set aside as `catalog.db.bad` and a new one made (a file in use is not taken 
 - Enumerate `content/cars/` directories
 - Validate minimum files: `ui/ui_car.json`
 - Extract folder name as stable ID
+- Left out, so they never reach a lot, a rival or the main screen, and are marked Legacy if they were ever in the
+  catalog. Both stay in AC's cars folder:
+  - police cars (every livery marked `street_corsa_police`, see `PoliceCars`);
+  - cars with an **encrypted model** (`EncryptedCars`). Some mods scramble the KN5's vertex normals, which only CSP
+    undoes, so the car races fine in AC but draws as shattered glass in the game's viewers. The tell: normals that
+    average a cosine of about 0 against their own faces, with half facing backwards (real models average about 0.95).
+    The answer is cached per model file (path, size, time) in `%AppData%\StreetRodAC\encrypted_cars.json`, so only
+    the first scan reads the models (about 7.5 s for 167 cars).
 
 ### 2. Materialization
 - Create `CarDefinition` in catalog
