@@ -6,6 +6,7 @@ using System.Windows.Media.Animation;
 using AcTools.Render.Kn5Specific.Objects;
 using AcTools.Render.Kn5SpecificForward;
 using Street_Rod_AC.Logging;
+using Street_Rod_AC.Services.Catalog;
 using CarSlot = AcTools.Render.Kn5SpecificForward.ForwardKn5ObjectRenderer.CarSlot;
 using Sx = SlimDX;
 
@@ -300,7 +301,7 @@ public class DealerLotViewport3D : D3DViewportBase
             if (i < previous.Count && i < _standing.Count && _standing[i] is { } already && already.Equals(car))
             {
                 // This bay already holds exactly this car
-                budget -= EstimateCarBytes(car.CarDirectory);
+                budget -= CarModelFiles.EstimateBytes(car.CarDirectory);
                 continue;
             }
 
@@ -318,7 +319,7 @@ public class DealerLotViewport3D : D3DViewportBase
                 continue;
             }
 
-            var bytes = EstimateCarBytes(car.CarDirectory);
+            var bytes = CarModelFiles.EstimateBytes(car.CarDirectory);
             if (bytes > budget) continue;
             budget -= bytes;
 
@@ -422,7 +423,7 @@ public class DealerLotViewport3D : D3DViewportBase
                 continue;
             }
 
-            var bytes = EstimateCarBytes(car.CarDirectory);
+            var bytes = CarModelFiles.EstimateBytes(car.CarDirectory);
             if (bytes > budget)
             {
                 Logger.Information("Lot is full at {Count} cars; {Car} ({Mb} MB) stays in the list only",
@@ -498,27 +499,6 @@ public class DealerLotViewport3D : D3DViewportBase
         }
 
         return best;
-    }
-
-    /// <summary>
-    /// Roughly what a car will cost to hold, taken as the biggest model in its folder. Good enough to tell a
-    /// 15 MB coupe from a 400 MB one, which is all the budget needs to know.
-    /// </summary>
-    private static long EstimateCarBytes(string carDirectory)
-    {
-        try
-        {
-            return new DirectoryInfo(carDirectory)
-                .EnumerateFiles("*.kn5", SearchOption.TopDirectoryOnly)
-                .Where(f => !f.Name.Equals("collider.kn5", StringComparison.OrdinalIgnoreCase))
-                .Select(f => f.Length)
-                .DefaultIfEmpty(0L)
-                .Max();
-        }
-        catch
-        {
-            return 0L;
-        }
     }
 
     #endregion

@@ -377,7 +377,25 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
     /// <summary>The picture is still held back: nothing has faded it in yet</summary>
     protected bool IsPictureHidden => _image.Opacity == 0;
 
-    protected void FadeIn() => _image.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, FadeInDuration));
+    protected void FadeIn() => FadeIn(FadeInDuration);
+
+    protected void FadeIn(TimeSpan duration) => _image.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duration));
+
+    /// <summary>
+    /// Fades the picture to nothing. Done when it is dark, or when the fade was cut short (the renderer went): never
+    /// left waiting on an animation that was taken off.
+    /// </summary>
+    protected Task FadeOutAsync(TimeSpan duration)
+    {
+        var done = new TaskCompletionSource();
+        var fade = new DoubleAnimation(_image.Opacity, 0, duration);
+        fade.Completed += (_, _) => done.TrySetResult();
+        _image.BeginAnimation(OpacityProperty, fade);
+        return Task.WhenAny(done.Task, Task.Delay(duration + TimeSpan.FromMilliseconds(250)));
+    }
+
+    /// <summary>A still of the picture on screen, or null when there is none to take</summary>
+    protected System.Windows.Media.Imaging.BitmapSource? CopyPicture() => _bridge.CopyFrame();
 
     protected void ShowPicture() => _image.Opacity = 1;
 
@@ -517,7 +535,8 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
         Fail();
     }
 
-    private static bool IsDeviceLost(Exception ex)
+    /// <summary>The GPU went away under the renderer; the scene is built again rather than failed</summary>
+    protected static bool IsDeviceLost(Exception ex)
     {
         for (var e = ex; e != null; e = e.InnerException)
         {

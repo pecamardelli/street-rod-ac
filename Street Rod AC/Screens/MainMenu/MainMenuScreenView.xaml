@@ -3,110 +3,116 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:controls="clr-namespace:Street_Rod_AC.Controls"
              mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid x:Name="MainMenuGrid"
-          Background="{StaticResource MainBackgroundBrush}"
-          Opacity="0">
-        <Grid.Triggers>
-            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                <BeginStoryboard>
-                    <Storyboard>
-                        <!-- Background fade in -->
-                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                       From="0.0"
-                                       To="1.0"
-                                       Duration="0:0:0.5"/>
-                    </Storyboard>
-                </BeginStoryboard>
-            </EventTrigger>
-        </Grid.Triggers>
+             d:DesignHeight="720" d:DesignWidth="1280">
+    <!--
+        The cars fill the lower part of the screen, fading into black towards the top. The menu and its cards sit in the
+        dark part; the cars go on below them whatever is open.
+    -->
+    <Grid Background="Black">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20*"/>
+            <RowDefinition Height="26*"/>
+            <RowDefinition Height="54*"/>
+        </Grid.RowDefinitions>
 
-        <!-- Exit Button -->
+        <!-- The picture the screen had before, only when there is no showroom to show: while one loads the screen is black -->
+        <Border x:Name="Fallback"
+                Grid.RowSpan="3"
+                Background="{StaticResource MainBackgroundBrush}"
+                Opacity="0"/>
+
+        <controls:ShowcaseViewport3D x:Name="Showcase"
+                                     Grid.Row="1"
+                                     Grid.RowSpan="2"
+                                     Cars="{Binding ShowcaseCars}"
+                                     Scenes="{Binding ShowcaseScenes}"/>
+
+        <!-- The fade to black the menu stands in -->
+        <Rectangle Grid.Row="0" Fill="Black" IsHitTestVisible="False"/>
+        <Rectangle Grid.Row="1" IsHitTestVisible="False">
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#FF000000" Offset="0"/>
+                    <GradientStop Color="#E6000000" Offset="0.2"/>
+                    <GradientStop Color="#99000000" Offset="0.55"/>
+                    <GradientStop Color="#00000000" Offset="1"/>
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <!-- Which car the camera is on -->
+        <TextBlock Grid.Row="2"
+                   Text="{Binding CurrentTitle, ElementName=Showcase}"
+                   Foreground="{StaticResource TextPrimaryBrush}"
+                   FontSize="{StaticResource FontSizeBody}"
+                   FontStyle="Italic"
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Bottom"
+                   Margin="0,0,36,28"
+                   Opacity="0.85"
+                   IsHitTestVisible="False">
+            <TextBlock.Effect>
+                <DropShadowEffect Color="Black" ShadowDepth="0" BlurRadius="8" Opacity="0.9"/>
+            </TextBlock.Effect>
+        </TextBlock>
+
+        <!-- Exit -->
         <Button x:Name="ExitButton"
+                Grid.Row="0"
                 Style="{StaticResource ExitButtonStyle}"
                 Background="{StaticResource ExitButtonBrush}"
                 Command="{Binding ExitCommand}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Margin="20,20,0,0"
-                Opacity="0">
-            <Button.RenderTransform>
-                <TranslateTransform Y="30"/>
-            </Button.RenderTransform>
-            <Button.Triggers>
-                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <!-- Fade in -->
-                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                           From="0.0"
-                                           To="1.0"
-                                           BeginTime="0:0:0.3"
-                                           Duration="0:0:0.5"/>
-                            <!-- Slide up -->
-                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
-                                           From="30"
-                                           To="0"
-                                           BeginTime="0:0:0.3"
-                                           Duration="0:0:0.5"/>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </Button.Triggers>
-        </Button>
+                Margin="20,20,0,0"/>
 
-        <!-- Menu Buttons Container -->
-        <StackPanel x:Name="MenuButtonsContainer"
-                    Orientation="Vertical"
-                    VerticalAlignment="Center"
+        <!-- The menu -->
+        <StackPanel x:Name="MenuPanel"
+                    Grid.Row="0"
+                    Grid.RowSpan="2"
+                    Orientation="Horizontal"
                     HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Margin="0,28,0,0"
                     Opacity="0">
             <StackPanel.RenderTransform>
-                <TranslateTransform Y="30"/>
+                <TranslateTransform/>
             </StackPanel.RenderTransform>
-            <StackPanel.Triggers>
-                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <!-- Fade in -->
-                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                           From="0.0"
-                                           To="1.0"
-                                           BeginTime="0:0:0.3"
-                                           Duration="0:0:0.5"/>
-                            <!-- Slide up -->
-                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
-                                           From="30"
-                                           To="0"
-                                           BeginTime="0:0:0.3"
-                                           Duration="0:0:0.5"/>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </StackPanel.Triggers>
-
-            <!-- Load/New Game Buttons Row -->
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center">
-                <!-- Load Game Button -->
-                <Button Style="{StaticResource MenuButtonStyle}"
-                        Background="{StaticResource LoadGameButtonBrush}"
-                        Command="{Binding LoadGameCommand}"
-                        Margin="0,0,100,0"/>
-
-                <!-- New Game Button -->
-                <Button Style="{StaticResource MenuButtonStyle}"
-                        Background="{StaticResource NewGameButtonBrush}"
-                        Command="{Binding NewGameCommand}"/>
-            </StackPanel>
-
-            <!-- Settings Button -->
+            <Button Style="{StaticResource MenuButtonStyle}"
+                    Background="{StaticResource LoadGameButtonBrush}"
+                    Command="{Binding LoadGameCommand}"
+                    Content="LOAD GAME"
+                    Margin="0,0,50,0"/>
+            <Button Style="{StaticResource MenuButtonStyle}"
+                    Background="{StaticResource NewGameButtonBrush}"
+                    Command="{Binding NewGameCommand}"
+                    Content="NEW GAME"
+                    Margin="0,0,50,0"/>
             <Button Style="{StaticResource MenuButtonStyle}"
                     Background="{StaticResource SettingsButtonBrush}"
                     Command="{Binding SettingsCommand}"
-                    HorizontalAlignment="Center"
-                    Margin="0,30,0,0"/>
+                    Content="SETTINGS"/>
         </StackPanel>
+
+        <!-- The open card, in the menu's place. It may reach down over the cars: a new game's form is tall. -->
+        <ScrollViewer x:Name="CardPanel"
+                      Grid.Row="0"
+                      Grid.RowSpan="3"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalAlignment="Top"
+                      Margin="0,28,0,28"
+                      Visibility="Collapsed"
+                      Opacity="0">
+            <ScrollViewer.RenderTransform>
+                <TranslateTransform/>
+            </ScrollViewer.RenderTransform>
+            <ContentControl x:Name="CardHost"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Focusable="False"/>
+        </ScrollViewer>
     </Grid>
 </UserControl>

@@ -256,14 +256,14 @@ namespace Street_Rod_AC.Screens.CarCatalogEditor
                     {
                         if (confirmed)
                         {
-                            _navigationService.NavigateToSettings();
+                            _navigationService.NavigateToMainMenu(MainMenu.MainMenuCard.Settings);
                         }
                     });
                 _dialogService.ShowDialog(confirmDialog);
             }
             else
             {
-                _navigationService.NavigateToSettings();
+                _navigationService.NavigateToMainMenu(MainMenu.MainMenuCard.Settings);
             }
         }
 

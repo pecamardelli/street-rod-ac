@@ -26,7 +26,8 @@ namespace Street_Rod_AC.Navigation
     ///
     /// Every service a screen needs comes in through here, so a screen's dependencies are all in its
     /// constructor. Every factory goes through <see cref="SafeNavigate"/>: a screen that fails to build or to
-    /// enter is logged and reported, and the player stays where they were.
+    /// enter is logged and reported, and the player stays where they were. The main menu's cards, which open over
+    /// it rather than in place of it, go through <see cref="SafeOpenCard{T}"/> the same way.
     /// </summary>
     public class NavigationService : ObservableObject
     {
@@ -192,6 +193,47 @@ namespace Street_Rod_AC.Navigation
             }
         }
 
+        /// <summary>
+        /// Builds a card that opens over the current screen and enters it, the way <see cref="SafeNavigate"/> does a
+        /// screen: one whose constructor throws is never shown, one whose Enter throws is left again. Either way the
+        /// error is logged and the player told. Null when the card did not open.
+        /// </summary>
+        internal T? SafeOpenCard<T>(string cardName, Func<T> create) where T : class, IScreen
+        {
+            T card;
+            try
+            {
+                card = create();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not open the {Card} card", cardName);
+                ShowNavigationError(cardName);
+                return null;
+            }
+
+            try
+            {
+                card.Enter();
+                return card;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not enter the {Card} card", cardName);
+                try
+                {
+                    card.Exit();
+                }
+                catch (Exception exitEx)
+                {
+                    _logger.Warning(exitEx, "The card that failed could not be left cleanly");
+                }
+
+                ShowNavigationError(cardName);
+                return null;
+            }
+        }
+
         private void ShowNavigationError(string screenName)
         {
             _dialogService.ShowDialog(new InformationDialogViewModel(
@@ -208,27 +250,20 @@ namespace Street_Rod_AC.Navigation
         public bool NavigateToInit() => SafeNavigate("start screen", () =>
             new Screens.Init.InitScreenViewModel(this, _dialogService));
 
-        public bool NavigateToMainMenu() => SafeNavigate("main menu", () =>
-            new Screens.MainMenu.MainMenuScreenViewModel(this, _dialogService));
+        /// <param name="card">A card to open on arrival: the car catalog editor goes back to the settings it came from</param>
+        public bool NavigateToMainMenu(Screens.MainMenu.MainMenuCard card = Screens.MainMenu.MainMenuCard.None) =>
+            SafeNavigate("main menu", () => new Screens.MainMenu.MainMenuScreenViewModel(this, _dialogService, _catalogRepository, card));
 
-        public bool NavigateToSettings() => SafeNavigate("settings", () =>
-            new Screens.Settings.SettingsScreenViewModel(this, _dialogService, _gameSettingsService));
+        // The main menu's cards. They open over the main screen rather than in place of it; back closes them.
 
-        public bool NavigateToNewGame() => SafeNavigate("new game screen", () =>
-            new Screens.NewGame.NewGameScreenViewModel(
-                this,
-                _dialogService,
-                _gameStateRepository,
-                _raceEventService,
-                _setCurrentGame));
+        public Screens.Settings.SettingsScreenViewModel CreateSettingsCard(Action back) =>
+            new(this, _dialogService, _gameSettingsService, back);
 
-        public bool NavigateToLoadGame() => SafeNavigate("saved games", () =>
-            new Screens.LoadGame.LoadGameScreenViewModel(
-                this,
-                _dialogService,
-                _gameStateRepository,
-                _carPartsService,
-                _setCurrentGame));
+        public Screens.NewGame.NewGameScreenViewModel CreateNewGameCard(Action back) =>
+            new(this, _dialogService, _gameStateRepository, _raceEventService, _setCurrentGame, back);
+
+        public Screens.LoadGame.LoadGameScreenViewModel CreateLoadGameCard(Action back) =>
+            new(this, _dialogService, _gameStateRepository, _carPartsService, _setCurrentGame, back);
 
         public bool NavigateToGarage(GameState gameState, bool skipAnimation = false) => SafeNavigate("garage", () =>
             new Screens.Garage.GarageScreenViewModel(

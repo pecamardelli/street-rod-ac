@@ -93,6 +93,14 @@ namespace Street_Rod_AC.Services.Catalog
                     continue;
                 }
 
+                // An encrypted model races in AC but draws as shattered glass everywhere in the game: the car stays in
+                // AC's folder and out of the catalog, the same way (see EncryptedCars)
+                if (EncryptedCars.IsEncrypted(carFolder))
+                {
+                    _logger.Information("{Car} has an encrypted model: not in the catalog", carId);
+                    continue;
+                }
+
                 // A car that is there but cannot be read now is still there: it is not retired for that
                 seen.Add(carId);
 
@@ -167,6 +175,7 @@ namespace Street_Rod_AC.Services.Catalog
             }
 
             if (toWrite.Count > 0) _catalog.UpsertCars(toWrite);
+            EncryptedCars.SaveCache();
 
             stopwatch.Stop();
             result.Duration = stopwatch.Elapsed;

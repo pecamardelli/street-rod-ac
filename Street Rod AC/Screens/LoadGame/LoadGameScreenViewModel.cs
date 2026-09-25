@@ -14,6 +14,7 @@ namespace Street_Rod_AC.Screens.LoadGame
     public class LoadGameScreenViewModel : BaseScreenViewModel
     {
         private readonly NavigationService _navigationService;
+        private readonly Action _back;
         private readonly DialogService _dialogService;
         private readonly IGameStateRepository _repository;
         private readonly ICarPartsService _partsService;
@@ -41,14 +42,17 @@ namespace Street_Rod_AC.Screens.LoadGame
         public RelayCommand BackCommand { get; }
 
         /// <param name="setCurrentGame">Makes the loaded game the one the app saves on exit and races with</param>
+        /// <param name="back">Closes the card, back to the main screen's menu</param>
         public LoadGameScreenViewModel(
             NavigationService navigationService,
             DialogService dialogService,
             IGameStateRepository repository,
             ICarPartsService partsService,
-            Action<GameState?> setCurrentGame)
+            Action<GameState?> setCurrentGame,
+            Action back)
         {
             _navigationService = navigationService;
+            _back = back;
             _dialogService = dialogService;
             _repository = repository;
             _partsService = partsService;
@@ -179,7 +183,7 @@ namespace Street_Rod_AC.Screens.LoadGame
 
         private void OnBack()
         {
-            _navigationService.NavigateToMainMenu();
+            _back();
         }
 
         public override void Enter()

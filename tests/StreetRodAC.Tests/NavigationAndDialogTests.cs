@@ -234,4 +234,36 @@ public class NavigationServiceTests
         dialogs.CloseDialog();
         Assert.False(dialogs.IsDialogOpen);
     }
+
+    [Fact]
+    public void A_card_that_opens_is_entered_and_the_screen_stays()
+    {
+        var dialogs = new DialogService();
+        var navigation = NewService(dialogs);
+        var home = new FakeScreen();
+        navigation.SafeNavigate("home", () => home);
+        var card = new FakeScreen();
+
+        Assert.Same(card, navigation.SafeOpenCard("card", () => card));
+
+        Assert.Same(home, navigation.CurrentScreen);
+        Assert.Equal(new[] { "Enter" }, card.Calls);
+        Assert.False(dialogs.IsDialogOpen);
+    }
+
+    [Fact]
+    public void A_card_that_will_not_build_or_enter_is_reported_and_left()
+    {
+        var dialogs = new DialogService();
+        var navigation = NewService(dialogs);
+        var broken = new FakeScreen(throwOnEnter: true);
+
+        Assert.Null(navigation.SafeOpenCard<FakeScreen>("card", () => throw new InvalidOperationException("ctor failed")));
+        Assert.IsType<InformationDialogViewModel>(dialogs.CurrentDialog);
+        dialogs.CloseDialog();
+
+        Assert.Null(navigation.SafeOpenCard("card", () => broken));
+        Assert.Equal(new[] { "Enter", "Exit" }, broken.Calls);
+        Assert.IsType<InformationDialogViewModel>(dialogs.CurrentDialog);
+    }
 }
