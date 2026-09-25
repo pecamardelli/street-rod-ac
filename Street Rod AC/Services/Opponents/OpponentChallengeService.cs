@@ -90,14 +90,6 @@ namespace Street_Rod_AC.Services.Opponents
                 };
             }
 
-            // A rival who lost a pink slip to the player takes any pink-slip race with them, for any car: that is what
-            // they've been waiting for (Grudges)
-            if (isPinkSlip && Grudges.WantsRematch(opponent))
-            {
-                _logger.Information("{Name} wants the rematch: pink slips accepted", opponent.Name);
-                return new ChallengeResponse { Accepted = true, Message = GetRematchAcceptance() };
-            }
-
             // The King races for one thing, and he takes on anybody who has made it to his table
             if (opponent.IsKing)
             {
@@ -163,6 +155,14 @@ namespace Street_Rod_AC.Services.Opponents
                     Message = GetCarValueMismatchMessage(opponent, isPlayerCarCheaper: playerCarValue <= 0),
                     DeclineReason = ChallengeDeclineReason.CarValueMismatch
                 };
+            }
+
+            // A rival who lost a pink slip to the player takes any pink-slip race with them, whatever the cars are
+            // worth: that is what they've been waiting for (Grudges). A car worth nothing is still nothing to stake.
+            if (Grudges.WantsRematch(opponent))
+            {
+                _logger.Information("{Name} wants the rematch: pink slips accepted", opponent.Name);
+                return new ChallengeResponse { Accepted = true, Message = "About time. Let's settle this." };
             }
 
             var valueRatio = (double)(playerCarValue / opponentCarValue);
@@ -411,19 +411,6 @@ namespace Street_Rod_AC.Services.Opponents
                     "Challenge accepted. Let's go.",
                     "Deal. May the best racer win."
                 }
-            };
-
-            return messages[_random.Next(messages.Length)];
-        }
-
-        private string GetRematchAcceptance()
-        {
-            var messages = new[]
-            {
-                "About time. Let's settle this.",
-                "I've been waiting all week for this. You're on.",
-                "Rematch it is. Don't get comfortable in my car.",
-                "You're on. This time the pink slip is mine."
             };
 
             return messages[_random.Next(messages.Length)];

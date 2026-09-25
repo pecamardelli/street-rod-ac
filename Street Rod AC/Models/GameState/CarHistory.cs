@@ -22,13 +22,20 @@ namespace Street_Rod_AC.Models.GameState
         /// <summary>Cars won with it in pink-slip races</summary>
         public int PinkSlipsWon { get; set; }
 
-        /// <summary>Everybody who has had the car, the one who has it now included</summary>
+        /// <summary>
+        /// Everybody who has had the car, the one who has it now included. Somebody who had it twice (sold it and
+        /// bought it back, lost it and won it back) is one owner.
+        /// </summary>
         [LiteDB.BsonIgnore]
-        public int OwnerCount => Math.Max(0, EarlierOwners) + Owners.Count;
+        public int OwnerCount => Math.Max(0, EarlierOwners) + Owners.Select(o => o.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+
+        /// <summary>Nothing is known about the car: a history from a save from before it was kept</summary>
+        [LiteDB.BsonIgnore]
+        public bool IsBlank => EarlierOwners <= 0 && Owners.Count == 0 && Races <= 0;
 
         /// <summary>
-        /// The car changes hands: <paramref name="name"/> has it from <paramref name="date"/> (game time). The same
-        /// owner twice in a row (a car won back) is still one more change of hands.
+        /// The car changes hands: <paramref name="name"/> has it from <paramref name="date"/> (game time). A car won
+        /// back is one more change of hands, though not one more owner (<see cref="OwnerCount"/>).
         /// </summary>
         public void ChangeHands(string name, DateTime date, CarAcquisition how) =>
             Owners.Add(new CarOwner { Name = name, Since = date, How = how });

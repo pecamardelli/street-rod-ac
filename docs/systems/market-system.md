@@ -111,10 +111,13 @@ they got it (`CarAcquisition`: Dealer, PinkSlip, PrivateSale, Unknown), the owne
 (`EarlierOwners`), and its races, wins and pink slips won, whoever drove it. The odometer is `Car.OdometerKM`.
 - It goes with the car everywhere: a pink slip (the player's races and the rivals'), a sale out of the paper to a rival,
   and through a dealer's lot (`ListCar` copies it onto `UsedCarListing.History`, `CarPurchaseService.CarFrom` copies it
-  back and adds the buyer).
+  back and adds the buyer). A relisted car keeps its id (`UsedCarListing.CarInstanceId`): whoever buys it gets that
+  very car back.
+- Somebody who had the car twice (won it back, bought it back) is one owner (`OwnerCount`), for the price and the words.
 - New stock comes with 1-3 earlier owners by its mileage; a rival's first car with a few more; the King's car with his
   record (it tops the ±15%).
-- Older saves: `HistoryUpgrade` gives every car its present owner at load.
+- Older saves: `HistoryUpgrade` gives every car its present owner at load, and a car or listing nothing was known about
+  the earlier owners its miles tell of (`EarlierOwnersFor`: none under 1,000 km, one more every 80,000 km).
 - Shown on the dealer lot, the used car ads, the purchase question, the Sell dialog and the garage (the mileage's
   tooltip), always through `CarHistoryDisplay`.
 

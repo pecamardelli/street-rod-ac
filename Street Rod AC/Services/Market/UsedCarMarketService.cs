@@ -330,7 +330,8 @@ namespace Street_Rod_AC.Services.Market
                 BodyDamageKmh = CarCondition.BodyTotal(car) > 0 ? CarCondition.Body(car) : null,
 
                 // Its past goes with it: who had it, how it raced
-                History = car.History?.Copy() ?? new CarHistory()
+                History = car.History?.Copy() ?? new CarHistory(),
+                CarInstanceId = car.InstanceId
             };
 
             if (listing.Parts.Count > 0 && car.Engine is { } engine && _partsService is { IsAvailable: true } parts)

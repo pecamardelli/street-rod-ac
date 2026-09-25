@@ -23,7 +23,6 @@ namespace Street_Rod_AC.Services.Opponents
         {
             rival.Grudge = new Grudge
             {
-                Since = date,
                 Until = date.Date.AddDays(RematchDays).AddHours(GameState.DayEndHour),
                 CarInstanceId = car.InstanceId,
                 CarDefinitionId = car.DefinitionId
@@ -44,6 +43,15 @@ namespace Street_Rod_AC.Services.Opponents
         }
 
         /// <summary>
+        /// <paramref name="racer"/> has just come by <paramref name="car"/> other than in the rematch (bought it, won it
+        /// off somebody else): when it is the car they wanted back, there is nothing left to settle and the rematch is off.
+        /// </summary>
+        public static void CarBack(Racer racer, Car car)
+        {
+            if (racer is Opponent { Grudge: { } grudge } rival && grudge.CarInstanceId == car.InstanceId) rival.Grudge = null;
+        }
+
+        /// <summary>
         /// The daily review: a rematch nobody came for is off, and the street hears the rival has let it go. A rival
         /// out of the game (retired, no car) keeps waiting until the offer runs out like anybody else.
         /// </summary>
@@ -51,7 +59,16 @@ namespace Street_Rod_AC.Services.Opponents
         {
             foreach (var rival in rivals)
             {
-                if (rival.Grudge is not { } grudge || grudge.Until >= date) continue;
+                if (rival.Grudge is not { } grudge) continue;
+
+                // Theirs again by some way the game did not see to: nothing to talk about
+                if (rival.Cars.Any(c => c.InstanceId == grudge.CarInstanceId))
+                {
+                    rival.Grudge = null;
+                    continue;
+                }
+
+                if (grudge.Until >= date) continue;
 
                 rival.Grudge = null;
                 talk.Add($"{rival.Name} has stopped talking about getting {OpponentRules.Possessive(rival)} {carName(grudge.CarDefinitionId)} back.");

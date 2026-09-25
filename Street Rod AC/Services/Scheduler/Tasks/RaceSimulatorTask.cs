@@ -57,8 +57,9 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
                     talk.Add($"{race.LoserName} wrecked the {car} in a {race.RaceType.ToLowerInvariant()} race against {race.WinnerName}.");
                 }
 
-                if (NewsWriter.RivalRace(currentDate, race.WinnerName, race.LoserName, car, race.RaceType == "Drag", race.IsPinkSlip,
-                        race.LoserCrashed, race.LoserCar?.History.Wins ?? 0, _random) is { } article)
+                var loserPossessive = gameState.Racers.Find(race.LoserName) is { } loser ? OpponentRules.Possessive(loser) : "their";
+                if (NewsWriter.RivalRace(currentDate, race.WinnerName, race.LoserName, loserPossessive, car, race.RaceType == "Drag",
+                        race.IsPinkSlip, race.LoserCrashed, race.LoserCar?.History.Wins ?? 0, _random) is { } article)
                     news.Add(article);
             }
 

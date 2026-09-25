@@ -131,7 +131,7 @@ namespace Street_Rod_AC.Services.Opponents
         private void EnsureKing(GameState gameState, List<(CarDefinition Car, CarProfile Profile)>? carPool)
         {
             var racers = gameState.Racers;
-            if (racers.ReadyToRace.Values.Concat(racers.Retired.Values).Concat(racers.Inactive.Values).Any(r => r is Opponent { IsKing: true })) return;
+            if (racers.All.Any(r => r is Opponent { IsKing: true })) return;
             if (_noKingDefined) return;
 
             var king = _opponentRepository.LoadAllOpponents().FirstOrDefault(o => o.IsKing);
@@ -156,16 +156,8 @@ namespace Street_Rod_AC.Services.Opponents
             king.Stats.PinkSlipsWon = 12;
             king.Stats.Reputation = king.Stats.CalculateReputation();
 
-            var car = CreateKingCar(carPool ?? BuildCarPool(), gameState.Date);
-            if (car != null)
-            {
-                // The car everybody on the street has lost to: his since he had it, and it shows in its worth
-                car.History.ChangeHands(king.Name, car.PurchaseDate, CarAcquisition.Unknown);
-                car.History.Races = king.Stats.Races - _random.Next(0, 10);
-                car.History.Wins = car.History.Races - _random.Next(1, 4);
-                car.History.PinkSlipsWon = king.Stats.PinkSlipsWon;
-                king.Cars.Add(car);
-            }
+            var car = CreateKingCar(carPool ?? BuildCarPool(), gameState.Date, king);
+            if (car != null) king.Cars.Add(car);
 
             racers.AddRacer(king);
             _logger.Information("{King} is in town, in a {Car} ({Power:0} hp)", king.Name, car?.DefinitionId ?? "(no car)", car?.PowerHp ?? 0);
@@ -175,7 +167,7 @@ namespace Street_Rod_AC.Services.Opponents
         /// One of the strongest cars there is from the factory (the dearest, without parts to tell), in top shape, its
         /// engine worked on as much as it gets
         /// </summary>
-        private Car? CreateKingCar(List<(CarDefinition Car, CarProfile Profile)> pool, DateTime today)
+        private Car? CreateKingCar(List<(CarDefinition Car, CarProfile Profile)> pool, DateTime today, Opponent king)
         {
             var choices = (_parts is { IsAvailable: true } catalogParts
                     ? pool.Select(p => (p.Car, p.Profile, Power: catalogParts.GetStockBuild(p.Car)?.PowerHp ?? 0)).Where(p => p.Power > 0)
@@ -209,6 +201,13 @@ namespace Street_Rod_AC.Services.Opponents
                     _logger.Warning("Could not build the King's engine: {Error}", ex.Message);
                 }
             }
+
+            // The car everybody on the street has lost to: his since he had it, and it shows in its worth (before
+            // FinishCar prices it)
+            car.History.ChangeHands(king.Name, car.PurchaseDate, CarAcquisition.Unknown);
+            car.History.Races = king.Stats.Races - _random.Next(0, 10);
+            car.History.Wins = car.History.Races - _random.Next(1, 4);
+            car.History.PinkSlipsWon = king.Stats.PinkSlipsWon;
 
             FinishCar(car, definition, profile);
             return car;

@@ -3,6 +3,7 @@ using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Models.Race;
 using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Market;
+using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Parts;
 
 namespace Street_Rod_AC.Services.Simulation
@@ -250,6 +251,7 @@ namespace Street_Rod_AC.Services.Simulation
                 winner.Cars.Add(loserCar);
                 winner.Stats.CarsOwned++;
                 loserCar.History.ChangeHands(winner.Name, date, CarAcquisition.PinkSlip);
+                Grudges.CarBack(winner, loserCar);
 
                 // Without a car the loser sits it out until they can buy one
                 if (loser.Cars.Count == 0)
@@ -291,8 +293,7 @@ namespace Street_Rod_AC.Services.Simulation
                 IsPinkSlip = isPinkSlip,
                 CarWon = carWon,
                 LoserCrashed = crashed,
-                LoserCar = loserCar,
-                WinnerCar = winnerCar
+                LoserCar = loserCar
             };
         }
 
@@ -582,8 +583,5 @@ namespace Street_Rod_AC.Services.Simulation
 
         /// <summary>The car the loser raced (now the winner's, in a pink-slip race)</summary>
         public Car? LoserCar { get; set; }
-
-        /// <summary>The car the winner raced</summary>
-        public Car? WinnerCar { get; set; }
     }
 }

@@ -1033,11 +1033,13 @@ namespace Street_Rod_AC.Services.Race
                 Date = gameState.Date,
                 PlayerName = gameState.Player.Name,
                 RivalName = context.OpponentName,
+                RivalPossessive = rival == null ? "their" : OpponentRules.Possessive(rival),
                 RivalIsKing = rival is Opponent { IsKing: true },
                 PlayerReputation = before.PlayerReputation,
                 RivalReputation = before.RivalReputation,
                 PlayerCar = CarName(CarDefinitionOf(gameState, context.PlayerCarInstanceId)),
-                RivalCar = CarName(CarDefinitionOf(gameState, context.OpponentCarInstanceId)),
+                RivalCar = CarName(CarDefinitionOf(gameState, context.OpponentCarInstanceId) is { Length: > 0 } rivalCar
+                    ? rivalCar : context.OpponentCarDefinitionId),
                 IsDrag = context.RaceType == RaceType.DragRace,
                 Decided = outcome.IsDecided,
                 PlayerWon = outcome.PlayerWon,
@@ -1064,7 +1066,7 @@ namespace Street_Rod_AC.Services.Race
         /// <summary>The model of a car in the race, whoever has it now: after a pink slip it has changed garages</summary>
         private static string CarDefinitionOf(GameState gameState, Guid carInstanceId)
         {
-            var racers = gameState.Racers.ReadyToRace.Values.Concat(gameState.Racers.Retired.Values).Concat(gameState.Racers.Inactive.Values);
+            var racers = gameState.Racers.All;
             var car = gameState.Player.Cars.Concat(racers.SelectMany(r => r.Cars)).FirstOrDefault(c => c.InstanceId == carInstanceId);
             return car?.DefinitionId ?? string.Empty;
         }

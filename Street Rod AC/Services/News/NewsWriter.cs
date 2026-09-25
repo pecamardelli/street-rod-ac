@@ -1,3 +1,4 @@
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Models.GameState;
 
 namespace Street_Rod_AC.Services.News
@@ -8,6 +9,9 @@ namespace Street_Rod_AC.Services.News
         public DateTime Date { get; init; }
         public string PlayerName { get; init; } = string.Empty;
         public string RivalName { get; init; } = string.Empty;
+
+        /// <summary>"his", "her", "their" for the rival (<see cref="Opponents.OpponentRules.Possessive"/>)</summary>
+        public string RivalPossessive { get; init; } = "their";
         public bool RivalIsKing { get; init; }
         public int PlayerReputation { get; init; }
         public int RivalReputation { get; init; }
@@ -72,7 +76,7 @@ namespace Street_Rod_AC.Services.News
             var (headline, body, weight) = Story(f, random);
             if (headline == null) return null;
 
-            return new NewsArticle { Date = f.Date, Headline = headline, Body = body!, Weight = weight, AboutPlayer = true };
+            return new NewsArticle { Date = f.Date, Headline = headline, Body = body!, Weight = weight };
         }
 
         private static (string? Headline, string? Body, int Weight) Story(PlayerRaceFacts f, Random random)
@@ -114,7 +118,7 @@ namespace Street_Rod_AC.Services.News
                         $"{r} wanted a rematch with {p} and got one. It went the same way: {p} won {where} and took the {f.RivalCar} too."
                         + Revenge(f), 70)
                     : (Pick(random, $"{r} Gets Even", "Sweet Revenge on the Street", $"{r} Settles the Score"),
-                        $"{r} had been waiting for a rematch since {p} took {PossessiveOf(r)} car. {r} won it {where}, and now drives off in {p}'s {f.PlayerCar}.", 70);
+                        $"{r} had been waiting for a rematch since {p} took {f.RivalPossessive} car. {r} won it {where}, and now drives off in {PossessiveOf(p)} {f.PlayerCar}.", 70);
             }
 
             if (f.PinkSlip)
@@ -126,18 +130,23 @@ namespace Street_Rod_AC.Services.News
                         $"{p} put the {f.PlayerCar} up against {r} for pink slips {where}, and lost. The car is {PossessiveOf(r)} now." + Crash(f), 60);
             }
 
+            // An event won is the story even when the rival wrecked on the way
+            if (f.EventName != null && f.PlayerWon)
+            {
+                return (Pick(random, $"{p} Wins the {f.EventName}", $"{f.EventName} Goes to {p}"),
+                    $"{p} beat {r} {where} in the {f.PlayerCar} to win the {f.EventName}."
+                    + (f.RivalCrashed ? $" {r} finished it off the road." : ""), 45);
+            }
+
             if (f.PlayerCrashed || f.RivalCrashed)
             {
                 var who = f.PlayerCrashed ? p : r;
                 var car = f.PlayerCrashed ? f.PlayerCar : f.RivalCar;
-                return (Pick(random, $"{who} Wrecks {PossessiveOf(who)} {Short(car)}", "Race Ends in a Wreck"),
-                    $"A race between {p} and {r} ended with {PossessiveOf(who)} {car} off the road. {(f.PlayerWon ? p : r)} took the win.", 40);
-            }
 
-            if (f.EventName != null && f.PlayerWon)
-            {
-                return (Pick(random, $"{p} Wins the {f.EventName}", $"{f.EventName} Goes to {p}"),
-                    $"{p} beat {r} {where} in the {f.PlayerCar} to win the {f.EventName}.", 45);
+                // The player's own car is "the" car in a headline: the paper does not know the player as him or her
+                var whose = f.PlayerCrashed ? "the" : Capitalized(f.RivalPossessive);
+                return (Pick(random, $"{who} Wrecks {whose} {Short(car)}", "Race Ends in a Wreck"),
+                    $"A race between {p} and {r} ended with {PossessiveOf(who)} {car} off the road. {(f.PlayerWon ? p : r)} took the win.", 40);
             }
 
             if (f.PlayerWon && f.RivalReputation - f.PlayerReputation >= UpsetReputation)
@@ -171,9 +180,11 @@ namespace Street_Rod_AC.Services.News
             f.RivalSwearsRevenge ? $" {f.RivalName} was heard saying this isn't over." : "";
 
         /// <summary>The piece about a race between two rivals; null when there is no story in it</summary>
-        public static NewsArticle? RivalRace(DateTime date, string winner, string loser, string loserCar, bool isDrag, bool pinkSlip,
-            bool loserCrashed, int carWins, Random random)
+        /// <param name="loserPossessive">"his", "her", "their" for the loser (<see cref="Opponents.OpponentRules.Possessive"/>)</param>
+        public static NewsArticle? RivalRace(DateTime date, string winner, string loser, string loserPossessive, string loserCar, bool isDrag,
+            bool pinkSlip, bool loserCrashed, int carWins, Random random)
         {
+            var whose = Capitalized(loserPossessive);
             var where = isDrag ? "at the strip" : "on the road";
             var record = carWins >= 5 ? $" The car had {carWins} wins to its name." : "";
 
@@ -184,8 +195,8 @@ namespace Street_Rod_AC.Services.News
                     Date = date,
                     Weight = 30,
                     Headline = loserCrashed
-                        ? Pick(random, $"{loser} Wrecks {PossessiveOf(loser)} Pink Slip", "Pink-Slip Race Ends in a Wreck")
-                        : Pick(random, $"{winner} Takes {PossessiveOf(loser)} {Short(loserCar)}", $"{loser} Loses {PossessiveOf(loser)} Ride"),
+                        ? Pick(random, $"{winner} Tows Away {PossessiveOf(loser)} Wreck", "Pink-Slip Race Ends in a Wreck")
+                        : Pick(random, $"{winner} Takes {PossessiveOf(loser)} {Short(loserCar)}", $"{loser} Loses {whose} Ride"),
                     Body = loserCrashed
                         ? $"{loser} wrecked the {loserCar} racing {winner} for pink slips {where}. {winner} towed away what was left.{record}"
                         : $"{winner} beat {loser} for pink slips {where}, and drives the {loserCar} home.{record}"
@@ -198,7 +209,7 @@ namespace Street_Rod_AC.Services.News
                 {
                     Date = date,
                     Weight = 15,
-                    Headline = Pick(random, $"{loser} Wrecks {PossessiveOf(loser)} {Short(loserCar)}", "Another Wreck on the Street"),
+                    Headline = Pick(random, $"{loser} Wrecks {whose} {Short(loserCar)}", "Another Wreck on the Street"),
                     Body = $"{loser} put the {loserCar} into something hard racing {winner} {where}."
                 };
             }
@@ -210,9 +221,7 @@ namespace Street_Rod_AC.Services.News
         public static void Add(GameState gameState, DateTime date, IEnumerable<NewsArticle> articles)
         {
             gameState.News ??= [];
-            gameState.News.AddRange(articles);
-            gameState.News.RemoveAll(a => (date - a.Date).TotalDays > DaysKept);
-            if (gameState.News.Count > MaxKept) gameState.News.RemoveRange(0, gameState.News.Count - MaxKept);
+            DatedLog.Append(gameState.News, articles, a => a.Date, date, DaysKept, MaxKept);
         }
 
         /// <summary>What the paper prints on <paramref name="today"/>: the last few days, newest day first, the weightiest first within a day</summary>
@@ -230,6 +239,8 @@ namespace Street_Rod_AC.Services.News
         private static string Pick(Random random, params string[] choices) => choices[random.Next(choices.Length)];
 
         private static string PossessiveOf(string name) => name.EndsWith('s') ? name + "'" : name + "'s";
+
+        private static string Capitalized(string word) => word.Length == 0 ? word : char.ToUpperInvariant(word[0]) + word[1..];
 
         /// <summary>A car as a headline says it: the model without the year</summary>
         private static string Short(string car)

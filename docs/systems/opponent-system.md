@@ -114,8 +114,10 @@ switches to pink slips when he is picked) and accepts any pink slip. Beating him
 ## Grudges (step 10)
 A rival who loses a pink slip to the player wants a rematch (`Opponent.Grudge`, `Grudges`): for 14 days
 (`RematchDays`) they are marked "Wants a rematch" at the diner, greet the player with grudge lines, have the pink slip
-picked, and accept any pink-slip race with the player whatever the usual odds (the cars' values included). A cash
-race is judged as usual. A pink-slip race between them settles it: a rival who wins it back is talked about ("got
+picked (and unpicked when the player turns to somebody else), and accept any pink-slip race with the player whatever the
+usual odds (the cars' values included, but a car worth nothing is still refused). A cash race is judged as usual. A
+rival who gets the car back some other way (bought out of the paper or off a lot, won off somebody else) wants no
+rematch any more (`Grudges.CarBack`). A pink-slip race between them settles it: a rival who wins it back is talked about ("got
 even"); one who loses again wants the new car back, for another 14 days. The daily review lets an offer nobody came
 for lapse, and the street hears. `RaceResultProcessor.ApplyGrudge` does the race's part.
 

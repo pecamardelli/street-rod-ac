@@ -118,7 +118,8 @@ namespace Street_Rod_AC.Services.Market
         {
             var car = new Car
             {
-                InstanceId = Guid.NewGuid(),
+                // A relisted car is the same car it was
+                InstanceId = listing.CarInstanceId ?? Guid.NewGuid(),
                 DefinitionId = listing.CarDefinitionId,
                 SkinId = listing.SkinId,
                 PurchasePrice = listing.Price,

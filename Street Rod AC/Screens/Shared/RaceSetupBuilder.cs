@@ -195,6 +195,7 @@ namespace Street_Rod_AC.Screens.Shared
                 OpponentName = entry.OpponentName,
                 PlayerCarInstanceId = entry.PlayerCar.InstanceId,
                 OpponentCarInstanceId = entry.OpponentCar?.InstanceId ?? Guid.Empty,
+                OpponentCarDefinitionId = entry.OpponentCarId,
                 CashWager = entry.CashWager,
                 IsPinkSlip = entry.IsPinkSlip,
                 TrackId = entry.TrackId,

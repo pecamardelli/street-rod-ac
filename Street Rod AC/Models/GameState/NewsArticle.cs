@@ -15,8 +15,5 @@ namespace Street_Rod_AC.Models.GameState
 
         /// <summary>How much of a story it is: the player's pink slips and the King lead the page, a rival's wreck is a filler</summary>
         public int Weight { get; set; }
-
-        /// <summary>The player is in it</summary>
-        public bool AboutPlayer { get; set; }
     }
 }

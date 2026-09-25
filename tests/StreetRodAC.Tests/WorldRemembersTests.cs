@@ -105,6 +105,23 @@ public class CarHistoryTests
     }
 
     [Fact]
+    public void A_car_won_back_counts_its_owner_once()
+    {
+        var history = new CarHistory
+        {
+            Owners =
+            [
+                new CarOwner { Name = "Player", How = CarAcquisition.Dealer },
+                new CarOwner { Name = "Rex", How = CarAcquisition.PinkSlip },
+                new CarOwner { Name = "Player", How = CarAcquisition.PinkSlip }
+            ]
+        };
+
+        Assert.Equal(2, history.OwnerCount);
+        Assert.Equal("1 owner before you · won from Rex on a pink slip · Never raced", CarHistoryDisplay.Summary(history, forSale: false));
+    }
+
+    [Fact]
     public void An_older_save_gives_every_car_its_owner_so_the_next_change_of_hands_counts_from_there()
     {
         var state = GameState.CreateNew("Player");
@@ -126,6 +143,24 @@ public class CarHistoryTests
     }
 
     [Fact]
+    public void An_older_save_does_not_make_a_used_car_a_first_owner_car()
+    {
+        var state = GameState.CreateNew("Player");
+        var mine = new Car("car_a") { OdometerKM = 90_000 };
+        state.Player.Cars.Add(mine);
+        state.UsedCarMarket.Add(new UsedCarListing { Mileage = 45_000 });
+        state.UsedCarMarket.Add(new UsedCarListing { Mileage = 45_000, History = new CarHistory { Owners = [new CarOwner { Name = "Rex" }] } });
+
+        HistoryUpgrade.BringUpToDate(state);
+        HistoryUpgrade.BringUpToDate(state);
+
+        Assert.Equal("1 previous owner · Never raced", CarHistoryDisplay.Summary(state.UsedCarMarket[0].History, forSale: true));
+        Assert.Equal(0, state.UsedCarMarket[1].History.EarlierOwners);
+        Assert.Equal("2 owners before you · Never raced", CarHistoryDisplay.Summary(mine.History, forSale: false));
+        Assert.Equal(0, HistoryUpgrade.EarlierOwnersFor(10));
+    }
+
+    [Fact]
     public void History_grudges_and_the_news_survive_a_save()
     {
         using var db = new LiteDatabase(new MemoryStream(), SaveMapper.Create());
@@ -136,7 +171,7 @@ public class CarHistoryTests
         state.Player.Cars.Add(car);
         var rival = new Opponent("Rex", 30, Gender.Male, 95, 50) { Grudge = new Grudge { CarInstanceId = car.InstanceId, CarDefinitionId = "car_a", Until = new DateTime(1970, 6, 16) } };
         state.Racers.AddRacer(rival);
-        state.News.Add(new NewsArticle { Date = new DateTime(1970, 6, 2), Headline = "H", Body = "B", Weight = 60, AboutPlayer = true });
+        state.News.Add(new NewsArticle { Date = new DateTime(1970, 6, 2), Headline = "H", Body = "B", Weight = 60 });
 
         var collection = db.GetCollection<GameState>("GameState");
         collection.Upsert(state);
@@ -182,6 +217,41 @@ public class GrudgeTests
     }
 
     [Fact]
+    public void A_rival_who_gets_the_car_back_some_other_way_wants_no_rematch()
+    {
+        var rival = Rival();
+        var car = new Car("car_b");
+        Grudges.Start(rival, car, new DateTime(1970, 6, 2), "Player", "car");
+
+        Grudges.CarBack(rival, new Car("car_b"));
+        Assert.True(Grudges.WantsRematch(rival));
+
+        Grudges.CarBack(rival, car);
+        Assert.False(Grudges.WantsRematch(rival));
+
+        // The daily review catches one the game did not see to
+        Grudges.Start(rival, car, new DateTime(1970, 6, 2), "Player", "car");
+        rival.Cars.Add(car);
+        var talk = new List<string>();
+        Grudges.Lapse([rival], new DateTime(1970, 6, 3), id => id, talk);
+        Assert.False(Grudges.WantsRematch(rival));
+        Assert.Empty(talk);
+    }
+
+    [Fact]
+    public void A_car_bought_back_off_a_lot_is_the_same_car()
+    {
+        TestLogging.SilenceLogging();
+        var market = new UsedCarMarketService(new MemoryCatalog(), new MemoryProfiles());
+        var car = new Car("car_a");
+
+        var listing = market.ListCar(car, 5000m, "industrial_motors", new DateTime(1970, 7, 1));
+
+        Assert.Equal(car.InstanceId, CarPurchaseService.CarFrom(listing, new DateTime(1970, 7, 2), "Rex").InstanceId);
+        Assert.NotEqual(car.InstanceId, CarPurchaseService.CarFrom(new UsedCarListing { CarDefinitionId = "car_a" }, new DateTime(1970, 7, 2), "Rex").InstanceId);
+    }
+
+    [Fact]
     public void A_rematch_nobody_came_for_lapses()
     {
         var waiting = Rival();
@@ -213,9 +283,17 @@ public class GrudgeTests
         var rival = Rival();
         Grudges.Start(rival, new Car("dear"), new DateTime(1970, 6, 2), "P", "car");
 
-        // Without the grudge a cheap car is never staked against a dear one
+        // Without the grudge a cheap car is never staked against a dear one; with it, it always is
+        var plain = Rival();
         for (var i = 0; i < 20; i++)
+        {
+            Assert.False(service.EvaluateChallenge(plain, player, new Car("cheap"), new Car("dear"), isPinkSlip: true).Accepted);
             Assert.True(service.EvaluateChallenge(rival, player, new Car("cheap"), new Car("dear"), isPinkSlip: true).Accepted);
+        }
+
+        // A car worth nothing is nothing to stake, rematch or not
+        catalog.UpsertCar(new CarDefinition { Id = "junk", Name = "junk", Brand = "Ford" });
+        Assert.False(service.EvaluateChallenge(rival, player, new Car("junk"), new Car("dear"), isPinkSlip: true).Accepted);
 
         var broke = Rival();
         broke.Grudge = rival.Grudge;
@@ -260,7 +338,6 @@ public sealed class WorldRemembersRaceTests : IDisposable
         Assert.Equal(taken.InstanceId, world.Rival.Grudge!.CarInstanceId);
         Assert.Contains(world.State.StreetTalk, t => t.Text.Contains("back from"));
         var article = world.State.News.Single();
-        Assert.True(article.AboutPlayer);
         Assert.Contains("isn't over", article.Body);
 
         // The race as history keeps it
@@ -343,9 +420,39 @@ public class NewsWriterTests
     {
         var random = new Random(1);
         var date = new DateTime(1970, 6, 5);
-        Assert.Null(NewsWriter.RivalRace(date, "A", "B", "1970 Ford Mustang", true, pinkSlip: false, loserCrashed: false, 0, random));
-        Assert.Contains("7 wins", NewsWriter.RivalRace(date, "A", "B", "1970 Ford Mustang", true, pinkSlip: true, loserCrashed: false, 7, random)!.Body);
-        Assert.Equal(15, NewsWriter.RivalRace(date, "A", "B", "1970 Ford Mustang", false, pinkSlip: false, loserCrashed: true, 0, random)!.Weight);
+        Assert.Null(NewsWriter.RivalRace(date, "A", "B", "his", "1970 Ford Mustang", true, pinkSlip: false, loserCrashed: false, 0, random));
+        Assert.Contains("7 wins", NewsWriter.RivalRace(date, "A", "B", "his", "1970 Ford Mustang", true, pinkSlip: true, loserCrashed: false, 7, random)!.Body);
+        Assert.Equal(15, NewsWriter.RivalRace(date, "A", "B", "his", "1970 Ford Mustang", false, pinkSlip: false, loserCrashed: true, 0, random)!.Weight);
+    }
+
+    [Fact]
+    public void A_headline_never_names_the_same_racer_twice()
+    {
+        var date = new DateTime(1970, 6, 5);
+        var headlines = new List<string>();
+        for (var seed = 0; seed < 50; seed++)
+        {
+            var random = new Random(seed);
+            headlines.Add(NewsWriter.PlayerRace(Facts with { PlayerWon = true, RivalCrashed = true, RivalPossessive = "his" }, random)!.Headline);
+            headlines.Add(NewsWriter.PlayerRace(Facts with { PlayerWon = false, PlayerCrashed = true }, random)!.Headline);
+            headlines.Add(NewsWriter.RivalRace(date, "Sal", "Rex", "his", "1970 Ford Mustang", true, pinkSlip: true, loserCrashed: false, 0, random)!.Headline);
+            headlines.Add(NewsWriter.RivalRace(date, "Sal", "Rex", "his", "1970 Ford Mustang", true, pinkSlip: true, loserCrashed: true, 0, random)!.Headline);
+            headlines.Add(NewsWriter.RivalRace(date, "Sal", "Rex", "his", "1970 Ford Mustang", true, pinkSlip: false, loserCrashed: true, 0, random)!.Headline);
+        }
+
+        Assert.DoesNotContain(headlines, h => (h.StartsWith("Rex") && h.Contains("Rex's")) || (h.StartsWith("Pablo") && h.Contains("Pablo's")));
+        Assert.Contains("Rex Wrecks His Ford Mustang", headlines);
+        Assert.Contains("Pablo Wrecks the Chevrolet Camaro", headlines);
+    }
+
+    [Fact]
+    public void An_event_won_is_the_story_even_when_the_rival_wrecked()
+    {
+        var article = NewsWriter.PlayerRace(Facts with { PlayerWon = true, RivalCrashed = true, EventName = "Summer Nationals" }, new Random(1))!;
+
+        Assert.Equal(45, article.Weight);
+        Assert.Contains("Summer Nationals", article.Headline);
+        Assert.Contains("off the road", article.Body);
     }
 
     [Fact]

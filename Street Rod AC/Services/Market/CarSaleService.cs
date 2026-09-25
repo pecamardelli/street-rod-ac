@@ -212,6 +212,7 @@ namespace Street_Rod_AC.Services.Market
                 rival.Cars.Add(car);
                 rival.Stats.CarsOwned++;
                 car.History.ChangeHands(rival.Name, gameState.Date, CarAcquisition.PrivateSale);
+                Grudges.CarBack(rival, car);
                 OpponentLifeService.AddTalk(gameState, gameState.Date, [$"{rival.Name} bought {gameState.Player.Name}'s car out of the paper."]);
             }
 

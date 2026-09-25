@@ -165,6 +165,7 @@ namespace Street_Rod_AC.Screens.Diner
                 if (_isCashBet != value)
                 {
                     _isCashBet = value;
+                    _pinkSlipBySelection = false;
                     OnPropertyChanged(nameof(IsCashBet));
                     OnPropertyChanged(nameof(IsPinkSlipBet));
                     OnPropertyChanged(nameof(IsCashBetEnabled));
@@ -178,6 +179,10 @@ namespace Street_Rod_AC.Screens.Diner
                 }
             }
         }
+
+        // The pink slips were put on the table by picking the King or a rival who wants a rematch, not by the player:
+        // picking somebody else takes them off again
+        private bool _pinkSlipBySelection;
 
         public bool IsPinkSlipBet
         {
@@ -441,8 +446,20 @@ namespace Street_Rod_AC.Screens.Diner
                 SelectedOpponent = opponentVm;
                 _logger.Information("Selected opponent: {Name}", opponentVm.Name);
 
-                // The King races for pink slips and nothing else, and a rival who wants a rematch wants the pink slips
-                if (opponentVm.Opponent.IsKing || opponentVm.WantsRematch) IsPinkSlipBet = true;
+                // The King races for pink slips and nothing else, and a rival who wants a rematch wants the pink slips.
+                // Pink slips only they asked for go back off the table when the player turns to somebody else.
+                if (opponentVm.Opponent.IsKing || opponentVm.WantsRematch)
+                {
+                    if (!IsPinkSlipBet)
+                    {
+                        IsPinkSlipBet = true;
+                        _pinkSlipBySelection = true;
+                    }
+                }
+                else if (_pinkSlipBySelection)
+                {
+                    IsCashBet = true;
+                }
 
                 // Update wager limits based on opponent's money
                 UpdateWagerLimits();

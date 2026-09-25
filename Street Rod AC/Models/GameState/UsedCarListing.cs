@@ -90,6 +90,13 @@ namespace Street_Rod_AC.Models.GameState
         /// owners it had before. Empty on listings from before it was kept.
         /// </summary>
         public CarHistory History { get; set; } = new();
+
+        /// <summary>
+        /// The car's own id (<see cref="Car.InstanceId"/>) when somebody had it and it was relisted: whoever buys it gets
+        /// that very car back, and a rival who wanted it knows it (<see cref="Grudge.CarInstanceId"/>). Null on new stock
+        /// and on listings from before it was kept.
+        /// </summary>
+        public Guid? CarInstanceId { get; set; }
     }
 
     /// <summary>

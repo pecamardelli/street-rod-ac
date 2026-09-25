@@ -7,9 +7,6 @@ namespace Street_Rod_AC.Models.GameState
     /// </summary>
     public class Grudge
     {
-        /// <summary>The day they lost the car, in game time</summary>
-        public DateTime Since { get; set; }
-
         /// <summary>The last day the offer stands, in game time</summary>
         public DateTime Until { get; set; }
 

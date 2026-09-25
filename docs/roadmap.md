@@ -468,8 +468,8 @@ two weeks, in the street talk); the paper's articles cover the player's notable 
 
 **As built:** see `docs/systems/market-system.md` ("Car History", "Pricing"), `docs/systems/opponent-system.md`
 ("Grudges") and `NewsWriter`.
-- The history lives on the car (`CarHistory`), not in the race sessions: a car changes id when it goes through a lot,
-  and the rivals' races were never saved. The history is copied onto the listing and back.
+- The history lives on the car (`CarHistory`), not in the race sessions: the rivals' races were never saved. The
+  history is copied onto the listing and back, and a relisted car keeps its id (review fix).
 - Articles (`GameState.News`, two weeks kept) are written when a race is settled, only when there is a story: the
   player's pink slips, the King, rematches, the police, wrecks, event wins, upsets, cash races of $1,000 and more, the
   first win; from the rivals' own races, pink slips and wrecks. The paper prints the last 3 days, 5 pieces, newest
