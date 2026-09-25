@@ -17,7 +17,7 @@ namespace Street_Rod_AC.Controls;
 /// </summary>
 public sealed partial class SharedTextureBridge : IDisposable
 {
-    private readonly D3DImage _image = new();
+    private readonly CopyableD3DImage _image = new();
 
     private D3D9.IDirect3D9Ex? _d3d9;
     private D3D9.IDirect3DDevice9Ex? _device;
@@ -41,6 +41,26 @@ public sealed partial class SharedTextureBridge : IDisposable
 
     /// <summary>The image source to put in the visual tree</summary>
     public D3DImage Image => _image;
+
+    /// <summary>
+    /// A software copy of what is on screen, for a cut to dissolve from. Null when there is nothing to copy or the
+    /// copy fails: the caller cuts instead.
+    /// </summary>
+    public System.Windows.Media.Imaging.BitmapSource? CopyFrame()
+    {
+        if (_boundTarget == IntPtr.Zero || !_image.IsFrontBufferAvailable) return null;
+
+        try
+        {
+            var copy = _image.Copy();
+            copy?.Freeze();
+            return copy;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
     /// <summary>WPF can present: false while the device is lost</summary>
     public bool IsFrontBufferAvailable => _image.IsFrontBufferAvailable;
@@ -185,4 +205,12 @@ public sealed partial class SharedTextureBridge : IDisposable
 
     [LibraryImport("user32.dll")]
     private static partial IntPtr GetDesktopWindow();
+}
+
+/// <summary>D3DImage keeps its read-back protected; this lets the bridge take a still of the picture</summary>
+internal sealed class CopyableD3DImage : D3DImage
+{
+    public System.Windows.Media.Imaging.BitmapSource? Copy() => CopyBackBuffer();
+
+    protected override Freezable CreateInstanceCore() => new CopyableD3DImage();
 }

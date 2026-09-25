@@ -4,102 +4,20 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid x:Name="RootGrid"
-          Background="{StaticResource SettingsBackgroundBrush}"
-          Opacity="0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <Grid.Triggers>
-            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                <BeginStoryboard>
-                    <Storyboard>
-                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                       From="0.0"
-                                       To="1.0"
-                                       Duration="0:0:0.5"/>
-                    </Storyboard>
-                </BeginStoryboard>
-            </EventTrigger>
-        </Grid.Triggers>
-
-        <!-- Back Button -->
-        <Button x:Name="BackButton"
-                Grid.Row="0"
-                Style="{StaticResource ExitButtonStyle}"
-                Background="{StaticResource BackButtonBrush}"
-                Command="{Binding BackCommand}"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Margin="20,20,0,0"
-                Opacity="0">
-            <Button.RenderTransform>
-                <TranslateTransform Y="30"/>
-            </Button.RenderTransform>
-            <Button.Triggers>
-                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                           From="0.0"
-                                           To="1.0"
-                                           BeginTime="0:0:0.3"
-                                           Duration="0:0:0.5"/>
-                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
-                                           From="30"
-                                           To="0"
-                                           BeginTime="0:0:0.3"
-                                           Duration="0:0:0.5"/>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </Button.Triggers>
-        </Button>
-
-        <!-- Settings Content -->
-        <StackPanel HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Opacity="0">
-            <StackPanel.RenderTransform>
-                <TranslateTransform Y="30"/>
-            </StackPanel.RenderTransform>
-            <StackPanel.Triggers>
-                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                           From="0.0"
-                                           To="1.0"
-                                           BeginTime="0:0:0.3"
-                                           Duration="0:0:0.5"/>
-                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
-                                           From="30"
-                                           To="0"
-                                           BeginTime="0:0:0.3"
-                                           Duration="0:0:0.5"/>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </StackPanel.Triggers>
-
-            <!-- Settings Title -->
-            <TextBlock Text="SETTINGS"
-                       FontSize="{StaticResource FontSizeDisplay}"
-                       FontWeight="Bold"
-                       Foreground="{StaticResource TextPrimaryBrush}"
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,40"/>
+             d:DesignWidth="800">
+    <!-- The Settings card of the main screen -->
+    <Border Style="{StaticResource MenuCardStyle}">
+        <StackPanel>
+            <TextBlock Text="SETTINGS" Style="{StaticResource MenuCardTitleStyle}"/>
 
             <!-- Assetto Corsa folder: read at start-up, so a change asks for a restart -->
-            <Border Background="{StaticResource BgMediumBrush}"
+            <Border Background="#80000000"
                     BorderBrush="{StaticResource BorderLightBrush}"
                     BorderThickness="1"
                     CornerRadius="5"
                     Padding="15"
                     Width="560"
-                    Margin="0,0,0,30">
+                    Margin="0,0,0,24">
                 <StackPanel>
                     <TextBlock Text="Assetto Corsa folder"
                                FontWeight="Bold"
@@ -146,6 +64,15 @@
                     Height="45"
                     FontSize="{StaticResource FontSizeSubheading}"
                     HorizontalAlignment="Center"/>
+
+            <Button Content="Back"
+                    Command="{Binding BackCommand}"
+                    Style="{StaticResource DialogSecondaryButtonStyle}"
+                    Width="150"
+                    Height="45"
+                    HorizontalAlignment="Center"
+                    Margin="0,16,0,0"
+                    FontSize="{StaticResource FontSizeSubheading}"/>
         </StackPanel>
-    </Grid>
+    </Border>
 </UserControl>

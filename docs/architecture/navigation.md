@@ -17,9 +17,13 @@ there (callers that don't care use it as a statement).
 ```
 NavigateToGarage(gameState)
 NavigateToUsedCarMarket(gameState)
-NavigateToSettings()
+NavigateToMainMenu(card)
 NavigateToCarCatalogEditor()
 ```
+
+The main screen's cards (New Game, Load Game, Settings) are the one exception: they open over the main screen instead of
+replacing it, so `NavigationService` only builds them (`CreateNewGameCard(back)` and the rest) and the main menu hosts
+them, calling their `Enter()`/`Exit()` itself. See `docs/screens/main-screen.md`.
 
 ### How It Works
 1. Screen calls `_navigationService.NavigateTo[Screen](params)`

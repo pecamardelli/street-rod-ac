@@ -14,6 +14,7 @@ namespace Street_Rod_AC.Screens.NewGame
     public class NewGameScreenViewModel : BaseScreenViewModel
     {
         private readonly NavigationService _navigationService;
+        private readonly Action _back;
         private readonly DialogService _dialogService;
         private readonly IGameStateRepository _repository;
         private readonly IRaceEventService _raceEventService;
@@ -50,14 +51,17 @@ namespace Street_Rod_AC.Screens.NewGame
         private const string ReservedSaveName = "catalog";
 
         /// <param name="setCurrentGame">Makes the new game the one the app saves on exit and races with</param>
+        /// <param name="back">Closes the card, back to the main screen's menu</param>
         public NewGameScreenViewModel(
             NavigationService navigationService,
             DialogService dialogService,
             IGameStateRepository repository,
             IRaceEventService raceEventService,
-            Action<GameState?> setCurrentGame)
+            Action<GameState?> setCurrentGame,
+            Action back)
         {
             _navigationService = navigationService;
+            _back = back;
             _dialogService = dialogService;
             _repository = repository;
             _raceEventService = raceEventService;
@@ -175,7 +179,7 @@ namespace Street_Rod_AC.Screens.NewGame
 
         private void OnBack()
         {
-            _navigationService.NavigateToMainMenu();
+            _back();
         }
 
         public override void Enter()

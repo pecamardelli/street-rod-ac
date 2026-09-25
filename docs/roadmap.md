@@ -427,13 +427,28 @@ a police chase. Left out: the end of the game, kept for the first release.
   gearbox data drive, the tow to the garage.
 - **Police:** the lights and the siren, the diner's police note, the garage's impound panel.
 - **Career:** the End Day button, a road-race event.
-- **Economy:** a price balance check after the $5k price fix (audit 2026-09-25).
+- **Economy:** a price balance check after the $5k price fix (audit 2026-09-25). **The user decided (2026-09-25):**
+  they review the prices of every car and part themselves first, then the economy.
 
-### Step 9: a new main screen
+**Started before step 8 was done (2026-09-25):** the user plays the checklist while step 9 is built.
+
+### Step 9: a new main screen (built on `feature/main-screen`, 2026-09-25, not yet seen by the user)
 From `docs/ideas.txt`. Owned or catalog cars picked at random stand in a showroom, filmed with slow camera moves (like
 Gran Turismo's menus). Over it, a fade to black rises from the bottom to about half the screen, and New Game, Load Game
 and Settings are semi-transparent cards that fade in and out; the screen never navigates away to show them. It builds
 on the garage renderer (`GarageRenderer`) and the engine preview.
+
+**The user decided (2026-09-25):** catalog cars only (no save is loaded yet); the rooms rotate (the garage plus the
+installed AC showrooms); no sound; the menu stays as buttons, and a click opens that button's card, one at a time, with
+fades and a Back button, the cars always behind. **As built:** see `docs/screens/main-screen.md`. The cars fill the
+top 72% of the window in a wide frame, with the fade from 40% to solid black; six GT-style shot kinds with dissolves
+between them and a fade through black between cars; three shots a car, three cars a room. Esc closes a card. The old
+picture shows until the first frame, and whenever there is nothing to show.
+
+**The user saw it (2026-09-25): "I love it!"** Their tweaks, done: the fade and the menu moved to the top (cars in the
+bottom 80%); several cars in each room (a lineup of 3–4, the camera staying with one at a time and keeping clear of
+the others); the screen opens black, and the old picture only comes up when there is nothing to show. Also found:
+encrypted car mods (scrambled normals) are now left out of the catalog, see `docs/systems/catalog-system.md`.
 
 ### Step 10: the world remembers
 Three features that read the same saved race sessions (`RaceSessionRepository`), so they go in one PR:

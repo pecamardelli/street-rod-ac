@@ -1,0 +1,20 @@
+{
+  "_comment": [
+    "The rooms the main screen shows its cars in, taken in turn a few cars at a time. Each id is looked for as the",
+    "game's own garage first (Assets/Garages/<id>/<id>.kn5), then as an installed AC showroom",
+    "(content/showroom/<id>); one found in neither is left out.",
+    "",
+    "wallRadius is how far from the middle the nearest wall stands, and the camera is kept 1.5 m inside it. The AC",
+    "showrooms take theirs from Assets/Dealers/showrooms.json; beach is its dome's floor (26 m) less a margin, and",
+    "garage is Rob Taylor's room (about 28 x 31 m) measured from the garage screen's orbit.",
+    "",
+    "Left out on purpose: at_previews (a black preview stage with stray white panels) and studio_white (bare)."
+  ],
+  "scenes": [
+    { "id": "garage", "wallRadius": 12.0 },
+    { "id": "Hangar", "wallRadius": 14.4 },
+    { "id": "showroom", "wallRadius": 14.0 },
+    { "id": "industrial", "wallRadius": 39.0 },
+    { "id": "beach", "wallRadius": 24.0 }
+  ]
+}

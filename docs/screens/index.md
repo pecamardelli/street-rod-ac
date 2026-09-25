@@ -5,10 +5,10 @@
 | Screen | Path | Purpose |
 |--------|------|---------|
 | Init | `Screens/Init/` | App startup, catalog loading |
-| MainMenu | `Screens/MainMenu/` | Main menu (New/Load/Settings) |
-| NewGame | `Screens/NewGame/` | Create new save |
-| LoadGame | `Screens/LoadGame/` | Load existing save |
-| Settings | `Screens/Settings/` | App settings |
+| MainMenu | `Screens/MainMenu/` | Main screen: cars filmed in the showrooms, the menu over them (see `main-screen.md`) |
+| NewGame | `Screens/NewGame/` | Create new save (a card on the main screen) |
+| LoadGame | `Screens/LoadGame/` | Load existing save (a card on the main screen) |
+| Settings | `Screens/Settings/` | App settings (a card on the main screen) |
 | CarCatalogEditor | `Screens/CarCatalogEditor/` | Edit car prices/precedence |
 | Garage | `Screens/Garage/` | In-game hub: 3D garage with the selected car, overlay buttons to every other in-game screen |
 | CarSelection | `Screens/CarSelection/` | Select car for activity |
@@ -22,10 +22,10 @@
 ## Navigation Flow
 
 ```
-Init → MainMenu
-         ├── NewGame → Garage
-         ├── LoadGame → Garage
-         └── Settings → CarCatalogEditor
+Init → MainMenu (NewGame, LoadGame and Settings are cards on it, not screens)
+         ├── NewGame card → Garage
+         ├── LoadGame card → Garage
+         └── Settings card → CarCatalogEditor → MainMenu with the Settings card open
 
 Garage (hub) ←→ CarSelection
   │
@@ -49,10 +49,10 @@ Each screen folder contains:
 | Method | Target Screen |
 |--------|---------------|
 | NavigateToInit() | Init |
-| NavigateToMainMenu() | MainMenu |
-| NavigateToNewGame() | NewGame |
-| NavigateToLoadGame() | LoadGame |
-| NavigateToSettings() | Settings |
+| NavigateToMainMenu(card) | MainMenu, optionally with a card open |
+| CreateNewGameCard(back) | NewGame card (not a navigation) |
+| CreateLoadGameCard(back) | LoadGame card (not a navigation) |
+| CreateSettingsCard(back) | Settings card (not a navigation) |
 | NavigateToCarCatalogEditor() | CarCatalogEditor |
 | NavigateToGarage(gameState) | Garage |
 | NavigateToCarSelection(gameState) | CarSelection |

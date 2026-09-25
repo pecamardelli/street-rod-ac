@@ -12,6 +12,7 @@ namespace Street_Rod_AC.Screens.Settings
     public class SettingsScreenViewModel : BaseScreenViewModel
     {
         private readonly NavigationService _navigationService;
+        private readonly Action _back;
         private readonly DialogService _dialogService;
         private readonly GameSettingsService _settingsService;
         private readonly IAppLogger _logger;
@@ -48,9 +49,11 @@ namespace Street_Rod_AC.Screens.Settings
         public SettingsScreenViewModel(
             NavigationService navigationService,
             DialogService dialogService,
-            GameSettingsService settingsService)
+            GameSettingsService settingsService,
+            Action back)
         {
             _navigationService = navigationService;
+            _back = back;
             _dialogService = dialogService;
             _settingsService = settingsService;
             _logger = AppLoggerFactory.CreateLogger("Settings");
@@ -76,8 +79,7 @@ namespace Street_Rod_AC.Screens.Settings
 
         private void OnBack()
         {
-            _logger.Information("Navigating back to main menu");
-            _navigationService.NavigateToMainMenu();
+            _back();
         }
 
         private void OnBrowseAssettoCorsaFolder()
