@@ -94,7 +94,7 @@ NavigationService.NavigateTo[ScreenName](dependencies) : bool
 
 **Key Integration Points**:
 - Every race, drag races too, is a one-lap race session (`TYPE=3`, never AC's drag session, whose rules teleport the cars) in the `sr_race` CSP mode: `[RACE] __CM_CUSTOM_MODE=sr_race` and `[STREET_ROD] RACE_TYPE` in race.ini (`IniModificationService`), with AC's damage and tyre wear on in assists.ini for the race (kept and restored like race.ini)
-- The mode writes results to `Documents/Assetto Corsa/out/sr_race_manager/*.json` (schema 1.3: `end_reason`, `false_start`, `disqualified`, the car's `condition`) and quits via `ac.shutdownAssettoCorsa()`
+- The mode writes results to `Documents/Assetto Corsa/out/sr_race_manager/*.json` (schema 1.5: `end_reason`, `false_start`, `disqualified`, the car's `condition`, breakdowns and timeslips, and the police chase's `pursuit`; the police cars are never participants) and quits via `ac.shutdownAssettoCorsa()`
 - Launcher reads JSON results after AC process exits
 
 ## Quick Reference - Adding Features

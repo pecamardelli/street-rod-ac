@@ -13,6 +13,10 @@
     corner; the career puts those into the car's data, and this mode adds them to what the race does.
   - Judges a breakdown: a blown engine, a gearbox or a corner that gives out, a blown tyre. A player's breakdown ends
     the race; a rival's is held where it stopped, and the player still has to finish
+  - Runs the police chase when the career sends cops (race.ini [STREET_ROD] POLICE): they wait hidden on the grid
+    and come after the racers part way round the lap, with lights and a siren. A driver who stops with a cop on
+    top of them is busted; the player who stays far enough ahead for long enough gets away. With cops on their
+    tail the player has to lose them before the race is over, finish line or not
   - Reports the race to the career, one JSON file per race, written once, and quits Assetto Corsa
 
   Full control: every race, drag races too, is a one-lap race session (Street Corsa never asks AC for its drag
@@ -30,12 +34,13 @@
   to finish.
 ]]
 
-local SCRIPT_VERSION = "3.3.0"
+local SCRIPT_VERSION = "3.4.0"
 -- 1.1: session.context_id, participants[].car_index and participants[].is_player
 -- 1.2: session.end_reason, participants[].false_start, participants[].condition
 -- 1.3: participants[].disqualified, session.race_type
 -- 1.4: session.end_reason BROKE_DOWN, participants[].broke_down, participants[].breakdown, participants[].timeslip
-local SCHEMA_VERSION = "1.4"
+-- 1.5: pursuit, session.end_reason BUSTED; the police are never participants
+local SCHEMA_VERSION = "1.5"
 
 -- How far AC bends a steering rod at most, in metres (suspensions.ini MAX_DAMAGE, 0.05 on every car the game has):
 -- a corner bent this far, with what it carried in, has given out
@@ -84,6 +89,75 @@ local RESULT_SECONDS = 5.0
 -- The longest step one tick may account for: a hitch or a pause must not turn into distance or race time
 local MAX_TICK_SECONDS = 1.0
 
+-- The police chase (docs/roadmap.md, step 6). Two cops, one for each racer: each sticks to its prey, races it like a
+-- racer (AI level 150%, full aggression, AC's own overtaking) and tries to get past. A racer the police get past is
+-- busted: the message shows, an autopilot takes the car and brakes it to a stop (the user's rules, 2026-09-24,
+-- replacing a boxing-in, a PIT and a pushed rubber band that tried to make a slow Monaco catch a fast Chevelle: the
+-- police Monaco has the 426 Hemi now).
+-- How far behind its prey a patrol cop joins, in metres
+local POLICE_JOIN_METRES = 200
+-- Overtaken: the cop this far ahead of its prey along the road, for this long, after having been behind it
+local OVERTAKE_METRES = 3
+local OVERTAKE_SECONDS = 0.5
+-- Busted anyway: a cop this close, and the driver this slow, for this long (a car stopped off the road, which the cop
+-- on its line may never get past)
+local BUSTED_METRES = 8
+local BUSTED_KMH = 15
+local BUSTED_SECONDS = 3
+-- A busted player is pulled over: an autopilot brakes the car to a stop, and the race ends once it has, or after this
+local PULL_OVER_SECONDS = 12
+-- Got away: every cop after them this far back along the road, for this long
+local ESCAPE_METRES = 600
+local ESCAPE_SECONDS = 20
+-- The police call it off after this long
+local CHASE_GIVE_UP_SECONDS = 240
+-- The cops' AI, set again every POLICE_AI_EVERY: a level of 1.5 is 150% (CSP takes 0 to 2; race.ini stops at 100),
+-- and an aggression of 0.95 is AC's 100% (the launcher's value is multiplied by 0.95)
+local POLICE_AI_LEVEL = 1.5
+local POLICE_AI_AGGRESSION = 0.95
+-- A mild rubber band: the cops' extra grip, AC's own 1.2 on their prey's bumper up to this far back of it
+local POLICE_MIN_GRIP = 1.2
+local POLICE_MAX_GRIP = 1.6
+-- A cop this far behind for this long sets up a roadblock ahead instead, once a chase
+local ROADBLOCK_BEHIND_METRES = 700
+local ROADBLOCK_AFTER_SECONDS = 8
+local ROADBLOCK_AHEAD_METRES = 450
+-- Speed traps (race.ini [STREET_ROD] POLICE_MODE=TRAPS): each cop waits parked on the verge of a straight somewhere
+-- between these shares of the lap (clear of the grid, before the line), and pulls out after the first racer to go
+-- past it who has no cop after them yet. A spot is a straight (the road turns less than TRAP_MAX_TURN over
+-- TRAP_STRAIGHT_METRES either way) with TRAP_MIN_ROOM metres at one side; the cop parks TRAP_EDGE_METRES in from that
+-- edge, at most TRAP_MAX_OFFSET out.
+local TRAP_FROM, TRAP_TO = 0.12, 0.92
+local TRAP_STEP_METRES = 10
+local TRAP_STRAIGHT_METRES = 60
+local TRAP_MAX_TURN = math.rad(12)
+local TRAP_MIN_ROOM = 4.5
+local TRAP_EDGE_METRES = 1.3
+local TRAP_MAX_OFFSET = 5
+-- A racer this far past a trap has been seen
+local TRAP_ENGAGE_METRES = 25
+-- The push a cop pulls out of a trap or a roadblock with, m/s
+local PULL_OUT_SPEED = 6
+
+-- A roadblock is a car parked at an angle on one side of the road, the other lane left open: square across a
+-- two-lane road a 5.6 m Monaco left no way through, and every roadblock was a bust (2026-09-24). It goes on the wider
+-- side, its middle this far out from the line (and this far in from the edge), turned this far across.
+local ROADBLOCK_OFFSET_METRES = 3.0
+local ROADBLOCK_EDGE_METRES = 1.2
+local ROADBLOCK_ANGLE = math.rad(50)
+-- A racer this far past a roadblock has dodged it: the cop goes after them at full throttle
+local ROADBLOCK_PASSED_METRES = 15
+-- A cop going nowhere for this long, away from its target, is put back on the road behind it
+local STUCK_KMH = 5
+local STUCK_SECONDS = 6
+local REJOIN_METRES = 250
+-- A car set down on the road: this high over it, and pushed along at up to this speed (m/s). Test Drive stops a
+-- car before it moves it: a car carried into a placement at speed froze AC's physics there.
+local SET_DOWN_CLEARANCE = 0.25
+local SET_DOWN_MAX_SPEED = 25
+-- How often the cops' AI level and aggression are set again: CSP resets the aggression
+local POLICE_AI_EVERY = 0.5
+
 -- Messages
 local MSG_WIN = "You won a few bucks, not bad!"
 local MSG_LOSE = "You lost, sucker!"
@@ -96,6 +170,8 @@ local MSG_BROKE_DOWN = {
   SUSPENSION = "The suspension gave out!\nYou're out of the race.",
   TYRE = "A tyre blew!\nYou're out of the race."
 }
+local MSG_BUSTED = "Busted!\nThe cops have you and your car."
+local MSG_ESCAPED = "You lost the cops!"
 
 local sim = ac.getSim()
 
@@ -143,6 +219,22 @@ local carCount = 0
 
 -- Seconds each car still counts as in a collision
 local touching = {}
+
+-- The police, in the order race.ini lists them, and by car index. A cop's state: WAITING (hidden on the grid),
+-- CHASING, ROADBLOCK, OUT (wrecked) or GONE (the chase is over).
+local police = {}
+local policeOf = {}
+
+-- The chase, nil in a race without police:
+-- spotMetres: how far into the race the patrol shows up; started, startedAt: when it did (session seconds);
+-- player, rival: ESCAPED or BUSTED once decided; escapeFor: seconds the player has been far enough ahead
+local chase = nil
+
+-- The racers (never the police) in the order they crossed the line, by car index
+local finishOrder = {}
+
+-- The player's race as decided at the line (true: won); nil before. A chase can go on past it.
+local raceWon = nil
 
 -- Forward declaration: endSession writes the output, which is defined further down
 local writeSessionOutput
@@ -210,14 +302,24 @@ local function readRaceType()
   return nil
 end
 
--- Numbers from race.ini [STREET_ROD] KEY=a,b,c; nil when the key is not there or is not all numbers
+-- Numbers from race.ini [STREET_ROD] KEY=a,b,c; nil when the key is not there or is not all numbers. Asked for with
+-- no default: CSP splits a value at its commas, and a string default gets only the first item (so "2,3" read as "2",
+-- and a car's four body zones as one, found in the game 2026-09-24).
 local function readNumbers(key, count)
   local ok, value = pcall(function()
-    return ac.INIConfig.raceConfig():get('STREET_ROD', key, '')
+    return ac.INIConfig.raceConfig():get('STREET_ROD', key)
   end)
-  if not ok or type(value) ~= 'string' or value == '' then return nil end
+  if not ok or value == nil then return nil end
+  local parts = {}
+  if type(value) == 'table' then
+    for _, item in ipairs(value) do
+      for part in tostring(item):gmatch('[^,]+') do parts[#parts + 1] = part end
+    end
+  else
+    for part in tostring(value):gmatch('[^,]+') do parts[#parts + 1] = part end
+  end
   local numbers = {}
-  for part in value:gmatch('[^,]+') do
+  for _, part in ipairs(parts) do
     local n = tonumber(part)
     if not n or n ~= n or n == math.huge or n == -math.huge then return nil end
     numbers[#numbers + 1] = n
@@ -252,6 +354,40 @@ local function applyStartState(carIndex, data)
     ac.log(string.format('[Street Corsa] Car %d starts with body %.0f/%.0f/%.0f/%.0f km/h, engine life %.0f, gearbox %.2f, corners %.2f/%.2f/%.2f/%.2f',
       carIndex, car.damage[0], car.damage[1], car.damage[2], car.damage[3], car.engineLifeLeft, data.startGearbox,
       data.startSuspension[1], data.startSuspension[2], data.startSuspension[3], data.startSuspension[4]))
+  end
+end
+
+-- Forward declaration: parks the cops in their speed traps before the green, defined with the chase further down
+local setUpTraps
+
+-- The police from race.ini [STREET_ROD]: POLICE lists their car indices (after the two racers), POLICE_SPOT how
+-- far round the lap, as a share of it, the patrol shows up. They wait out of sight: hidden, and nothing hits them.
+local function readPolice()
+  local indices = readNumbers('POLICE', 1)
+  if not indices then return end
+  for _, value in ipairs(indices) do
+    local index = math.floor(value)
+    if index >= 2 and index < carCount and not policeOf[index] then
+      local cop = { index = index, number = #police + 1, state = 'WAITING', target = 0, behindFor = 0,
+        stuckFor = 0, roadblocked = false, steering = false, aiTimer = 0 }
+      police[#police + 1] = cop
+      policeOf[index] = cop
+      pcall(ac.setCarActive, index, false)
+      pcall(physics.disableCarCollisions, index, true)
+    end
+  end
+  if #police == 0 then return end
+
+  local spot = readNumbers('POLICE_SPOT', 1)
+  local share = math.min(0.9, math.max(0.1, spot and spot[1] or 0.4))
+  local ok, mode = pcall(function() return ac.INIConfig.raceConfig():get('STREET_ROD', 'POLICE_MODE', '') end)
+  -- playerChased, rivalChased: a cop has been after them; only then is their chase judged. playerSince: from when.
+  chase = { spotMetres = share * sim.trackLengthM, traps = ok and mode == 'TRAPS', started = false, startedAt = nil,
+    player = nil, rival = nil, playerChased = false, rivalChased = false, playerSince = nil, escapeFor = 0, caughtFor = {} }
+  if chase.traps then
+    ac.log(string.format('[Street Corsa] %d cop(s) waiting in speed traps', #police))
+  else
+    ac.log(string.format('[Street Corsa] %d cop(s) waiting, the patrol shows up %.0f m into the race', #police, chase.spotMetres))
   end
 end
 
@@ -304,6 +440,17 @@ local function initializeSession()
   if player and not sim.isSessionStarted then gridPosition = vec3():set(player.position) end
 
   raceType = readRaceType()
+  if raceType ~= 'DRAG' then
+    local ok, err = pcall(readPolice)
+    if not ok then ac.log('[Street Corsa] Could not read the police: ' .. tostring(err)) end
+    if chase and chase.traps and setUpTraps then
+      local set, why = pcall(setUpTraps)
+      if not set then
+        chase.traps = false
+        ac.log('[Street Corsa] Speed traps could not be set up: ' .. tostring(why))
+      end
+    end
+  end
   if raceType == 'DRAG' and player and not sim.isSessionStarted then
     -- Each car's lane is the line it stands on
     for i = 0, carCount - 1 do
@@ -340,8 +487,39 @@ local function holdAI(carIndex)
   pcall(physics.setAIStopCounter, carIndex, 1)
 end
 
+-- The patrol has shown up and the player's chase is not decided yet
+local function chaseOn()
+  return chase ~= nil and chase.started and chase.playerChased and chase.player == nil
+end
+
+-- A cop has been after the rival and the rival's chase is not decided yet
+local function rivalHunted()
+  return chase ~= nil and chase.started and chase.rivalChased and chase.rival == nil
+end
+
+-- The racer has a cop after them from now: their chase counts
+local function markChased(racer)
+  if racer == 0 and not chase.playerChased then
+    chase.playerChased = true
+    chase.playerSince = sessionDuration
+  elseif racer == 1 and not chase.rivalChased then
+    chase.rivalChased = true
+    chase.rivalSince = sessionDuration
+  end
+end
+
+-- A racer's chase decided, 'player' or 'rival': ESCAPED or BUSTED, once
+local function decideChase(who, outcome)
+  if not chase or not chase.started or chase[who] then return end
+  chase[who] = outcome
+  ac.log(string.format('[Street Corsa] Chase: %s %s after %.0f s', who, outcome, sessionDuration - (chase.startedAt or sessionDuration)))
+end
+
+-- Forward declaration: puts the police away, lights and sirens too; defined with the chase further down
+local shutDownPolice
+
 -- End session: write results, show the result, and quit
--- reason: FINISHED (WIN or LOSE), CRASH, FALSE_START, DISQUALIFIED, BROKE_DOWN or ABANDONED
+-- reason: FINISHED (WIN or LOSE), CRASH, FALSE_START, DISQUALIFIED, BROKE_DOWN, BUSTED or ABANDONED
 local function endSession(reason, won)
   if not sessionActive then return end
   sessionActive = false
@@ -350,6 +528,16 @@ local function endSession(reason, won)
   endReason = reason
 
   ac.log('[Street Corsa] Ending session: ' .. reason .. (reason == 'FINISHED' and (won and ' (WIN)' or ' (LOSE)') or ''))
+
+  -- A chase the race ended in the middle of. A player who stops for good with the cops behind them is theirs:
+  -- wrecked, broken down, or back in the pits. The police stop there, so a rival not caught by then got away.
+  if chase and chase.started then
+    local stopped = reason == 'CRASH' or reason == 'BROKE_DOWN' or reason == 'ABANDONED' or reason == 'BUSTED'
+    if chase.playerChased then decideChase('player', stopped and 'BUSTED' or 'ESCAPED') end
+    if chase.rivalChased then decideChase('rival', 'ESCAPED') end
+    chase.duration = sessionDuration - chase.startedAt
+  end
+  if shutDownPolice then pcall(shutDownPolice) end
 
   -- Write session results. Whatever goes wrong there, AC must still quit: the launcher waits for it.
   sessionEndTime = getISOTimestamp()
@@ -364,8 +552,12 @@ local function endSession(reason, won)
     return
   end
 
-  if reason == 'CRASH' then
-    resultTitle, resultMessage = "Race Over", MSG_CRASH
+  local busted = chase and chase.player == 'BUSTED'
+  if reason == 'BUSTED' then
+    resultTitle, resultMessage = "Busted", MSG_BUSTED
+    holdPlayer(30)
+  elseif reason == 'CRASH' then
+    resultTitle, resultMessage = busted and "Busted" or "Race Over", busted and MSG_CRASH .. "\n" .. MSG_BUSTED or MSG_CRASH
     holdPlayer(30)
   elseif reason == 'FALSE_START' then
     resultTitle, resultMessage = "False Start", MSG_FALSE_START
@@ -378,6 +570,12 @@ local function endSession(reason, won)
     holdPlayer(30)
   else
     resultTitle, resultMessage = "Race Over", won and MSG_WIN or MSG_LOSE
+    if busted then
+      resultTitle, resultMessage = "Busted", resultMessage .. "\n" .. MSG_BUSTED
+      holdPlayer(30)
+    elseif chase and chase.player == 'ESCAPED' then
+      resultMessage = resultMessage .. "\n" .. MSG_ESCAPED
+    end
   end
 
   showResultOverlay = true
@@ -394,10 +592,18 @@ local function crash(carIndex, data, g)
   if carIndex == 0 then
     playerCrashed = true
     ac.log(string.format('[Street Corsa] PLAYER CRASHED! Intensity: %.1fG', g))
-    endSession('CRASH')
+    if raceWon ~= nil then
+      -- Past the line, running from the cops: the race stands, and the cops have them
+      decideChase('player', 'BUSTED')
+      endSession('FINISHED', raceWon)
+    else
+      endSession('CRASH')
+    end
   else
     ac.log(string.format('[Street Corsa] Car %d crashed - Intensity: %.1fG', carIndex, g))
     holdAI(carIndex)
+    -- A rival wrecked with the cops out is theirs
+    if rivalHunted() then decideChase('rival', 'BUSTED') end
   end
 end
 
@@ -427,9 +633,21 @@ local function updateCrashes(dt)
       local g = _dv:length() / math.max(dt, 1 / 240) / 9.81
       data.velocity:set(car.velocity)
 
-      if data.crashed or data.brokeDown then
-        -- A crashed or broken-down rival stays where it is
-        if carIndex ~= 0 then holdAI(carIndex) end
+      local cop = policeOf[carIndex]
+      if cop then
+        -- A cop that wrecks itself is out of the chase; it never races, so nothing else applies
+        if data.grace > 0 then
+          data.grace = data.grace - dt
+        elseif cop.state == 'CHASING' and touching[carIndex] and g >= CRASH_G then
+          cop.state = 'OUT'
+          ac.log(string.format('[Street Corsa] Cop %d wrecked (%.1fG): out of the chase', carIndex, g))
+        end
+      elseif data.crashed or data.brokeDown or data.busted then
+        -- A crashed, broken-down or busted rival stays where it is (not retired to the pits by AC)
+        if carIndex ~= 0 then
+          holdAI(carIndex)
+          pcall(physics.preventAIFromRetiring, carIndex)
+        end
       elseif data.disqualified and carIndex ~= 0 and data.grace <= 0 and touching[carIndex] and g >= CRASH_G then
         -- A disqualified rival that crashed doing it: both on its record
         crash(carIndex, data, g)
@@ -440,7 +658,8 @@ local function updateCrashes(dt)
         data.grace = data.grace - dt
       elseif data.lapsCompleted >= 1 then
         -- Past the line nothing counts: a rival that finishes first and wrecks itself at the end of the strip
-        -- (205 km/h, 2026-09-24) has still won, and the player still gets to finish
+        -- (205 km/h, 2026-09-24) has still won, and the player still gets to finish. The police have no hold on a
+        -- racer past the line either.
       elseif touching[carIndex] and g >= CRASH_G and sim.isSessionStarted then
         crash(carIndex, data, g)
         if sessionEnded then return end
@@ -469,7 +688,7 @@ local function updateBreakdowns()
   for carIndex = 0, carCount - 1 do
     local data = carData[carIndex]
     local car = ac.getCar(carIndex)
-    if data and car and not data.crashed and not data.disqualified and not data.brokeDown and data.lapsCompleted < 1 then
+    if data and car and not policeOf[carIndex] and not data.crashed and not data.disqualified and not data.brokeDown and data.lapsCompleted < 1 then
       local ok, what = pcall(findBreakdown, car, data)
       if ok and what then
         data.brokeDown = true
@@ -481,6 +700,7 @@ local function updateBreakdowns()
         end
         holdAI(carIndex)
         pcall(ac.setMessage, 'Broke down', data.driverName .. "'s car gave out. Finish the race and it is yours!")
+        if rivalHunted() then decideChase('rival', 'BUSTED') end
       end
     end
   end
@@ -539,6 +759,9 @@ local function updateAllTelemetry(deltaT)
 
       local currentLapCount = car.lapCount
       if currentLapCount > data.prevLapCount then
+        if data.lapsCompleted < 1 and currentLapCount >= 1 and not policeOf[carIndex] then
+          finishOrder[#finishOrder + 1] = carIndex
+        end
         data.lapsCompleted = currentLapCount
 
         local lastLapTimeMs = car.previousLapTimeMs
@@ -571,21 +794,31 @@ local function checkFalseStart()
   end
 end
 
--- The race is over when the player crosses the line, whoever got there first: the player always gets to finish
+-- The race is over when the player crosses the line, whoever got there first: the player always gets to finish.
+-- With cops on their tail, the player still has to lose them: the race is decided at the line, and the session
+-- ends with the chase.
 local function checkRaceFinish()
-  if raceEnded then return end
+  if raceEnded or raceWon ~= nil then return end
 
   local playerData = carData[0]
   if not playerData then return end
 
   if playerData.lapsCompleted >= 1 then
-    local playerPosition = ac.getCarLeaderboardPosition(0)
-    if playerPosition <= 0 then
-      playerPosition = ac.getCar(0).racePosition
+    if #police > 0 then
+      -- The police are in AC's race too, and one put down ahead can lead it: the racers' own order decides
+      raceWon = finishOrder[1] == 0
+      ac.log(string.format('[Street Corsa] Race finished - %s', raceWon and 'WON' or 'LOST'))
+    else
+      local playerPosition = ac.getCarLeaderboardPosition(0)
+      if playerPosition <= 0 then
+        playerPosition = ac.getCar(0).racePosition
+      end
+      raceWon = playerPosition == 1
+      ac.log(string.format('[Street Corsa] Race finished - Position: %d', playerPosition))
     end
 
-    ac.log(string.format('[Street Corsa] Race finished - Position: %d', playerPosition))
-    endSession('FINISHED', playerPosition == 1)
+    -- The line is home: a cop still after the player has lost him (endSession calls it a getaway)
+    endSession('FINISHED', raceWon)
   end
 end
 
@@ -683,17 +916,39 @@ writeSessionOutput = function()
   local trackLayout = ac.getTrackLayout()
   if trackLayout == "" then trackLayout = nil end
 
-  -- Capture final positions, and build the participants in car index order (the player, car 0, first)
+  -- Capture final positions, and build the participants in car index order (the player, car 0, first). The police
+  -- are not racers: they are in AC's race, not in the result, and the racers' positions are their own order at
+  -- the line, whoever did not get there after.
   local participants = {}
   for carIndex = 0, carCount - 1 do
     local data = carData[carIndex]
-    if data then
-      local pos = ac.getCarLeaderboardPosition(carIndex)
-      if pos > 0 then
-        data.finalPosition = pos
+    if data and not policeOf[carIndex] then
+      if #police > 0 then
+        data.finalPosition = #finishOrder + 1
+        for position, index in ipairs(finishOrder) do
+          if index == carIndex then data.finalPosition = position end
+        end
+      else
+        local pos = ac.getCarLeaderboardPosition(carIndex)
+        if pos > 0 then
+          data.finalPosition = pos
+        end
       end
       participants[#participants + 1] = carDataToDict(data)
     end
+  end
+
+  -- The chase, when the career sent the police: whether the patrol showed up, and how it went for each racer
+  local pursuit = nil
+  if chase then
+    pursuit = {
+      police = #police,
+      started = chase.started,
+      started_at_s = chase.started and round(chase.startedAt, 1) or nil,
+      duration_s = chase.started and round(chase.duration or (sessionDuration - chase.startedAt), 1) or nil,
+      player = chase.player,
+      rival = chase.rival
+    }
   end
 
   local outputData = {
@@ -715,7 +970,8 @@ writeSessionOutput = function()
       end_reason = endReason,
       race_type = raceType
     },
-    participants = participants
+    participants = participants,
+    pursuit = pursuit
   }
 
   -- Output directory: AC's own documents folder, the shell's Documents (which OneDrive may have moved),
@@ -782,6 +1038,649 @@ local function judgeContact(carIndex, otherIndex)
   else
     holdAI(guiltyIndex)
     pcall(ac.setMessage, 'Disqualified', guilty.driverName .. ' hit you. Finish the race and it is yours!')
+  end
+end
+
+--------------------------------------------------------------------------------
+-- The police chase
+--------------------------------------------------------------------------------
+
+local _roadAt, _roadOn, _roadDir, _placeAt, _facing, _push, _probe = vec3(), vec3(), vec3(), vec3(), vec3(), vec3(), vec3()
+local _down = vec3(0, -1, 0)
+
+-- A share of the lap in [0, 1)
+local function lapShare(t)
+  return t - math.floor(t)
+end
+
+-- The road's direction at lap share t, flat and of unit length (into dir); false where the line has none
+local function roadDirection(t, dir)
+  local step = 5 / math.max(sim.trackLengthM, 1)
+  ac.trackProgressToWorldCoordinateTo(lapShare(t), _roadAt)
+  ac.trackProgressToWorldCoordinateTo(lapShare(t + step), _roadOn)
+  dir:set(_roadOn.x - _roadAt.x, 0, _roadOn.z - _roadAt.z)
+  if dir:length() < 1e-6 then return false end
+  dir:normalize()
+  return true
+end
+
+-- Where a position is on the road: lap share and metres to the right of the AI line (Traffic Race's road frame:
+-- right of a heading is (-z, x) in AC's handedness, and setAISplineAbsoluteOffset takes right as positive)
+local function roadFrame(pos)
+  local t = ac.worldCoordinateToTrackProgress(pos)
+  if t < 0 or not roadDirection(t, _roadDir) then return nil end
+  ac.trackProgressToWorldCoordinateTo(t, _roadAt)
+  local lateral = (pos.x - _roadAt.x) * -_roadDir.z + (pos.z - _roadAt.z) * _roadDir.x
+  return t, lateral
+end
+
+-- Metres along the road from a to b, the short way round: positive when b is ahead
+local function gapAlong(a, b)
+  local d = b - a
+  d = d - math.floor(d + 0.5)
+  return d * sim.trackLengthM
+end
+
+-- The height of the road under pos, or nil
+local function groundUnder(pos)
+  _probe:set(pos.x, pos.y + 3, pos.z)
+  local distance = physics.raycastTrack(_probe, _down, 10)
+  if distance == nil or distance < 0 then return nil end
+  return _probe.y - distance
+end
+
+-- Puts a cop on the road at lap share t, a hand's breadth over it, facing along it (or parked at an angle on one side
+-- for a roadblock, ROADBLOCK_*), and sends it off at speed m/s. The way Test Drive puts a car back: stopped first, then placed (the
+-- AI setter faces the opposite of where the car will look), woken, engine running, and pushed.
+local function placeCop(cop, t, across, speed, lateral)
+  local i = cop.index
+  local car = ac.getCar(i)
+  if not car or not roadDirection(t, _facing) then return false end
+  ac.trackProgressToWorldCoordinateTo(lapShare(t), _placeAt)
+  local ground = groundUnder(_placeAt)
+  _placeAt.y = (ground or _placeAt.y) + SET_DOWN_CLEARANCE
+
+  _push:set(_facing):scale(math.min(speed, SET_DOWN_MAX_SPEED))
+  if lateral and not across then
+    -- Off the line (a speed trap on the verge): right of the heading is (-z, x)
+    _placeAt.x, _placeAt.z = _placeAt.x - _facing.z * lateral, _placeAt.z + _facing.x * lateral
+    local ground3 = groundUnder(_placeAt)
+    if ground3 then _placeAt.y = ground3 + SET_DOWN_CLEARANCE end
+  end
+  if across then
+    -- Right of the heading is (-z, x); the nose turned in towards the line
+    local sides = ac.getTrackAISplineSides(lapShare(t))
+    local side = sides.y >= sides.x and 1 or -1
+    local room = side > 0 and sides.y or sides.x
+    local lateral = side * math.max(0, math.min(room - ROADBLOCK_EDGE_METRES, ROADBLOCK_OFFSET_METRES))
+    local rx, rz = -_facing.z, _facing.x
+    _placeAt.x, _placeAt.z = _placeAt.x + rx * lateral, _placeAt.z + rz * lateral
+    local ground2 = groundUnder(_placeAt)
+    if ground2 then _placeAt.y = ground2 + SET_DOWN_CLEARANCE end
+    local c, sn = math.cos(ROADBLOCK_ANGLE), math.sin(ROADBLOCK_ANGLE)
+    _facing:set(_facing.x * c - side * rx * sn, 0, _facing.z * c - side * rz * sn):normalize()
+    cop.blockT, cop.blockSide = lapShare(t), side
+  end
+
+  physics.setCarVelocity(i, vec3())
+  physics.setAICarPosition(i, _placeAt, -_facing)
+  physics.awakeCar(i)
+  pcall(physics.setEngineStallEnabled, i, false)
+  pcall(physics.setEngineRPM, i, 3000)
+  if not across then
+    physics.setCarVelocity(i, _push)
+    physics.setAIThrottleLimit(i, 1)
+    physics.setAIStopCounter(i, 0)
+    physics.setAITopSpeed(i, 1e9)
+    pcall(physics.setAIPitStopRequest, i, false)
+  end
+  cop.stuckFor, cop.behindFor = 0, 0
+  if carData[i] then carData[i].grace = TELEPORT_GRACE_SECONDS end
+  return true
+end
+
+-- A cop's lights: a red and a blue lamp on the roof, flashing in turn, lighting up the road around it
+local function lightsOn(cop)
+  if cop.lamps then return end
+  cop.lamps = {}
+  for n = 1, 2 do
+    local lamp = ac.LightSource(ac.LightType.Regular)
+    lamp.range = 25
+    lamp.fadeAt = 400
+    lamp.fadeSmooth = 100
+    lamp.color = rgb(0, 0, 0)
+    cop.lamps[n] = lamp
+  end
+  local ok, siren = pcall(ac.AudioEvent.fromFile, {
+    filename = ac.getFolder(ac.FolderID.ScriptOrigin) .. '\\siren.wav',
+    use3D = true, loop = true, minDistance = 10, maxDistance = 900, dopplerEffect = 1
+  }, false)
+  if ok and siren then
+    siren.volume = 1
+    siren.cameraInteriorMultiplier = 0.5
+    -- Each car's siren starts somewhere else in the wail, so two never sing in unison
+    pcall(function() siren:start(); siren:seek(cop.number * 1.7) end)
+    cop.siren = siren
+  else
+    ac.log('[Street Corsa] No siren: ' .. tostring(siren))
+  end
+end
+
+local function lightsOff(cop)
+  if cop.lamps then
+    for _, lamp in ipairs(cop.lamps) do pcall(lamp.dispose, lamp) end
+    cop.lamps = nil
+  end
+  if cop.siren then
+    pcall(function() cop.siren:stop(); cop.siren:dispose() end)
+    cop.siren = nil
+  end
+end
+
+local RED, BLUE, DARK = rgb(30, 0, 0), rgb(0, 4, 40), rgb(0, 0, 0)
+
+-- Where a cop's lamps are, off its roof, in world space (into out); n = 1 left, 2 right
+local function lampPosition(car, n, out)
+  local height = (car.aabbSize and car.aabbSize.y > 0.5) and car.aabbSize.y * 0.5 + 0.1 or 1.4
+  out:set(car.position):addScaled(car.up, height):addScaled(car.side, n == 1 and -0.45 or 0.45)
+  if car.aabbCenter then out:addScaled(car.up, car.aabbCenter.y) end
+  return out
+end
+
+-- Which lamp is lit: each car flashes about twice a second, its own beat
+local function lampLit(cop, n)
+  return (math.floor(sessionDuration * 4 + cop.number) % 2 == 0) == (n == 1)
+end
+
+local _lamp = vec3()
+local function updateLights(cop, car)
+  if not cop.lamps then return end
+  for n, lamp in ipairs(cop.lamps) do
+    lamp.position = lampPosition(car, n, _lamp)
+    lamp.color = lampLit(cop, n) and (n == 1 and RED or BLUE) or DARK
+  end
+  if cop.siren then pcall(cop.siren.setPosition, cop.siren, car.position, car.look, car.up, car.velocity) end
+end
+
+-- Puts a cop out of sight for good: the chase is over for it
+local function putAway(cop)
+  lightsOff(cop)
+  cop.state = 'GONE'
+  pcall(physics.setAISplineAbsoluteOffset, cop.index, 0, false)
+  holdAI(cop.index)
+  pcall(ac.setCarActive, cop.index, false)
+  pcall(physics.disableCarCollisions, cop.index, true)
+end
+
+-- Forward declaration: steers AI racers past roadblocks, defined with the chase below
+local steerPastRoadblocks
+
+shutDownPolice = function()
+  for _, cop in ipairs(police) do
+    -- A trap nobody set off stays parked where it is: a car vanishing off the verge would be seen
+    if cop.state ~= 'GONE' and cop.state ~= 'PARKED' then putAway(cop) end
+  end
+  if steerPastRoadblocks then pcall(steerPastRoadblocks, true) end
+end
+
+-- Is the rival still running, for a cop to go after it
+local function rivalRunning()
+  local data = carData[1]
+  return data ~= nil and not policeOf[1] and not data.crashed and not data.brokeDown and not data.disqualified
+    and chase.rival == nil
+end
+
+-- The patrol shows up: each cop joins behind its target, the first nearest. With more than one, the last goes
+-- after the rival.
+local function startChase()
+  chase.started = true
+  chase.startedAt = sessionDuration
+  -- The patrol saw them both: each one's chase counts
+  markChased(0)
+  markChased(1)
+  for n, cop in ipairs(police) do
+    -- One for each racer: the first after the player, the second after the rival
+    cop.target = (n == 2 and rivalRunning()) and 1 or 0
+    local target = ac.getCar(cop.target)
+    local metres = POLICE_JOIN_METRES
+    local ok, placed = pcall(placeCop, cop, target.splinePosition - metres / sim.trackLengthM, false, target.speedKmh / 3.6 * 0.8)
+    if ok and placed then
+      cop.state = 'CHASING'
+      pcall(ac.setCarActive, cop.index, true)
+      pcall(physics.disableCarCollisions, cop.index, false)
+      lightsOn(cop)
+      ac.log(string.format('[Street Corsa] Cop %d after car %d from %.0f m back', cop.index, cop.target, metres))
+    else
+      cop.state = 'OUT'
+      ac.log(string.format('[Street Corsa] Cop %d could not be put on the road: %s', cop.index, tostring(placed)))
+    end
+  end
+  pcall(ac.setMessage, 'Cops!', 'The police are on to you. Lose them!')
+end
+
+local _toTarget = vec3()
+local _boost, _boostAt = vec3(), vec3()
+
+-- Gets a cop that has been standing (in a trap, at a roadblock) going after its prey at full throttle: the way Test
+-- Drive gets a still car going again. Released, woken (a still body is put to sleep and ignores its engine), engine
+-- revving in first gear, and a push along the road at t. Released alone, a cop sat on the verge at 0 km/h (2026-09-24).
+local function pullOut(cop, t)
+  local i = cop.index
+  physics.setAIThrottleLimit(i, 1)
+  physics.setAIStopCounter(i, 0)
+  physics.setAITopSpeed(i, 1e9)
+  pcall(physics.awakeCar, i)
+  pcall(physics.setEngineStallEnabled, i, false)
+  pcall(physics.setEngineRPM, i, 2500)
+  pcall(physics.engageGear, i, 1)
+  pcall(physics.setCarAutoShifter, i, true)
+  if roadDirection(t, _push) then
+    pcall(physics.setCarVelocity, i, _push:scale(PULL_OUT_SPEED))
+  end
+  cop.stuckFor, cop.behindFor = 0, 0
+end
+
+-- One cop, every frame of the chase: racing its prey, and past it if it can
+local function driveCop(cop, dt)
+  local i = cop.index
+  local car = ac.getCar(i)
+  if not car then return end
+
+  updateLights(cop, car)
+
+  -- The rival is out of it (caught, wrecked, broken down): this cop stays with the arrest, lights on
+  if cop.target == 1 and not rivalRunning() then
+    cop.state = 'ARRESTING'
+    holdAI(i)
+    ac.log(string.format('[Street Corsa] Cop %d stays with the rival', i))
+    return
+  end
+  local target = ac.getCar(cop.target)
+  if not target then return end
+
+  -- AC's own retirement puts a car that stops in the pits
+  pcall(physics.preventAIFromRetiring, i)
+
+  local copT = ac.worldCoordinateToTrackProgress(car.position)
+  local targetT = ac.worldCoordinateToTrackProgress(target.position)
+  if copT < 0 or targetT < 0 then return end
+  local gap = gapAlong(copT, targetT)
+
+  if cop.state == 'ROADBLOCK' then
+    holdAI(i)
+    -- Dodged: after them at full throttle. Judged from where the roadblock was put: the car reads where it was until
+    -- the physics has run, and a roadblock once "left" in the frame it went up.
+    if gapAlong(cop.blockT or copT, targetT) > ROADBLOCK_PASSED_METRES then
+      pullOut(cop, cop.blockT or copT)
+      cop.state = 'CHASING'
+      ac.log(string.format('[Street Corsa] Cop %d: car %d got past its roadblock, after it', i, cop.target))
+    end
+    return
+  end
+
+  cop.aiTimer = cop.aiTimer - dt
+  if cop.aiTimer <= 0 then
+    cop.aiTimer = POLICE_AI_EVERY
+    pcall(physics.setAILevel, i, POLICE_AI_LEVEL)
+    pcall(physics.setAIAggression, i, POLICE_AI_AGGRESSION)
+  end
+
+  -- The mild rubber band: AC's own grip on their bumper, a little more the further back
+  pcall(physics.setExtraAIGrip, i, math.min(POLICE_MAX_GRIP, math.max(POLICE_MIN_GRIP, POLICE_MIN_GRIP + (gap - 50) / 1000)))
+
+  -- Past them: busted. Only a cop that has been behind its prey can get past it (a roadblock or a trap starts ahead).
+  if gap > 0 then cop.behind = true end
+  cop.pastFor = (cop.behind and gap < -OVERTAKE_METRES) and (cop.pastFor or 0) + dt or 0
+  if cop.pastFor >= OVERTAKE_SECONDS then
+    cop.overtook = true
+    return
+  end
+
+  -- Losing ground: a roadblock up the road, once
+  cop.behindFor = gap > ROADBLOCK_BEHIND_METRES and cop.behindFor + dt or 0
+  if cop.behindFor >= ROADBLOCK_AFTER_SECONDS and not cop.roadblocked then
+    if placeCop(cop, targetT + ROADBLOCK_AHEAD_METRES / sim.trackLengthM, true, 0) then
+      cop.state = 'ROADBLOCK'
+      cop.roadblocked = true
+      cop.behind = false
+      holdAI(i)
+      ac.log(string.format('[Street Corsa] Cop %d sets up a roadblock %.0f m ahead of car %d', i, ROADBLOCK_AHEAD_METRES, cop.target))
+    end
+    return
+  end
+
+  -- Stuck somewhere: back on the road behind them
+  _toTarget:set(target.position):sub(car.position)
+  cop.stuckFor = (car.speedKmh < STUCK_KMH and _toTarget:length() > 30) and cop.stuckFor + dt or 0
+  if cop.stuckFor >= STUCK_SECONDS then
+    ac.log(string.format('[Street Corsa] Cop %d stuck: back on the road %.0f m behind car %d', i, REJOIN_METRES, cop.target))
+    placeCop(cop, targetT - REJOIN_METRES / sim.trackLengthM, false, target.speedKmh / 3.6 * 0.8)
+  end
+end
+
+-- Busted anyway: a cop right there and the car all but stopped, for long enough (a car stopped off the road)
+local function caught(targetIndex, dt)
+  local target = ac.getCar(targetIndex)
+  if not target then return false end
+  local near = false
+  for _, cop in ipairs(police) do
+    local car = ac.getCar(cop.index)
+    if car and (cop.state == 'CHASING' or cop.state == 'ROADBLOCK') and car.position:distance(target.position) < BUSTED_METRES then
+      near = true
+    end
+  end
+  local held = (chase.caughtFor[targetIndex] or 0)
+  held = (near and target.speedKmh < BUSTED_KMH) and held + dt or 0
+  chase.caughtFor[targetIndex] = held
+  return held >= BUSTED_SECONDS
+end
+
+-- The player got away: every cop after them far back along the road, for long enough, or none left after them.
+-- A cop after the rival doesn't count (and stays with the rival once it has caught them).
+local function gotAway(dt)
+  local player = ac.getCar(0)
+  local playerT = player and ac.worldCoordinateToTrackProgress(player.position) or -1
+  if playerT < 0 then return false end
+  local left, far = 0, true
+  for _, cop in ipairs(police) do
+    local after = cop.target == 0
+    if after and (cop.state == 'CHASING' or cop.state == 'ROADBLOCK') then
+      left = left + 1
+      local car = ac.getCar(cop.index)
+      local copT = car and ac.worldCoordinateToTrackProgress(car.position) or -1
+      if copT < 0 or math.abs(gapAlong(copT, playerT)) < ESCAPE_METRES then far = false end
+    end
+  end
+  if left == 0 then return true end
+  chase.escapeFor = far and chase.escapeFor + dt or 0
+  return chase.escapeFor >= ESCAPE_SECONDS
+end
+
+-- AI-driven racers (the rival; the player under an autopilot) are steered into the open lane past a roadblock: AC's AI
+-- brakes to a stop behind a parked car on its line rather than going round it, and was busted there every time
+-- (2026-09-24). Traffic Race's way of steering round traffic.
+local ROADBLOCK_SEEN_METRES = 150
+local dodging = {}
+
+steerPastRoadblocks = function(release)
+  for racer = 0, math.min(1, carCount - 1) do
+    local car, data = ac.getCar(racer), carData[racer]
+    local want = nil
+    if not release and car and data and car.isAIControlled and not data.crashed and not data.brokeDown and not data.busted then
+      local t = ac.worldCoordinateToTrackProgress(car.position)
+      for _, cop in ipairs(police) do
+        if t >= 0 and cop.state == 'ROADBLOCK' and cop.blockT then
+          local ahead = gapAlong(t, cop.blockT)
+          if ahead > -10 and ahead < ROADBLOCK_SEEN_METRES then want = -cop.blockSide * ROADBLOCK_OFFSET_METRES end
+        end
+      end
+    end
+    if want then
+      pcall(physics.setAISplineAbsoluteOffset, racer, want, true)
+      dodging[racer] = true
+    elseif dodging[racer] then
+      pcall(physics.setAISplineAbsoluteOffset, racer, 0, false)
+      dodging[racer] = nil
+    end
+  end
+end
+
+-- The road's heading at lap share t, in radians
+local _headingDir = vec3()
+local atan2 = math.atan2 or math.atan
+local function headingAt(t)
+  if not roadDirection(t, _headingDir) then return nil end
+  return atan2(_headingDir.z, _headingDir.x)
+end
+
+-- Where speed traps can go: straights with room at one side, as { t, side, room }
+local function trapCandidates()
+  local candidates = {}
+  local length = sim.trackLengthM
+  local window = TRAP_STRAIGHT_METRES / length
+  for metres = TRAP_FROM * length, TRAP_TO * length, TRAP_STEP_METRES do
+    local t = metres / length
+    local before, after = headingAt(t - window), headingAt(t + window)
+    if before and after then
+      local turn = after - before
+      turn = turn - math.floor(turn / (2 * math.pi) + 0.5) * 2 * math.pi
+      local sides = ac.getTrackAISplineSides(lapShare(t))
+      local room = math.max(sides.x, sides.y)
+      if math.abs(turn) < TRAP_MAX_TURN and room >= TRAP_MIN_ROOM then
+        candidates[#candidates + 1] = { t = t, side = sides.y >= sides.x and 1 or -1, room = room }
+      end
+    end
+  end
+  return candidates
+end
+
+-- Before the green: each cop parked in a speed trap, one per stretch of the lap, the spots random. A cop left
+-- without a spot stays hidden; no spot at all, and the police come as a patrol instead.
+setUpTraps = function()
+  local candidates = trapCandidates()
+  local stretch = (TRAP_TO - TRAP_FROM) / #police
+  local parked = 0
+  for n, cop in ipairs(police) do
+    local from, to = TRAP_FROM + (n - 1) * stretch, TRAP_FROM + n * stretch
+    local inStretch = {}
+    for _, c in ipairs(candidates) do
+      if c.t >= from and c.t < to then inStretch[#inStretch + 1] = c end
+    end
+    local spot = #inStretch > 0 and inStretch[math.random(#inStretch)] or nil
+    if spot then
+      local lateral = spot.side * math.min(spot.room - TRAP_EDGE_METRES, TRAP_MAX_OFFSET)
+      if placeCop(cop, spot.t, false, 0, lateral) then
+        holdAI(cop.index)
+        cop.state = 'PARKED'
+        cop.spotT = lapShare(spot.t)
+        pcall(ac.setCarActive, cop.index, true)
+        pcall(physics.disableCarCollisions, cop.index, false)
+        parked = parked + 1
+        ac.log(string.format('[Street Corsa] Cop %d parked in a speed trap at %.3f of the lap, %.1f m off the line', cop.index, cop.spotT, lateral))
+      end
+    end
+  end
+  if parked == 0 then
+    chase.traps = false
+    ac.log(string.format('[Street Corsa] No spot for a speed trap (%d straight(s) with room): the police come as a patrol', #candidates))
+  end
+end
+
+-- A racer is going past a parked cop: it lights up and goes after them. The first one starts the chase.
+local function engage(cop, racer)
+  local i = cop.index
+  cop.target = racer
+  cop.state = 'CHASING'
+  pullOut(cop, cop.spotT)
+  lightsOn(cop)
+  if not chase.started then
+    chase.started = true
+    chase.startedAt = sessionDuration
+  end
+  markChased(racer)
+  ac.log(string.format('[Street Corsa] Cop %d in its speed trap saw car %d go by: after it', i, racer))
+  pcall(ac.setMessage, 'Cops!', racer == 0 and 'A cop saw you go by. Lose him!'
+    or (carData[1] and carData[1].driverName or 'Your rival') .. ' just went past a cop!')
+end
+
+-- A cop is after the racer already
+local function hasCop(racer)
+  for _, cop in ipairs(police) do
+    if cop.target == racer and (cop.state == 'CHASING' or cop.state == 'ROADBLOCK' or cop.state == 'ARRESTING') then return true end
+  end
+  return false
+end
+
+local function bustRival()
+  decideChase('rival', 'BUSTED')
+  carData[1].busted = true
+  holdAI(1)
+  pcall(ac.setMessage, 'Busted', (carData[1] and carData[1].driverName or 'Your rival') .. ' got caught by the police!')
+end
+
+-- The player is busted: the message, and an autopilot takes the car and brakes it to a stop; the race ends then
+local function pullOver()
+  decideChase('player', 'BUSTED')
+  chase.pullOverAt = sessionDuration
+  pcall(physics.setCarAutopilot, true)
+  pcall(physics.setGentleStop, 0, true)
+  pcall(ac.setMessage, 'Busted!', 'The police got you. Pull over.')
+end
+
+local function checkTraps()
+  for _, cop in ipairs(police) do
+    if cop.state == 'PARKED' and cop.spotT then
+      for racer = 0, math.min(1, carCount - 1) do
+        local free = ((racer == 0 and chase.player == nil) or (racer == 1 and rivalRunning())) and not hasCop(racer)
+          and carData[racer] and carData[racer].lapsCompleted < 1
+        local car = free and ac.getCar(racer)
+        if car then
+          local t = ac.worldCoordinateToTrackProgress(car.position)
+          local past = t >= 0 and gapAlong(cop.spotT, t) or -1
+          if past > 0 and past < TRAP_ENGAGE_METRES then
+            engage(cop, racer)
+            break
+          end
+        end
+      end
+    end
+  end
+end
+
+-- Every frame after the green: the patrol shows up once the player is far enough in, or the traps wait for racers;
+-- then each racer's chase runs on its own, until the police get past them or they get away
+local function updateChase(dt)
+  if not chase or not sim.isSessionStarted or sessionEnded then return end
+
+  -- Hidden on the grid or parked in a trap until called, and never retired for standing still, whatever the chase is doing
+  for _, cop in ipairs(police) do
+    if cop.state == 'WAITING' or cop.state == 'PARKED' then
+      holdAI(cop.index)
+      pcall(physics.preventAIFromRetiring, cop.index)
+    end
+  end
+
+  -- A busted player being pulled over: the race ends once the car has stopped
+  if chase.pullOverAt then
+    local player = ac.getCar(0)
+    if (player and player.speedKmh < 3) or sessionDuration - chase.pullOverAt >= PULL_OVER_SECONDS then
+      chase.pullOverAt = nil
+      if raceWon ~= nil then endSession('FINISHED', raceWon) else endSession('BUSTED') end
+    end
+    return
+  end
+
+  if chase.traps then
+    local ok, err = pcall(checkTraps)
+    if not ok then ac.log('[Street Corsa] Speed traps: ' .. tostring(err)) end
+    if not chase.started then return end
+  elseif not chase.started then
+    if raceWon == nil and carData[0].distanceKm * 1000 >= chase.spotMetres then
+      local ok, err = pcall(startChase)
+      if not ok then
+        ac.log('[Street Corsa] The chase could not start: ' .. tostring(err))
+        chase.started = true
+        chase.startedAt = sessionDuration
+        chase.player = 'ESCAPED'
+        chase.rival = 'ESCAPED'
+        shutDownPolice()
+      end
+    end
+    return
+  end
+
+  pcall(steerPastRoadblocks, false)
+
+  for _, cop in ipairs(police) do
+    if cop.state == 'CHASING' or cop.state == 'ROADBLOCK' then
+      local ok, err = pcall(driveCop, cop, dt)
+      if not ok then
+        ac.log(string.format('[Street Corsa] Cop %d: %s', cop.index, tostring(err)))
+      end
+    elseif cop.state == 'OUT' then
+      lightsOff(cop)
+      holdAI(cop.index)
+    elseif cop.state == 'ARRESTING' then
+      holdAI(cop.index)
+      local car = ac.getCar(cop.index)
+      if car then updateLights(cop, car) end
+    end
+  end
+
+  -- A cop that got past its prey has them
+  for _, cop in ipairs(police) do
+    if cop.state == 'CHASING' and cop.overtook then
+      cop.overtook = false
+      cop.state = 'ARRESTING'
+      holdAI(cop.index)
+      ac.log(string.format('[Street Corsa] Cop %d got past car %d', cop.index, cop.target))
+      if cop.target == 1 and rivalHunted() then
+        bustRival()
+      elseif cop.target == 0 and chase.player == nil then
+        pullOver()
+        return
+      end
+    end
+  end
+
+  -- The rival over the line is home: the cop after them is called off
+  if rivalHunted() and carData[1] and carData[1].lapsCompleted >= 1 then
+    decideChase('rival', 'ESCAPED')
+    for _, cop in ipairs(police) do
+      if cop.target == 1 and (cop.state == 'CHASING' or cop.state == 'ROADBLOCK') then putAway(cop) end
+    end
+  end
+
+  if rivalHunted() and rivalRunning() and caught(1, dt) then bustRival() end
+
+  -- The player's chase: caught, or away from the cops after him (the rival's chase goes on without it)
+  if chase.playerChased and chase.player == nil then
+    if caught(0, dt) then
+      pullOver()
+      return
+    end
+
+    local giveUp = sessionDuration - chase.playerSince >= CHASE_GIVE_UP_SECONDS
+    if gotAway(dt) or giveUp then
+      decideChase('player', 'ESCAPED')
+      chase.duration = sessionDuration - chase.startedAt
+      for _, cop in ipairs(police) do
+        if cop.target == 0 and (cop.state == 'CHASING' or cop.state == 'ROADBLOCK') then putAway(cop) end
+      end
+      if raceWon ~= nil then
+        endSession('FINISHED', raceWon)
+      else
+        pcall(ac.setMessage, 'Got away', giveUp and 'The cops gave up on you. Now win the race!' or 'You lost the cops. Now win the race!')
+      end
+    end
+  end
+
+  -- The rival's chase: the police give up on them after a while
+  if rivalHunted() and sessionDuration - (chase.rivalSince or chase.startedAt) >= CHASE_GIVE_UP_SECONDS then
+    decideChase('rival', 'ESCAPED')
+    for _, cop in ipairs(police) do
+      if cop.target == 1 and (cop.state == 'CHASING' or cop.state == 'ROADBLOCK') then putAway(cop) end
+    end
+  end
+end
+
+local _glowTo = vec3()
+
+-- The lamps as the eye sees them: a bright dot on each side of the roof, the lit one glowing
+function script.draw3D()
+  if not chase or not chase.started then return end
+  local camera = ac.getCameraPosition()
+  for _, cop in ipairs(police) do
+    local car = cop.lamps and ac.getCar(cop.index)
+    if car then
+      for n = 1, 2 do
+        local at = lampPosition(car, n, _lamp)
+        _glowTo:set(camera):sub(at)
+        local lit = lampLit(cop, n)
+        local colour = n == 1 and rgbm(lit and 40 or 0.4, 0, 0, 1) or rgbm(0, lit and 6 or 0.1, lit and 60 or 0.6, 1)
+        render.circle(at, _glowTo, lit and 0.16 or 0.08, colour)
+      end
+    end
   end
 end
 
@@ -861,6 +1760,9 @@ function script.update(dt)
   sessionDuration = sessionDuration + tick
   updateAllTelemetry(tick)
   updateTimeslips(tick)
+
+  updateChase(tick)
+  if sessionEnded then return end
 
   checkRaceFinish()
 end

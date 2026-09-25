@@ -186,6 +186,12 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// <summary>The shape the opponent's car starts in; null starts it as AC would</summary>
         public RaceStartState? OpponentStart { get; set; }
 
+        /// <summary>The police sent to the race; null when none come</summary>
+        public RacePolice? Police { get; set; }
+
+        /// <summary>The game's time when the race starts, which AC's sun follows; null races at noon</summary>
+        public DateTime? RaceTime { get; set; }
+
         public override string Executable => "acs.exe";
 
         public override string Description =>
@@ -209,6 +215,8 @@ namespace Street_Rod_AC.Services.Configuration.Models
                 DamagePercent = this.DamagePercent,
                 PlayerStart = this.PlayerStart,
                 OpponentStart = this.OpponentStart,
+                Police = this.Police,
+                RaceTime = this.RaceTime,
                 ContextId = Metadata.TryGetValue("RaceContext", out var context) && context is RaceContext raceContext
                     ? raceContext.ContextId
                     : null

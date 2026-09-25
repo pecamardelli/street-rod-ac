@@ -100,7 +100,7 @@ full damage wrecks 1970 street cars too fast (the user chose 100% to start).
 Tested by the user in the game. Known issue: the newspaper's "Your Ads" panel runs off the bottom of the screen and
 can't be scrolled; the newspaper screen is due a refactor.
 
-## Step 5, living opponents (built on `feature/living-opponents`, not yet merged)
+## Step 5, living opponents (done, PR #20, merged as `70161ad`)
 
 See `docs/systems/opponent-system.md` "Living Opponents" for what was built.
 
@@ -112,8 +112,7 @@ rivals behave by the prices they find (prices get tuned later): every sum is pri
 power cap added meanwhile was dropped. Money is the limit. Many rivals end up in Chevelle SS 454
 LS5s, because the dyno rates that engine at 555 hp against a cheap price (the known over-rating of some SLRR engines).
 
-Not yet seen by the user in the game: the diner's "word on the street" panel, The King at the diner, a rival
-answering an ad, rivals' cars racing with their real damage.
+Tested by the user in the game (2026-09-24): the street talk panel, The King, a rival answering an ad, damaged rival cars.
 
 Left for later: new racers generated when the pool runs dry (`OpponentGenerationService` is still unused); rivals
 putting their own cars in the paper; rivals buying used parts out of the ads (they order new); the King's own
@@ -268,7 +267,74 @@ ported is the daily life cycle:
   - `MatchupCalculator` compares catalog horsepower, not what's under the hood: use the dyno.
   - Add "The King" as a boss at the top of a reputation ladder. The King victory can't be won today, because no racer is called "The King" (`KingVictory.cs:13, 84`).
 
-## Step 6: police chases
+## Step 6: police chases (built on `feature/police-chases`, not yet merged)
+
+**The user decided (2026-09-24):**
+- real AI cops (design (c) below), not a ghost or a text roll;
+- the 1974 Dodge Monaco mod as the police car, which the player installs;
+- busted is a fine and the car in the impound, and the race counts as a loss;
+- getting away earns reputation;
+- the rival can be busted too, and both busted is no contest;
+- races after 20:00 run at night, the police chance rolled from the time, the reputation and the stakes, and the
+  diner shows the risk.
+
+**What was built** (see `docs/ac-integration/csp-lua-scripts.md`, "The police chase"):
+- **The career side.**
+  - The diner rolls the patrol when a road race is agreed (`PoliceCars.Patrol`, `PoliceRules`):
+    - the chance: 8% by day, 30% from 20:00, up to 15% more for the better known racer, 5% more each for a pink slip
+      and a wager of $1,000 or more, at most 50%;
+    - the cars: two, one for each racer, on a track with four pit boxes or more.
+  - The police car is the installed car with liveries marked `"street_corsa_police": true` in `ui_skin.json`, a
+    Monaco first (`PoliceCars.Find`). Without one, no police come and the diner shows no risk.
+  - race.ini gets the cops as `[CAR_2]`… and `[STREET_ROD] POLICE`/`POLICE_SPOT`, and `SUN_ANGLE` from the game's
+    clock for every race.
+- **The race mode** runs the chase and writes `pursuit` (schema 1.5):
+  - speed traps or a patrol;
+  - a cop racing each racer, a racer it gets past busted;
+  - one roadblock per cop;
+  - lights and a synthesized siren.
+- **The result:**
+  - busted: the fine ($750, $500 more for each earlier bust, at most $5,000);
+  - busted: the impound (2 days, one more for each earlier bust, at most 7, $100 a day; an unpaid fine goes on the
+    bill), collected with the garage's Collect button;
+  - getting away: +2 reputation each time, up to +10.
+- **Rivals** pay to collect their cars, sit out meanwhile, and lose a car left unpaid 14 days past its date.
+- **Organised events** (the newspaper) never draw police, but run at the game's hour too.
+- **Drag races** have no police: the strip has two pit boxes and nowhere to run.
+
+**The police car:** the 1974 Dodge Monaco Police (Stereo) is installed and sanitized to factory spec (275 hp net 440, 2.94
+pursuit axle). Its liveries carry `"street_corsa_police": true` in `ui_skin.json`, which is how the game knows a police
+livery (`PoliceCars`). Marked liveries never reach the catalog, and a car with nothing else stays out of it (no police
+car on a lot or in a rival's garage). The civilian Monaco of the same mod is an ordinary car of the set.
+
+**Tested in the game** (2026-09-24, unattended runs, see `docs/ac-integration/csp-lua-scripts.md`): the busted and got-away
+paths, roadblocks, a stuck cop put back, night at 21:00. The game found five things the stub couldn't:
+- the INI list bug, which also fixes step 2's body and suspension carry-over;
+- cops ramming a stopped player;
+- a roadblock square across the road with no way through;
+- AI racers stopping behind a roadblock instead of going round it;
+- a roadblock "left" in the frame it went up.
+
+Not yet seen by the user: how a chase feels to drive; the lights and the siren (the screenshots caught the terminal
+over the AC window); the diner's police note; the garage's impound panel.
+
+**Speed traps** (added after the first review): two patrols in three are cops parked on the verge at random spots on
+straights round the track, set off by whoever goes past (see the race mode doc). Only a racer a cop has been after has
+a chase to win or lose. A cop that catches the rival stays with them. Checked in the game. The police chance was kept
+as it was (the user thought 30–50% of races would be too many).
+
+**The police drive like racers** (the user's rules, 2026-09-25):
+- **One cop for each racer.** Each races its prey at AI level 150% with full aggression, and tries to get past.
+- **Getting past is the bust.** The player's car is taken over by an autopilot and braked to a stop; the rival is
+  held.
+- **A dodged roadblock** sends the cop after its prey at full throttle.
+- **The finish line is home:** a racer over it is out of the police's reach.
+- **The police Monaco has the 426 Hemi.** The factory 440 couldn't keep up with a 450 hp Chevelle.
+- **Dropped:** the boxing-in, the PIT, the pinned bust and a pushed rubber band, tried along the way.
+- **The chance:** the police chance is unchanged, and it always sends two cars.
+
+Left for later: Test Drive mode (race-explorer); rivals busted in their own races with each other; the difficulty's say
+in the police chance; hiding the cops from AC's HUD leaderboard. Any other car can be a police car by marking a skin.
 
 **User:** loves it, and wants it for Test Drive mode too.
 

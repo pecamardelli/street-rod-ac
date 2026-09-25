@@ -43,6 +43,18 @@ namespace Street_Rod_AC.Models.GameState
         public const int FalseStartPenalty = 3;
         public const int MaxFalseStartPenalty = 15;
 
+        /// <summary>Times the police caught this racer after a street race. The fines and the impound grow with it.</summary>
+        public int PoliceBusts { get; set; }
+
+        /// <summary>
+        /// Times this racer got away from the police. The street hears about it: each one is worth
+        /// <see cref="PoliceEscapeBonus"/> reputation, up to <see cref="MaxPoliceEscapeBonus"/>
+        /// </summary>
+        public int PoliceEscapes { get; set; }
+
+        public const int PoliceEscapeBonus = 2;
+        public const int MaxPoliceEscapeBonus = 10;
+
         public RacerStats()
         {
             Wins = 0;
@@ -114,6 +126,9 @@ namespace Street_Rod_AC.Models.GameState
 
             // Jumping the start: no contest, but a racer known for it is not taken seriously
             reputation -= Math.Min(FalseStarts * FalseStartPenalty, MaxFalseStartPenalty);
+
+            // Outrunning the police: the street talks about it
+            reputation += Math.Min(PoliceEscapes * PoliceEscapeBonus, MaxPoliceEscapeBonus);
 
             // Clamp to valid range
             return Math.Clamp(reputation, 0, 100);

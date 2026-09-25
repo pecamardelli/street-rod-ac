@@ -45,7 +45,10 @@ namespace Street_Rod_AC.Services.Time
         SwitchCar,
 
         /// <summary>Take a car out for a drive on your own (1 hour)</summary>
-        FreeRun
+        FreeRun,
+
+        /// <summary>Get a car back from the police impound (1 hour)</summary>
+        CollectFromImpound
     }
 
     /// <summary>
@@ -74,6 +77,7 @@ namespace Street_Rod_AC.Services.Time
                 GameAction.PlaceAd => 30,
                 GameAction.SwitchCar => 15,
                 GameAction.FreeRun => 60,
+                GameAction.CollectFromImpound => 60,
                 _ => 30 // Default fallback
             };
         }

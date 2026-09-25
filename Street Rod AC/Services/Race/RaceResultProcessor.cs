@@ -8,6 +8,7 @@ using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Career;
 using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Parts;
+using Street_Rod_AC.Services.Police;
 using Street_Rod_AC.Services.Race.Validation;
 using Street_Rod_AC.Services.Storage;
 using System.IO;
@@ -98,8 +99,9 @@ namespace Street_Rod_AC.Services.Race
                 var damage = ApplyCarUpdates(gameState, outcome, context);
                 ApplyRace(gameState, outcome, context, messages);
 
-                // A crashed car is towed home, and the player goes with it to see what the crash did
-                if (outcome.Player?.Crash.Crashed == true)
+                // A crashed car is towed home, and the player goes with it to see what the crash did. A busted
+                // player's car went to the impound instead, and the police message says so.
+                if (outcome.Player?.Crash.Crashed == true && outcome.Pursuit?.PlayerBusted != true)
                 {
                     damage = new PlayerMessage("Towed Home", damage == null
                         ? "Your car was towed back to the garage."
@@ -290,6 +292,10 @@ namespace Street_Rod_AC.Services.Race
                 moved = ApplyWagerTransfer(gameState, outcome, context);
             }
 
+            // The police: fines, the impound, a name for getting away. After the stakes, which may have moved the cars.
+            if (outcome.Pursuit is { Started: true } pursuit)
+                ApplyPursuit(gameState, outcome, context, pursuit, messages);
+
             // Update reputations based on race outcome
             ApplyReputationUpdates(gameState, outcome, context);
 
@@ -362,6 +368,93 @@ namespace Street_Rod_AC.Services.Race
                 $"You jumped the gun against {context.OpponentName}. No contest.{stakes}{reputation}");
         }
 
+        /// <summary>
+        /// What the police chase did: a busted racer pays a fine and their car goes to the impound (if it is still
+        /// theirs after the stakes), and a player who got away makes a name for it (<see cref="RacerStats.PoliceEscapes"/>).
+        /// A fine the racer can't pay goes onto the impound's bill.
+        /// </summary>
+        private void ApplyPursuit(GameState gameState, RaceDecision outcome, RaceContext context, PursuitResult pursuit, List<PlayerMessage> messages)
+        {
+            var now = gameState.Date;
+            var player = gameState.Player;
+            var lines = new List<string>();
+
+            if (pursuit.PlayerBusted)
+            {
+                var car = player.Cars.FirstOrDefault(c => c.InstanceId == context.PlayerCarInstanceId);
+                var (fine, unpaid, impounded) = Bust(player, car, now);
+                _logger.Information("The police caught the player: fined ${Fine}, car {Car} impounded until {Until}",
+                    fine, car?.DefinitionId ?? "(not theirs any more)", car?.ImpoundedUntil);
+
+                lines.Add(outcome.WinCondition == WinCondition.BothBusted
+                    ? $"The police caught you and {context.OpponentName}. No contest, and nothing changes hands."
+                    : $"The police caught you. The race goes to {context.OpponentName}.");
+                lines.Add($"Fine: ${fine:N0}");
+                if (impounded && car != null)
+                {
+                    lines.Add($"Your car is in the police impound until {car.ImpoundedUntil:dddd d MMMM}. Collecting it costs ${car.ImpoundFee:N0}.");
+                    if (unpaid > 0)
+                        lines.Add($"You couldn't pay ${unpaid:N0} of the fine: it's on the impound's bill.");
+                }
+                else if (context.IsPinkSlip)
+                {
+                    lines.Add($"The pink slip was signed: {context.OpponentName} collects your car from the police.");
+                }
+            }
+
+            if (pursuit.RivalBusted && FindRacer(gameState, context.OpponentName) is { } rival)
+            {
+                var car = rival.Cars.FirstOrDefault(c => c.InstanceId == context.OpponentCarInstanceId);
+                var (fine, _, impounded) = Bust(rival, car, now);
+                _logger.Information("The police caught {Rival}: fined ${Fine}, car impounded {Impounded}", rival.Name, fine, impounded);
+
+                if (outcome.WinCondition == WinCondition.OpponentBusted)
+                    lines.Add($"The police caught {rival.Name}. The race is yours.");
+                if (impounded) lines.Add($"{rival.Name}'s car is in the impound for a while.");
+            }
+
+            if (pursuit.PlayerEscaped)
+            {
+                var before = player.Stats.Reputation;
+                player.Stats.PoliceEscapes++;
+                player.Stats.Reputation = player.Stats.CalculateReputation();
+                gameState.Career.SetCounter(MilestoneTrigger.ReputationReached, player.Stats.Reputation);
+                _logger.Information("The player got away from the police ({Escapes} times now)", player.Stats.PoliceEscapes);
+
+                lines.Add("You lost the cops. The street will hear about it.");
+                if (player.Stats.Reputation > before)
+                    lines.Add($"Reputation: {before} → {player.Stats.Reputation}");
+            }
+
+            if (lines.Count == 0) return;
+            messages.Add(new PlayerMessage(pursuit.PlayerBusted ? "Busted" : pursuit.PlayerEscaped ? "Got Away" : "The Police", string.Join("\n\n", lines))
+            {
+                // Home on foot: the garage is where the player finds out what's left
+                TowedToGarage = pursuit.PlayerBusted
+            });
+        }
+
+        /// <summary>
+        /// A racer caught by the police: the fine off their money, as far as it goes, and <paramref name="car"/> (null
+        /// when it isn't theirs any more) into the impound with what's left of the fine on its bill. Returns the fine,
+        /// what of it the racer couldn't pay, and whether the car was impounded.
+        /// </summary>
+        private static (decimal Fine, decimal Unpaid, bool Impounded) Bust(Racer racer, Car? car, DateTime now)
+        {
+            var earlier = racer.Stats.PoliceBusts;
+            var fine = PoliceRules.Fine(earlier);
+            var paid = Math.Min(fine, Math.Max(0m, racer.Money));
+            racer.Money -= paid;
+            racer.Stats.TotalLosses += paid;
+            racer.Stats.PoliceBusts++;
+
+            if (car == null) return (fine, 0m, false);
+
+            PoliceRules.Impound(car, now, earlier);
+            car.ImpoundFee += fine - paid;
+            return (fine, fine - paid, true);
+        }
+
         /// <summary>What of a race's stakes changed hands: the cash wager, the pink slip's car</summary>
         private readonly record struct StakesMoved(bool Cash, bool Car);
 
@@ -384,12 +477,24 @@ namespace Street_Rod_AC.Services.Race
             var (playerParticipant, opponentParticipant) = IdentifyPlayer(participants, context);
             outcome.Player = playerParticipant;
             outcome.Opponent = opponentParticipant;
+            outcome.Pursuit = result.Pursuit;
 
             // Jumping the start calls the race off before anything else counts: no contest
             if (playerParticipant.FalseStart == true || result.Session.EndReason == EndReasons.FalseStart)
             {
                 outcome.WinCondition = WinCondition.FalseStart;
                 outcome.PlayerWon = false;
+                return outcome;
+            }
+
+            // The police: a racer they caught is out of the race, whatever else happened in it (a wreck, the finish
+            // line). Both caught is no contest. The patrol only turns up after the green, so a false start comes first.
+            if (result.Pursuit is { Started: true } pursuit && (pursuit.PlayerBusted || pursuit.RivalBusted))
+            {
+                outcome.WinCondition = pursuit.PlayerBusted && pursuit.RivalBusted ? WinCondition.BothBusted
+                    : pursuit.PlayerBusted ? WinCondition.PlayerBusted
+                    : WinCondition.OpponentBusted;
+                outcome.PlayerWon = outcome.WinCondition == WinCondition.OpponentBusted;
                 return outcome;
             }
 
@@ -1099,8 +1204,12 @@ namespace Street_Rod_AC.Services.Race
         public bool PlayerWon { get; set; }
         public WinCondition WinCondition { get; set; }
 
+        /// <summary>The police chase, when the police were sent; null otherwise</summary>
+        public PursuitResult? Pursuit { get; set; }
+
         /// <summary>True when the race has a winner and a loser (stats, money and reputation change)</summary>
-        public bool IsDecided => WinCondition is not (WinCondition.Inconclusive or WinCondition.BothCrashed or WinCondition.BothOut or WinCondition.FalseStart);
+        public bool IsDecided => WinCondition is not (WinCondition.Inconclusive or WinCondition.BothCrashed or WinCondition.BothOut
+            or WinCondition.FalseStart or WinCondition.BothBusted);
 
         public RaceParticipant? Winner => !IsDecided ? null : PlayerWon ? Player : Opponent;
         public RaceParticipant? Loser => !IsDecided ? null : PlayerWon ? Opponent : Player;
@@ -1174,6 +1283,21 @@ namespace Street_Rod_AC.Services.Race
         /// <summary>
         /// Neither car made it to the line, one broke down and the other crashed or broke down too: a draw
         /// </summary>
-        BothOut
+        BothOut,
+
+        /// <summary>
+        /// The police caught the player, before or after the line: the race is lost, a fine, the car impounded
+        /// </summary>
+        PlayerBusted,
+
+        /// <summary>
+        /// The police caught the rival and not the player: the race is the player's
+        /// </summary>
+        OpponentBusted,
+
+        /// <summary>
+        /// The police caught both: no contest, nothing changes hands, both fined and impounded
+        /// </summary>
+        BothBusted
     }
 }

@@ -109,6 +109,7 @@ public static class CarCondition
     public static List<string> WhyCannotRace(Car car, Func<string, string?>? groupOf)
     {
         var problems = new List<string>();
+        if (car.IsImpounded) problems.Add("it's in the police impound");
         if (IsTotaled(car)) problems.Add("the body is wrecked: the car is totaled");
 
         if (groupOf != null && car.HasPartsAssigned)

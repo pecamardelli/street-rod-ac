@@ -5,6 +5,7 @@ using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Parts;
+using Street_Rod_AC.Services.Police;
 
 namespace Street_Rod_AC.Services.Opponents
 {
@@ -90,12 +91,14 @@ namespace Street_Rod_AC.Services.Opponents
         {
             try
             {
+                CollectFromImpound(racer, date, talk);
                 PickBestCar(racer, groupOf);
                 SellSpares(gameState, racer, groupOf, talk);
 
                 if (racer.Cars.Count == 0) TryBuy(gameState, racer, date, talk);
 
-                if (racer.Cars.FirstOrDefault() is { } car && !CanRace(car, groupOf)
+                // A car in the impound can be neither fixed nor sold: they wait for it
+                if (racer.Cars.FirstOrDefault() is { IsImpounded: false } car && !CanRace(car, groupOf)
                     && !TryRepair(gameState, racer, car, groupOf, talk))
                 {
                     SellAndBuyAnother(gameState, racer, car, date, groupOf, talk);
@@ -141,10 +144,36 @@ namespace Street_Rod_AC.Services.Opponents
             {
                 talk.Add(racer.Cars.Count == 0
                     ? $"{racer.Name} has no car and is sitting it out."
-                    : $"{racer.Name}'s {CarName(racer.Cars[0])} is laid up; {racer.Name} is sitting it out.");
+                    : racer.Cars[0].IsImpounded
+                        ? $"The police have {racer.Name}'s {CarName(racer.Cars[0])} in the impound; {racer.Name} is sitting it out."
+                        : $"{racer.Name}'s {CarName(racer.Cars[0])} is laid up; {racer.Name} is sitting it out.");
             }
 
             _logger.Information("{Racer}: {From} -> {To}", racer.Name, from, target);
+        }
+
+        /// <summary>
+        /// Cars whose days in the impound are up come home, when the racer can pay for them. One left there too long
+        /// (<see cref="PoliceRules.AuctionAfterDays"/>) is auctioned off by the police, and it is gone.
+        /// </summary>
+        private void CollectFromImpound(Opponent racer, DateTime date, List<string> talk)
+        {
+            foreach (var car in racer.Cars.Where(c => PoliceRules.CanCollect(c, date)).ToList())
+            {
+                if (racer.Money >= car.ImpoundFee)
+                {
+                    racer.Money -= car.ImpoundFee;
+                    _logger.Information("{Racer} collected the {Car} from the impound for ${Fee}", racer.Name, car.DefinitionId, car.ImpoundFee);
+                    PoliceRules.Release(car);
+                    talk.Add($"{racer.Name} got {OpponentRules.Possessive(racer)} {CarName(car)} back from the police impound.");
+                }
+                else if (PoliceRules.IsForAuction(car, date))
+                {
+                    racer.Cars.Remove(car);
+                    _logger.Information("{Racer} never paid to collect the {Car}: the police auctioned it off", racer.Name, car.DefinitionId);
+                    talk.Add($"{racer.Name} never collected {OpponentRules.Possessive(racer)} {CarName(car)}: the police auctioned it off.");
+                }
+            }
         }
 
         /// <summary>The car the racer means to drive goes to the front of their cars, where every screen looks for it</summary>
@@ -168,7 +197,7 @@ namespace Street_Rod_AC.Services.Opponents
         {
             while (racer.Cars.Count > 1)
             {
-                var spares = racer.Cars.Skip(1).ToList();
+                var spares = racer.Cars.Skip(1).Where(c => !c.IsImpounded).ToList();
                 var wreck = spares.FirstOrDefault(CarCondition.IsTotaled);
                 var sell = wreck ?? (racer.Cars.Count > OpponentRules.MaxCars ? spares.OrderBy(c => Score(c, groupOf)).First() : null);
                 if (sell == null) return;

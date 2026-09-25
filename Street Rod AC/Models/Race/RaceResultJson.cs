@@ -16,6 +16,51 @@ namespace Street_Rod_AC.Models.Race
 
         [JsonProperty("participants")]
         public List<RaceParticipant> Participants { get; set; } = new();
+
+        /// <summary>
+        /// The police chase, when the race had police sent to it (schema 1.5); null otherwise and in older files. The
+        /// police cars are never among the <see cref="Participants"/>.
+        /// </summary>
+        [JsonProperty("pursuit")]
+        public PursuitResult? Pursuit { get; set; }
+    }
+
+    /// <summary>How the police chase went</summary>
+    public class PursuitResult
+    {
+        /// <summary>How many police cars were sent</summary>
+        [JsonProperty("police")]
+        public int Police { get; set; }
+
+        /// <summary>The patrol showed up; false when the race was over before it got there</summary>
+        [JsonProperty("started")]
+        public bool Started { get; set; }
+
+        /// <summary>Seconds into the session the patrol showed up</summary>
+        [JsonProperty("started_at_s")]
+        public double? StartedAtSeconds { get; set; }
+
+        [JsonProperty("duration_s")]
+        public double? DurationSeconds { get; set; }
+
+        /// <summary>The player's chase, one of <see cref="PursuitOutcomes"/>; null when there was none</summary>
+        [JsonProperty("player")]
+        public string? Player { get; set; }
+
+        /// <summary>The rival's chase, one of <see cref="PursuitOutcomes"/>; null when there was none</summary>
+        [JsonProperty("rival")]
+        public string? Rival { get; set; }
+
+        public bool PlayerBusted => Started && Player == PursuitOutcomes.Busted;
+        public bool RivalBusted => Started && Rival == PursuitOutcomes.Busted;
+        public bool PlayerEscaped => Started && Player == PursuitOutcomes.Escaped;
+    }
+
+    /// <summary>How a racer's police chase ended</summary>
+    public static class PursuitOutcomes
+    {
+        public const string Escaped = "ESCAPED";
+        public const string Busted = "BUSTED";
     }
 
     /// <summary>
@@ -97,6 +142,9 @@ namespace Street_Rod_AC.Models.Race
 
         /// <summary>The player's car broke down: the engine blew, the gearbox or a corner gave out, a tyre blew (schema 1.4)</summary>
         public const string BrokeDown = "BROKE_DOWN";
+
+        /// <summary>The police caught the player before the finish (schema 1.5)</summary>
+        public const string Busted = "BUSTED";
     }
 
     /// <summary>What gave out in a <see cref="RaceParticipant.Breakdown"/></summary>

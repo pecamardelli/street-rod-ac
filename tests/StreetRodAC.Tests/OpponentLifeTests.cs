@@ -11,6 +11,7 @@ using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Parts;
+using Street_Rod_AC.Services.Police;
 using Street_Rod_AC.Services.Simulation;
 
 namespace StreetRodAC.Tests;
@@ -276,6 +277,43 @@ public class OpponentLifeServiceTests
         OpponentLifeService.AddTalk(_state, day.AddDays(OpponentLifeService.StreetTalkDays + 1), ["news"]);
 
         Assert.Equal(new[] { "news" }, _state.StreetTalk.Select(t => t.Text));
+    }
+
+    [Fact]
+    public async Task A_racer_waits_for_a_car_in_the_impound_and_collects_it_when_its_days_are_up()
+    {
+        var car = GoodCar();
+        var racer = Racer("Eve", 2000m, RacerStatus.ReadyToRace, car);
+        Listing("car_cheap", 400m, 120);
+        PoliceRules.Impound(car, _state.Date, earlierBusts: 0);
+
+        // In the impound: not fixed, not sold, not replaced; they sit it out
+        await _life.ReviewDayAsync(_state, _state.Date);
+        Assert.Same(car, Assert.Single(racer.Cars));
+        Assert.True(car.IsImpounded);
+        Assert.Equal(RacerStatus.Retired, racer.Status);
+        Assert.Contains(_state.StreetTalk, t => t.Text.Contains("impound"));
+
+        // Its days up: paid for and back on the street
+        var fee = car.ImpoundFee;
+        await _life.ReviewDayAsync(_state, car.ImpoundedUntil!.Value);
+        Assert.False(car.IsImpounded);
+        Assert.Equal(2000m - fee, racer.Money);
+        Assert.Equal(RacerStatus.ReadyToRace, racer.Status);
+    }
+
+    [Fact]
+    public async Task A_car_nobody_pays_for_is_auctioned_off_by_the_police()
+    {
+        var car = GoodCar();
+        var racer = Racer("Fay", 0m, RacerStatus.Retired, car);
+        PoliceRules.Impound(car, _state.Date, earlierBusts: 0);
+        car.ImpoundFee = 1_000_000m;
+
+        await _life.ReviewDayAsync(_state, car.ImpoundedUntil!.Value.AddDays(PoliceRules.AuctionAfterDays));
+
+        Assert.DoesNotContain(car, racer.Cars);
+        Assert.Contains(_state.StreetTalk, t => t.Text.Contains("auctioned"));
     }
 }
 

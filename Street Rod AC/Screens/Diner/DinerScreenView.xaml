@@ -1064,6 +1064,14 @@
                                         </Border>
                                     </Grid>
 
+                                    <!-- The police risk of a road race -->
+                                    <TextBlock Text="{Binding PoliceNote}"
+                                              FontSize="{StaticResource FontSizeTiny}"
+                                              Foreground="{StaticResource WarningBrush}"
+                                              HorizontalAlignment="Center"
+                                              Margin="0,8,0,0"
+                                              Visibility="{Binding HasPoliceNote, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
                                     <!-- Insufficient Funds Warning -->
                                     <Border Background="{StaticResource WarningBgBrush}"
                                            BorderBrush="{StaticResource WarningBrush}"
