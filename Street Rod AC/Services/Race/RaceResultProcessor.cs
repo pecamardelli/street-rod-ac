@@ -1034,11 +1034,8 @@ namespace Street_Rod_AC.Services.Race
                 }
             }
 
-            // Update current cars owned count (not cumulative)
-            career.SetCounter(MilestoneTrigger.CarsOwned, gameState.Player.Cars.Count);
-
-            // Update current reputation (not cumulative)
-            career.SetCounter(MilestoneTrigger.ReputationReached, gameState.Player.Stats.Reputation);
+            // Cars owned and reputation as they stand now (not cumulative)
+            career.SyncStanding(gameState.Player);
 
             _logger.Debug("Milestone counters updated: TotalWins={Wins}, PinkSlipWins={PinkSlips}, CarsOwned={Cars}, Reputation={Rep}",
                 career.GetCounter(MilestoneTrigger.TotalWins),
@@ -1102,12 +1099,11 @@ namespace Street_Rod_AC.Services.Race
                     gameState.Player.Stats.EventReputationBonus += reward.Reputation;
                 }
 
-                // Handle special item reward (log for now - parts system integration later)
+                // The special item: a part for the car that won it, on the shelf. The reward is this race's copy,
+                // so it can say what the player got.
                 if (!string.IsNullOrEmpty(reward.SpecialItem))
                 {
-                    _logger.Information("Event reward: Special item '{Item}' - {Description}",
-                        reward.SpecialItem, reward.SpecialItemDescription ?? "No description");
-                    // TODO: Add to player's parts inventory when parts system is implemented
+                    reward.SpecialItemDescription = GiveSpecialItem(gameState, context, reward.SpecialItem);
                 }
 
                 // The screen that ran the race tells the player
@@ -1115,6 +1111,45 @@ namespace Street_Rod_AC.Services.Race
                 if (rewardMessage != null)
                     messages.Add(rewardMessage);
             }
+        }
+
+        /// <summary>What a prize camshaft is worth in cash when no better one fits the car that won it</summary>
+        public const decimal CamshaftPrizeCash = 500m;
+
+        /// <summary>
+        /// Gives an event's special item and says what it was. "rare_camshaft" is the dearest camshaft that fits
+        /// the engine of the car that won (<see cref="PrizeParts.BestCamshaft"/>), one for each camshaft the engine
+        /// takes, on the shelf; when none fits or better, its worth in cash.
+        /// </summary>
+        private string GiveSpecialItem(GameState gameState, RaceContext context, string item)
+        {
+            if (item != "rare_camshaft")
+            {
+                _logger.Warning("Event reward: special item '{Item}' is nothing the game knows; not given", item);
+                return string.Empty;
+            }
+
+            var car = gameState.Player.Cars.FirstOrDefault(c => c.InstanceId == context.PlayerCarInstanceId);
+            try
+            {
+                if (_parts is { IsAvailable: true } parts && PrizeParts.BestCamshaft(parts.Catalog, car?.Engine) is var (cam, count))
+                {
+                    for (var i = 0; i < count; i++) gameState.Player.Parts.Add(new PartInstance(cam.Id));
+                    var name = cam.DisplayName ?? cam.Name;
+                    _logger.Information("Event reward: {Count} x {Cam} on the shelf", count, cam.Id);
+                    return count > 1 ? $"{count} x {name} (on your shelf)" : $"{name} (on your shelf)";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not pick the prize camshaft: its worth is paid instead");
+            }
+
+            var cash = Math.Round(GameRules.Scale(CamshaftPrizeCash, gameState.Rules.PartPriceMultiplier) / 5) * 5;
+            gameState.Player.Money += cash;
+            gameState.Player.Stats.TotalEarnings += cash;
+            _logger.Information("Event reward: no better camshaft fits {Car}; ${Cash} instead", car?.DefinitionId ?? "(no car)", cash);
+            return $"${cash:N0} for a camshaft (none better fits your engine)";
         }
 
         /// <summary>

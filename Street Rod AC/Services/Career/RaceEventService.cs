@@ -75,13 +75,16 @@ namespace Street_Rod_AC.Services.Career
                 Schedule = EventSchedule.Weekly
             });
 
+            // The era and make shows are road races, on the circuits the diner races on; power, money and pink
+            // slips are settled at the strip
+
             // Classic Showdown - Pre-1970 cars
             AddEvent(events, new RaceEventDefinition
             {
                 Id = "classic_showdown",
                 Name = "Classic Showdown",
                 Description = "Only the classics qualify. Show off your vintage ride!",
-                RaceType = RaceType.DragRace,
+                RaceType = RaceType.Circuit,
                 EntryRequirements = new DecadeFilter(null, 1969),
                 MinReputation = 15,
                 Reward = new EventReward(750, 10),
@@ -94,7 +97,7 @@ namespace Street_Rod_AC.Services.Career
                 Id = "fifties_fever",
                 Name = "Fifties Fever",
                 Description = "Celebrate the golden age of American motoring. 1950s only!",
-                RaceType = RaceType.DragRace,
+                RaceType = RaceType.Circuit,
                 EntryRequirements = DecadeFilter.ForDecade(1950),
                 MinReputation = 30,
                 Reward = new EventReward(1000, 8),
@@ -107,7 +110,7 @@ namespace Street_Rod_AC.Services.Career
                 Id = "chevy_challenge",
                 Name = "Chevy Challenge",
                 Description = "Bow tie brigade only! Let's see what your Chevy can do.",
-                RaceType = RaceType.DragRace,
+                RaceType = RaceType.Circuit,
                 EntryRequirements = new BrandFilter("Chevrolet"),
                 MinReputation = 10,
                 Reward = new EventReward(600, 5),
@@ -146,8 +149,8 @@ namespace Street_Rod_AC.Services.Career
             {
                 Id = "european_invasion",
                 Name = "European Invasion",
-                Description = "European engineering takes on the strips. Import power!",
-                RaceType = RaceType.DragRace,
+                Description = "European engineering takes on the back roads. Import handling!",
+                RaceType = RaceType.Circuit,
                 EntryRequirements = new OriginFilter("European"),
                 MinReputation = 20,
                 Reward = new EventReward(800, 7),
@@ -160,7 +163,7 @@ namespace Street_Rod_AC.Services.Career
                 Id = "sixties_showdown",
                 Name = "Sixties Showdown",
                 Description = "The muscle car era at its finest. 1960s machinery only!",
-                RaceType = RaceType.DragRace,
+                RaceType = RaceType.Circuit,
                 EntryRequirements = DecadeFilter.ForDecade(1960),
                 MinReputation = 20,
                 Reward = new EventReward(850, 8),
@@ -226,6 +229,9 @@ namespace Street_Rod_AC.Services.Career
         /// <summary>How likely an eligible event is to turn up when events are generated</summary>
         private const double EventChance = 0.5;
 
+        /// <summary>Most invitations open in the paper at once</summary>
+        public const int MaxOpenEvents = 5;
+
         public List<RaceEventInstance> GenerateEvents(CareerState career, DateTime currentTime, double pinkSlipFactor = 1.0)
         {
             var newEvents = new List<RaceEventInstance>();
@@ -234,8 +240,15 @@ namespace Street_Rod_AC.Services.Career
             // Remove expired events first
             CleanupExpiredEvents(career, currentTime);
 
-            foreach (var eventDef in eligibleEvents)
+            // The paper has room for a few at a time; the order they are looked at is shuffled, so a full paper
+            // is not always the same few
+            var open = career.ActiveEvents.Count(e => e.IsAvailable(currentTime));
+
+            foreach (var eventDef in eligibleEvents.OrderBy(_ => _random.Next()))
             {
+                if (open >= MaxOpenEvents)
+                    break;
+
                 // Check if this event type is already active
                 var hasActive = career.ActiveEvents.Any(e =>
                     e.EventDefinitionId == eventDef.Id && e.IsAvailable(currentTime));
@@ -294,6 +307,7 @@ namespace Street_Rod_AC.Services.Career
                 });
 
                 newEvents.Add(instance);
+                open++;
             }
 
             return newEvents;

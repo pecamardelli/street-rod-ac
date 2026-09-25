@@ -44,6 +44,11 @@ namespace Street_Rod_AC.Services.Career
                     return poolOpponent;
             }
 
+            // A pink slip changes hands between two garages: only a racer of the pool has one to take the
+            // player's car into, and a car of their own to lose
+            if (eventDef.IsPinkSlip)
+                return null;
+
             // Fall back to special opponents
             if (eventDef.SpecialOpponents?.Count > 0)
             {

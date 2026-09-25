@@ -135,7 +135,8 @@ namespace Street_Rod_AC.Screens.NewGame
             {
                 gameState = _repository.CreateNew(saveName, playerName, Rules.Build());
 
-                // Generate initial race events
+                // Generate initial race events, for the reputation the player starts with
+                gameState.Career.SyncStanding(gameState.Player);
                 _raceEventService.GenerateEvents(gameState.Career, gameState.Date, gameState.Rules.PinkSlipFactor);
             }
             catch (Exception ex)

@@ -24,9 +24,16 @@ namespace Street_Rod_AC.Services.Career
         IVictoryCondition? GetVictoryCondition(string victoryType);
 
         /// <summary>
-        /// Check if any victory condition has been achieved
+        /// The victory the game has reached: the path the player picked (<see cref="CareerState.ActiveVictoryType"/>)
+        /// once it is achieved, or with none picked the first one achieved. Null when none is.
         /// </summary>
         IVictoryCondition? CheckForVictory(GameState gameState);
+
+        /// <summary>
+        /// Marks the game won when <see cref="CheckForVictory"/> finds a victory and it was not won already, and
+        /// returns that victory; null otherwise. A won game goes on: the player can keep racing.
+        /// </summary>
+        IVictoryCondition? ClaimVictory(GameState gameState);
 
         /// <summary>
         /// Get progress for a specific victory condition

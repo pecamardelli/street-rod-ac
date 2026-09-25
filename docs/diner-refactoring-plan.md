@@ -1,5 +1,9 @@
 # Diner Screen Refactoring Plan
 
+**Status (2026-09-25): built.** The diner shipped with this design; the checklists below are ticked where the code
+was checked against them (talk, tracks, matchup). The layout items under the first checklist are a matter for the
+eye and were left for a look in the game.
+
 ## Overview
 
 Refactor the diner screen to improve layout, add track selection cards, implement a "talk container" for opponent dialogue, and consolidate the race setup flow by removing the ChallengeSetupDialog.
@@ -271,10 +275,10 @@ private async void OnOpponentSelected(OpponentDisplayViewModel opponent)
 ```
 
 ### Acceptance Criteria
-- [ ] Speech bubble appears next to portrait when opponent selected
-- [ ] Messages are contextual based on reputation difference
-- [ ] Different triggers can produce different messages
-- [ ] Service interface allows for future AI implementation
+- [x] Speech bubble appears next to portrait when opponent selected
+- [x] Messages are contextual based on reputation difference
+- [x] Different triggers can produce different messages
+- [x] Service interface allows for future AI implementation
 
 ---
 
@@ -469,11 +473,11 @@ private void LoadTracks()
 ```
 
 ### Acceptance Criteria
-- [ ] Tracks are loaded and categorized by type (Drag/Road)
-- [ ] Track cards show preview images from AC
-- [ ] Fallback placeholder for tracks without previews
-- [ ] Single track selection with visual feedback
-- [ ] Selection updates matchup stats
+- [x] Tracks are loaded and categorized by type (Drag/Road)
+- [x] Track cards show preview images from AC
+- [x] Fallback placeholder for tracks without previews
+- [x] Single track selection with visual feedback
+- [x] Selection updates matchup stats
 
 ---
 
@@ -625,10 +629,10 @@ private void AddStat(string label, double playerVal, double opponentVal,
 ```
 
 ### Acceptance Criteria
-- [ ] Stats update when track or opponent changes
-- [ ] Relevant stats shown based on race type
-- [ ] Clear visual indication of advantage/disadvantage
-- [ ] Stats are accurate based on car definitions
+- [x] Stats update when track or opponent changes
+- [x] Relevant stats shown based on race type
+- [x] Clear visual indication of advantage/disadvantage
+- [x] Stats are accurate based on car definitions
 
 ---
 

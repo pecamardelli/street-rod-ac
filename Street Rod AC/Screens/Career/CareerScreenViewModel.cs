@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using Street_Rod_AC.Dialogs;
+using Street_Rod_AC.Logging;
 using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Services.Career;
+using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.ViewModels;
 
 namespace Street_Rod_AC.Screens.Career
@@ -13,6 +15,8 @@ namespace Street_Rod_AC.Screens.Career
         private readonly IVictoryConditionService _victoryService;
         private readonly IMilestoneService _milestoneService;
         private readonly Models.GameState.GameState _gameState;
+        private readonly IGameStateRepository _gameStateRepo;
+        private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("Career");
 
         // Commands
         public RelayCommand BackCommand { get; }
@@ -77,8 +81,10 @@ namespace Street_Rod_AC.Screens.Career
             DialogService dialogService,
             IVictoryConditionService victoryService,
             IMilestoneService milestoneService,
-            Models.GameState.GameState gameState)
+            Models.GameState.GameState gameState,
+            IGameStateRepository gameStateRepo)
         {
+            _gameStateRepo = gameStateRepo;
             _navigationService = navigationService;
             _dialogService = dialogService;
             _victoryService = victoryService;
@@ -161,8 +167,35 @@ namespace Street_Rod_AC.Screens.Career
             // Update game state
             _gameState.Career.ActiveVictoryType = victoryType;
 
+            // A path already reached wins the game the moment it is picked
+            var won = _victoryService.ClaimVictory(_gameState);
+            if (won != null)
+                _logger.Information("Player achieved victory on picking it: {VictoryType} - {VictoryName}", won.VictoryType, won.Name);
+
+            Save();
+
             // Refresh display
             LoadVictories();
+            OnPropertyChanged(nameof(HasWonGame));
+            OnPropertyChanged(nameof(WinningVictoryName));
+
+            if (won != null)
+            {
+                var message = CareerProgressService.VictoryMessage(_gameState, won, [], []);
+                PlayerMessageDialogs.Show(_dialogService, message, () => _navigationService.NavigateToMainMenu());
+            }
+        }
+
+        private void Save()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not save the game after picking a victory path");
+            }
         }
 
         private void OnBack()
@@ -173,6 +206,9 @@ namespace Street_Rod_AC.Screens.Career
         public override void Enter()
         {
             base.Enter();
+
+            // A save from before the counters followed the player starts them where the player stands
+            _gameState.Career.SyncStanding(_gameState.Player);
 
             LoadVictories();
             LoadMilestones();

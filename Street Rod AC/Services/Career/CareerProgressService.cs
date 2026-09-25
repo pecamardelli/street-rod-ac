@@ -55,23 +55,16 @@ namespace Street_Rod_AC.Services.Career
             }
 
             // Check for game victory (only if not already won)
-            if (!gameState.Career.HasWonGame)
+            var achievedVictory = _victoryService.ClaimVictory(gameState);
+            if (achievedVictory != null)
             {
-                var achievedVictory = _victoryService.CheckForVictory(gameState);
-                if (achievedVictory != null)
-                {
-                    result.AchievedVictory = achievedVictory.VictoryType;
-                    gameState.Career.HasWonGame = true;
-                    gameState.Career.WinningVictoryType = achievedVictory.VictoryType;
-
-                    _logger.Information("Player achieved victory: {VictoryType} - {VictoryName}",
-                        achievedVictory.VictoryType, achievedVictory.Name);
-                }
+                result.AchievedVictory = achievedVictory.VictoryType;
+                _logger.Information("Player achieved victory: {VictoryType} - {VictoryName}",
+                    achievedVictory.VictoryType, achievedVictory.Name);
             }
 
             // What to tell the player (priority: victory > milestones > unlocks)
-            if (ComposeMessage(newMilestones, newVictoryUnlocks,
-                    result.AchievedVictory != null ? _victoryService.GetVictoryCondition(result.AchievedVictory) : null) is { } message)
+            if (ComposeMessage(gameState, newMilestones, newVictoryUnlocks, achievedVictory) is { } message)
             {
                 result.PlayerMessages.Add(message);
             }
@@ -84,6 +77,7 @@ namespace Street_Rod_AC.Services.Career
         /// Victory > Milestones > Victory Unlocks. Null when there is nothing to tell.
         /// </summary>
         private PlayerMessage? ComposeMessage(
+            GameState gameState,
             List<MilestoneDefinition> newMilestones,
             List<IVictoryCondition> newVictoryUnlocks,
             IVictoryCondition? achievedVictory)
@@ -91,7 +85,7 @@ namespace Street_Rod_AC.Services.Career
             // Priority 1: Game Victory
             if (achievedVictory != null)
             {
-                return VictoryMessage(achievedVictory, newMilestones, newVictoryUnlocks);
+                return VictoryMessage(gameState, achievedVictory, newMilestones, newVictoryUnlocks);
             }
 
             // Priority 2: Milestones (with optional unlock info)
@@ -105,36 +99,28 @@ namespace Street_Rod_AC.Services.Career
         }
 
         /// <summary>
-        /// The message for a game victory
+        /// The message for a game victory: shown as the victory screen (<see cref="VictoryCard"/>), with what
+        /// else the race brought as its footnote
         /// </summary>
-        private static PlayerMessage VictoryMessage(
+        public static PlayerMessage VictoryMessage(
+            GameState gameState,
             IVictoryCondition achievedVictory,
             List<MilestoneDefinition> newMilestones,
             List<IVictoryCondition> newVictoryUnlocks)
         {
-            var message = $"Congratulations!\n\nYou have achieved the {achievedVictory.Name} victory!\n\n{achievedVictory.Description}";
-
-            // Add milestone info if any were completed
+            var footnote = new List<string>();
             if (newMilestones.Count > 0)
-            {
-                message += "\n\nMilestones also completed:";
-                foreach (var milestone in newMilestones)
-                {
-                    message += $"\n  {milestone.Name}";
-                }
-            }
+                footnote.Add("Milestones also completed: " + string.Join(", ", newMilestones.Select(m => m.Name)));
 
-            // Add unlock info if any new victories were unlocked
-            if (newVictoryUnlocks.Count > 0)
-            {
-                message += "\n\nNew victory paths unlocked:";
-                foreach (var victory in newVictoryUnlocks.Where(v => v.VictoryType != achievedVictory.VictoryType))
-                {
-                    message += $"\n  {victory.Name}";
-                }
-            }
+            var otherUnlocks = newVictoryUnlocks.Where(v => v.VictoryType != achievedVictory.VictoryType).ToList();
+            if (otherUnlocks.Count > 0)
+                footnote.Add("New victory paths unlocked: " + string.Join(", ", otherUnlocks.Select(v => v.Name)));
 
-            return new PlayerMessage("VICTORY!", message);
+            var card = VictoryCard.For(achievedVictory.Name, achievedVictory.Description, gameState, string.Join("\n", footnote));
+            var text = $"Congratulations!\n\nYou have achieved the {achievedVictory.Name} victory!\n\n{achievedVictory.Description}";
+            if (footnote.Count > 0) text += "\n\n" + card.Footnote;
+
+            return new PlayerMessage("VICTORY!", text) { Victory = card };
         }
 
         /// <summary>

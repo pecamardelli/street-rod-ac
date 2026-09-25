@@ -76,6 +76,7 @@ namespace Street_Rod_AC.Services.Market
             gameState.Player.Cars ??= [];
             gameState.Player.Cars.Add(carInstance);
             gameState.Player.Stats.CarsOwned++;
+            gameState.Career.SyncStanding(gameState.Player);
 
             // Somebody with no car of their own has just bought one: it is the one they mean. Without this
             // the garage falls back to whatever happens to be first in the list.

@@ -30,8 +30,6 @@ namespace Street_Rod_AC.Models.GameState
         public RacerCollection Racers { get; set; }
 
         // Markets
-        public List<Car> UsedCars { get; set; }
-        public List<PartInstance> UsedParts { get; set; }
         public NewspaperAds NewspaperAds { get; set; }
 
         // Used Car Market System
@@ -76,8 +74,6 @@ namespace Street_Rod_AC.Models.GameState
 
             Player = new Player("Player");
             Racers = new RacerCollection();
-            UsedCars = [];
-            UsedParts = [];
             NewspaperAds = new NewspaperAds();
 
             UsedCarMarket = [];

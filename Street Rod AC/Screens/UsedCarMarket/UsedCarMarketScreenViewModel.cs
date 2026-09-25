@@ -28,7 +28,6 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
 
         public RelayCommand BackCommand { get; }
         public RelayCommand<UsedCarListingViewModel> PurchaseCarCommand { get; }
-        public RelayCommand RefreshMarketCommand { get; }
 
         private ObservableCollection<UsedCarListingViewModel> _listings;
         public ObservableCollection<UsedCarListingViewModel> Listings
@@ -90,7 +89,6 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
 
             BackCommand = new RelayCommand(OnBack);
             PurchaseCarCommand = new RelayCommand<UsedCarListingViewModel>(OnPurchaseCar, CanPurchaseCar);
-            RefreshMarketCommand = new RelayCommand(OnRefreshMarket);
 
             _listings = new ObservableCollection<UsedCarListingViewModel>();
             _listingsView = CollectionViewSource.GetDefaultView(_listings);
@@ -243,32 +241,6 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
                 if (result.Succeeded || result.Outcome == PurchaseOutcome.NoLongerAvailable) LoadListings();
                 OnPropertyChanged(nameof(BankrollDisplay));
             });
-        }
-
-        private async void OnRefreshMarket()
-        {
-            _logger.Information("Manual market refresh requested");
-
-            if (_gameState.DealerLocations == null || _gameState.DealerLocations.Count == 0)
-            {
-                _gameState.DealerLocations = _marketService.GetDefaultDealers();
-            }
-
-            try
-            {
-                _gameState.UsedCarMarket = await _marketService.RefreshMarketAsync(
-                    _gameState.UsedCarMarket,
-                    _gameState.DealerLocations,
-                    _gameState.Date,
-                    _gameState.Rules.CarPriceMultiplier);
-                LoadListings();
-
-                _logger.Information("Market refresh completed");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Market refresh failed");
-            }
         }
 
         private void OnBack()

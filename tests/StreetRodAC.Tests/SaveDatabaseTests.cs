@@ -95,6 +95,28 @@ public sealed class SaveDatabaseTests : IDisposable
     }
 
     [Fact]
+    public void A_save_with_fields_the_game_no_longer_has_still_loads()
+    {
+        _repository.Save(_repository.CreateNew("Dora", "Dora"), "Dora");
+
+        // UsedCars, UsedParts and NewspaperAds.Cars were in every save until they were taken out, never filled
+        _database.Use("Dora", db =>
+        {
+            var games = db.GetCollection("gamestate");
+            var doc = games.FindById(1);
+            doc["UsedCars"] = new LiteDB.BsonArray();
+            doc["UsedParts"] = new LiteDB.BsonArray();
+            doc["NewspaperAds"].AsDocument["Cars"] = new LiteDB.BsonArray();
+            return games.Update(doc);
+        });
+
+        var loaded = _repository.Load("Dora");
+
+        Assert.NotNull(loaded);
+        Assert.Equal("Dora", loaded!.Player.Name);
+    }
+
+    [Fact]
     public void Backups_rotate_while_the_save_stays_open()
     {
         var state = _repository.CreateNew("Dan", "Dan");

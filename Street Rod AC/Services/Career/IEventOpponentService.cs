@@ -10,7 +10,8 @@ namespace Street_Rod_AC.Services.Career
     {
         /// <summary>
         /// Get an opponent for an event.
-        /// Returns pool opponent if available, otherwise special opponent.
+        /// Returns pool opponent if available, otherwise special opponent. A pink-slip event only takes a
+        /// racer of the pool; null when none can race it.
         /// </summary>
         EventOpponentResult? GetOpponentForEvent(
             RaceEventDefinition eventDef,

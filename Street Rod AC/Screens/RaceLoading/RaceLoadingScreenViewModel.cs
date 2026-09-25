@@ -140,10 +140,7 @@ namespace Street_Rod_AC.Screens.RaceLoading
             // One at a time, over the screen the player came back to: the dialog service queues them
             foreach (var message in messages)
             {
-                if (message.Timeslip is { } slip)
-                    _dialogService.ShowDialog(new Dialogs.Timeslip.TimeslipDialogViewModel(_dialogService, slip));
-                else
-                    _dialogService.ShowDialog(new InformationDialogViewModel(_dialogService, message.Text, message.Title));
+                Dialogs.PlayerMessageDialogs.Show(_dialogService, message, () => _navigationService.NavigateToMainMenu());
             }
         }
 

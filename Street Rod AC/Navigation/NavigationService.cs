@@ -354,6 +354,7 @@ namespace Street_Rod_AC.Navigation
                 _dialogService,
                 _victoryConditionService,
                 _milestoneService,
-                gameState));
+                gameState,
+                _gameStateRepository));
     }
 }

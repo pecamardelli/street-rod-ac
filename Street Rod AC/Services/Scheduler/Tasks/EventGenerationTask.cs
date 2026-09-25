@@ -37,7 +37,8 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
                 _logger.Information("Removed {Count} expired events", removed);
             }
 
-            // Generate new events
+            // Generate new events, for where the player stands today
+            gameState.Career.SyncStanding(gameState.Player);
             var newEvents = _eventService.GenerateEvents(
                 gameState.Career,
                 currentDate,
