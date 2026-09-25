@@ -283,13 +283,16 @@ ported is the daily life cycle:
   - The diner rolls the patrol when a road race is agreed (`PoliceCars.Patrol`, `PoliceRules`):
     - the chance: 8% by day, 30% from 20:00, up to 15% more for the better known racer, 5% more each for a pink slip
       and a wager of $1,000 or more, at most 50%;
-    - the cars: 1 by day, 2 at night, one more at 75 reputation, as the track's pit boxes allow.
+    - the cars: two, one for each racer, on a track with four pit boxes or more.
   - The police car is the installed car with liveries marked `"street_corsa_police": true` in `ui_skin.json`, a
     Monaco first (`PoliceCars.Find`). Without one, no police come and the diner shows no risk.
   - race.ini gets the cops as `[CAR_2]`… and `[STREET_ROD] POLICE`/`POLICE_SPOT`, and `SUN_ANGLE` from the game's
     clock for every race.
-- **The race mode** runs the chase (hidden cops, the patrol part way round, rubber band, boxing in, one roadblock per
-  cop, lights, a synthesized siren) and writes `pursuit` (schema 1.5).
+- **The race mode** runs the chase and writes `pursuit` (schema 1.5):
+  - speed traps or a patrol;
+  - a cop racing each racer, a racer it gets past busted;
+  - one roadblock per cop;
+  - lights and a synthesized siren.
 - **The result:**
   - busted: the fine ($750, $500 more for each earlier bust, at most $5,000);
   - busted: the impound (2 days, one more for each earlier bust, at most 7, $100 a day; an unpaid fine goes on the
@@ -314,6 +317,21 @@ paths, roadblocks, a stuck cop put back, night at 21:00. The game found five thi
 
 Not yet seen by the user: how a chase feels to drive; the lights and the siren (the screenshots caught the terminal
 over the AC window); the diner's police note; the garage's impound panel.
+
+**Speed traps** (added after the first review): two patrols in three are cops parked on the verge at random spots on
+straights round the track, set off by whoever goes past (see the race mode doc). Only a racer a cop has been after has
+a chase to win or lose. A cop that catches the rival stays with them. Checked in the game. The police chance was kept
+as it was (the user thought 30–50% of races would be too many).
+
+**The police drive like racers** (the user's rules, 2026-09-25):
+- **One cop for each racer.** Each races its prey at AI level 150% with full aggression, and tries to get past.
+- **Getting past is the bust.** The player's car is taken over by an autopilot and braked to a stop; the rival is
+  held.
+- **A dodged roadblock** sends the cop after its prey at full throttle.
+- **The finish line is home:** a racer over it is out of the police's reach.
+- **The police Monaco has the 426 Hemi.** The factory 440 couldn't keep up with a 450 hp Chevelle.
+- **Dropped:** the boxing-in, the PIT, the pinned bust and a pushed rubber band, tried along the way.
+- **The chance:** the police chance is unchanged, and it always sends two cars.
 
 Left for later: Test Drive mode (race-explorer); rivals busted in their own races with each other; the difficulty's say
 in the police chance; hiding the cops from AC's HUD leaderboard. Any other car can be a police car by marking a skin.

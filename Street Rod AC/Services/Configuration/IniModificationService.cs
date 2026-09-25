@@ -383,6 +383,7 @@ namespace Street_Rod_AC.Services.Configuration
             {
                 sb.AppendLine($"POLICE={string.Join(",", Enumerable.Range(2, police.Count))}");
                 sb.AppendLine($"POLICE_SPOT={police.SpotShare.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture)}");
+                sb.AppendLine(police.Traps ? "POLICE_MODE=TRAPS" : "POLICE_MODE=PATROL");
             }
 
             // The shape each car goes in, from its earlier races: the mode puts it into AC before the green
@@ -465,9 +466,9 @@ namespace Street_Rod_AC.Services.Configuration
             return sb.ToString();
         }
 
-        /// <summary>How the police drive: flat out, and not shy of contact</summary>
+        /// <summary>How the police drive: flat out, and not shy of contact (the race mode takes them to 150% once they are out)</summary>
         public const int PoliceAILevel = 100;
-        public const int PoliceAIAggression = 80;
+        public const int PoliceAIAggression = 100;
         public const string PoliceDriverName = "Police";
 
         /// <summary>Noon, which a launch without a time of day races at</summary>

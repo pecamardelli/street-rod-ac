@@ -38,11 +38,10 @@ public sealed class PoliceTests : IDisposable
     }
 
     [Fact]
-    public void A_patrol_sends_one_car_by_day_two_at_night_and_one_more_after_a_big_name()
+    public void The_police_send_one_car_for_each_racer()
     {
-        Assert.Equal(1, PoliceRules.Cops(Afternoon, 50));
-        Assert.Equal(2, PoliceRules.Cops(Night, 50));
-        Assert.Equal(3, PoliceRules.Cops(Night, 90));
+        Assert.Equal(2, PoliceCars.Patrol(Monaco, true, Afternoon, 0, false, 0m, "24", ["car_a", "car_b"], new SureRandom())?.Count);
+        Assert.Equal(2, PoliceCars.Patrol(Monaco, true, Night, 100, true, 5000m, "24", ["car_a", "car_b"], new SureRandom())?.Count);
         Assert.Equal("Low", PoliceRules.RiskLabel(0.08));
         Assert.Equal("Moderate", PoliceRules.RiskLabel(0.2));
         Assert.Equal("High", PoliceRules.RiskLabel(0.4));
@@ -122,9 +121,10 @@ public sealed class PoliceTests : IDisposable
         var sure = new Random(1);
         Assert.Null(PoliceCars.Patrol(Monaco, isRoadRace: false, Night, 100, true, 5000m, "24", ["car_a", "car_b"], sure));
         Assert.Null(PoliceCars.Patrol(Monaco, true, Night, 100, true, 5000m, "24", ["DODGE_MONACO_74", "car_b"], sure));
-        // Two pit boxes are the two racers': no room for anybody else
+        // Two pit boxes are the two racers': the police need one more for each of them
         Assert.Null(PoliceCars.Patrol(Monaco, true, Night, 100, true, 5000m, "2", ["car_a", "car_b"], sure));
-        Assert.Equal(1, PoliceCars.Patrol(Monaco, true, Night, 100, true, 5000m, "3", ["car_a", "car_b"], new SureRandom())?.Count);
+        Assert.Null(PoliceCars.Patrol(Monaco, true, Night, 100, true, 5000m, "3", ["car_a", "car_b"], new SureRandom()));
+        Assert.Equal(2, PoliceCars.Patrol(Monaco, true, Night, 100, true, 5000m, "4", ["car_a", "car_b"], new SureRandom())?.Count);
     }
 
     [Fact]
@@ -140,6 +140,16 @@ public sealed class PoliceTests : IDisposable
         Assert.Equal(3, police.Count);
         Assert.Equal(["police_a", "police_b", "police_a"], police.Skins);
         Assert.InRange(police.SpotShare, 0.25, 0.6);
+        // A roll of 0 is under the trap share: speed traps
+        Assert.True(police.Traps);
+    }
+
+    [Fact]
+    public void Two_patrols_in_three_are_speed_traps()
+    {
+        var random = new Random(7);
+        var rolls = Enumerable.Range(0, 3000).Select(_ => PoliceCars.Roll(1, 2, Monaco, random)!).ToList();
+        Assert.InRange(rolls.Count(p => p.Traps) / 3000.0, 0.62, 0.71);
     }
 
     /// <summary>Every roll comes up: NextDouble is 0</summary>
@@ -184,6 +194,7 @@ public sealed class PoliceTests : IDisposable
         Assert.Contains($"DRIVER_NAME={IniModificationService.PoliceDriverName}", lines);
         Assert.Contains("POLICE=2,3", lines);
         Assert.Contains("POLICE_SPOT=0.400", lines);
+        Assert.Contains("POLICE_MODE=PATROL", lines);
         // 21:00: 16 degrees an hour past 13:00
         Assert.Contains("SUN_ANGLE=128.00", lines);
     }

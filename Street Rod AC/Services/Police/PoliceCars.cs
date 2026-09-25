@@ -127,8 +127,8 @@ namespace Street_Rod_AC.Services.Police
 
         /// <summary>
         /// The police a street race draws, rolled now: a road race only, with a police car installed that neither
-        /// racer drives (the two share a folder otherwise), as many cars as <see cref="PoliceRules.Cops"/> says and
-        /// the track has pit boxes left for. The more known of the two racers is the one the police have heard of.
+        /// racer drives (the two share a folder otherwise), one car for each racer (<see cref="PoliceRules.CopsPerRace"/>)
+        /// on a track with a pit box for each. The more known of the two racers is the one the police have heard of.
         /// Null when none come.
         /// </summary>
         public static RacePolice? Patrol(PoliceCar? car, bool isRoadRace, DateTime time, int reputation, bool isPinkSlip,
@@ -137,14 +137,15 @@ namespace Street_Rod_AC.Services.Police
             if (car == null || !isRoadRace) return null;
             if (racingCarIds.Any(id => string.Equals(id, car.CarId, StringComparison.OrdinalIgnoreCase))) return null;
 
-            var cops = PoliceRules.Cops(time, reputation);
-            if (int.TryParse(pitboxes, out var boxes) && boxes > 0) cops = Math.Min(cops, boxes - 2);
-            return Roll(PoliceRules.Chance(time, reputation, isPinkSlip, cashWager), cops, car, random);
+            if (int.TryParse(pitboxes, out var boxes) && boxes > 0 && boxes < 2 + PoliceRules.CopsPerRace) return null;
+            return Roll(PoliceRules.Chance(time, reputation, isPinkSlip, cashWager), PoliceRules.CopsPerRace, car, random);
         }
 
         /// <summary>
         /// Whether a patrol comes, and if so what it sends: <paramref name="cops"/> cars of <paramref name="car"/>, each
-        /// in its own livery where there are enough, turning up somewhere between a quarter and 60% of the way round
+        /// in its own livery where there are enough. Two in three are speed traps parked round the track
+        /// (<see cref="PoliceRules.TrapShare"/>); the rest a patrol turning up behind somewhere between a quarter and 60%
+        /// of the way round.
         /// </summary>
         public static RacePolice? Roll(double chance, int cops, PoliceCar? car, Random random)
         {
@@ -156,7 +157,8 @@ namespace Street_Rod_AC.Services.Police
             {
                 CarId = car.CarId,
                 Skins = Enumerable.Range(0, cops).Select(i => car.Skins[(first + i) % car.Skins.Count]).ToList(),
-                SpotShare = Math.Round(0.25 + random.NextDouble() * 0.35, 3)
+                SpotShare = Math.Round(0.25 + random.NextDouble() * 0.35, 3),
+                Traps = random.NextDouble() < PoliceRules.TrapShare
             };
         }
     }

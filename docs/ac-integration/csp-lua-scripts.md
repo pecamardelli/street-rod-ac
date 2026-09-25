@@ -55,44 +55,74 @@ every frame) and the player still has to finish.
 putting the car back (`ac.onCarJumped`) before it has gone 20 m. With AC's own penalties and teleports off, the first
 is the rule; the second stays for a car AC moves anyway. Put back after 20 m is `ABANDONED`.
 
-**The police chase** (road races only, since step 6): race.ini lists the police as `[CAR_2]` and on, after the two
-racers, and `[STREET_ROD] POLICE=2,3` tells the mode which cars they are and `POLICE_SPOT` (a share of the lap) when the
-patrol shows up. The career rolls whether police come at all (`PoliceRules`, `PoliceCars.Patrol`); the mode runs the
-chase:
-- **Waiting**: hidden (`ac.setCarActive(i, false)`), nothing collides with them (`physics.disableCarCollisions`), held
-  on the grid with the throttle limit and the stop counter, every frame, and kept from retiring
+**The police chase** (road races only, since step 6). race.ini lists the police as `[CAR_2]` and `[CAR_3]`, after the
+two racers. `[STREET_ROD]` tells the mode:
+- `POLICE=2,3`: which cars they are;
+- `POLICE_MODE`: `TRAPS` (two patrols in three) or `PATROL`;
+- `POLICE_SPOT`: for a patrol, how far round the lap it shows up.
+
+The career rolls whether the police come at all (`PoliceRules`, `PoliceCars.Patrol`); the mode runs the chase. The
+rules are the user's (2026-09-24):
+- **One cop for each racer.** Each sticks to its prey and races it like a racer, with AC's own AI and its overtaking:
+  - AI level 150% (`physics.setAILevel(i, 1.5)`: CSP takes 0 to 2, race.ini stops at 100);
+  - full aggression (0.95, which is AC's 100%);
+  - both set again every 0.5 s, since CSP resets the aggression;
+  - a mild rubber band: `setExtraAIGrip` from AC's own 1.2 up to 1.6 the further back the cop is.
+- **The police car is the Monaco with the 426 Hemi:** 425 hp gross, 3.23 axle, its own engine sound. With the factory
+  440 it couldn't keep up with a 450 hp Chevelle, and boxing it in, a PIT and a pushed rubber band were tried and
+  dropped for this.
+- **Waiting:** hidden (`ac.setCarActive(i, false)`) with nothing colliding with them (`physics.disableCarCollisions`).
+  Held on the grid with the throttle limit and the stop counter every frame, and kept from retiring
   (`physics.preventAIFromRetiring`). Not `setAINoInput`: Test Drive found a car parked with it never drives again.
-- **The patrol shows up** when the player has driven `POLICE_SPOT` of the lap: each cop is put on the AI line 200, 280
-  or 360 m behind its target, shown, and sent off at 80% of the target's speed. The way Test Drive puts a car back:
-  stopped, placed a hand's breadth over the road (`physics.raycastTrack`), facing the opposite of where it will look
-  (`setAICarPosition` takes it that way), woken, engine at 3000 rpm with stalling off, then pushed. With two or more
-  cops the last goes after the rival.
-- **Driving**: AC's AI on its line, AI level and aggression set again every 0.5 s (CSP resets the aggression), and a
-  rubber band on `setExtraAIGrip` (1.1 to 1.7, more the further back). Within 40 m of its target a cop drives at it
-  with `setAISplineAbsoluteOffset(i, offset, true)`: the first on the target's line, the others 2.4 m to either side.
-  Right of the line is positive, the road frame Traffic Race uses. Behind its target a cop is never faster than it can
-  still stop from (the target's speed plus what it sheds at 5 m/s² before a 6 m standoff), and is braked with
-  `setAIStopCounter` pulses when over that: `setAITopSpeed` only takes the throttle away, and a cop coasting down to
-  it hit a stopped player at 35 km/h (a 20 g crash) in the game. With the brake it stops 5 m behind.
-- **Roadblock**: a cop more than 700 m back for 8 s is parked 450 m ahead of its target, once a chase: at 50° on the
-  wider side of the road, 3 m out from the line, the other lane open. Square across a county road the Monaco left no
-  way through and every roadblock was a bust. AC's AI brakes to a stop behind a parked car rather than going round
-  it, so an AI-driven racer (the rival, or the player under an autopilot) is steered into the open lane when a
-  roadblock is within 150 m ahead. When the target is 150 m past it (judged from where it was put: the car reads its
-  old place until the physics runs), it turns round and chases again. A cop going nowhere for 6 s is put back 250 m
-  behind.
-- **Lights and siren**: two `ac.LightSource`s on the roof, red and blue in turn about twice a second, and a glow drawn
-  over each in `script.draw3D` (`render.circle`). AI cars' own light bars can't be switched from Lua. The siren is
-  `siren.wav` in the mode's folder, a 3D looping `ac.AudioEvent` placed on the car every frame; it is synthesized by
-  `tools/siren/make_siren.py`, so the game ships no recording.
-- **Busted**: a cop within 8 m and the driver under 15 km/h for 3 s. A player who crashes, breaks down or goes to the
-  pits with the cops out is busted too, and so is a rival who crashes or breaks down. A busted rival is held.
-- **Got away**: every cop after the player more than 600 m back along the road for 20 s (a cop after the rival
-  doesn't count until the rival is out of it), no cop left in it, or 4 minutes gone: the police give up. The cops are
-  put away (hidden, held) and the rival, if still free, got away too.
-- **The finish line** decides the race as always, by the racers' own order at the line (the police are in AC's race
-  too, and one put down ahead can lead it). With the cops still after the player, the session goes on past the line
-  until the chase is decided; a crash after the line with the cops out is a bust, and the race result stands.
+- **Speed traps:** before the green each cop is parked on the verge of a straight.
+  - The spots are picked at random from the AI line, sampled every 10 m between 12% and 92% of the lap.
+  - A spot turns less than 12° over 120 m and has 4.5 m of room at one side. There's one per stretch of the lap.
+  - The cop parks 1.3 m in from the edge, at most 5 m off the line, visible with its lights off.
+  - The first racer to go 0–25 m past a trap who has no cop after them yet sets it off: lights on, and it pulls out.
+    A racer with a cop already leaves it for the other one.
+  - A trap nobody set off stays parked. With no room for a trap anywhere, the police come as a patrol instead.
+- **Pulling out** (a trap, a dodged roadblock): the Test Drive restart. Released, woken, revving in first gear, and
+  pushed along the road at 6 m/s. Released alone, a cop sat on the verge.
+- **The patrol** shows up when the player has driven `POLICE_SPOT` of the lap. Each cop is put on the AI line 200 m
+  behind its own prey, shown, and sent off at 80% of the prey's speed. The way Test Drive puts a car back:
+  - stopped;
+  - placed a hand's breadth over the road (`physics.raycastTrack`);
+  - facing the opposite of where it will look (`setAICarPosition` takes it that way);
+  - woken, with the engine running and stalling off;
+  - then pushed.
+- **Busted = overtaken.** A cop 3 m ahead of its prey along the road for 0.5 s, after having been behind it, has them.
+  - The player: "Busted!", `physics.setCarAutopilot` and `physics.setGentleStop` brake the car to a stop, and the race
+    ends `BUSTED` once it has stopped (12 s at most).
+  - The rival: held where it stops, and the player races on.
+  - The cop stops by them, lights on.
+  - A car stopped off the road, which a cop on its line may never get past, is busted with a cop within 8 m and
+    under 15 km/h for 3 s.
+  - Crashing or breaking down while chased is busted too.
+- **Roadblock:** a cop more than 700 m back for 8 s is parked 450 m ahead of its prey, once a chase.
+  - It sits at 50° on the wider side of the road, 3 m out from the line, with the other lane open. Square across a
+    county road the Monaco left no way through.
+  - AC's AI brakes to a stop behind a parked car rather than going round it. So an AI-driven racer (the rival, or the
+    player under an autopilot) is steered into the open lane when a roadblock is within 150 m ahead.
+  - Dodged (the prey 15 m past it, judged from where it was put, since the car reads its old place until the physics
+    runs): the cop goes after them at full throttle.
+  - A roadblock ahead of its prey never counts as getting past it.
+- **Stuck:** a cop going nowhere for 6 s is put back 250 m behind.
+- **Lights and siren:**
+  - two `ac.LightSource`s on the roof, red and blue in turn about twice a second, with a glow drawn over each in
+    `script.draw3D` (`render.circle`). AI cars' own light bars can't be switched from Lua.
+  - The siren is `siren.wav` in the mode's folder, a 3D looping `ac.AudioEvent` placed on the car every frame. It is
+    synthesized by `tools/siren/make_siren.py`, so the game ships no recording.
+- **Got away:** the cop after the player more than 600 m back along the road for 20 s, no cop left after them, or 4
+  minutes gone. That cop is put away; the rival's chase goes on on its own (the police give up on the rival after 4
+  minutes too).
+- **The finish line is home.** A racer over the line is out of the police's reach.
+  - The player crossing it ends the race, and a player still chased got away.
+  - The rival crossing it gets away, and their cop is called off.
+  - Past the line nothing counts: no crash, no bust.
+  - The race itself is decided by the racers' own order at the line (the police are in AC's race too, and one put
+    down ahead can lead it).
+- **Whose chase counts:** only a racer a cop has been after has a chase to win or lose (`playerChased`,
+  `rivalChased`).
 - A wrecked cop (15 g) is out of the chase.
 
 The police are never in `participants`: the result has a `pursuit` block instead (schema 1.5). AC's own HUD
@@ -106,7 +136,10 @@ checked in the game: a car sent in with `CAR_0_BODY=25,0,0,0` finished with 25 k
 **Tested in the game** (2026-09-24, unattended, Black Cat County at 21:00, the Monaco Police, the player on
 `physics.setCarAutopilot`): the cops appear behind at speed and drive; a player who stops is busted with the cop
 braked to a stop 5 m behind; with the cops held back, both roadblocks are passed, a stuck cop is put back, the player
-gets away mid-race and still wins at the line. 21:00 is full night. The chase logic runs
+gets away mid-race and still wins at the line. 21:00 is full night. Speed traps: parked on the verge, set off by the
+player going past, pulled out and chased, a bust; the light bar lights the player's cockpit blue at night. With the
+Hemi and one cop for each racer (2026-09-25): a 140 hp Bel Air and a 130 hp Packard were both overtaken and busted,
+the Bel Air pulled over by the autopilot; a 450 hp Chevelle kept its lead to the line and the race ended there. The chase logic runs
 outside the game in `tools/sr_race_harness/test_chase.py` (lupa, a stub round track).
 
 **Time of day**: race.ini's `[LIGHTING] SUN_ANGLE` follows the game's clock when the race starts (Content Manager's

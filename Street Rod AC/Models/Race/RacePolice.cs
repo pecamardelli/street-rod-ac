@@ -12,8 +12,14 @@ namespace Street_Rod_AC.Models.Race
         /// <summary>One livery per police car: as many cars as skins</summary>
         public List<string> Skins { get; init; } = new();
 
-        /// <summary>How far round the lap the patrol shows up, as a share of it</summary>
+        /// <summary>How far round the lap the patrol shows up, as a share of it (a patrol, not traps)</summary>
         public double SpotShare { get; init; }
+
+        /// <summary>
+        /// Speed traps: the cops wait parked on the verge at spots round the track, and pull out after whoever goes past.
+        /// Otherwise a patrol that drives up from behind at <see cref="SpotShare"/>.
+        /// </summary>
+        public bool Traps { get; init; }
 
         public int Count => Skins.Count;
     }

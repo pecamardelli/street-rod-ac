@@ -27,6 +27,9 @@ namespace Street_Rod_AC.Services.Police
 
         public const double MaxChance = 0.5;
 
+        /// <summary>The share of patrols that are speed traps parked round the track; the rest drive up from behind</summary>
+        public const double TrapShare = 2.0 / 3.0;
+
         /// <summary>The fine for a first bust, what each earlier one adds, and the most it gets to</summary>
         public const decimal BaseFine = 750m;
         public const decimal FinePerBust = 500m;
@@ -54,13 +57,11 @@ namespace Street_Rod_AC.Services.Police
             return Math.Min(chance, MaxChance);
         }
 
-        /// <summary>How many cars a patrol sends: one by day, two at night, one more after a racer with a big name</summary>
-        public static int Cops(DateTime time, int reputation)
-        {
-            var cops = IsNight(time) ? 2 : 1;
-            if (reputation >= 75) cops++;
-            return Math.Min(cops, 3);
-        }
+        /// <summary>
+        /// The police send one car for each racer: each sticks to its prey and tries to get past it (the race mode).
+        /// A track needs a pit box for each, after the racers' two.
+        /// </summary>
+        public const int CopsPerRace = 2;
 
         /// <summary>The risk in the diner's words</summary>
         public static string RiskLabel(double chance) => chance switch

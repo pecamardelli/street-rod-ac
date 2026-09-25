@@ -89,6 +89,7 @@ for i = 0, world.cars - 1 do refresh(cars[i]) end
 
 -- CSP -------------------------------------------------------------------------
 local log = {}
+local targets = {}
 local timers = {}
 local saved = {}
 local quit = false
@@ -111,7 +112,13 @@ ac = {
     for part in tostring(v):gmatch('[^,]+') do items[#items + 1] = part end
     if default == nil then return items end
     return items[1] end } end },
-  log = function(s) log[#log + 1] = s end,
+  -- Each cop's target, as the mode announces it: the stub's cars block the cop behind it
+  log = function(s)
+    log[#log + 1] = s
+    local cop, racer = s:match('Cop (%d+) after car (%d+)')
+    if not cop then cop, racer = s:match('Cop (%d+) in its speed trap saw car (%d+)') end
+    if cop then targets[tonumber(cop)] = tonumber(racer) end
+  end,
   setMessage = function(t, d) log[#log + 1] = '[message] ' .. t .. ': ' .. tostring(d) end,
   setCarActive = function(i, a) controls[i].active = a end,
   getCarLeaderboardPosition = function(i) return cars[i].racePosition end,
@@ -126,7 +133,7 @@ ac = {
   shutdownAssettoCorsa = function() quit = true end,
   worldCoordinateToTrackProgress = progressOf,
   trackProgressToWorldCoordinateTo = function(t, r) r:set(pointAt(t * L, 0)) end,
-  getTrackAISplineSides = function() return vec2(6, 6) end,
+  getTrackAISplineSides = function() return vec2(world.sides or 6, world.sides or 6) end,
   getCameraPosition = function() return vec3() end,
   LightSource = function() return { dispose = function() end } end,
   AudioEvent = { fromFile = function() return { start = function() end, seek = function() end, stop = function() end,
@@ -144,7 +151,10 @@ physics = {
   setCarVelocity = function(i, v) cars[i].speedKmh = v:length() * 3.6 end,
   setAICarPosition = function(i, pos, facing)
     local car = cars[i]
-    car.total = math.floor(car.total / L) * L + progressOf(pos) * L
+    -- On the lap that puts it at most a quarter lap behind the player or up to three quarters ahead: the mode puts
+    -- cops a few hundred metres behind a racer, or ahead (a roadblock, a trap anywhere round the lap)
+    local s = progressOf(pos) * L
+    car.total = s + math.ceil((cars[0].total - 0.25 * L - s) / L) * L
     controls[i].placed = controls[i].placed + 1
     placements[#placements + 1] = { index = i, t = sim.time / 1000, progress = progressOf(pos) }
     refresh(car)
@@ -153,6 +163,8 @@ physics = {
   setAIPitStopRequest = function() end, preventAIFromRetiring = function() end,
   setAILevel = function() end, setAIAggression = function() end, setExtraAIGrip = function() end,
   setAISplineAbsoluteOffset = function() end,
+  setGentleStop = function(i, v) controls[i].gentle = v ~= false end,
+  setCarAutopilot = function() end,
   raycastTrack = function(pos) return pos.y end,
 }
 render = { circle = function() end }
@@ -196,18 +208,9 @@ local function step(dt, t)
     if i > 0 and (c.throttle <= 0 or c.stop > 0) then want = 0 end
     if i > 0 then want = math.min(want, c.top) end
     c.stop = math.max(0, c.stop - dt)
-    local before = car.total
+    -- A car being stopped gently (the busted player, pulled over) stops
+    if c.gentle then want = 0 end
     car.total = car.total + want * dt
-    -- A cop can't drive through the racer it is after: it stops on its bumper. (It gets past anything else, as the
-    -- AI overtakes.) The mode sends the last of two or more cops after the rival, the others after the player.
-    if i >= 2 and controls[i].active then
-      local r = (world.cars > 3 and i == world.cars - 1) and 1 or 0
-      local bumper = cars[r].total - 5
-      if before <= bumper and car.total > bumper then
-        car.total = bumper
-        want = math.min(want, cars[r].speedKmh / 3.6)
-      end
-    end
     car.speedKmh = want * 3.6
     refresh(car)
   end
@@ -238,10 +241,10 @@ end
 '''
 
 
-def run(name, cars, ini, player, rival, cop, max_seconds=400, length=2000.0):
+def run(name, cars, ini, player, rival, cop, max_seconds=400, length=2000.0, sides=6.0):
     lua = lupa.LuaRuntime(unpack_returned_tuples=True)
     world = lua.table_from({
-        'length': length, 'cars': cars, 'maxSeconds': max_seconds,
+        'length': length, 'cars': cars, 'maxSeconds': max_seconds, 'sides': sides,
         'ini': lua.table_from(ini),
         'playerSpeed': player, 'rivalSpeed': rival, 'copSpeed': cop,
     })
@@ -264,38 +267,49 @@ def check(name, condition, log):
 POLICE_INI = {'STREET_ROD.RACE_TYPE': 'ROAD', 'STREET_ROD.POLICE': '2,3', 'STREET_ROD.POLICE_SPOT': '0.1'}
 
 
-def busted_after_the_chase_starts():
-    # The player stops for good 30 s into the race; the cops are faster
-    result, log, _, _ = run('busted', 4, POLICE_INI, lambda t: 30 if t < 30 else 0, lambda t: 20, lambda t, i: 45)
+def overtaken_and_busted():
+    # The cops are faster: the player's gets past him, and he is pulled over
+    result, log, _, _ = run('overtaken', 4, POLICE_INI, lambda t: 30, lambda t: 20, lambda t, i: 45)
     pursuit = result['pursuit']
     check('the patrol showed up', pursuit['started'], log)
+    check('a cop got past the player', 'got past car 0' in log, log)
     check('the player is busted', pursuit['player'] == 'BUSTED', log)
     check('before the line the race ends BUSTED', result['session']['end_reason'] == 'BUSTED', log)
-    # stopped at 30 s, the patrol out at about 10 s: a cop on their bumper has them a few seconds later
-    check('caught soon after stopping', 20 <= pursuit['duration_s'] <= 26, log)
+    check('one cop for each racer', 'Cop 2 after car 0' in log and 'Cop 3 after car 1' in log, log)
     check('the police are not participants', len(result['participants']) == 2, log)
     check('both cops were read from POLICE=2,3', pursuit['police'] == 2, log)
 
 
 def escaped_after_the_roadblocks():
-    # Slow cops: they fall back, try their roadblock once each, and are left behind for good
-    result, log, _, placements = run('escaped', 4, POLICE_INI, lambda t: 30, lambda t: 20, lambda t, i: 12)
+    # Slow cops: they fall back, try their roadblock once each, chase again once dodged, and are left behind for good
+    result, log, _, _ = run('escaped', 4, POLICE_INI, lambda t: 30, lambda t: 20, lambda t, i: 12)
     pursuit = result['pursuit']
     check('the player got away', pursuit['player'] == 'ESCAPED', log)
     check('the race was won at the line', result['session']['end_reason'] == 'FINISHED', log)
     check('the player finished first', result['participants'][0]['performance']['final_position'] == 1, log)
-    check('the roadblocks were tried', 'roadblock' in log, log)
-    # join (2) + roadblock and back (2 each)
-    check('each cop set up one roadblock at most', placements <= 6, log)
+    check('a roadblock went up', 'sets up a roadblock' in log, log)
+    check('a dodged roadblock chases again', 'got past its roadblock, after it' in log, log)
+    check('nobody was busted by a roadblock ahead of them', 'got past car' not in log, log)
 
 
-def rival_busted_and_the_chase_called_off():
-    # The rival stops half way round and the cop after it catches it; the player's cop can't get past the player
-    result, log, _, _ = run('rival busted', 4, POLICE_INI, lambda t: 30, lambda t: 20 if t < 40 else 0, lambda t, i: 40)
+def rival_overtaken_the_player_gets_away():
+    # The rival's cop is fast and gets past him; the player's is slow
+    result, log, _, _ = run('rival busted', 4, POLICE_INI, lambda t: 30, lambda t: 20,
+                            lambda t, i: 40 if i == 3 else 12)
     pursuit = result['pursuit']
     check('the rival is busted', pursuit['rival'] == 'BUSTED', log)
-    check('the player got away when the police gave up', pursuit['player'] == 'ESCAPED', log)
-    check('given up after the time limit', 'gave up' in log or pursuit['duration_s'] >= 239, log)
+    check('by being overtaken', 'got past car 1' in log, log)
+    check('the player got away', pursuit['player'] == 'ESCAPED', log)
+    check('and won at the line', result['session']['end_reason'] == 'FINISHED', log)
+
+
+def the_line_is_home():
+    # A cop as fast as the player, on his tail the whole way: he crosses the line, and he made it
+    result, log, _, _ = run('the line', 4, POLICE_INI, lambda t: 30, lambda t: 20, lambda t, i: 30)
+    pursuit = result['pursuit']
+    check('the race ends at the line', result['session']['end_reason'] == 'FINISHED', log)
+    check('a player chased over the line got away', pursuit['player'] == 'ESCAPED', log)
+    check('and won', result['participants'][0]['performance']['final_position'] == 1, log)
 
 
 def no_police_no_pursuit():
@@ -304,8 +318,54 @@ def no_police_no_pursuit():
     check('won', result['participants'][0]['performance']['final_position'] == 1, log)
 
 
+TRAPS_INI = {'STREET_ROD.RACE_TYPE': 'ROAD', 'STREET_ROD.POLICE': '2,3', 'STREET_ROD.POLICE_SPOT': '0.1',
+             'STREET_ROD.POLICE_MODE': 'TRAPS'}
+
+
+def trap_sees_the_player_who_is_then_busted():
+    # An 8 km loop: straight enough for traps. The trap cop is faster and gets past him
+    result, log, _, _ = run('trap busted', 4, TRAPS_INI, lambda t: 30, lambda t: 20, lambda t, i: 45,
+                            max_seconds=700, length=8000.0)
+    pursuit = result['pursuit']
+    check('the cops were parked in traps', log.count('parked in a speed trap') == 2, log)
+    check('a trap saw the player', 'saw car 0 go by' in log, log)
+    check('and got past him', 'got past car 0' in log, log)
+    check('the player is busted', pursuit['player'] == 'BUSTED', log)
+
+
+def each_racer_gets_a_trap_of_his_own():
+    # Slow cops. The player goes past the first trap first; the rival, behind him, finds it taken and gets the second
+    result, log, _, _ = run('a trap each', 4, TRAPS_INI, lambda t: 30, lambda t: 27, lambda t, i: 10,
+                            max_seconds=700, length=8000.0)
+    check('a trap saw the player', 'saw car 0 go by' in log, log)
+    check('the other trap saw the rival', 'saw car 1 go by' in log, log)
+    check('two different cops', log.count('in its speed trap saw car') == 2, log)
+
+
+def only_the_rival_is_seen_and_the_player_finishes_clean():
+    # One trap. The rival is faster, goes past it first and stops later on; the player never has a cop after him
+    ini = dict(TRAPS_INI, **{'STREET_ROD.POLICE': '2'})
+    result, log, _, _ = run('rival seen', 3, ini, lambda t: 25, lambda t: 35 if t < 200 else 0, lambda t, i: 45,
+                            max_seconds=700, length=8000.0)
+    pursuit = result['pursuit']
+    check('the trap saw the rival', 'saw car 1 go by' in log, log)
+    check('the rival is busted', pursuit['rival'] == 'BUSTED', log)
+    check("the player's chase was never on", pursuit.get('player') is None, log)
+    check('the player finished the race and won it', result['session']['end_reason'] == 'FINISHED'
+          and result['participants'][0]['performance']['final_position'] == 1, log)
+
+
+def no_room_for_traps_means_a_patrol():
+    result, log, _, _ = run('no room', 4, TRAPS_INI, lambda t: 30, lambda t: 20, lambda t, i: 12, sides=2.0)
+    check('no trap spot found', 'No spot for a speed trap' in log, log)
+    check('the patrol came instead', 'after car 0 from 200 m back' in log, log)
+    check('and the chase ran', result['pursuit']['started'], log)
+
+
 if __name__ == '__main__':
-    for test in (busted_after_the_chase_starts, escaped_after_the_roadblocks, rival_busted_and_the_chase_called_off, no_police_no_pursuit):
+    for test in (overtaken_and_busted, escaped_after_the_roadblocks, rival_overtaken_the_player_gets_away, the_line_is_home, no_police_no_pursuit,
+                 trap_sees_the_player_who_is_then_busted, each_racer_gets_a_trap_of_his_own,
+                 only_the_rival_is_seen_and_the_player_finishes_clean, no_room_for_traps_means_a_patrol):
         test()
         print(f'ok  {test.__name__}')
     sys.exit(0)
