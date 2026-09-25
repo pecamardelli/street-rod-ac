@@ -455,7 +455,7 @@ garage's navigation tiles throwing on hover. The others: Esc closing every card,
 broken room skipped rather than ending the showroom, the central car in the main slot. Build and tests pass; not yet
 tried in the game.
 
-### Step 10: the world remembers (built 2026-09-25 on `feature/world-remembers`)
+### Step 10: the world remembers (done, PR #24, merged as `2db9eb1`)
 Three features, one PR:
 - **car history:** every car keeps its odometer (`Car.OdometerKM` exists), previous owners and wins, and its price
   reflects them (`CarValuation`);
@@ -484,6 +484,12 @@ two weeks, in the street talk); the paper's articles cover the player's notable 
 
 Not yet seen by the user in the game: the new newspaper (checked in a render at 1920×1080), a rematch at the diner,
 history on the lots and in the garage, the price effect on the lots.
+
+**Reviewed before the merge (2026-09-25):** an xhigh code review found 14 issues, all fixed in the PR. The worst: picking
+a rival who wanted a rematch left pink slips on the table for the next rival, and a rematch took a car worth nothing.
+The others: a grudge kept after the rival bought the car back, headlines naming a racer twice, event races losing
+their story to a wreck, older saves showing used cars as first-owner cars, a car won back counting its owner twice,
+the King's car priced before its record. Build and tests pass; not yet tried in the game.
 
 ### Step 11: strip extras
 - **Test-and-tune:** paid time at the strip for a timeslip with nothing at stake, building on the free run.
