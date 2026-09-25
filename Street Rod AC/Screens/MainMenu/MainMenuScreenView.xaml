@@ -6,9 +6,6 @@
              xmlns:controls="clr-namespace:Street_Rod_AC.Controls"
              mc:Ignorable="d"
              d:DesignHeight="720" d:DesignWidth="1280">
-    <UserControl.InputBindings>
-        <KeyBinding Key="Escape" Command="{Binding CloseCardCommand}"/>
-    </UserControl.InputBindings>
     <!--
         The cars fill the lower part of the screen, fading into black towards the top. The menu and its cards sit in the
         dark part; the cars go on below them whatever is open.

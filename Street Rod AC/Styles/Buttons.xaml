@@ -271,7 +271,7 @@
                 <ControlTemplate TargetType="Button">
                     <Grid x:Name="root" RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform>
-                            <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            <ScaleTransform x:Name="scale" ScaleX="1" ScaleY="1"/>
                         </Grid.RenderTransform>
 
                         <!-- Glow (separate element so the blur is not applied to the image) -->
@@ -335,8 +335,8 @@
                                 <VisualState x:Name="Normal"/>
                                 <VisualState x:Name="MouseOver">
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="badge" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.08" Duration="0"/>
-                                        <DoubleAnimation Storyboard.TargetName="badge" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.08" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleX" To="1.08" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleY" To="1.08" Duration="0"/>
                                         <DoubleAnimation Storyboard.TargetName="tile" Storyboard.TargetProperty="Opacity" To="1" Duration="0"/>
                                         <DoubleAnimation Storyboard.TargetName="glow" Storyboard.TargetProperty="Opacity" To="0.85" Duration="0"/>
                                         <ColorAnimation Storyboard.TargetName="tileBorder" Storyboard.TargetProperty="Color" To="{StaticResource Amber}" Duration="0"/>
@@ -346,8 +346,8 @@
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="badge" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="0.97" Duration="0"/>
-                                        <DoubleAnimation Storyboard.TargetName="badge" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="0.97" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleX" To="0.97" Duration="0"/>
+                                        <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleY" To="0.97" Duration="0"/>
                                         <DoubleAnimation Storyboard.TargetName="tile" Storyboard.TargetProperty="Opacity" To="1" Duration="0"/>
                                         <DoubleAnimation Storyboard.TargetName="glow" Storyboard.TargetProperty="Opacity" To="0.5" Duration="0"/>
                                         <ColorAnimation Storyboard.TargetName="tileBorder" Storyboard.TargetProperty="Color" To="{StaticResource Amber}" Duration="0"/>

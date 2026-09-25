@@ -88,11 +88,14 @@ namespace Street_Rod_AC.Services.Showcase
             return null;
         }
 
-        /// <summary>The catalog's cars that are installed, each with its folder and the name it is shown by</summary>
-        public static IReadOnlyList<ShowcaseCar> Cars(IEnumerable<CarDefinition> catalog, ISet<string> installed, string carsPath) =>
-            catalog
-                .Where(c => !string.IsNullOrWhiteSpace(c.Id) && installed.Contains(c.Id))
-                .Select(c => new ShowcaseCar(c.Id, Path.Combine(carsPath, c.Id), Title(c), c.AvailableSkins.ToList()))
+        /// <summary>
+        /// The installed cars of the catalog (as <see cref="Catalog.InstalledCars.Only"/> finds them), each with its
+        /// folder and the name it is shown by
+        /// </summary>
+        public static IReadOnlyList<ShowcaseCar> Cars(IEnumerable<CarDefinition> installed, string carsPath) =>
+            installed
+                .Where(c => !string.IsNullOrWhiteSpace(c.Id))
+                .Select(c => new ShowcaseCar(c.Id, Path.Combine(carsPath, c.Id), Title(c), c.AvailableSkins?.ToList() ?? []))
                 .ToList();
 
         /// <summary>The year in front of the name, unless the name already has it</summary>

@@ -83,7 +83,7 @@ public class EncryptedCarsTests
         dir.Bytes("car/car.kn5", new byte[3000]);
         dir.Bytes("car/interior.kn5", new byte[100]);
 
-        Assert.Equal(dir.Combine("car", "car.kn5"), EncryptedCars.MainModel(dir.Combine("car")));
-        Assert.Null(EncryptedCars.MainModel(dir.Combine("missing")));
+        Assert.Equal(dir.Combine("car", "car.kn5"), CarModelFiles.MainModel(dir.Combine("car")));
+        Assert.Null(CarModelFiles.MainModel(dir.Combine("missing")));
     }
 }

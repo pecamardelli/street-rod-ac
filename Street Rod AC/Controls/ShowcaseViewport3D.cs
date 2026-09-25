@@ -4,6 +4,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using AcTools.Render.Kn5Specific.Objects;
 using Street_Rod_AC.Controls.Showcase;
+using Street_Rod_AC.Services.Catalog;
 using CarSlot = AcTools.Render.Kn5SpecificForward.ForwardKn5ObjectRenderer.CarSlot;
 using Sx = SlimDX;
 
@@ -123,21 +124,6 @@ public class ShowcaseViewport3D : D3DViewportBase
         private set => SetValue(CurrentTitlePropertyKey, value);
     }
 
-    private static readonly DependencyPropertyKey IsEmptyPropertyKey = DependencyProperty.RegisterReadOnly(
-        nameof(IsEmpty), typeof(bool), typeof(ShowcaseViewport3D), new PropertyMetadata(true));
-
-    public static readonly DependencyProperty IsEmptyProperty = IsEmptyPropertyKey.DependencyProperty;
-
-    /// <summary>
-    /// There is nothing to show: no cars, no rooms, or cars that will not load. The screen shows its picture instead,
-    /// as it does when the viewport has failed.
-    /// </summary>
-    public bool IsEmpty
-    {
-        get => (bool)GetValue(IsEmptyProperty);
-        private set => SetValue(IsEmptyPropertyKey, value);
-    }
-
     #endregion
 
     #region Loading
@@ -151,7 +137,6 @@ public class ShowcaseViewport3D : D3DViewportBase
         _wanted = _playlist?.Next();
         _leaving = false;
         _failedSets = 0;
-        IsEmpty = _wanted == null;
         RequestLoad();
     }
 
@@ -172,7 +157,13 @@ public class ShowcaseViewport3D : D3DViewportBase
             return;
         }
 
-        if (Renderer != null && !IsPictureHidden) await FadeOutAsync(SceneFadeOut);
+        if (Renderer != null && !IsPictureHidden)
+        {
+            await FadeOutAsync(SceneFadeOut);
+
+            // Left during the fade (a game was started): no room is built for a screen that is gone
+            if (!IsLoaded) return;
+        }
 
         // Another room is another scene. The D3D9 device the picture goes through stays up for it.
         DisposeRenderer(releaseDevice: false);
@@ -186,7 +177,26 @@ public class ShowcaseViewport3D : D3DViewportBase
         renderer.TryToGuessCarLights = false;
         renderer.AutoAdjustTarget = false;
 
-        if (!await StartRendererAsync(renderer)) return;
+        try
+        {
+            if (!await StartRendererAsync(renderer)) return;
+        }
+        catch (Exception ex) when (!IsDeviceLost(ex))
+        {
+            // A room whose model will not load is left out for the rest of the visit; the others still show
+            Logger.Error(ex, "Main screen scene {Scene} could not be loaded; left out", set.Scene.Id);
+            if (_playlist == null || !_playlist.Drop(set.Scene))
+            {
+                Logger.Warning("No main screen scene would load; the main screen shows its picture");
+                _wanted = null;
+                Fail();
+                return;
+            }
+
+            _wanted = _playlist.Next();
+            RequestLoad();
+            return;
+        }
 
         await PutCarsAsync(renderer, set);
         if (Renderer != renderer || !IsLoaded) return;
@@ -201,7 +211,6 @@ public class ShowcaseViewport3D : D3DViewportBase
                 // Failed like a viewport that cannot draw: the screen shows its picture
                 Logger.Warning("{Count} rooms in a row had no car that would load; the main screen shows its picture", _failedSets);
                 _wanted = null;
-                IsEmpty = true;
                 Fail();
                 return;
             }
@@ -230,7 +239,9 @@ public class ShowcaseViewport3D : D3DViewportBase
     /// <summary>
     /// Stands the cars in the room one after another, where a layout puts them. One at a time on purpose: loading a
     /// car ends with device calls made from a worker thread outside the renderer's lock. A car that will not load, or
-    /// would take the room past its budget, is left out (logged).
+    /// would take the room past its budget, is left out (logged), and the cars that did are stood again in a layout
+    /// for as many as there are, so no gap is left where it would have stood. A lost GPU is not a car that will not
+    /// load: it goes up to the load, which builds the scene again.
     /// </summary>
     private async Task PutCarsAsync(GarageRenderer renderer, ShowcaseSet set)
     {
@@ -249,9 +260,9 @@ public class ShowcaseViewport3D : D3DViewportBase
                 continue;
             }
 
-            var bytes = EstimateCarBytes(directory);
+            // Counted once the car is in: one that fails to load takes nothing from the ones after it
+            var bytes = CarModelFiles.EstimateBytes(directory);
             if (bytes > budget && _lineup.Count > 0) continue;
-            budget -= bytes;
 
             var skin = entry.Skin != null && Directory.Exists(Path.Combine(directory, "skins", entry.Skin))
                 ? entry.Skin
@@ -259,7 +270,7 @@ public class ShowcaseViewport3D : D3DViewportBase
 
             try
             {
-                // The first car takes the main slot, which the scene's shadows are worked out from
+                // The first car in takes the main slot; StandInLayout gives it the middle
                 var slot = _lineup.Count == 0 ? renderer.MainSlot : renderer.AddCar(null);
 
                 // The slot hands a matrix set while it was empty to the car it is given: set before and after
@@ -270,13 +281,43 @@ public class ShowcaseViewport3D : D3DViewportBase
                 Place(slot, placements[i]);
                 if (slot.CarNode == null) continue;
 
+                budget -= bytes;
                 _lineup.Add(new LineupCar(entry, slot, placements[i], FrameOf(slot)));
                 Invalidate();
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!IsDeviceLost(ex))
             {
                 Logger.Error(ex, "Could not show {Car} on the main screen", entry.Car.Id);
             }
+        }
+
+        StandInLayout(set);
+    }
+
+    /// <summary>
+    /// Stands the cars that loaded in a layout for as many as there are, the car in the main slot in the middle of it:
+    /// the scene's shadows and reflections are worked out from that slot, and from a car at the end of a row the far
+    /// ones get theirs cut short. Nothing is drawn yet, so the move is not seen.
+    /// </summary>
+    private void StandInLayout(ShowcaseSet set)
+    {
+        if (_lineup.Count == 0) return;
+
+        var layout = ShowcaseLineup.Arrange(_lineup.Count, set.Scene.WallRadius, _random)
+            .OrderBy(p => p.X * p.X + p.Z * p.Z)
+            .ToList();
+
+        // Fewer cars always fit where more did; if not, they stay where they are
+        if (layout.Count < _lineup.Count) return;
+
+        // The main slot takes the middle, the others the rest in the order they came in
+        var main = Renderer?.MainSlot;
+        var cars = _lineup.OrderBy(c => c.Slot == main ? 0 : 1).ToList();
+        _lineup.Clear();
+        for (var i = 0; i < cars.Count; i++)
+        {
+            Place(cars[i].Slot, layout[i]);
+            _lineup.Add(cars[i] with { Placement = layout[i], Frame = FrameOf(cars[i].Slot) });
         }
     }
 
@@ -311,24 +352,6 @@ public class ShowcaseViewport3D : D3DViewportBase
         // The box is in the room's space and the car may stand anywhere in it: only its height is wanted
         var height = slot.GetCarBoundingBox()?.Maximum.Y ?? CarFrame.Nominal.Height;
         return CarFrame.FromWheels(lf, rf, lr, rr, height) ?? CarFrame.Nominal;
-    }
-
-    /// <summary>Roughly what a car will cost to hold: the biggest model in its folder</summary>
-    private static long EstimateCarBytes(string carDirectory)
-    {
-        try
-        {
-            return new DirectoryInfo(carDirectory)
-                .EnumerateFiles("*.kn5", SearchOption.TopDirectoryOnly)
-                .Where(f => !f.Name.Equals("collider.kn5", StringComparison.OrdinalIgnoreCase))
-                .Select(f => f.Length)
-                .DefaultIfEmpty(0L)
-                .Max();
-        }
-        catch
-        {
-            return 0L;
-        }
     }
 
     #endregion

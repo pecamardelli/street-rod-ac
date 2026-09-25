@@ -19,17 +19,21 @@ MainMenu ──▶ card: New Game ──▶ Garage
 - **The menu** is the three round badges (Load Game, New Game, Settings) in a row, each labelled under it
   (`MenuButtonStyle` in `Styles/Buttons.xaml`). A badge lifts and glows gold under the pointer.
 - **A card** (`MenuCardStyle`) is dark glass with a thin edge. It hangs from the top, over the fade, and a tall card
-  (New Game) reaches down over the cars. The menu fades out and lifts away, then the card drops in. Back or Esc reverses it. Only one
-  is ever open, and a click can't land on either while they swap. The code is in `MainMenuScreenView.xaml.cs`.
+  (New Game) reaches down over the cars. The menu fades out and lifts away, then the card drops in. Back or Esc reverses it (Esc is caught at the
+  window, since the clicked badge is hidden and takes the focus out of the screen; not while a dialog is up). Only one
+  is ever open, and a click can't land on either while they swap. The code is in `MainMenuScreenView.xaml.cs`. A card
+  that fails to build or open is reported like a screen (`NavigationService.SafeOpenCard`). If starting or loading a
+  game fails, the main screen is resumed with the card the player was using open again.
 - **The name of the car the camera is on** shows small, in italics, at the bottom right, with a shadow.
 - **The screen opens black** and the first scene fades up in it (user's change: the old picture used to hold the
   screen while it loaded). The old picture (`Backgrounds/main.png`) only comes up when there is nothing to show: no
   Assetto Corsa folder, no installed catalog cars or no scene found (`MainMenuScreenViewModel.NothingToShow`), or a
-  viewport that failed (no GPU in a remote session, or three rooms in a row whose cars would not load).
+  viewport that failed (no GPU in a remote session, three rooms in a row whose cars would not load, or no room whose
+  model would load). A room whose model will not load is dropped for the rest of the visit (`ShowcasePlaylist.Drop`).
 
 ## What it shows
 
-- **Cars:** the catalog's `Active` cars that are installed (`ShowcaseContent.Cars`). A car shows in a random skin of
+- **Cars:** the catalog's `Active` cars that are installed (`InstalledCars.Only`, then `ShowcaseContent.Cars`). A car shows in a random skin of
   the catalog's `AvailableSkins`, or its default skin when that folder is missing. It is titled "Year Name" unless
   the name already has the year. The player's own cars are not used, since no save is loaded at this point (the
   user's decision).
@@ -42,7 +46,9 @@ MainMenu ──▶ card: New Game ──▶ Garage
   and the room is never the one just left. The cars stand in one of three layouts: side by side (3.4 m apart), an
   echelon of angled bays, or loosely parked. The layout is turned any way, centred, and kept 1.2 m inside the walls,
   with fewer cars when it won't fit. They all load behind the black before the scene fades up (about 0.6–1.4 s),
-  within a 900 MB geometry budget.
+  within a 900 MB geometry budget (`CarModelFiles.EstimateBytes`, counted only for cars that load). The cars that
+  loaded are then stood again in a layout for as many as there are, so a car that failed leaves no gap, and the car in
+  the renderer's main slot (which shadows and reflections are worked out from) takes the middle.
 - **The camera** stays with up to three of them in turn, three shots each, then fades to the next room.
 
 ## The film

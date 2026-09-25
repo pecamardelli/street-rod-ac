@@ -535,7 +535,8 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
         Fail();
     }
 
-    private static bool IsDeviceLost(Exception ex)
+    /// <summary>The GPU went away under the renderer; the scene is built again rather than failed</summary>
+    protected static bool IsDeviceLost(Exception ex)
     {
         for (var e = ex; e != null; e = e.InnerException)
         {

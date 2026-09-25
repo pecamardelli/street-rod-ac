@@ -51,13 +51,16 @@ namespace Street_Rod_AC.Services.Catalog
         /// </summary>
         public static bool IsEncrypted(string carFolder)
         {
-            var model = MainModel(carFolder);
+            var model = CarModelFiles.MainModel(carFolder);
             if (model == null) return false;
 
-            FileInfo info;
+            // Read once, here: the model may be gone by now (a mod being replaced while the import runs)
+            long size, writeTicks;
             try
             {
-                info = new FileInfo(model);
+                var info = new FileInfo(model);
+                size = info.Length;
+                writeTicks = info.LastWriteTimeUtc.Ticks;
             }
             catch (Exception)
             {
@@ -67,7 +70,7 @@ namespace Street_Rod_AC.Services.Catalog
             lock (Lock)
             {
                 var cache = LoadCache();
-                if (cache.TryGetValue(model, out var known) && known.Size == info.Length && known.WriteTicks == info.LastWriteTimeUtc.Ticks)
+                if (cache.TryGetValue(model, out var known) && known.Size == size && known.WriteTicks == writeTicks)
                     return known.Encrypted;
 
                 bool encrypted;
@@ -77,11 +80,12 @@ namespace Street_Rod_AC.Services.Catalog
                 }
                 catch (Exception ex)
                 {
+                    // Kept as not encrypted, so a model that will not read is not read again on every start-up
                     Logger.Warning("Could not read {Model} to tell if it is encrypted: {Error}", model, ex.Message);
-                    return false;
+                    encrypted = false;
                 }
 
-                cache[model] = new Entry(info.Length, info.LastWriteTimeUtc.Ticks, encrypted);
+                cache[model] = new Entry(size, writeTicks, encrypted);
                 _dirty = true;
                 if (encrypted) Logger.Information("{Car} has an encrypted model: left out of the game", Path.GetFileName(carFolder));
                 return encrypted;
@@ -105,24 +109,6 @@ namespace Street_Rod_AC.Services.Catalog
                     // Only costs the next start-up a second look
                     Logger.Warning("Could not save {Path}: {Error}", CachePath, ex.Message);
                 }
-            }
-        }
-
-        /// <summary>The car's own model: the biggest .kn5 in its folder that is not the collider or a LOD</summary>
-        public static string? MainModel(string carFolder)
-        {
-            try
-            {
-                return new DirectoryInfo(carFolder)
-                    .EnumerateFiles("*.kn5", SearchOption.TopDirectoryOnly)
-                    .Where(f => !f.Name.Equals("collider.kn5", StringComparison.OrdinalIgnoreCase)
-                                && !f.Name.Contains("_lod_", StringComparison.OrdinalIgnoreCase))
-                    .OrderByDescending(f => f.Length)
-                    .FirstOrDefault()?.FullName;
-            }
-            catch (Exception)
-            {
-                return null;
             }
         }
 

@@ -91,13 +91,19 @@ public class MainScreenTests
     [Fact]
     public void The_same_kind_of_shot_never_plays_twice_running()
     {
+        // Boxed in by cars on both sides, where most kinds are spoilt and a recent one could otherwise win
+        var row = new[] { new CarPlacement(-3.4f, 0f, 0f), new CarPlacement(0f, 0f, 0f), new CarPlacement(3.4f, 0f, 0f) };
+        var others = new[] { new CarObstacle(row[0], Camaro), new CarObstacle(row[2], Camaro) };
+
         var random = new Random(7);
         var recent = new List<ShotKind>();
+        ShotKind? previous = null;
 
         for (var i = 0; i < 200; i++)
         {
-            var kind = ShowcaseShots.NextKind(recent, random);
-            Assert.DoesNotContain(kind, recent);
+            var kind = ShowcaseLineup.Choose(Camaro, row[1], 14f, others, recent, mirror: i % 2 == 0, random).Kind;
+            Assert.NotEqual(previous, kind);
+            previous = kind;
             recent.Add(kind);
             if (recent.Count > 2) recent.RemoveAt(0);
         }
@@ -297,12 +303,36 @@ public class MainScreenTests
         };
         var installed = new HashSet<string>(["camaro", "CUDA"], StringComparer.OrdinalIgnoreCase);
 
-        var cars = ShowcaseContent.Cars(catalog, installed, @"C:\ac\content\cars");
+        var cars = ShowcaseContent.Cars(catalog.Where(c => installed.Contains(c.Id)), @"C:\ac\content\cars");
 
         Assert.Equal(["camaro", "cuda"], cars.Select(c => c.Id));
         Assert.Equal("1969 Chevrolet Camaro Z/28", cars[0].Title);
         Assert.Equal("1971 Plymouth 'Cuda", cars[1].Title);
         Assert.Equal(Path.Combine(@"C:\ac\content\cars", "camaro"), cars[0].Directory);
         Assert.Equal(["red"], cars[0].Skins);
+    }
+
+    [Fact]
+    public void A_room_that_will_not_load_is_never_picked_again()
+    {
+        var cars = Enumerable.Range(0, 5).Select(i => Car($"car{i}")).ToList();
+        var scenes = new[] { new ShowcaseScene("a", "a.kn5", 12f), new ShowcaseScene("b", "b.kn5", 12f), new ShowcaseScene("c", "c.kn5", 12f) };
+        var playlist = new ShowcasePlaylist(cars, scenes, new Random(3));
+
+        Assert.True(playlist.Drop(scenes[1]));
+        Assert.DoesNotContain(Enumerable.Range(0, 30).Select(_ => playlist.Next()), s => s.Scene.Id == "b");
+
+        Assert.True(playlist.Drop(scenes[0]));
+        Assert.False(playlist.Drop(scenes[2]));
+    }
+
+    [Fact]
+    public void A_car_stored_without_skins_is_shown_in_its_default()
+    {
+        var catalog = new[] { new CarDefinition { Id = "camaro", Name = "Camaro", AvailableSkins = null! } };
+
+        var cars = ShowcaseContent.Cars(catalog, @"C:\ac\content\cars");
+
+        Assert.Empty(Assert.Single(cars).Skins);
     }
 }

@@ -145,16 +145,6 @@ public static class ShowcaseShots
 
     private const float HalfPi = MathF.PI / 2f;
 
-    private static readonly ShotKind[] Kinds = Enum.GetValues<ShotKind>();
-
-    /// <summary>A kind of shot other than the ones just used, so the same move never plays twice running</summary>
-    public static ShotKind NextKind(IReadOnlyCollection<ShotKind> recent, Random random)
-    {
-        var fresh = Kinds.Where(k => !recent.Contains(k)).ToArray();
-        var pool = fresh.Length > 0 ? fresh : Kinds;
-        return pool[random.Next(pool.Length)];
-    }
-
     /// <summary>
     /// A shot of the given kind on a car standing in the middle of the room, nose to +Z
     /// </summary>

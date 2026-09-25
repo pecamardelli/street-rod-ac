@@ -26,7 +26,8 @@ namespace Street_Rod_AC.Navigation
     ///
     /// Every service a screen needs comes in through here, so a screen's dependencies are all in its
     /// constructor. Every factory goes through <see cref="SafeNavigate"/>: a screen that fails to build or to
-    /// enter is logged and reported, and the player stays where they were.
+    /// enter is logged and reported, and the player stays where they were. The main menu's cards, which open over
+    /// it rather than in place of it, go through <see cref="SafeOpenCard{T}"/> the same way.
     /// </summary>
     public class NavigationService : ObservableObject
     {
@@ -189,6 +190,47 @@ namespace Street_Rod_AC.Navigation
             catch (Exception ex)
             {
                 _logger.Error(ex, "Could not go back to the screen before");
+            }
+        }
+
+        /// <summary>
+        /// Builds a card that opens over the current screen and enters it, the way <see cref="SafeNavigate"/> does a
+        /// screen: one whose constructor throws is never shown, one whose Enter throws is left again. Either way the
+        /// error is logged and the player told. Null when the card did not open.
+        /// </summary>
+        internal T? SafeOpenCard<T>(string cardName, Func<T> create) where T : class, IScreen
+        {
+            T card;
+            try
+            {
+                card = create();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not open the {Card} card", cardName);
+                ShowNavigationError(cardName);
+                return null;
+            }
+
+            try
+            {
+                card.Enter();
+                return card;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not enter the {Card} card", cardName);
+                try
+                {
+                    card.Exit();
+                }
+                catch (Exception exitEx)
+                {
+                    _logger.Warning(exitEx, "The card that failed could not be left cleanly");
+                }
+
+                ShowNavigationError(cardName);
+                return null;
             }
         }
 

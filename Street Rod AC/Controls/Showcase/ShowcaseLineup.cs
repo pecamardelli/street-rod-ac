@@ -213,12 +213,15 @@ public static class ShowcaseLineup
     /// <summary>
     /// A shot of the car at <paramref name="placement"/> that keeps clear of the cars and is not squeezed by the walls.
     /// Kinds not used lately come first, from either side of the car; when nothing is clear (a car boxed in), the least
-    /// spoilt one.
+    /// spoilt one. The kind that played last (the last of <paramref name="recent"/>) is never taken again, so the same
+    /// move never plays twice running.
     /// </summary>
     public static Shot Choose(CarFrame car, CarPlacement placement, float wallRadius, IReadOnlyList<CarObstacle> others,
-        IReadOnlyCollection<ShotKind> recent, bool mirror, Random random)
+        IReadOnlyList<ShotKind> recent, bool mirror, Random random)
     {
+        ShotKind? last = recent.Count > 0 ? recent[^1] : null;
         var kinds = Enum.GetValues<ShotKind>()
+            .Where(k => k != last)
             .OrderBy(k => recent.Contains(k) ? 1 : 0)
             .ThenBy(_ => random.Next())
             .ToList();

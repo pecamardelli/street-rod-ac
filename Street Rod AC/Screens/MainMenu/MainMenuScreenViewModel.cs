@@ -38,6 +38,10 @@ namespace Street_Rod_AC.Screens.MainMenu
         private bool _left;
         private bool _nothingToShow;
 
+        /// <summary>The card that was open when the screen was left, opened again if the player is sent back</summary>
+        private MainMenuCard _cardOnExit;
+        private MainMenuCard _openCard;
+
         /// <summary>A card asked for before the screen was entered</summary>
         private MainMenuCard _pendingCard;
 
@@ -64,7 +68,8 @@ namespace Street_Rod_AC.Screens.MainMenu
             LoadGameCommand = new RelayCommand(() => Open(MainMenuCard.LoadGame));
             SettingsCommand = new RelayCommand(() => Open(MainMenuCard.Settings));
             ExitCommand = new RelayCommand(OnExit);
-            CloseCardCommand = new RelayCommand(CloseCard);
+            // Not while a dialog is up: Esc belongs to the dialog then
+            CloseCardCommand = new RelayCommand(CloseCard, () => _currentCard != null && !_dialogService.IsDialogOpen);
 
             _pendingCard = openCard;
         }
@@ -73,13 +78,8 @@ namespace Street_Rod_AC.Screens.MainMenu
         public BaseScreenViewModel? CurrentCard
         {
             get => _currentCard;
-            private set
-            {
-                if (SetProperty(ref _currentCard, value)) OnPropertyChanged(nameof(IsMenuShown));
-            }
+            private set => SetProperty(ref _currentCard, value);
         }
-
-        public bool IsMenuShown => _currentCard == null;
 
         /// <summary>The installed cars of the catalog, for the showroom behind the menu</summary>
         public IReadOnlyList<ShowcaseCar> ShowcaseCars
@@ -121,8 +121,27 @@ namespace Street_Rod_AC.Screens.MainMenu
         public override void Exit()
         {
             _left = true;
+            _cardOnExit = _openCard;
             CloseCard();
             base.Exit();
+        }
+
+        /// <summary>
+        /// Back after starting or loading a game failed: the card the player was using opens again, and the showroom
+        /// is looked for again if leaving cut that short.
+        /// </summary>
+        public override void Resume()
+        {
+            base.Resume();
+            _left = false;
+
+            if (_cardOnExit != MainMenuCard.None)
+            {
+                Open(_cardOnExit);
+                _cardOnExit = MainMenuCard.None;
+            }
+
+            if (_showcaseCars.Count == 0 && !NothingToShow) _ = LoadShowcaseAsync();
         }
 
         /// <summary>
@@ -136,10 +155,9 @@ namespace Street_Rod_AC.Screens.MainMenu
                 var settings = AppSettings.Instance;
                 var (cars, scenes) = await Task.Run(() =>
                 {
-                    var installed = InstalledCars.Ids();
-                    var definitions = _catalog.GetCarsByStatus(ContentStatus.Active);
+                    var installed = InstalledCars.Only(_catalog.GetCarsByStatus(ContentStatus.Active), out _);
                     return (
-                        ShowcaseContent.Cars(definitions, installed, settings.CarsPath),
+                        ShowcaseContent.Cars(installed, settings.CarsPath),
                         ShowcaseContent.LoadScenes(ShowcaseContent.ScenesFile, settings.GaragesPath, settings.ShowroomsPath));
                 });
 
@@ -163,24 +181,15 @@ namespace Street_Rod_AC.Screens.MainMenu
 
             BaseScreenViewModel? opened = card switch
             {
-                MainMenuCard.NewGame => _navigationService.CreateNewGameCard(CloseCard),
-                MainMenuCard.LoadGame => _navigationService.CreateLoadGameCard(CloseCard),
-                MainMenuCard.Settings => _navigationService.CreateSettingsCard(CloseCard),
+                MainMenuCard.NewGame => _navigationService.SafeOpenCard<BaseScreenViewModel>("new game screen", () => _navigationService.CreateNewGameCard(CloseCard)),
+                MainMenuCard.LoadGame => _navigationService.SafeOpenCard<BaseScreenViewModel>("saved games", () => _navigationService.CreateLoadGameCard(CloseCard)),
+                MainMenuCard.Settings => _navigationService.SafeOpenCard<BaseScreenViewModel>("settings", () => _navigationService.CreateSettingsCard(CloseCard)),
                 _ => null
             };
 
             if (opened == null) return;
 
-            try
-            {
-                opened.Enter();
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Could not open the {Card} card", card);
-                return;
-            }
-
+            _openCard = card;
             CurrentCard = opened;
         }
 
@@ -190,6 +199,7 @@ namespace Street_Rod_AC.Screens.MainMenu
             if (card == null) return;
 
             CurrentCard = null;
+            _openCard = MainMenuCard.None;
             try
             {
                 card.Exit();

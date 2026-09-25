@@ -22,7 +22,7 @@ public sealed record ShowcaseSet(ShowcaseScene Scene, IReadOnlyList<ShowcaseEntr
 public sealed class ShowcasePlaylist
 {
     private readonly IReadOnlyList<ShowcaseCar> _cars;
-    private readonly IReadOnlyList<ShowcaseScene> _scenes;
+    private readonly List<ShowcaseScene> _scenes;
     private readonly Random _random;
     private readonly Func<ShowcaseScene, int> _carsFor;
 
@@ -38,9 +38,19 @@ public sealed class ShowcasePlaylist
         if (scenes.Count == 0) throw new ArgumentException("A playlist needs a scene", nameof(scenes));
 
         _cars = cars;
-        _scenes = scenes;
+        _scenes = [.. scenes];
         _random = random;
         _carsFor = carsFor ?? (scene => ShowcaseLineup.CarsFor(scene.WallRadius));
+    }
+
+    /// <summary>
+    /// Takes a room that will not load out of the list, for the rest of the visit. False when that was the last one:
+    /// there is nothing left to show then, and <see cref="Next"/> must not be asked.
+    /// </summary>
+    public bool Drop(ShowcaseScene scene)
+    {
+        _scenes.Remove(scene);
+        return _scenes.Count > 0;
     }
 
     public ShowcaseSet Next()
