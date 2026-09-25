@@ -338,6 +338,9 @@ namespace Street_Rod_AC.Services.Market
             if (gameState.PendingRace is { } race && race.PlayerCarInstanceId == car.InstanceId)
                 return new SaleResult(SaleOutcome.Racing, "The car is out racing: it can be sold once the race is settled.");
 
+            if (car.IsImpounded)
+                return new SaleResult(SaleOutcome.Refused, "The car is in the police impound: nobody buys it until you've collected it.");
+
             return null;
         }
 

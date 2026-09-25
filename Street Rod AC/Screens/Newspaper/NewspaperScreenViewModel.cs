@@ -361,7 +361,9 @@ namespace Street_Rod_AC.Screens.Newspaper
                 DamagePercent = _gameState.Rules.RaceDamagePercent,
                 EventId = result.EventId,
                 EventInstanceId = result.EventInstanceId,
-                IsEventOnlyOpponent = !opponent.IsPoolOpponent
+                IsEventOnlyOpponent = !opponent.IsPoolOpponent,
+                // An organised event: the police stay away, but it runs at the game's hour, after dark too
+                RaceTime = _gameState.Date
             });
 
             // Setting the cars up takes a moment: a player who put the paper down meanwhile has called it off

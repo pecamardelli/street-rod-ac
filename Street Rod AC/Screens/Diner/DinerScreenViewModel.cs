@@ -10,6 +10,7 @@ using Street_Rod_AC.Screens.Shared;
 using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Opponents;
+using Street_Rod_AC.Services.Police;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Talk;
 using Street_Rod_AC.Services.Time;
@@ -194,6 +195,8 @@ namespace Street_Rod_AC.Screens.Diner
                     _wagerAmount = value;
                     OnPropertyChanged(nameof(WagerAmount));
                     OnPropertyChanged(nameof(WagerAmountDisplay));
+                    OnPropertyChanged(nameof(PoliceNote));
+                    OnPropertyChanged(nameof(HasPoliceNote));
                 }
             }
         }
@@ -213,6 +216,22 @@ namespace Street_Rod_AC.Screens.Diner
         }
 
         public bool HasStakesNote => IsCashBet && StakesNote.Length > 0;
+
+        /// <summary>The reputation the police go by: the better known of the two racers</summary>
+        private int PoliceReputation => Math.Max(_gameState.Player.Stats.Reputation, SelectedOpponent?.Opponent.Stats.Reputation ?? 0);
+
+        /// <summary>The chance of the police on a road race with the selected rival, now; 0 for a drag race or with no police car installed</summary>
+        private double PoliceChance =>
+            SelectedTrack is { RaceType: not RaceType.DragRace } && PoliceCars.Installed() != null
+                ? PoliceRules.Chance(_gameState.Date, PoliceReputation, IsPinkSlipBet, IsCashBet ? WagerAmount : 0m)
+                : 0;
+
+        /// <summary>The word on the police for the race as it is set up: "Police: Moderate"; empty when none could come</summary>
+        public string PoliceNote => PoliceChance > 0
+            ? $"Police: {PoliceRules.RiskLabel(PoliceChance)}{(PoliceRules.IsNight(_gameState.Date) ? " (night patrols)" : string.Empty)}"
+            : string.Empty;
+
+        public bool HasPoliceNote => PoliceNote.Length > 0;
 
         public bool CanAffordMinBet
         {
@@ -611,6 +630,8 @@ namespace Street_Rod_AC.Screens.Diner
             // Notify affordability status
             OnPropertyChanged(nameof(StakesNote));
             OnPropertyChanged(nameof(HasStakesNote));
+            OnPropertyChanged(nameof(PoliceNote));
+            OnPropertyChanged(nameof(HasPoliceNote));
             OnPropertyChanged(nameof(CanAffordMinBet));
             OnPropertyChanged(nameof(InsufficientFundsMessage));
         }
@@ -710,6 +731,13 @@ namespace Street_Rod_AC.Screens.Diner
 
             _logger.Information("Opponent accepted challenge - launching race");
 
+            // Whether the police turn up, rolled once the race is on
+            var police = PoliceCars.Patrol(PoliceCars.Installed(), track.RaceType != RaceType.DragRace, _gameState.Date,
+                PoliceReputation, isPinkSlip, cashWager, track.Configuration?.Pitboxes ?? track.Track.Pitboxes,
+                [playerCar.DefinitionId, SelectedOpponent.CarDefinition.Id], Random.Shared);
+            if (police != null)
+                _logger.Information("The police will show up: {Count} car(s), {Share:P0} into the race", police.Count, police.SpotShare);
+
             // Both cars race on what their parts make of them, the same way an event does; a player's car that
             // will not go stays home
             var setup = await _raceSetup.BuildAsync(new RaceEntry
@@ -726,7 +754,9 @@ namespace Street_Rod_AC.Screens.Diner
                 RaceType = track.RaceType,
                 CashWager = cashWager,
                 IsPinkSlip = isPinkSlip,
-                DamagePercent = _gameState.Rules.RaceDamagePercent
+                DamagePercent = _gameState.Rules.RaceDamagePercent,
+                Police = police,
+                RaceTime = _gameState.Date
             });
 
             // Setting the cars up takes a moment: a player who walked out meanwhile has called it off

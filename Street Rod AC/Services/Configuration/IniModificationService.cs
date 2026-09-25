@@ -292,12 +292,16 @@ namespace Street_Rod_AC.Services.Configuration
         private string BuildDragRaceIni(DragRaceIntent intent)
         {
             var sb = new System.Text.StringBuilder();
-            AppendCommonSections(sb);
+            AppendCommonSections(sb, SunAngle(intent.RaceTime));
+
+            // The police go on the grid after the two racers, as many as the track has room for; the race mode
+            // keeps them out of sight until the patrol shows up
+            var police = intent.Police is { Count: > 0 } sent && intent.RaceType != RaceType.DragRace ? sent : null;
 
             // [RACE] - Player car info and track
             sb.AppendLine("[RACE]");
             sb.AppendLine("AI_LEVEL=100");
-            sb.AppendLine("CARS=2");
+            sb.AppendLine($"CARS={2 + (police?.Count ?? 0)}");
             sb.AppendLine($"CONFIG_TRACK={IniId(intent.TrackConfig, "track layout")}");
             sb.AppendLine("DRIFT_MODE=0");
             sb.AppendLine("FIXED_SETUP=0");
@@ -348,6 +352,21 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("NATIONALITY=");
             sb.AppendLine("NATION_CODE=");
 
+            // [CAR_2]... - The police
+            for (var i = 0; i < (police?.Count ?? 0); i++)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"[CAR_{2 + i}]");
+                sb.AppendLine($"MODEL={IniId(police!.CarId, "car")}");
+                sb.AppendLine("MODEL_CONFIG=");
+                sb.AppendLine($"AI_LEVEL={PoliceAILevel}");
+                sb.AppendLine($"AI_AGGRESSION={PoliceAIAggression}");
+                sb.AppendLine($"SKIN={IniId(police.Skins[i], "skin")}");
+                sb.AppendLine($"DRIVER_NAME={PoliceDriverName}");
+                sb.AppendLine("NATIONALITY=");
+                sb.AppendLine("NATION_CODE=");
+            }
+
             // [STREET_ROD] - What the race mode needs to know: the kind of race (a drag race has lanes and
             // timeslips), which race this is, which it writes into the result so a result is only ever applied
             // to the race it came from, and the damage each car carries into it
@@ -357,6 +376,13 @@ namespace Street_Rod_AC.Services.Configuration
             if (intent.ContextId is { } contextId)
             {
                 sb.AppendLine($"CONTEXT_ID={contextId:D}");
+            }
+
+            // The police cars' indices, and how far round the lap the patrol shows up
+            if (police != null)
+            {
+                sb.AppendLine($"POLICE={string.Join(",", Enumerable.Range(2, police.Count))}");
+                sb.AppendLine($"POLICE_SPOT={police.SpotShare.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture)}");
             }
 
             // The shape each car goes in, from its earlier races: the mode puts it into AC before the green
@@ -439,8 +465,24 @@ namespace Street_Rod_AC.Services.Configuration
             return sb.ToString();
         }
 
-        /// <summary>Everything before [RACE] that every launch shares</summary>
-        private static void AppendCommonSections(System.Text.StringBuilder sb)
+        /// <summary>How the police drive: flat out, and not shy of contact</summary>
+        public const int PoliceAILevel = 100;
+        public const int PoliceAIAggression = 80;
+        public const string PoliceDriverName = "Police";
+
+        /// <summary>Noon, which a launch without a time of day races at</summary>
+        public const double NoonSunAngle = -16.0;
+
+        /// <summary>
+        /// AC's sun for a time of day ([LIGHTING] SUN_ANGLE): Content Manager's formula, 0 at 13:00 and 16 degrees an
+        /// hour, so -80 is 08:00 and 80 is 18:00. AC alone stops there; with Custom Shaders Patch the angle goes on
+        /// through the evening and the night (CM writes it up to 23:59), which is how a race after dark is dark.
+        /// </summary>
+        public static double SunAngle(DateTime? time) =>
+            time is { } t ? Math.Round(16.0 * (t.TimeOfDay.TotalSeconds - 13 * 3600) / 3600.0, 2) : NoonSunAngle;
+
+        /// <summary>Everything before [RACE] that every launch shares, the sun where <paramref name="sunAngle"/> puts it</summary>
+        private static void AppendCommonSections(System.Text.StringBuilder sb, double sunAngle = NoonSunAngle)
         {
 
             // [BENCHMARK]
@@ -488,7 +530,7 @@ namespace Street_Rod_AC.Services.Configuration
             // [LIGHTING]
             sb.AppendLine("[LIGHTING]");
             sb.AppendLine("CLOUD_SPEED=0.200");
-            sb.AppendLine("SUN_ANGLE=-16.00");
+            sb.AppendLine($"SUN_ANGLE={sunAngle.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}");
             sb.AppendLine("TIME_MULT=1.0");
             sb.AppendLine("__CM_WEATHER_TYPE=19");
             sb.AppendLine("__TRACK_GEOTAG_LONG=0.231944444444444");

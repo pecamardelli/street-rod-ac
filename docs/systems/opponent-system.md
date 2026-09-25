@@ -62,6 +62,9 @@ street and the rest in `Inactive`; `OpponentRules.MinActive` brings out 2 more e
 
 **The daily review** (`OpponentLifeService`, scheduled as `OpponentReviewTask`, before the race simulator), per racer,
 retired ones first:
+0. The police impound (roadmap step 6): a car whose days there are up is collected when they can pay the fee
+   (`PoliceRules.CanCollect`); one left unpaid `PoliceRules.AuctionAfterDays` (14) past its date is auctioned off and
+   gone. An impounded car can't race (`WhyCannotRace`), and is never repaired, sold or replaced: they sit it out.
 1. The best car to the front of `Cars` (`OpponentRules.CarScore`: a car that can race before any that can't, then
    dyno horsepower ×10, condition, worth). `Cars[0]` is the car every screen and the simulator use.
 2. Spares: a wreck goes for scrap (`CarSaleService.ScrapFactor`), more than 2 cars and the weakest goes to a dealer

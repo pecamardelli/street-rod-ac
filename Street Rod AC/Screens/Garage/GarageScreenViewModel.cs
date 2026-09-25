@@ -10,6 +10,7 @@ using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Configuration.Models;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Parts;
+using Street_Rod_AC.Services.Police;
 using Street_Rod_AC.Services.Race;
 using Street_Rod_AC.Services.Settings;
 using Street_Rod_AC.Services.Storage;
@@ -43,6 +44,9 @@ namespace Street_Rod_AC.Screens.Garage
         public AsyncRelayCommand FreeRunCommand { get; }
         public RelayCommand RepairsCommand { get; }
         public RelayCommand SellCommand { get; }
+
+        /// <summary>Pays the impound and brings the selected car home, once its days there are up</summary>
+        public RelayCommand CollectCommand { get; }
 
         /// <summary>Where a free run can go: every track of the install, one entry per layout</summary>
         public ObservableCollection<FreeRunTrackViewModel> FreeRunTracks { get; } = new();
@@ -111,9 +115,11 @@ namespace Street_Rod_AC.Screens.Garage
                 OnPropertyChanged(nameof(SelectedCarDisplay));
                 OnPropertyChanged(nameof(HasCars));
                 OnPropertyChanged(nameof(SellButtonText));
+                RaiseImpoundChanged();
                 if (carChanged)
                 {
-                    Workbench.SetCar(value?.CarInstance);
+                    // A car in the impound isn't here to work on
+                    Workbench.SetCar(value?.CarInstance is { IsImpounded: false } car ? car : null);
                     RefreshEngine();
                 }
             }
@@ -292,10 +298,11 @@ namespace Street_Rod_AC.Screens.Garage
             BackCommand = new RelayCommand(OnBack);
             ExitCommand = new RelayCommand(OnExit);
             LaunchShowroomCommand = new AsyncRelayCommand(OnLaunchShowroom, CanLaunchShowroom);
-            FreeRunCommand = new AsyncRelayCommand(OnFreeRun, () => SelectedCar != null && FreeRunTrack != null && !_launcher.IsExecutionLocked);
+            FreeRunCommand = new AsyncRelayCommand(OnFreeRun, () => SelectedCarHere && FreeRunTrack != null && !_launcher.IsExecutionLocked);
             LoadFreeRunTracks();
-            RepairsCommand = new RelayCommand(OnRepairs, () => SelectedCar != null);
-            SellCommand = new RelayCommand(OnSell, () => SelectedCar != null && !_launcher.IsExecutionLocked);
+            RepairsCommand = new RelayCommand(OnRepairs, () => SelectedCarHere);
+            SellCommand = new RelayCommand(OnSell, () => SelectedCarHere && !_launcher.IsExecutionLocked);
+            CollectCommand = new RelayCommand(OnCollect, CanCollect);
             SelectCarCommand = new RelayCommand(OnSelectCar);
             ShowCalendarCommand = new RelayCommand(OnShowCalendar);
             NewspaperCommand = new RelayCommand(() => LeaveTo(() => _navigationService.NavigateToNewspaper(_gameState)));
@@ -571,6 +578,74 @@ namespace Street_Rod_AC.Screens.Garage
                     // The parts view shows the parts' shape: it gets the repaired ones
                     Workbench.SetCar(car);
                 }));
+        }
+
+        // ----- the police impound -----
+
+        /// <summary>A car is selected and it is in the garage, not the police impound</summary>
+        private bool SelectedCarHere => SelectedCar is { CarInstance.IsImpounded: false };
+
+        public bool IsSelectedCarImpounded => SelectedCar?.CarInstance.IsImpounded == true;
+
+        /// <summary>Where the selected car is and what getting it back takes</summary>
+        public string ImpoundNote
+        {
+            get
+            {
+                if (SelectedCar?.CarInstance is not { ImpoundedUntil: { } until } car) return string.Empty;
+                return PoliceRules.CanCollect(car, _gameState.Date)
+                    ? $"The police have this car in the impound. It can be collected now for ${car.ImpoundFee:N0}."
+                    : $"The police have this car in the impound until {until:dddd d MMMM}, {until:h:mm tt}. Collecting it will cost ${car.ImpoundFee:N0}.";
+            }
+        }
+
+        public string CollectButtonText => SelectedCar?.CarInstance is { IsImpounded: true } car ? $"Collect (${car.ImpoundFee:N0})" : "Collect";
+
+        private bool CanCollect() =>
+            SelectedCar?.CarInstance is { } car && PoliceRules.CanCollect(car, _gameState.Date) && _gameState.Player.Money >= car.ImpoundFee;
+
+        /// <summary>Pays the impound, brings the car home and saves; an hour goes by getting there and back</summary>
+        private async void OnCollect()
+        {
+            if (SelectedCar is not { } selected || !CanCollect()) return;
+
+            var car = selected.CarInstance;
+            _gameState.Player.Money -= car.ImpoundFee;
+            _gameState.Player.Stats.TotalLosses += car.ImpoundFee;
+            _logger.Information("Collected {Car} from the impound for ${Fee}", car.DefinitionId, car.ImpoundFee);
+            PoliceRules.Release(car);
+
+            try
+            {
+                await _timeService.SpendTimeAsync(_gameState, GameAction.CollectFromImpound);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Could not spend the time for the impound: {Error}", ex.Message);
+            }
+
+            try
+            {
+                if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not save the game after collecting the car");
+            }
+
+            Workbench.SetCar(car);
+            RefreshCalendarDisplay();
+            OnPropertyChanged(nameof(BankrollDisplay));
+            RaiseImpoundChanged();
+        }
+
+        private void RaiseImpoundChanged()
+        {
+            OnPropertyChanged(nameof(IsSelectedCarImpounded));
+            OnPropertyChanged(nameof(ImpoundNote));
+            OnPropertyChanged(nameof(CollectButtonText));
+            RelayCommand.RaiseCanExecuteChanged();
+            FreeRunCommand?.RaiseCanExecuteChanged();
         }
 
         /// <summary>"Sell", or where the selected car's sale stands when it is in the paper</summary>

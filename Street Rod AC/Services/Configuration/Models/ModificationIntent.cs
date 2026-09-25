@@ -113,6 +113,12 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// <summary>The opponent's car's damage ([STREET_ROD] CAR_1_*)</summary>
         public Street_Rod_AC.Models.Race.RaceStartState? OpponentStart { get; set; }
 
+        /// <summary>The police: [CAR_2] on, and [STREET_ROD] POLICE and POLICE_SPOT for the race mode; null for none</summary>
+        public Street_Rod_AC.Models.Race.RacePolice? Police { get; set; }
+
+        /// <summary>The time of day the race starts at, for AC's sun ([LIGHTING] SUN_ANGLE); null is noon</summary>
+        public DateTime? RaceTime { get; set; }
+
         public override string Description =>
             $"Configure drag race: {PlayerName} ({PlayerCarId}) vs {OpponentName} ({OpponentCarId}) [AI: {OpponentAILevel}/{OpponentAIAggression}]";
 

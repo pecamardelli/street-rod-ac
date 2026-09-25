@@ -10,6 +10,7 @@ using Street_Rod_AC.Services.Storage;
 
 namespace StreetRodAC.Tests;
 
+[Collection(RaceSessionTests.Name)]
 public sealed class RaceResultProcessorTests : IDisposable
 {
     private readonly TempDir _temp = new();

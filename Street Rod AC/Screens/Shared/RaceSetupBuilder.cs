@@ -52,6 +52,12 @@ namespace Street_Rod_AC.Screens.Shared
 
         /// <summary>An event entrant who is not one of the racers of the pool: their stats are not kept</summary>
         public bool IsEventOnlyOpponent { get; init; }
+
+        /// <summary>The police the race draws (<see cref="Services.Police.PoliceCars.Patrol"/>); null when none come</summary>
+        public RacePolice? Police { get; init; }
+
+        /// <summary>The game's time the race starts at, which AC's sun follows; null races at noon</summary>
+        public DateTime? RaceTime { get; init; }
     }
 
     /// <summary>What came of putting a race together</summary>
@@ -178,6 +184,8 @@ namespace Street_Rod_AC.Screens.Shared
                 CashWager = entry.CashWager,
                 IsPinkSlip = entry.IsPinkSlip,
                 DamagePercent = entry.DamagePercent,
+                Police = entry.Police,
+                RaceTime = entry.RaceTime,
                 CarData = carData
             };
 

@@ -391,6 +391,32 @@
                 </StackPanel>
                 </Grid>
 
+                <!-- The police impound: the selected car is held there until it is collected -->
+                <Border Background="{StaticResource WarningBgBrush}"
+                        BorderBrush="{StaticResource WarningBrush}"
+                        BorderThickness="1"
+                        CornerRadius="5"
+                        Padding="20,8"
+                        Margin="0,0,0,6"
+                        Visibility="{Binding IsSelectedCarImpounded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <DockPanel LastChildFill="True">
+                        <Button DockPanel.Dock="Right"
+                                Content="{Binding CollectButtonText}"
+                                Command="{Binding CollectCommand}"
+                                Style="{StaticResource DialogPrimaryButtonStyle}"
+                                Padding="15,5"
+                                FontSize="{StaticResource FontSizeBody}"
+                                VerticalAlignment="Center"
+                                ToolTip="Pay the impound and bring the car home"/>
+                        <TextBlock Text="{Binding ImpoundNote}"
+                                   FontSize="{StaticResource FontSizeBody}"
+                                   Foreground="{StaticResource WarningBrush}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,20,0"
+                                   VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
+
                 <!-- Car Details -->
                 <Border Background="{StaticResource BgPanelCCBrush}"
                        BorderBrush="{StaticResource BorderLightBrush}"

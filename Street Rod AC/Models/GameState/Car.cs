@@ -48,6 +48,18 @@ namespace Street_Rod_AC.Models.GameState
         public decimal PurchasePrice { get; set; }
 
         /// <summary>
+        /// The car is in the police impound (its owner was busted after a street race), and can be collected from
+        /// this date on, in game time, for <see cref="ImpoundFee"/>. Null when it is not impounded. An impounded car
+        /// goes nowhere: it does not race, run or sell until it is collected.
+        /// </summary>
+        public DateTime? ImpoundedUntil { get; set; }
+
+        /// <summary>What collecting the car from the impound costs; 0 when it is not impounded</summary>
+        public decimal ImpoundFee { get; set; }
+
+        public bool IsImpounded => ImpoundedUntil != null;
+
+        /// <summary>
         /// When the car changed hands, in game time (1970s). Whoever creates the car sets it from the game's
         /// date; the real clock has no place in the game world.
         /// </summary>

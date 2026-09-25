@@ -3,6 +3,7 @@ using Street_Rod_AC.Configuration;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Parts.Export;
+using Street_Rod_AC.Services.Police;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
@@ -83,6 +84,14 @@ namespace Street_Rod_AC.Services.Catalog
             {
                 var carFolder = carFolders[i];
                 var carId = Path.GetFileName(carFolder);
+
+                // A car with nothing but police liveries is the police's: never on a lot or in a rival's garage. Left
+                // out of the catalog (and marked Legacy if it was ever in it); the chase finds it in the install.
+                if (PoliceCars.IsPoliceCar(carFolder))
+                {
+                    _logger.Information("{Car} is a police car: not in the catalog", carId);
+                    continue;
+                }
 
                 // A car that is there but cannot be read now is still there: it is not retired for that
                 seen.Add(carId);
@@ -304,8 +313,9 @@ namespace Street_Rod_AC.Services.Catalog
                 {
                     var skinId = Path.GetFileName(skinFolder);
 
-                    // Only include directories that aren't empty and have valid names
-                    if (!string.IsNullOrEmpty(skinId) && !skinId.StartsWith("."))
+                    // Only include directories that aren't empty and have valid names. A police livery is the
+                    // police's, not something a car on a lot or a rival's car comes in (PoliceCars).
+                    if (!string.IsNullOrEmpty(skinId) && !skinId.StartsWith(".") && !PoliceCars.IsPoliceSkin(skinFolder))
                     {
                         skins.Add(skinId);
                     }

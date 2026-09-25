@@ -16,7 +16,7 @@ A mode and not an app since 2026-09-24: `ALLOW_PHYSICS_ALTERATIONS=1` in its man
 which an app only gets from a track that opts in through its `surfaces.ini` (none of ours do). As an app, the
 control lock on a crash did nothing.
 
-**Files**: `mode.lua`, `manifest.ini`. Edit them in the repo: `SrRaceMode` writes the repo's copy (shipped next to
+**Files**: `mode.lua`, `manifest.ini`, `siren.wav`. Edit them in the repo: `SrRaceMode` writes the repo's copy (shipped next to
 the game under `AcModes\sr_race`) over the installed one before every race.
 
 **Selected by** `[RACE] __CM_CUSTOM_MODE=sr_race` in race.ini (the key CSP reads; `MODE=` and
@@ -55,8 +55,66 @@ every frame) and the player still has to finish.
 putting the car back (`ac.onCarJumped`) before it has gone 20 m. With AC's own penalties and teleports off, the first
 is the rule; the second stays for a car AC moves anyway. Put back after 20 m is `ABANDONED`.
 
+**The police chase** (road races only, since step 6): race.ini lists the police as `[CAR_2]` and on, after the two
+racers, and `[STREET_ROD] POLICE=2,3` tells the mode which cars they are and `POLICE_SPOT` (a share of the lap) when the
+patrol shows up. The career rolls whether police come at all (`PoliceRules`, `PoliceCars.Patrol`); the mode runs the
+chase:
+- **Waiting**: hidden (`ac.setCarActive(i, false)`), nothing collides with them (`physics.disableCarCollisions`), held
+  on the grid with the throttle limit and the stop counter, every frame, and kept from retiring
+  (`physics.preventAIFromRetiring`). Not `setAINoInput`: Test Drive found a car parked with it never drives again.
+- **The patrol shows up** when the player has driven `POLICE_SPOT` of the lap: each cop is put on the AI line 200, 280
+  or 360 m behind its target, shown, and sent off at 80% of the target's speed. The way Test Drive puts a car back:
+  stopped, placed a hand's breadth over the road (`physics.raycastTrack`), facing the opposite of where it will look
+  (`setAICarPosition` takes it that way), woken, engine at 3000 rpm with stalling off, then pushed. With two or more
+  cops the last goes after the rival.
+- **Driving**: AC's AI on its line, AI level and aggression set again every 0.5 s (CSP resets the aggression), and a
+  rubber band on `setExtraAIGrip` (1.1 to 1.7, more the further back). Within 40 m of its target a cop drives at it
+  with `setAISplineAbsoluteOffset(i, offset, true)`: the first on the target's line, the others 2.4 m to either side.
+  Right of the line is positive, the road frame Traffic Race uses. Behind its target a cop is never faster than it can
+  still stop from (the target's speed plus what it sheds at 5 m/s² before a 6 m standoff), and is braked with
+  `setAIStopCounter` pulses when over that: `setAITopSpeed` only takes the throttle away, and a cop coasting down to
+  it hit a stopped player at 35 km/h (a 20 g crash) in the game. With the brake it stops 5 m behind.
+- **Roadblock**: a cop more than 700 m back for 8 s is parked 450 m ahead of its target, once a chase: at 50° on the
+  wider side of the road, 3 m out from the line, the other lane open. Square across a county road the Monaco left no
+  way through and every roadblock was a bust. AC's AI brakes to a stop behind a parked car rather than going round
+  it, so an AI-driven racer (the rival, or the player under an autopilot) is steered into the open lane when a
+  roadblock is within 150 m ahead. When the target is 150 m past it (judged from where it was put: the car reads its
+  old place until the physics runs), it turns round and chases again. A cop going nowhere for 6 s is put back 250 m
+  behind.
+- **Lights and siren**: two `ac.LightSource`s on the roof, red and blue in turn about twice a second, and a glow drawn
+  over each in `script.draw3D` (`render.circle`). AI cars' own light bars can't be switched from Lua. The siren is
+  `siren.wav` in the mode's folder, a 3D looping `ac.AudioEvent` placed on the car every frame; it is synthesized by
+  `tools/siren/make_siren.py`, so the game ships no recording.
+- **Busted**: a cop within 8 m and the driver under 15 km/h for 3 s. A player who crashes, breaks down or goes to the
+  pits with the cops out is busted too, and so is a rival who crashes or breaks down. A busted rival is held.
+- **Got away**: every cop after the player more than 600 m back along the road for 20 s (a cop after the rival
+  doesn't count until the rival is out of it), no cop left in it, or 4 minutes gone: the police give up. The cops are
+  put away (hidden, held) and the rival, if still free, got away too.
+- **The finish line** decides the race as always, by the racers' own order at the line (the police are in AC's race
+  too, and one put down ahead can lead it). With the cops still after the player, the session goes on past the line
+  until the chase is decided; a crash after the line with the cops out is a bust, and the race result stands.
+- A wrecked cop (15 g) is out of the chase.
+
+The police are never in `participants`: the result has a `pursuit` block instead (schema 1.5). AC's own HUD
+leaderboard still lists them ("POL").
+
+**Reading lists from race.ini**: `ac.INIConfig:get` splits a value at its commas, and with a string default returns
+only the first item. `readNumbers` asks with no default and gets the list: before that, `POLICE=2,3` read as one cop,
+and the damage keys of four values (`CAR_n_BODY`, `CAR_n_SUSPENSION`) never reached AC at all (fixed 2026-09-24,
+checked in the game: a car sent in with `CAR_0_BODY=25,0,0,0` finished with 25 km/h on the front).
+
+**Tested in the game** (2026-09-24, unattended, Black Cat County at 21:00, the Monaco Police, the player on
+`physics.setCarAutopilot`): the cops appear behind at speed and drive; a player who stops is busted with the cop
+braked to a stop 5 m behind; with the cops held back, both roadblocks are passed, a stuck cop is put back, the player
+gets away mid-race and still wins at the line. 21:00 is full night. The chase logic runs
+outside the game in `tools/sr_race_harness/test_chase.py` (lupa, a stub round track).
+
+**Time of day**: race.ini's `[LIGHTING] SUN_ANGLE` follows the game's clock when the race starts (Content Manager's
+formula, 0 at 13:00 and 16 degrees an hour; CSP takes angles past 80, so a race after 20:00 is run in the dark). A
+free run is at noon.
+
 **End reasons** (`session.end_reason`): `FINISHED` (the player crossed the line, `WIN` or `LOSE` by position),
-`CRASH`, `FALSE_START`, `DISQUALIFIED`, `ABANDONED`. The race ends only when the player crosses the line, whoever
+`CRASH`, `FALSE_START`, `DISQUALIFIED`, `BROKE_DOWN`, `BUSTED` (caught by the police before the line), `ABANDONED`. The race ends only when the player crosses the line, whoever
 finished first. Quitting AC before any of them writes nothing: the launcher settles a race with
 stakes that brings back no result as a forfeit.
 
@@ -188,6 +246,7 @@ with a script, and overheating is for the game to model.
 | Signal files | Removed | Was in Python app, didn't work reliably |
 | race.ini `[STREET_ROD] CONTEXT_ID` | Working | Launcher to the mode: which race this is (see below) |
 | race.ini `[STREET_ROD] CAR_n_*` | Working | Launcher to the mode: the damage car n carries into the race (see below) |
+| race.ini `[STREET_ROD] POLICE`, `POLICE_SPOT` | Working | Launcher to the mode: which cars are the police, and how far round the lap they show up |
 | Result JSON | Working | The mode to the launcher, one file per race |
 
 ### Race Result File
@@ -230,14 +289,22 @@ Schema 1.4 added:
 | `participants[].breakdown` | string or absent | What gave out: `ENGINE`, `GEARBOX`, `SUSPENSION` or `TYRE` |
 | `participants[].timeslip` | object or absent | A drag race only: `reaction_s` (AC's green to the car leaving the line, 0.2 m), then from leaving the line `sixty_ft_s`, `three_thirty_ft_s`, `eighth_mile_s`, `eighth_mile_mph`, `thousand_ft_s`, `quarter_mile_s`, `quarter_mile_mph`. A mark the car never reached is absent. The speeds are trap speeds, the average over the last 66 ft |
 
+Schema 1.5 added:
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `session.end_reason` | string | Now also `BUSTED`: the police caught the player before the line |
+| `pursuit` | object or absent | Only when race.ini sent police: `police` (how many), `started` (the patrol showed up), `started_at_s`, `duration_s`, `player` and `rival`: `ESCAPED` or `BUSTED`. The police cars are never participants |
+
 ```json
 {
-  "metadata": { "schema_version": "1.4", "script_version": "3.3.0", "source": "sr_race_manager", "generated_at": "ISO8601" },
+  "metadata": { "schema_version": "1.5", "script_version": "3.4.0", "source": "sr_race_manager", "generated_at": "ISO8601" },
   "session": { "session_id": "UUID", "context_id": "UUID of the race context", "track_id": "...", "duration_seconds": 12.3, "end_reason": "FINISHED" },
   "participants": [
     { "driver_name": "...", "car_name": "...", "car_index": 0, "is_player": true, "false_start": false,
       "performance": { }, "crash": { }, "condition": { } }
-  ]
+  ],
+  "pursuit": { "police": 2, "started": true, "started_at_s": 41.2, "duration_s": 96.5, "player": "ESCAPED", "rival": "BUSTED" }
 }
 ```
 
@@ -249,6 +316,11 @@ How the launcher uses them (`RaceResultIngestionService`, `RaceResultProcessor`)
   `disqualified`) is a loss, the rival's a win.
 - A breakdown puts a car out like a crash: the player's (`BROKE_DOWN` or the player's `broke_down`) is a loss, the
   rival's a win. Both cars out, whatever put each one out, is a draw (`BothOut`, or `BothCrashed` when both crashed).
+- The police decide the race before anything but a false start: a busted player loses (`PlayerBusted`), even after
+  winning at the line; a busted rival loses (`OpponentBusted`); both busted is no contest (`BothBusted`). A busted
+  racer pays a fine (`PoliceRules.Fine`, more for each earlier bust) and, if the car is still theirs after the stakes,
+  it goes to the impound for a few days (`Car.ImpoundedUntil`, `ImpoundFee`; a fine they couldn't pay goes on the
+  bill). The player who got away earns `RacerStats.PoliceEscapes`, 2 reputation each, up to 10.
 - A file whose `context_id` does not match the race in hand is never applied with that race's context.
 - The race about to be driven is saved as `GameState.PendingRace` before AC starts. A result left over from a race
   that ended badly is applied when a save is loaded, only if its `context_id` is that save's `PendingRace.ContextId`

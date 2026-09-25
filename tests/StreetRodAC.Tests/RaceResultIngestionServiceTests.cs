@@ -13,6 +13,7 @@ namespace StreetRodAC.Tests;
 /// The ingestion service on temp folders, with a real save: which file goes with which race (K1/K2), the orphan
 /// pass, and the rule that a race is forfeited only when AC ran, has exited, and no file of it exists at all.
 /// </summary>
+[Collection(RaceSessionTests.Name)]
 public sealed class RaceResultIngestionServiceTests : IDisposable
 {
     private readonly TempDir _temp = new();
