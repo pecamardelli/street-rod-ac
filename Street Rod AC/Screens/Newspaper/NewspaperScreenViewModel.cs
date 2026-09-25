@@ -10,6 +10,7 @@ using Street_Rod_AC.Services;
 using Street_Rod_AC.Services.Career;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Market;
+using Street_Rod_AC.Services.News;
 using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
@@ -48,6 +49,13 @@ namespace Street_Rod_AC.Screens.Newspaper
         // Race Invitations
         public ObservableCollection<EventInvitationViewModel> RaceInvitations { get; } = [];
         public bool HasRaceInvitations => RaceInvitations.Count > 0;
+
+        /// <summary>The race pages: what the paper wrote about the last few days' races, the lead story first</summary>
+        public ObservableCollection<NewsArticleViewModel> Articles { get; } = [];
+        public bool HasArticles => Articles.Count > 0;
+
+        /// <summary>The paper's date line</summary>
+        public string EditionDisplay => _gameState.Date.ToString("dddd, MMMM d, yyyy");
 
         /// <summary>The player's own cars in the paper, and the buyers who called about them</summary>
         public ObservableCollection<PlayerCarAdViewModel> PlayerAds { get; } = [];
@@ -104,6 +112,23 @@ namespace Street_Rod_AC.Screens.Newspaper
         private void OnBack()
         {
             _navigationService.NavigateToGarage(_gameState);
+        }
+
+        private void LoadArticles()
+        {
+            Articles.Clear();
+            try
+            {
+                var page = NewsWriter.FrontPage(_gameState.News, _gameState.Date);
+                for (var i = 0; i < page.Count; i++) Articles.Add(new NewsArticleViewModel(page[i], _gameState.Date, isLead: i == 0));
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not lay out the race pages");
+            }
+
+            OnPropertyChanged(nameof(HasArticles));
+            OnPropertyChanged(nameof(EditionDisplay));
         }
 
         private void LoadPlayerAds()
@@ -410,6 +435,7 @@ namespace Street_Rod_AC.Screens.Newspaper
             }
 
             LoadPlayerAds();
+            LoadArticles();
 
             // Only spend time when actually visiting (not returning from sub-screens)
             if (SkipEnterAnimation)
@@ -424,6 +450,7 @@ namespace Street_Rod_AC.Screens.Newspaper
                 {
                     LoadRaceInvitations();
                     LoadPlayerAds();
+                    LoadArticles();
                 }
                 OnPropertyChanged(nameof(BankrollDisplay));
 

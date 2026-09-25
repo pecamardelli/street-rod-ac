@@ -455,12 +455,35 @@ garage's navigation tiles throwing on hover. The others: Esc closing every card,
 broken room skipped rather than ending the showroom, the central car in the main slot. Build and tests pass; not yet
 tried in the game.
 
-### Step 10: the world remembers
-Three features that read the same saved race sessions (`RaceSessionRepository`), so they go in one PR:
+### Step 10: the world remembers (built 2026-09-25 on `feature/world-remembers`)
+Three features, one PR:
 - **car history:** every car keeps its odometer (`Car.OdometerKM` exists), previous owners and wins, and its price
   reflects them (`CarValuation`);
 - **grudges:** a rival who lost a pink slip asks for a rematch, with talk lines to match (`StaticTalkService`);
 - **newspaper articles** written from the race history.
+
+**The user decided (2026-09-25):** history moves the price modestly (wins up to +15%, owners and mileage down to
+−15%, condition still leads); the rematch is a diner offer (marked, grudge lines, pink slips accepted whatever the odds,
+two weeks, in the street talk); the paper's articles cover the player's notable races and the rivals' big ones.
+
+**As built:** see `docs/systems/market-system.md` ("Car History", "Pricing"), `docs/systems/opponent-system.md`
+("Grudges") and `NewsWriter`.
+- The history lives on the car (`CarHistory`), not in the race sessions: the rivals' races were never saved. The
+  history is copied onto the listing and back, and a relisted car keeps its id (review fix).
+- Articles (`GameState.News`, two weeks kept) are written when a race is settled, only when there is a story: the
+  player's pink slips, the King, rematches, the police, wrecks, event wins, upsets, cash races of $1,000 and more, the
+  first win; from the rivals' own races, pink slips and wrecks. The paper prints the last 3 days, 5 pieces, newest
+  day first and the weightiest first within it, the lead in bigger type.
+- The newspaper got a third column for them, **Street News**; the market buttons are two thirds their size side by
+  side, and "Your Ads" scrolls: the overflow from step 4 is fixed. The invitations panel stays up with a line when
+  there are none.
+- The race session record now keeps the game date, both names and car ids, the race type and the event.
+- Found on the way: the diner never told the talk service a pink slip was on the table, so the pink-slip lines were
+  never said; fixed.
+- The race snapshot now covers the street talk and the news too, so a race that fails to save leaves none behind.
+
+Not yet seen by the user in the game: the new newspaper (checked in a render at 1920×1080), a rematch at the diner,
+history on the lots and in the garage, the price effect on the lots.
 
 ### Step 11: strip extras
 - **Test-and-tune:** paid time at the strip for a timeslip with nothing at stake, building on the free run.

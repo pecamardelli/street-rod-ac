@@ -33,6 +33,12 @@ namespace Street_Rod_AC.Models.Race
         public Guid OpponentCarInstanceId { get; set; }
 
         /// <summary>
+        /// The opponent's car model. The one way to name an event-only opponent's car, which is nobody's in the game
+        /// (<see cref="OpponentCarInstanceId"/> is empty then). Empty on contexts from before it was kept.
+        /// </summary>
+        public string OpponentCarDefinitionId { get; set; } = string.Empty;
+
+        /// <summary>
         /// Cash wager amount (0 if no wager)
         /// </summary>
         public decimal CashWager { get; set; }

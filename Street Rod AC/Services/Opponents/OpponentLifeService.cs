@@ -1,3 +1,4 @@
+using Street_Rod_AC.Helpers;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Career.Victory;
 using Street_Rod_AC.Models.GameState;
@@ -85,6 +86,10 @@ namespace Street_Rod_AC.Services.Opponents
             Activate(gameState, currentDate, groupOf, talk);
 
             await TuneAsync(gameState, groupOf, talk);
+
+            // A rematch nobody came for is off. Last, next to the talk it makes: a review that fails before this
+            // leaves the grudges for tomorrow's rather than dropping them without a word.
+            Grudges.Lapse(gameState.Racers.All.OfType<Opponent>(), currentDate, _carNames, talk);
 
             AddTalk(gameState, currentDate, talk);
             _logger.Information("Rivals reviewed: {Ready} racing, {Retired} sitting out, {Inactive} not on the street yet; {Talk} thing(s) to talk about",
@@ -255,7 +260,7 @@ namespace Street_Rod_AC.Services.Opponents
             listing.SoldDate = date;
             racer.Money -= listing.Price;
 
-            var car = CarPurchaseService.CarFrom(listing, date);
+            var car = CarPurchaseService.CarFrom(listing, date, racer.Name);
             listing.Parts = [];
             try
             {
@@ -268,6 +273,7 @@ namespace Street_Rod_AC.Services.Opponents
 
             racer.Cars.Insert(0, car);
             racer.Stats.CarsOwned++;
+            Grudges.CarBack(racer, car);
 
             var dealer = gameState.DealerLocations?.FirstOrDefault(d => d.Id == listing.DealerLocation)?.Name;
             talk.Add($"{racer.Name} bought a {CarName(car)}{(dealer == null ? "" : $" off {dealer}'s lot")} for ${listing.Price:N0}.");
@@ -310,7 +316,7 @@ namespace Street_Rod_AC.Services.Opponents
         private void Activate(GameState gameState, DateTime date, Func<string, string?>? groupOf, List<string> talk)
         {
             var racers = gameState.Racers;
-            var street = racers.ReadyToRace.Values.Concat(racers.Retired.Values).Concat(racers.Inactive.Values)
+            var street = racers.All
                 .Count(r => r is not Opponent { IsKing: true });
             var ready = racers.ReadyToRace.Values.Count(r => r is not Opponent { IsKing: true });
             var wanted = OpponentRules.MinActive(date, street) - ready;
@@ -454,7 +460,7 @@ namespace Street_Rod_AC.Services.Opponents
         }
 
         private static IEnumerable<Car> AllRivalCars(GameState gameState) =>
-            gameState.Racers.ReadyToRace.Values.Concat(gameState.Racers.Retired.Values).Concat(gameState.Racers.Inactive.Values)
+            gameState.Racers.All
                 .Where(r => r.Type == RacerType.AI)
                 .SelectMany(r => r.Cars);
 
@@ -502,9 +508,7 @@ namespace Street_Rod_AC.Services.Opponents
         public static void AddTalk(GameState gameState, DateTime date, IEnumerable<string> lines)
         {
             gameState.StreetTalk ??= [];
-            gameState.StreetTalk.AddRange(lines.Select(line => new StreetTalkItem(date, line)));
-            gameState.StreetTalk.RemoveAll(item => (date - item.Date).TotalDays > StreetTalkDays);
-            if (gameState.StreetTalk.Count > MaxStreetTalk) gameState.StreetTalk.RemoveRange(0, gameState.StreetTalk.Count - MaxStreetTalk);
+            DatedLog.Append(gameState.StreetTalk, lines.Select(line => new StreetTalkItem(date, line)), item => item.Date, date, StreetTalkDays, MaxStreetTalk);
         }
     }
 }

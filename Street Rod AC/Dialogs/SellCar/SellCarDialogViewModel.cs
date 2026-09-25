@@ -51,6 +51,9 @@ namespace Street_Rod_AC.Dialogs.SellCar
 
         public string ValueDisplay => $"Worth about ${_quote.Value:N0}";
 
+        /// <summary>Who had the car and how it has raced: part of what it is worth</summary>
+        public string HistoryDisplay => Screens.Shared.CarHistoryDisplay.Summary(_car.History, forSale: false);
+
         public string MoneyDisplay => $"${_gameState.Player.Money:N0}";
 
         // ----- the dealer, or the scrapyard -----

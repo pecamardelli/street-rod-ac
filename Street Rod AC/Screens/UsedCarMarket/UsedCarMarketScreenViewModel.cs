@@ -290,6 +290,9 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
         public string ConditionDisplay => Shared.ConditionDisplay.Of(Listing.Condition).Percent;
         public string MileageDisplay => $"{Listing.Mileage:N0} km";
 
+        /// <summary>Who had the car and how it has raced</summary>
+        public string HistoryDisplay => CarHistoryDisplay.Summary(Listing.History, forSale: true);
+
         /// <summary>The condition in a word, for the purchase question</summary>
         public string ConditionLabel => Shared.ConditionDisplay.Of(Listing.Condition).Label;
 

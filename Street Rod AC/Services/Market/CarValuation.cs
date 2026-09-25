@@ -15,8 +15,8 @@ namespace Street_Rod_AC.Services.Market
     /// on a lot, 0.5 in an opponent's hands, 0.4 when relisted and 1.0 to the challenge logic.
     ///
     /// Worth is the profile's base price (the car in perfect shape with its factory engine) times how straight
-    /// the car is, plus part of what has been put into the engine: money put into an engine never comes back in
-    /// full.
+    /// the car is and a little for its past (<see cref="HistoryFactor"/>), plus part of what has been put into the
+    /// engine: money put into an engine never comes back in full.
     /// </summary>
     public static class CarValuation
     {
@@ -43,9 +43,58 @@ namespace Street_Rod_AC.Services.Market
             return double.IsFinite(extra) && extra > 0 ? (decimal)Math.Min(extra, 1e9) : 0m;
         }
 
-        /// <summary>A car of this base price in this condition, with this much put into it, to the nearest hundred</summary>
-        public static decimal Value(decimal basePrice, double condition, decimal modifications = 0m) =>
-            RoundToHundred(Math.Max(0m, basePrice) * ConditionFactor(condition) + modifications);
+        /// <summary>
+        /// A car of this base price in this condition, with this much put into it, to the nearest hundred.
+        /// <paramref name="history"/> is <see cref="HistoryFactor"/>: it moves the car's worth, not what was put into the engine.
+        /// </summary>
+        public static decimal Value(decimal basePrice, double condition, decimal modifications = 0m, decimal history = 1m) =>
+            RoundToHundred(Math.Max(0m, basePrice) * ConditionFactor(condition) * history + modifications);
+
+        /// <summary>What wins add to a car's worth: a point each, two for a car won with it, at most <see cref="MaxHistoryShare"/></summary>
+        public const decimal WinShare = 0.01m;
+        public const decimal PinkSlipWinShare = 0.02m;
+
+        /// <summary>What an owner beyond the first <see cref="OwnersWithoutPenalty"/> takes off, at most <see cref="MaxOwnersPenalty"/></summary>
+        public const decimal OwnerPenalty = 0.02m;
+        public const int OwnersWithoutPenalty = 2;
+        public const decimal MaxOwnersPenalty = 0.08m;
+
+        /// <summary>A point off for every <see cref="MileageStepKm"/> past <see cref="MileageWithoutPenaltyKm"/>, at most <see cref="MaxMileagePenalty"/></summary>
+        public const double MileageWithoutPenaltyKm = 80_000;
+        public const double MileageStepKm = 10_000;
+        public const decimal MileagePenalty = 0.01m;
+        public const decimal MaxMileagePenalty = 0.08m;
+
+        /// <summary>The most a car's history moves its worth, either way</summary>
+        public const decimal MaxHistoryShare = 0.15m;
+
+        /// <summary>
+        /// What a car's past does to its worth, as a factor on it: wins (a car that took pink slips most) put up to 15%
+        /// on, a car that has been through many hands or has a lot of miles loses up to 15%. The car's condition still
+        /// says far more (<see cref="ConditionFactor"/>). A car nobody knows anything about (null, an older save) is 1.
+        /// </summary>
+        public static decimal HistoryFactor(CarHistory? history, double odometerKm)
+        {
+            var bonus = 0m;
+            var penalty = 0m;
+
+            if (history != null)
+            {
+                bonus = Math.Min(MaxHistoryShare, Math.Max(0, history.Wins) * WinShare + Math.Max(0, history.PinkSlipsWon) * PinkSlipWinShare);
+                penalty += Math.Min(MaxOwnersPenalty, Math.Max(0, history.OwnerCount - OwnersWithoutPenalty) * OwnerPenalty);
+            }
+
+            if (double.IsFinite(odometerKm) && odometerKm > MileageWithoutPenaltyKm)
+            {
+                var steps = Math.Floor((odometerKm - MileageWithoutPenaltyKm) / MileageStepKm);
+                penalty += Math.Min(MaxMileagePenalty, (decimal)Math.Min(steps, 1000) * MileagePenalty);
+            }
+
+            return 1m + Math.Clamp(bonus - penalty, -MaxHistoryShare, MaxHistoryShare);
+        }
+
+        /// <summary>The factor of this very car's history on its worth</summary>
+        public static decimal HistoryFactor(Car car) => HistoryFactor(car.History, car.OdometerKM);
 
         public static decimal RoundToHundred(decimal price) => Math.Round(price / 100) * 100;
 
@@ -81,7 +130,7 @@ namespace Street_Rod_AC.Services.Market
             Func<CarDefinition, RatedBuild?>? stockBuildOf = null)
         {
             var condition = ConditionOf(car);
-            return Value(basePrice, condition, ModificationsOf(car, condition, parts, definition, stockBuildOf));
+            return Value(basePrice, condition, ModificationsOf(car, condition, parts, definition, stockBuildOf), HistoryFactor(car));
         }
 
         /// <summary>Worked on: the engine is not made of the factory build's parts</summary>

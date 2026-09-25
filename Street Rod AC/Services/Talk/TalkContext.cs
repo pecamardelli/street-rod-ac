@@ -42,6 +42,15 @@ namespace Street_Rod_AC.Services.Talk
         /// Selected track name (for track-specific dialogue)
         /// </summary>
         public string? SelectedTrackName { get; set; }
+
+        /// <summary>The opponent lost a pink slip to the player and wants a rematch; null when not</summary>
+        public Grudge? Grudge { get; set; }
+
+        /// <summary>The car the opponent lost to the player, as people say it; set with <see cref="Grudge"/></summary>
+        public string? GrudgeCarName { get; set; }
+
+        /// <summary>The player still has the car the opponent lost</summary>
+        public bool PlayerHasGrudgeCar { get; set; }
     }
 
     /// <summary>

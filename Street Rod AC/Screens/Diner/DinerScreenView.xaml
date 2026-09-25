@@ -216,6 +216,19 @@
                                                                         <TextBlock Text="{Binding RecordDisplay}"
                                                                                   FontSize="{StaticResource FontSizeTiny}"
                                                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+
+                                                                        <!-- Lost a pink slip to the player and wants it settled -->
+                                                                        <Border Background="{StaticResource DangerBrush}"
+                                                                                CornerRadius="3"
+                                                                                Padding="6,2"
+                                                                                Margin="0,4,0,0"
+                                                                                HorizontalAlignment="Left"
+                                                                                Visibility="{Binding WantsRematch, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                                            <TextBlock Text="{Binding RematchDisplay}"
+                                                                                       FontSize="{StaticResource FontSizeTiny}"
+                                                                                       FontWeight="Bold"
+                                                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                                        </Border>
                                                                     </StackPanel>
                                                                 </Grid>
                                                             </Border>

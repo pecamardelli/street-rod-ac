@@ -45,6 +45,9 @@ The save's rules can turn the daily refresh off (`GameRules.MarketRefreshEnabled
 What a car is worth has one formula, `CarValuation` (`Services/Market/CarValuation.cs`), used by the market, an
 opponent's car, a pink-slipped car going back on a lot and the pink-slip challenge logic:
 - `CarProfile.BasePrice` × condition factor `0.5 + 0.6 × condition` (condition 0 = 50%, 1.0 = 110%)
+- × its history (`HistoryFactor`, step 10): +1% a win and +2% a car won on a pink slip; −2% an owner beyond the
+  second and −1% every 10,000 km past 80,000 (each at most −8%); all together within ±15%. A car with no history
+  (an older save) is ×1.
 - plus half of what the car's engine parts cost new beyond its factory build's, scaled by condition (`ValueOf`, with the
   parts catalog; without it the engine counts as the factory one)
 - rounded to the nearest $100
@@ -101,6 +104,22 @@ A car bought counts in `Player.Stats.CarsOwned`.
 
 A sale refuses a car that is out racing (`GameState.PendingRace`), moves the selected car on to another, and counts in
 `Player.Stats.CarsSold`.
+
+## Car History
+Every car keeps its history (`Car.History`, a `CarHistory`): the owners the game has seen, each with the date and how
+they got it (`CarAcquisition`: Dealer, PinkSlip, PrivateSale, Unknown), the owners before anybody in the game had it
+(`EarlierOwners`), and its races, wins and pink slips won, whoever drove it. The odometer is `Car.OdometerKM`.
+- It goes with the car everywhere: a pink slip (the player's races and the rivals'), a sale out of the paper to a rival,
+  and through a dealer's lot (`ListCar` copies it onto `UsedCarListing.History`, `CarPurchaseService.CarFrom` copies it
+  back and adds the buyer). A relisted car keeps its id (`UsedCarListing.CarInstanceId`): whoever buys it gets that
+  very car back.
+- Somebody who had the car twice (won it back, bought it back) is one owner (`OwnerCount`), for the price and the words.
+- New stock comes with 1-3 earlier owners by its mileage; a rival's first car with a few more; the King's car with his
+  record (it tops the ±15%).
+- Older saves: `HistoryUpgrade` gives every car its present owner at load, and a car or listing nothing was known about
+  the earlier owners its miles tell of (`EarlierOwnersFor`: none under 1,000 km, one more every 80,000 km).
+- Shown on the dealer lot, the used car ads, the purchase question, the Sell dialog and the garage (the mileage's
+  tooltip), always through `CarHistoryDisplay`.
 
 ## Cars Going Back on a Lot
 `ListCar(car, price, location, listedDate)` turns a car into a listing with its parts (engine, running gear), the

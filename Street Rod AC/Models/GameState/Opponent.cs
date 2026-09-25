@@ -66,6 +66,9 @@ namespace Street_Rod_AC.Models.GameState
         /// </summary>
         public string? Biography { get; set; }
 
+        /// <summary>They lost a pink slip to the player and want a rematch; null when they don't (see <see cref="Models.GameState.Grudge"/>)</summary>
+        public Grudge? Grudge { get; set; }
+
         /// <summary>
         /// Constructor for creating a new opponent
         /// </summary>

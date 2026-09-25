@@ -925,6 +925,9 @@ namespace Street_Rod_AC.Screens.Garage
         /// <summary>What is worst about the car, or its overall shape: the one condition the market prices it by</summary>
         public string ConditionDisplay => Shared.ConditionDisplay.Of(CarInstance).Percent;
         public string MileageDisplay => $"{CarInstance.OdometerKM:N0} km";
+
+        /// <summary>Who had the car before, how it came to the player, and how it has raced</summary>
+        public string HistoryDisplay => Shared.CarHistoryDisplay.Summary(CarInstance.History, forSale: false);
         public bool HasPreviewImage => !string.IsNullOrEmpty(PreviewImagePath);
     }
 

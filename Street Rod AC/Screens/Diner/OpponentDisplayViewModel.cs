@@ -17,6 +17,12 @@ namespace Street_Rod_AC.Screens.Diner
         public OpponentDifficulty Difficulty { get; set; }
 
         public string Name => Opponent.Name;
+
+        /// <summary>Lost a pink slip to the player and wants a rematch: they take any pink-slip race with the player</summary>
+        public bool WantsRematch => Opponent.Grudge != null;
+
+        /// <summary>What the badge says under a rival who wants a rematch</summary>
+        public string RematchDisplay => Opponent.Grudge is { } grudge ? $"Wants a rematch · until {grudge.Until:MMM d}" : string.Empty;
         public string Nickname => Opponent.Nickname;
         public string CarDisplay => $"{CarDefinition.Brand} {CarDefinition.Name}";
         public string CarBrand => CarDefinition.Brand;

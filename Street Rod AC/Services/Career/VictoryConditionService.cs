@@ -126,7 +126,7 @@ namespace Street_Rod_AC.Services.Career
             if (_playerHasMostWins != null) career.PlayerHasMostWins = _playerHasMostWins(gameState);
 
             var racers = gameState.Racers;
-            career.KingName = racers.ReadyToRace.Values.Concat(racers.Retired.Values).Concat(racers.Inactive.Values)
+            career.KingName = racers.All
                 .OfType<Opponent>().FirstOrDefault(o => o.IsKing)?.Name ?? career.KingName;
         }
     }

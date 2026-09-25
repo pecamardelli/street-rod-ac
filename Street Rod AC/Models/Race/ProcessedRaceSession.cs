@@ -76,5 +76,24 @@ namespace Street_Rod_AC.Models.Race
         /// How the race was decided
         /// </summary>
         public string WinCondition { get; set; } = string.Empty;
+
+        // Who raced whom in what, and when in the game. Null or empty on sessions from before they were kept.
+
+        /// <summary>The game's date when the race was settled (1970s)</summary>
+        public DateTime? GameDate { get; set; }
+
+        public string PlayerName { get; set; } = string.Empty;
+
+        public string OpponentName { get; set; } = string.Empty;
+
+        public Guid? PlayerCarInstanceId { get; set; }
+
+        public Guid? OpponentCarInstanceId { get; set; }
+
+        /// <summary>The <see cref="Race.RaceType"/> by name</summary>
+        public string RaceType { get; set; } = string.Empty;
+
+        /// <summary>The event the race was for; null for a race at the diner</summary>
+        public string? EventId { get; set; }
     }
 }

@@ -77,6 +77,10 @@ namespace Street_Rod_AC.Models.GameState
             }
         }
 
+        /// <summary>Every racer, whatever their status: ready to race, sitting out, not on the street yet</summary>
+        [LiteDB.BsonIgnore]
+        public IEnumerable<Racer> All => ReadyToRace.Values.Concat(Retired.Values).Concat(Inactive.Values);
+
         [LiteDB.BsonIgnore]
         public int TotalCount => Inactive.Count + Retired.Count + ReadyToRace.Count;
     }

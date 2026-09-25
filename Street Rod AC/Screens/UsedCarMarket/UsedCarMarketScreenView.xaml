@@ -160,6 +160,20 @@
                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
                                     </StackPanel>
 
+                                    <!-- History -->
+                                    <StackPanel Orientation="Horizontal"
+                                                Margin="0,5,0,0">
+                                        <TextBlock Text="History:"
+                                                  FontSize="{StaticResource FontSizeBody}"
+                                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                                  Width="80"/>
+                                        <TextBlock Text="{Binding HistoryDisplay}"
+                                                  FontSize="{StaticResource FontSizeBody}"
+                                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                                  TextWrapping="Wrap"
+                                                  MaxWidth="320"/>
+                                    </StackPanel>
+
                                     <!-- Engine -->
                                     <StackPanel Orientation="Horizontal"
                                                 Margin="0,5,0,0"

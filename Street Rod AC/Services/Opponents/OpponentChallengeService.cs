@@ -157,6 +157,14 @@ namespace Street_Rod_AC.Services.Opponents
                 };
             }
 
+            // A rival who lost a pink slip to the player takes any pink-slip race with them, whatever the cars are
+            // worth: that is what they've been waiting for (Grudges). A car worth nothing is still nothing to stake.
+            if (Grudges.WantsRematch(opponent))
+            {
+                _logger.Information("{Name} wants the rematch: pink slips accepted", opponent.Name);
+                return new ChallengeResponse { Accepted = true, Message = "About time. Let's settle this." };
+            }
+
             var valueRatio = (double)(playerCarValue / opponentCarValue);
 
             // Check car value mismatch (won't risk expensive car for cheap car)

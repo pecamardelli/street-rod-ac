@@ -23,6 +23,7 @@ namespace Street_Rod_AC.Screens.Newspaper
                     BackButton.Opacity = 1;
                     ContentPanel.Opacity = 1;
                     RaceInvitationsPanel.Opacity = 1;
+                    NewsPanel.Opacity = 1;
                 }
                 else
                 {
@@ -53,6 +54,7 @@ namespace Street_Rod_AC.Screens.Newspaper
                     };
                     ContentPanel.BeginAnimation(OpacityProperty, contentFade);
                     RaceInvitationsPanel.BeginAnimation(OpacityProperty, contentFade);
+                    NewsPanel.BeginAnimation(OpacityProperty, contentFade);
                 }
             }
         }

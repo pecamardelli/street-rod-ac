@@ -131,7 +131,7 @@ namespace Street_Rod_AC.Services.Opponents
         private void EnsureKing(GameState gameState, List<(CarDefinition Car, CarProfile Profile)>? carPool)
         {
             var racers = gameState.Racers;
-            if (racers.ReadyToRace.Values.Concat(racers.Retired.Values).Concat(racers.Inactive.Values).Any(r => r is Opponent { IsKing: true })) return;
+            if (racers.All.Any(r => r is Opponent { IsKing: true })) return;
             if (_noKingDefined) return;
 
             var king = _opponentRepository.LoadAllOpponents().FirstOrDefault(o => o.IsKing);
@@ -156,7 +156,7 @@ namespace Street_Rod_AC.Services.Opponents
             king.Stats.PinkSlipsWon = 12;
             king.Stats.Reputation = king.Stats.CalculateReputation();
 
-            var car = CreateKingCar(carPool ?? BuildCarPool(), gameState.Date);
+            var car = CreateKingCar(carPool ?? BuildCarPool(), gameState.Date, king);
             if (car != null) king.Cars.Add(car);
 
             racers.AddRacer(king);
@@ -167,7 +167,7 @@ namespace Street_Rod_AC.Services.Opponents
         /// One of the strongest cars there is from the factory (the dearest, without parts to tell), in top shape, its
         /// engine worked on as much as it gets
         /// </summary>
-        private Car? CreateKingCar(List<(CarDefinition Car, CarProfile Profile)> pool, DateTime today)
+        private Car? CreateKingCar(List<(CarDefinition Car, CarProfile Profile)> pool, DateTime today, Opponent king)
         {
             var choices = (_parts is { IsAvailable: true } catalogParts
                     ? pool.Select(p => (p.Car, p.Profile, Power: catalogParts.GetStockBuild(p.Car)?.PowerHp ?? 0)).Where(p => p.Power > 0)
@@ -201,6 +201,13 @@ namespace Street_Rod_AC.Services.Opponents
                     _logger.Warning("Could not build the King's engine: {Error}", ex.Message);
                 }
             }
+
+            // The car everybody on the street has lost to: his since he had it, and it shows in its worth (before
+            // FinishCar prices it)
+            car.History.ChangeHands(king.Name, car.PurchaseDate, CarAcquisition.Unknown);
+            car.History.Races = king.Stats.Races - _random.Next(0, 10);
+            car.History.Wins = car.History.Races - _random.Next(1, 4);
+            car.History.PinkSlipsWon = king.Stats.PinkSlipsWon;
 
             FinishCar(car, definition, profile);
             return car;
@@ -311,6 +318,10 @@ namespace Street_Rod_AC.Services.Opponents
                 TireCondition = 0.6f + (float)_random.NextDouble() * 0.3f, // Tires vary more
                 PurchaseDate = today.AddDays(-_random.Next(30, 365)) // Owned for 1 month to 1 year, in game time
             };
+
+            // A car that has done that many miles has been through a few hands before theirs
+            car.History.EarlierOwners = 1 + _random.Next(0, 1 + mileage / 50_000);
+            car.History.ChangeHands(opponent.Name, car.PurchaseDate, CarAcquisition.Unknown);
 
             // A used engine, now and then worked on, like the ones on the lots
             if (_parts is { IsAvailable: true } parts)
