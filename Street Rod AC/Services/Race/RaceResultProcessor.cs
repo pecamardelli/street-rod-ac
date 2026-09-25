@@ -6,6 +6,7 @@ using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Models.Race;
 using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Career;
+using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Parts;
 using Street_Rod_AC.Services.Race.Validation;
 using Street_Rod_AC.Services.Storage;
@@ -32,6 +33,7 @@ namespace Street_Rod_AC.Services.Race
         private readonly ICareerProgressService _careerProgressService;
         private readonly IRaceEventService _raceEventService;
         private readonly ICarPartsService? _parts;
+        private readonly IOpponentEvolutionService _evolution;
         private readonly IAppLogger _logger;
 
         // Car health degradation constants (per race), for result files without the car's condition (before schema 1.2)
@@ -57,13 +59,15 @@ namespace Street_Rod_AC.Services.Race
             IRaceSessionRepository sessionRepository,
             ICareerProgressService careerProgressService,
             IRaceEventService raceEventService,
-            ICarPartsService? parts = null)
+            ICarPartsService? parts = null,
+            IOpponentEvolutionService? evolution = null)
         {
             _gameStateRepository = gameStateRepository;
             _sessionRepository = sessionRepository;
             _careerProgressService = careerProgressService;
             _raceEventService = raceEventService;
             _parts = parts;
+            _evolution = evolution ?? new OpponentEvolutionService();
             _logger = AppLoggerFactory.CreateLogger(LogCategory.RaceIngestion);
         }
 
@@ -572,6 +576,14 @@ namespace Street_Rod_AC.Services.Race
                     opponent.Stats.Races++;
                     _logger.Debug("Opponent stats updated: W{Wins}/L{Losses}",
                         opponent.Stats.Wins, opponent.Stats.Losses);
+
+                    // A race against the player shapes the rival: a win makes them bolder, a wreck careful
+                    if (opponent is Opponent rival)
+                    {
+                        if (outcome.WinCondition == WinCondition.OpponentCrashed) _evolution.ApplyCrashEvolution(rival);
+                        else if (outcome.PlayerWon) _evolution.ApplyLossEvolution(rival);
+                        else _evolution.ApplyWinEvolution(rival);
+                    }
                 }
                 else
                 {
@@ -1049,7 +1061,8 @@ namespace Street_Rod_AC.Services.Race
 
         /// <summary>
         /// Update opponent status based on race outcome
-        /// If opponent lost their only car in a pink slip race, move them to Inactive
+        /// If opponent lost their only car in a pink slip race, they sit it out (retired) until the daily review
+        /// (<see cref="OpponentLifeService"/>) finds them another
         /// </summary>
         private void UpdateOpponentStatus(GameState gameState, RaceContext context)
         {
@@ -1061,23 +1074,12 @@ namespace Street_Rod_AC.Services.Race
             }
 
             // Check if opponent has no cars left
-            if (opponent.Cars.Count == 0)
+            if (opponent.Cars.Count == 0 && opponent.Status != RacerStatus.Retired)
             {
-                // Opponent lost their only car - move to Inactive
-                gameState.Racers.ReadyToRace.Remove(opponent.Name);
-                gameState.Racers.Inactive[opponent.Name] = opponent;
-                opponent.Status = RacerStatus.Inactive;
+                // Opponent lost their only car: off the street until they buy another
+                gameState.Racers.MoveRacer(opponent.Name, RacerStatus.Retired);
 
-                _logger.Information("Opponent {Name} moved to Inactive (no cars remaining)", opponent.Name);
-            }
-            else if (opponent.Status == RacerStatus.Inactive && opponent.Cars.Count > 0)
-            {
-                // Opponent gained a car (won pink slip) and is now active again
-                gameState.Racers.Inactive.Remove(opponent.Name);
-                gameState.Racers.ReadyToRace[opponent.Name] = opponent;
-                opponent.Status = RacerStatus.ReadyToRace;
-
-                _logger.Information("Opponent {Name} moved to ReadyToRace (now has a car)", opponent.Name);
+                _logger.Information("Opponent {Name} is sitting it out (no cars remaining)", opponent.Name);
             }
         }
     }

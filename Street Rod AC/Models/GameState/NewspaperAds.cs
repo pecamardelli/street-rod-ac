@@ -37,6 +37,9 @@ namespace Street_Rod_AC.Models.GameState
     public class CarOffer
     {
         public string BuyerName { get; set; } = string.Empty;
+
+        /// <summary>The rival who called, when the buyer is one of the racers: the car then races under them</summary>
+        public string? RivalName { get; set; }
         public decimal Amount { get; set; }
 
         /// <summary>Game time; after it the buyer has found another car</summary>

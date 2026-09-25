@@ -16,6 +16,12 @@ namespace Street_Rod_AC.Services.Opponents
         void InitializeOpponents(GameState gameState, int? opponentCount = null);
 
         /// <summary>
+        /// Puts the King in the game when he isn't in it yet (a save from before him): out of sight, with his money
+        /// and his car. Nothing when there is no King among the definitions.
+        /// </summary>
+        void EnsureKing(GameState gameState);
+
+        /// <summary>
         /// Get random selection of opponents
         /// </summary>
         /// <param name="count">Number of opponents to select</param>

@@ -152,6 +152,11 @@ namespace Street_Rod_AC.Services.Opponents
                     opponent.Location = locationElement.GetString();
                 }
 
+                if (json.TryGetProperty("isKing", out var kingElement) && kingElement.ValueKind == JsonValueKind.True)
+                {
+                    opponent.IsKing = true;
+                }
+
                 if (json.TryGetProperty("biography", out var biographyElement))
                 {
                     opponent.Biography = biographyElement.GetString();

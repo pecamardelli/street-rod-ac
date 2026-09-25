@@ -105,26 +105,6 @@ public static class CarCondition
         };
     }
 
-    /// <summary>
-    /// A start the car can at least leave the line with. For an opponent's car, which races whatever shape it is in
-    /// until opponents look after their cars (roadmap step 5): its save keeps the damage, the race gets it running.
-    /// </summary>
-    public static RaceStartState Runnable(RaceStartState state)
-    {
-        var body = state.BodyKmh.ToArray();
-        var total = body.Sum();
-        var most = TotaledKmh * 0.9;
-        if (total > most) body = body.Select(z => z * most / total).ToArray();
-
-        return new RaceStartState
-        {
-            BodyKmh = body,
-            EngineLife = Math.Max(state.EngineLife, NewEngineLife * 0.3),
-            GearboxWear = Math.Min(state.GearboxWear, 0.7),
-            SuspensionBend = state.SuspensionBend.Select(b => Math.Min(b, 0.7)).ToArray()
-        };
-    }
-
     /// <summary>What keeps the car from racing, in words for the player; empty when it can go</summary>
     public static List<string> WhyCannotRace(Car car, Func<string, string?>? groupOf)
     {

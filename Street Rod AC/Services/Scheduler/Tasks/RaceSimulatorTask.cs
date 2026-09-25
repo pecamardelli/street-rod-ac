@@ -1,5 +1,7 @@
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Services.Catalog;
+using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Simulation;
 
 namespace Street_Rod_AC.Services.Scheduler.Tasks
@@ -10,14 +12,17 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
     public class RaceSimulatorTask : IScheduledTask
     {
         private readonly RaceSimulatorService _simulatorService;
+        private readonly IContentCatalogRepository? _catalogRepo;
         private readonly IAppLogger _logger;
 
         public string TaskId => "race_simulator";
         public int IntervalDays => 1;
 
-        public RaceSimulatorTask(RaceSimulatorService simulatorService)
+        /// <param name="catalogRepo">Names the cars in the street talk; null and they go by their folder names</param>
+        public RaceSimulatorTask(RaceSimulatorService simulatorService, IContentCatalogRepository? catalogRepo = null)
         {
             _simulatorService = simulatorService;
+            _catalogRepo = catalogRepo;
             _logger = AppLoggerFactory.CreateLogger("RaceSimulatorTask");
         }
 
@@ -31,14 +36,25 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
                 "Race simulation complete. Races simulated: {TotalRaces}",
                 result.TotalRaces);
 
-            // Log summary of interesting events
-            foreach (var race in result.Races.Where(r => r.IsPinkSlip))
+            // What the street talks about: cars changing hands and cars wrecked
+            var talk = new List<string>();
+            foreach (var race in result.Races)
             {
-                _logger.Information(
-                    "Pink slip race! {Winner} won {Loser}'s car",
-                    race.WinnerName, race.LoserName);
+                var car = race.LoserCar == null ? "car" : _catalogRepo == null ? race.LoserCar.DefinitionId : CarNames.Of(_catalogRepo, race.LoserCar.DefinitionId);
+                if (race.IsPinkSlip)
+                {
+                    _logger.Information("Pink slip race! {Winner} won {Loser}'s car", race.WinnerName, race.LoserName);
+                    talk.Add(race.LoserCrashed
+                        ? $"{race.LoserName} wrecked the {car} racing {race.WinnerName} for pink slips; {race.WinnerName} towed away what's left of it."
+                        : $"{race.WinnerName} took {race.LoserName}'s {car} in a pink slip race.");
+                }
+                else if (race.LoserCrashed)
+                {
+                    talk.Add($"{race.LoserName} wrecked the {car} in a {race.RaceType.ToLowerInvariant()} race against {race.WinnerName}.");
+                }
             }
 
+            OpponentLifeService.AddTalk(gameState, currentDate, talk);
             return Task.CompletedTask;
         }
     }

@@ -169,13 +169,17 @@ namespace Street_Rod_AC
 
             // Scheduler and Time Service
             Scheduler = new GameTimeScheduler();
-            Scheduler.RegisterTask(new Services.Scheduler.Tasks.RaceSimulatorTask(new Services.Simulation.RaceSimulatorService(MarketService)));
-            // Note: EventGenerationTask, and after it the market and parts ads tasks, are registered once RaceEventService is created
+            // Note: the rivals' tasks are registered once their services are made, and after them the event, market
+            // and parts ads tasks, once RaceEventService is created
             GameTimeService = new GameTimeService(Scheduler);
 
             // Opponent services (must be initialized before GameStateRepository)
             OpponentRepository = new OpponentRepository();
-            OpponentInitializationService = new OpponentInitializationService(OpponentRepository, CatalogRepository, ProfileRepository);
+            OpponentInitializationService = new OpponentInitializationService(OpponentRepository, CatalogRepository, ProfileRepository, CarPartsService);
+
+            // The rivals' morning first (cars bought, fixed, tuned), then their races against each other
+            Scheduler.RegisterTask(new OpponentReviewTask(new OpponentLifeService(CarPartsService, MarketService, CatalogRepository, OpponentInitializationService)));
+            Scheduler.RegisterTask(new Services.Scheduler.Tasks.RaceSimulatorTask(new Services.Simulation.RaceSimulatorService(MarketService, CarPartsService), CatalogRepository));
             OpponentChallengeService = new OpponentChallengeService(CatalogRepository, ProfileRepository, CarPartsService);
 
             // Game state repository (depends on opponent initialization service). The save in use stays open in
@@ -196,7 +200,7 @@ namespace Street_Rod_AC
                 CarFilterService,
                 carDefId => CatalogRepository.GetCar(carDefId)
             );
-            EventOpponentService = new EventOpponentService(CarFilterService, CatalogRepository);
+            EventOpponentService = new EventOpponentService(CarFilterService, CatalogRepository, OpponentChallengeService.CanRace);
             CareerProgressService = new CareerProgressService(MilestoneService, VictoryConditionService);
 
             // Talk service for opponent dialogue
@@ -781,26 +785,12 @@ namespace Street_Rod_AC
         {
             var playerWins = gameState.Player.Stats.Wins;
 
-            // Check all opponents
-            foreach (var racer in gameState.Racers.ReadyToRace.Values)
-            {
-                if (racer.Stats.Wins > playerWins)
-                    return false;
-            }
-
-            foreach (var racer in gameState.Racers.Inactive.Values)
-            {
-                if (racer.Stats.Wins > playerWins)
-                    return false;
-            }
-
-            foreach (var racer in gameState.Racers.Retired.Values)
-            {
-                if (racer.Stats.Wins > playerWins)
-                    return false;
-            }
-
-            return true;
+            // Every racer of the street, the King aside: his record is from before the season
+            return gameState.Racers.ReadyToRace.Values
+                .Concat(gameState.Racers.Inactive.Values)
+                .Concat(gameState.Racers.Retired.Values)
+                .Where(racer => racer is not Models.GameState.Opponent { IsKing: true })
+                .All(racer => racer.Stats.Wins <= playerWins);
         }
 
         protected override void OnExit(ExitEventArgs e)

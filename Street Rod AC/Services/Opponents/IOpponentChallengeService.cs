@@ -26,6 +26,12 @@ namespace Street_Rod_AC.Services.Opponents
             bool isPinkSlip,
             decimal cashWager = 0,
             double pinkSlipFactor = 1.0);
+
+        /// <summary>
+        /// Whether the car can race as it is (<see cref="Parts.Cars.CarCondition.WhyCannotRace"/>): a rival whose car
+        /// is laid up is not at the diner and turns every challenge down
+        /// </summary>
+        bool CanRace(Car car);
     }
 
     /// <summary>

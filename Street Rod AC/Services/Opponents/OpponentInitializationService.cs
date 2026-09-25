@@ -1,8 +1,10 @@
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Market;
+using Street_Rod_AC.Services.Parts;
 
 namespace Street_Rod_AC.Services.Opponents
 {
@@ -14,17 +16,30 @@ namespace Street_Rod_AC.Services.Opponents
         private readonly IOpponentRepository _opponentRepository;
         private readonly IContentCatalogRepository _catalogRepo;
         private readonly ICarProfileRepository _profileRepo;
+        private readonly ICarPartsService? _parts;
         private readonly IAppLogger _logger;
         private readonly Random _random;
 
+        /// <summary>What the King has in the bank</summary>
+        public const decimal KingMoney = 20000m;
+
+        /// <summary>The King's car is one of the this many strongest from the factory</summary>
+        private const int KingCarChoices = 5;
+
+        /// <param name="parts">
+        /// Gives the rivals' cars their engines and running gear (a used engine, now and then worked on); null, or no
+        /// parts, and the cars get them the first time they are looked at
+        /// </param>
         public OpponentInitializationService(
             IOpponentRepository opponentRepository,
             IContentCatalogRepository catalogRepo,
-            ICarProfileRepository profileRepo)
+            ICarProfileRepository profileRepo,
+            ICarPartsService? parts = null)
         {
             _opponentRepository = opponentRepository;
             _catalogRepo = catalogRepo;
             _profileRepo = profileRepo;
+            _parts = parts;
             _logger = AppLoggerFactory.CreateLogger("OpponentInitialization");
             _random = new Random();
         }
@@ -36,8 +51,8 @@ namespace Street_Rod_AC.Services.Opponents
         {
             _logger.Information("Initializing opponents for new game");
 
-            // Load all available opponents
-            var allOpponents = _opponentRepository.LoadAllOpponents();
+            // Load all available opponents; the King is set up on his own
+            var allOpponents = _opponentRepository.LoadAllOpponents().Where(o => !o.IsKing).ToList();
 
             if (allOpponents.Count == 0)
             {
@@ -52,7 +67,7 @@ namespace Street_Rod_AC.Services.Opponents
             if (opponentCount.HasValue && opponentCount.Value < allOpponents.Count)
             {
                 // Select random subset
-                selectedOpponents = GetRandomOpponents(opponentCount.Value);
+                selectedOpponents = allOpponents.OrderBy(_ => _random.Next()).Take(opponentCount.Value).ToList();
                 _logger.Information("Selected {Count} random opponents from pool of {Total}",
                     opponentCount.Value, allOpponents.Count);
             }
@@ -67,11 +82,16 @@ namespace Street_Rod_AC.Services.Opponents
             // that was deleted from content\cars, however long the catalog remembers it), with a price
             var carPool = BuildCarPool();
 
+            // A few racers are out on the street when the career starts; the rest turn up as the weeks go by
+            // (OpponentLifeService). Who comes first is the luck of the draw.
+            var onTheStreet = OpponentRules.MinActive(gameState.Date, selectedOpponents.Count);
+            var order = selectedOpponents.OrderBy(_ => _random.Next()).ToList();
+
             // Add opponents to game state
-            foreach (var opponent in selectedOpponents)
+            for (var i = 0; i < order.Count; i++)
             {
-                // Set initial status (most start as ReadyToRace)
-                opponent.Status = RacerStatus.ReadyToRace;
+                var opponent = order[i];
+                opponent.Status = i < onTheStreet ? RacerStatus.ReadyToRace : RacerStatus.Inactive;
 
                 // Generate and assign a used car to this opponent
                 var car = GenerateOpponentCar(opponent, carPool, gameState.Date);
@@ -98,7 +118,87 @@ namespace Street_Rod_AC.Services.Opponents
                     opponent.Name, opponent.Skill, opponent.Aggression);
             }
 
-            _logger.Information("Successfully initialized {Count} opponents", selectedOpponents.Count);
+            _logger.Information("Successfully initialized {Count} opponents, {Street} of them on the street", selectedOpponents.Count, onTheStreet);
+
+            EnsureKing(gameState, carPool);
+        }
+
+        public void EnsureKing(GameState gameState) => EnsureKing(gameState, null);
+
+        private void EnsureKing(GameState gameState, List<(CarDefinition Car, CarProfile Profile)>? carPool)
+        {
+            var racers = gameState.Racers;
+            if (racers.ReadyToRace.Values.Concat(racers.Retired.Values).Concat(racers.Inactive.Values).Any(r => r is Opponent { IsKing: true })) return;
+
+            var king = _opponentRepository.LoadAllOpponents().FirstOrDefault(o => o.IsKing);
+            if (king == null)
+            {
+                _logger.Warning("No King among the opponent definitions: the King victory can't be won");
+                return;
+            }
+
+            // Out of sight until the player has earned a shot at him (OpponentLifeService brings him to the diner)
+            king.Status = RacerStatus.Inactive;
+            king.Money = KingMoney;
+
+            // A name on the street: years of wins, pink slips taken
+            king.Stats.Races = 52;
+            king.Stats.Wins = 48;
+            king.Stats.Losses = 4;
+            king.Stats.DragRaces = king.Stats.RoadRaces = 26;
+            king.Stats.DragWins = king.Stats.RoadWins = 24;
+            king.Stats.DragLosses = king.Stats.RoadLosses = 2;
+            king.Stats.PinkSlipsWon = 12;
+            king.Stats.Reputation = king.Stats.CalculateReputation();
+
+            var car = CreateKingCar(carPool ?? BuildCarPool(), gameState.Date);
+            if (car != null) king.Cars.Add(car);
+
+            racers.AddRacer(king);
+            _logger.Information("{King} is in town, in a {Car} ({Power:0} hp)", king.Name, car?.DefinitionId ?? "(no car)", car?.PowerHp ?? 0);
+        }
+
+        /// <summary>
+        /// One of the strongest cars there is from the factory (the dearest, without parts to tell), in top shape, its
+        /// engine worked on as much as it gets
+        /// </summary>
+        private Car? CreateKingCar(List<(CarDefinition Car, CarProfile Profile)> pool, DateTime today)
+        {
+            var choices = (_parts is { IsAvailable: true } catalogParts
+                    ? pool.Select(p => (p.Car, p.Profile, Power: catalogParts.GetStockBuild(p.Car)?.PowerHp ?? 0)).Where(p => p.Power > 0)
+                    : pool.Select(p => (p.Car, p.Profile, Power: (double)p.Profile.BasePrice)))
+                .OrderByDescending(p => p.Power)
+                .Take(KingCarChoices)
+                .Select(p => (p.Car, p.Profile))
+                .ToList();
+            if (choices.Count == 0) return null;
+
+            var (definition, profile) = choices[_random.Next(choices.Count)];
+            var car = new Car(definition.Id)
+            {
+                SkinId = definition.AvailableSkins is { Count: > 0 } skins ? skins[_random.Next(skins.Count)] : "default",
+                OdometerKM = 20000 + _random.Next(0, 20000),
+                EngineHealth = 0.95,
+                TransmissionHealth = 0.95,
+                BodyCondition = 1.0,
+                TireCondition = 0.95,
+                PurchaseDate = today.AddDays(-_random.Next(60, 365))
+            };
+
+            if (_parts is { IsAvailable: true } parts && parts.GetStockBuild(definition) is { } build)
+            {
+                try
+                {
+                    AddEngine(car, EngineFactory.CreateTuned(parts.Catalog, parts.Builds, build, 0.95, 1.0, _random));
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning("Could not build the King's engine: {Error}", ex.Message);
+                }
+            }
+
+            FinishCar(car, definition, profile);
+            return car;
         }
 
         /// <summary>
@@ -223,13 +323,54 @@ namespace Street_Rod_AC.Services.Opponents
                 PurchaseDate = today.AddDays(-_random.Next(30, 365)) // Owned for 1 month to 1 year, in game time
             };
 
-            // Paid what a car like that is worth: the same sum the market prices its cars with
-            car.PurchasePrice = CarValuation.ValueOf(car, profile.BasePrice);
+            // A used engine, now and then worked on, like the ones on the lots
+            if (_parts is { IsAvailable: true } parts)
+            {
+                try
+                {
+                    AddEngine(car, parts.CreateUsedEngine(carDefinition, condition));
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning("Could not build the engine of {Name}'s {Car}: {Error}", opponent.Name, carDefinition.Id, ex.Message);
+                }
+            }
+
+            FinishCar(car, carDefinition, profile);
 
             _logger.Debug("Generated car {CarId} for opponent {Name}: Condition={Condition:F2}, Mileage={Mileage}",
                 carDefinition.Id, opponent.Name, condition, mileage);
 
             return car;
+        }
+
+        private static void AddEngine(Car car, BuiltEngine? engine)
+        {
+            if (engine == null) return;
+
+            car.Parts.Add(engine.Root);
+            car.HasPartsAssigned = true;
+            car.PowerHp = UsedCarMarketService.PowerOf(engine.Report);
+        }
+
+        /// <summary>The running gear, the car's figures from its parts, and what it is worth</summary>
+        private void FinishCar(Car car, CarDefinition definition, CarProfile profile)
+        {
+            if (_parts is { IsAvailable: true } parts)
+            {
+                try
+                {
+                    parts.EnsureParts(car);
+                    CarCondition.RefreshFigures(car, CarCondition.Groups(parts.Catalog));
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning("Could not give the {Car} its running gear: {Error}", car.DefinitionId, ex.Message);
+                }
+            }
+
+            // Paid what a car like that is worth: the same sum the market prices its cars with
+            car.PurchasePrice = CarValuation.ValueOf(car, profile.BasePrice, _parts, definition);
         }
     }
 }

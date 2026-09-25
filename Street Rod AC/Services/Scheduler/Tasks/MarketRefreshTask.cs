@@ -32,6 +32,12 @@ namespace Street_Rod_AC.Services.Scheduler.Tasks
 
             _logger.Information("Running daily market refresh for date {Date}", currentDate);
 
+            // A new career has no dealers until the player opens the map; the rivals buy off the lots from day one
+            if (gameState.DealerLocations is not { Count: > 0 })
+            {
+                gameState.DealerLocations = _marketService.GetDefaultDealers();
+            }
+
             var previousCount = gameState.UsedCarMarket.Count;
             var previousAvailable = gameState.UsedCarMarket.Count(l => !l.IsSold);
 

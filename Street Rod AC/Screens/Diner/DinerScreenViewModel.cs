@@ -19,6 +19,9 @@ using System.IO;
 
 namespace Street_Rod_AC.Screens.Diner
 {
+    /// <summary>One line of the street talk, with when it happened ("Today", "Yesterday", "Jun 3")</summary>
+    public sealed record StreetTalkLine(string When, string Text);
+
     public class DinerScreenViewModel : BaseScreenViewModel
     {
         private readonly NavigationService _navigationService;
@@ -93,6 +96,14 @@ namespace Street_Rod_AC.Screens.Diner
         public bool HasRoadTracks => RoadTracks.Count > 0;
         public bool HasAnyTracks => HasDragTracks || HasRoadTracks;
         public bool HasOpponents => Opponents.Count > 0;
+
+        /// <summary>What the rivals have been up to, newest first (<see cref="Models.GameState.GameState.StreetTalk"/>)</summary>
+        public ObservableCollection<StreetTalkLine> StreetTalk { get; } = new();
+
+        public bool HasStreetTalk => StreetTalk.Count > 0;
+
+        /// <summary>How many lines of talk the diner shows</summary>
+        private const int StreetTalkShown = 15;
 
         private TrackCardViewModel? _selectedTrack;
         public TrackCardViewModel? SelectedTrack
@@ -313,6 +324,13 @@ namespace Street_Rod_AC.Screens.Diner
                     continue;
                 }
 
+                // A racer whose car came back from a race today unable to go is at the garage, not the diner
+                if (!_challengeService.CanRace(opponentCar))
+                {
+                    _logger.Information("{Name}'s car can't race today: not at the diner", opponent.Name);
+                    continue;
+                }
+
                 // Get car definition
                 var carDef = _catalogRepository.GetCar(opponentCar.DefinitionId);
                 if (carDef == null)
@@ -371,6 +389,22 @@ namespace Street_Rod_AC.Screens.Diner
 
             // Update bankroll display
             OnPropertyChanged(nameof(BankrollDisplay));
+
+            LoadStreetTalk();
+        }
+
+        private void LoadStreetTalk()
+        {
+            StreetTalk.Clear();
+            var today = _gameState.Date.Date;
+            foreach (var item in (_gameState.StreetTalk ?? []).AsEnumerable().Reverse().Take(StreetTalkShown))
+            {
+                var days = (today - item.Date.Date).Days;
+                var when = days <= 0 ? "Today" : days == 1 ? "Yesterday" : item.Date.ToString("MMM d");
+                StreetTalk.Add(new StreetTalkLine(when, item.Text));
+            }
+
+            OnPropertyChanged(nameof(HasStreetTalk));
         }
 
         private OpponentDifficulty CalculateDifficulty(Opponent opponent) =>
@@ -382,6 +416,9 @@ namespace Street_Rod_AC.Screens.Diner
             {
                 SelectedOpponent = opponentVm;
                 _logger.Information("Selected opponent: {Name}", opponentVm.Name);
+
+                // The King races for pink slips and nothing else
+                if (opponentVm.Opponent.IsKing) IsPinkSlipBet = true;
 
                 // Update wager limits based on opponent's money
                 UpdateWagerLimits();

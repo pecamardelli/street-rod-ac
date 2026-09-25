@@ -85,6 +85,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <!-- Header -->
@@ -233,6 +234,48 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
+
+                    <!-- Word on the street: what the rivals have been up to -->
+                    <Border Grid.Row="2"
+                           Background="{StaticResource BgPanelBrush}"
+                           BorderBrush="{StaticResource BorderLightBrush}"
+                           BorderThickness="0,1,0,0"
+                           Padding="15,10"
+                           Visibility="{Binding HasStreetTalk, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="WORD ON THE STREET"
+                                      FontSize="{StaticResource FontSizeCaption}"
+                                      FontWeight="Bold"
+                                      Foreground="{StaticResource TextSecondaryBrush}"
+                                      Margin="0,0,0,6"/>
+                            <ScrollViewer MaxHeight="200"
+                                         VerticalScrollBarVisibility="Auto"
+                                         HorizontalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding StreetTalk}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="62"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                          Text="{Binding When}"
+                                                          FontSize="{StaticResource FontSizeTiny}"
+                                                          Foreground="{StaticResource TextDisabledBrush}"
+                                                          Margin="0,2,0,0"/>
+                                                <TextBlock Grid.Column="1"
+                                                          Text="{Binding Text}"
+                                                          FontSize="{StaticResource FontSizeSmall}"
+                                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                                          TextWrapping="Wrap"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </Border>
 

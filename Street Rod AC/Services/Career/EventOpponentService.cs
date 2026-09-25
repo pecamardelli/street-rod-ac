@@ -13,14 +13,18 @@ namespace Street_Rod_AC.Services.Career
     {
         private readonly ICarFilterService _filterService;
         private readonly IContentCatalogRepository _catalogRepository;
+        private readonly Func<Car, bool> _canRace;
         private readonly Random _random = new();
 
+        /// <param name="canRace">Whether a rival's car can race today; a racer whose car is laid up sits the event out</param>
         public EventOpponentService(
             ICarFilterService filterService,
-            IContentCatalogRepository catalogRepository)
+            IContentCatalogRepository catalogRepository,
+            Func<Car, bool>? canRace = null)
         {
             _filterService = filterService;
             _catalogRepository = catalogRepository;
+            _canRace = canRace ?? (_ => true);
         }
 
         public EventOpponentResult? GetOpponentForEvent(
@@ -74,11 +78,12 @@ namespace Street_Rod_AC.Services.Career
             // Check ReadyToRace pool for eligible opponents
             foreach (var racer in gameState.Racers.ReadyToRace.Values)
             {
-                if (racer is not Opponent opponent)
+                // The King races for pink slips at his own table, not in anybody's event
+                if (racer is not Opponent opponent || opponent.IsKing)
                     continue;
 
                 var car = opponent.Cars.FirstOrDefault();
-                if (car == null)
+                if (car == null || !_canRace(car))
                     continue;
 
                 // A car that is no longer installed cannot race

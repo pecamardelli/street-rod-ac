@@ -116,27 +116,35 @@ namespace Street_Rod_AC.Services.Market
                 saveFailed);
         }
 
+        /// <summary>
+        /// The car that was for sale, as whoever buys it gets it: the parts it came with (the listing's list moves to the
+        /// car), paid the listing's price on <paramref name="date"/>. Older listings carry no parts; the car is then
+        /// given its factory ones (<see cref="ICarPartsService.EnsureParts"/>), which is the buyer's to do.
+        /// </summary>
+        public static Car CarFrom(UsedCarListing listing, DateTime date) => new()
+        {
+            InstanceId = Guid.NewGuid(),
+            DefinitionId = listing.CarDefinitionId,
+            SkinId = listing.SkinId,
+            PurchasePrice = listing.Price,
+            PurchaseDate = date,
+            OdometerKM = listing.Mileage,
+            // Map single condition to health metrics
+            EngineHealth = listing.Condition,
+            TransmissionHealth = listing.Condition,
+            BodyCondition = listing.Condition,
+            TireCondition = listing.Condition,
+            // What was for sale is what gets bought; older listings carry no parts and get the factory engine
+            Parts = listing.Parts,
+            HasPartsAssigned = listing.Parts.Count > 0,
+            HasRunningGearAssigned = listing.HasRunningGearAssigned,
+            PowerHp = listing.PowerHp
+        };
+
         /// <summary>The car that was for sale, with the parts it came with, or its factory engine if it came without</summary>
         private async Task<Car> CreateCarAsync(Models.GameState.GameState gameState, UsedCarListing listing)
         {
-            var carInstance = new Car
-            {
-                InstanceId = Guid.NewGuid(),
-                DefinitionId = listing.CarDefinitionId,
-                SkinId = listing.SkinId,
-                PurchasePrice = listing.Price,
-                PurchaseDate = gameState.Date,
-                OdometerKM = listing.Mileage,
-                // Map single condition to health metrics
-                EngineHealth = listing.Condition,
-                TransmissionHealth = listing.Condition,
-                BodyCondition = listing.Condition,
-                TireCondition = listing.Condition,
-                // What was for sale is what gets bought; older listings carry no parts and get the factory engine
-                Parts = listing.Parts,
-                HasPartsAssigned = listing.Parts.Count > 0,
-                HasRunningGearAssigned = listing.HasRunningGearAssigned
-            };
+            var carInstance = CarFrom(listing, gameState.Date);
 
             try
             {

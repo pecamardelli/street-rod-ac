@@ -19,6 +19,12 @@ namespace Street_Rod_AC.Models.GameState
         public string DefinitionId { get; set; } = string.Empty;
 
         /// <summary>
+        /// The boss at the top of the ladder (<see cref="Models.Career.Victory.KingVictory"/>): he only races for pink
+        /// slips, only once the player has earned the right, and never in the races nobody watches
+        /// </summary>
+        public bool IsKing { get; set; }
+
+        /// <summary>
         /// Opponent nickname (e.g., "Flathead", "Redline")
         /// </summary>
         public string Nickname { get; set; } = string.Empty;
