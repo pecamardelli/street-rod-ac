@@ -26,6 +26,8 @@ design. Steps are meant to be vertical slices, one PR each, to `dev` (remote `gi
 - **The player always gets to finish.** Quitting AC is a forfeit.
 - **Result schema 1.3:** `end_reason`, `race_type`, `false_start`, `disqualified`, and `condition`. `condition` is the car as AC left it: body damage by zone, engine life, gearbox, oil and water, fuel, and per wheel tyre wear, virtual km, blown and suspension damage. Step 2 puts `condition` onto the parts (schema 1.4 since).
 
+Tested by the user in the game (2026-09-25): collisions work.
+
 Not yet tested by the user in a race: a clean drag race to the finish, a disqualification for contact either way, a
 crashed rival being held, a false start on a road race, `assists.ini` coming back after the race.
 
@@ -315,8 +317,10 @@ paths, roadblocks, a stuck cop put back, night at 21:00. The game found five thi
 - AI racers stopping behind a roadblock instead of going round it;
 - a roadblock "left" in the frame it went up.
 
-Not yet seen by the user: how a chase feels to drive; the lights and the siren (the screenshots caught the terminal
-over the AC window); the diner's police note; the garage's impound panel.
+Tested by the user in the game (2026-09-25): a police chase works.
+
+Not yet seen by the user: the lights and the siren (the screenshots caught the terminal over the AC window); the
+diner's police note; the garage's impound panel.
 
 **Speed traps** (added after the first review): two patrols in three are cops parked on the verge at random spots on
 straights round the track, set off by whoever goes past (see the race mode doc). Only a racer a cop has been after has
@@ -405,7 +409,68 @@ Game") and `docs/systems/time-system.md`.
   load) and the unbound `RefreshMarketCommand`. `Player.Stats.CarsOwned` already went up on purchases.
 - **Docs brought up to date:** `career-system.md`, `systems/time-system.md`, `diner-refactoring-plan.md`.
 
-Not yet seen by the user: the End Day button, the victory screen, a road-race event.
+Not yet seen by the user: the End Day button, the victory screen, a road-race event. The end of the game (victory)
+takes too long to reach by playing; the user will test it in the first release.
+
+## Steps 8–15: what comes next (planned 2026-09-25)
+
+Everything left over from steps 1–7, plus `docs/ideas.txt`, grouped into vertical slices. **The user decided:** the steps
+are taken one at a time, in this order. The rename comes last because it touches every file and would clash with any
+open branch.
+
+### Step 8: playtest and fix
+The user plays what nobody has seen yet, from a checklist, and one PR fixes what breaks. Already tested: collisions and
+a police chase. Left out: the end of the game, kept for the first release.
+- **Race rules:** a clean drag race to the finish, a contact disqualification either way, a crashed rival being held,
+  a false start on a road race, `assists.ini` coming back.
+- **Damage:** the dents redrawing at the start, breakdowns both ways, the timeslip marks on `ks_drag`, how the toe and
+  gearbox data drive, the tow to the garage.
+- **Police:** the lights and the siren, the diner's police note, the garage's impound panel.
+- **Career:** the End Day button, a road-race event.
+- **Economy:** a price balance check after the $5k price fix (audit 2026-09-25).
+
+### Step 9: a new main screen
+From `docs/ideas.txt`. Owned or catalog cars picked at random stand in a showroom, filmed with slow camera moves (like
+Gran Turismo's menus). Over it, a fade to black rises from the bottom to about half the screen, and New Game, Load Game
+and Settings are semi-transparent cards that fade in and out; the screen never navigates away to show them. It builds
+on the garage renderer (`GarageRenderer`) and the engine preview.
+
+### Step 10: the world remembers
+Three features that read the same saved race sessions (`RaceSessionRepository`), so they go in one PR:
+- **car history:** every car keeps its odometer (`Car.OdometerKM` exists), previous owners and wins, and its price
+  reflects them (`CarValuation`);
+- **grudges:** a rival who lost a pink slip asks for a rematch, with talk lines to match (`StaticTalkService`);
+- **newspaper articles** written from the race history.
+
+### Step 11: strip extras
+- **Test-and-tune:** paid time at the strip for a timeslip with nothing at stake, building on the free run.
+- **Bracket racing** with a dial-in.
+- **Each car's best elapsed time.**
+- **The part that failed:** name the one part that broke, not the whole rotating assembly (see step 2).
+
+### Step 12: a bigger opponent pool
+After step 10, since both touch the rivals and the newspaper.
+- New racers when the pool runs dry (`OpponentGenerationService` is written but unused).
+- Rivals put their own cars in the paper and buy used parts out of the ads.
+- The King's own portrait.
+
+### Step 13: the street encounter
+From `docs/ideas.txt`, after step 9 because it reuses its renderer work. Not SLRR's Valo City: the player's car seen
+from the driver's seat, looking left; a rival drives up and the race dialog pops up, as in Street Rod. Both cars have
+their engine sound and body movement under braking and throttle (the engine preview has both). **Decide first:** the
+street scene. The showroom research (`reports/AC showrooms for dealer and garage.md`) found nothing licensed to ship,
+so it is likely one we build.
+
+### Step 14: deeper simulation and police extras
+Research first: CSP limits much of it (it fills oil figures only for scripted cars).
+- Overheating and oil starvation modelled by the game, fuel carried between races, body dirt.
+- Test Drive mode (race-explorer), rivals busted in their own races, the difficulty's say in the police chance,
+  hiding the cops from AC's HUD leaderboard.
+
+### Step 15: the rename to Street Corsa
+Namespaces (`Street_Rod_AC`), the AppData folder (`StreetRodAC`, with a migration), ids like `sr_race`, and the repo.
+Before a release, check the licence of every shipped asset: the icons in `Assets/Icons` are of unknown origin, and the
+garage showroom is not licensed for the public repo.
 
 ## Testing in AC without driving
 
