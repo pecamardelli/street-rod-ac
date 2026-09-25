@@ -279,26 +279,6 @@ public sealed class CarConditionTests : IDisposable
         Assert.Equal(300, CarCondition.StartState(car, null).EngineLife, 6);
     }
 
-    [Fact]
-    public void An_opponents_wreck_gets_just_enough_to_leave_the_line()
-    {
-        var state = new RaceStartState
-        {
-            BodyKmh = new double[] { 150, 150, 0, 0 },
-            EngineLife = 0,
-            GearboxWear = 1,
-            SuspensionBend = new double[] { 1, 0.2, 0, 0 }
-        };
-
-        var runnable = CarCondition.Runnable(state);
-
-        Assert.True(runnable.BodyKmh.Sum() < CarCondition.TotaledKmh);
-        Assert.Equal(runnable.BodyKmh[0], runnable.BodyKmh[1]);
-        Assert.True(runnable.EngineLife > 0);
-        Assert.True(runnable.GearboxWear < 1);
-        Assert.Equal(new[] { 0.7, 0.2, 0, 0 }, runnable.SuspensionBend);
-    }
-
     // ---- Into the next race ----
 
     [Fact]

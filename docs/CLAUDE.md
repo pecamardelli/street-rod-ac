@@ -40,7 +40,7 @@ Street Rod-style career mode manager for Assetto Corsa. WPF app manages game log
 |--------|---------|---------|
 | Catalog | ContentCatalogRepository, CarProfileService | Car import, profiles |
 | Market | UsedCarMarketService, CarValuation | Spawn listings, refresh, purchases; one formula for what a car is worth |
-| Opponents | OpponentGenerationService, OpponentEvolutionService | Create/evolve racers |
+| Opponents | OpponentInitializationService, OpponentLifeService, EngineTuner, OpponentEvolutionService | Rivals on the street: daily review (buy, repair, tune, go broke, come back), the King (see `docs/systems/opponent-system.md`) |
 | Time | GameTimeScheduler, IScheduledTask | Time-based task execution |
 | Race | AssettoCorsaLauncher, IniModificationService, RaceResultIngestionService | Launch AC, modify and restore configs, stop a race, read results (`LaunchResult.Outcome`, `PlayerMessages`) |
 | Dialogs | DialogService | Modal overlays |
@@ -74,6 +74,8 @@ NavigationService.NavigateTo[ScreenName](dependencies) : bool
 - `Opponent` model stores Skill (90-100; the floor of 90 is deliberate, commit 61ca613: below it AC's AI drives too badly to make a race. Never lower it) and Aggression (0-100)
 - `OpponentAIAdapter` converts to AC AI parameters at runtime (never persisted)
 - Evolution happens after races via `OpponentEvolutionService`
+- The rivals live day to day (`OpponentLifeService`, the `opponent_review` task): `Cars[0]` is the car a rival drives,
+  `Car.PowerHp` its dyno figure; what they do goes into `GameState.StreetTalk` (the diner's "word on the street")
 
 ## Market System
 - `CarProfile.DealerPrecedence` controls spawn probability (0.0=rare, 1.0=common)

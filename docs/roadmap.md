@@ -70,7 +70,7 @@ Left for later: overheating and oil starvation modelled by the game (CSP only fi
 fuel carried between races, body dirt, each car's best elapsed time, bracket racing with a dial-in, and whether AC's
 full damage wrecks 1970 street cars too fast (the user chose 100% to start).
 
-**Done: step 4, the economy** (`feature/economy`). See `docs/systems/market-system.md` "Selling Cars".
+**Done: step 4, the economy** (PR #19, merged as `a04eaf3`). See `docs/systems/market-system.md` "Selling Cars".
 - **The user decided:**
   - the difficulty belongs to the save, picked on the New Game screen (Easy, Normal, Hard, each figure adjustable, which
     makes it Custom), not app-wide settings;
@@ -97,12 +97,54 @@ full damage wrecks 1970 street cars too fast (the user chose 100% to start).
   reputation over 50 (three times at 100) and doubles from 20:00, still capped by the poorer racer's money. The diner
   says why the stakes are up. Races still run in daylight: a night race (`SUN_ANGLE`) belongs with step 6.
 
-Not yet tested by the user in the game: the New Game difficulty panel, the Sell dialog, the newspaper's "Your Ads",
-night stakes in the diner.
+Tested by the user in the game. Known issue: the newspaper's "Your Ads" panel runs off the bottom of the screen and
+can't be scrolled; the newspaper screen is due a refactor.
 
-## Next: step 5, living opponents
+## Step 5, living opponents (built on `feature/living-opponents`, not yet merged)
 
-Before starting: check that the economy PR is merged into `dev`, and branch from `dev`.
+See `docs/systems/opponent-system.md` "Living Opponents" for what was built.
+
+Checked with a scratch console harness: a new career on the real catalog, parts and lots, run for 60–90 game days
+(review, rival races, market refresh; nothing saved). Rivals buy, sell, repair, go broke and come back, and newcomers
+arrive on schedule. The review takes 0.1–0.8 s a day. The first cut tuned far too fast (every rival on 740 hp within
+weeks), so it was slowed: 15% a day, one upgrade, 30% of the money over a reserve. The user then asked that the
+rivals behave by the prices they find (prices get tuned later): every sum is price-relative, and the 1.8×-factory
+power cap added meanwhile was dropped. Money is the limit. Many rivals end up in Chevelle SS 454
+LS5s, because the dyno rates that engine at 555 hp against a cheap price (the known over-rating of some SLRR engines).
+
+Not yet seen by the user in the game: the diner's "word on the street" panel, The King at the diner, a rival
+answering an ad, rivals' cars racing with their real damage.
+
+Left for later: new racers generated when the pool runs dry (`OpponentGenerationService` is still unused); rivals
+putting their own cars in the paper; rivals buying used parts out of the ads (they order new); the King's own
+portrait; dyno horsepower in the diner's matchup panel (not picked by the user).
+
+**The user decided (2026-09-24):**
+- **Ramp up:** 6 rivals active at the start and 2 more each week, pulled from the inactive pool (the GameMaker rule).
+  Rivals who lose their last car or go broke retire and come back through the daily review.
+- **First cars are made, with real parts:** a used engine (sometimes tuned) and running gear on New Game, so the dyno
+  and the repair bill are real from day one. After that they buy off the lots and answer the player's ads.
+- **The King in this PR:** a fixed boss, strong well-tuned car, top skill, pink slips only, shown once the King victory
+  unlocks (10 wins, 50 reputation). He lives through the same daily review.
+- **Visible:** "word on the street" at the diner (purchases, tuning, going broke, coming back, pink slips) and rivals
+  among the buyers who answer the player's ads (the car then races under them).
+- Not picked: dyno horsepower in the diner's matchup panel (it keeps the catalog figures).
+
+**Design:**
+- `Car.PowerHp` / `UsedCarListing.PowerHp`: the dyno figure, cached; the simulator and the rivals' choices use it.
+- `OpponentLifeService` + `OpponentReviewTask` (daily, before the race simulator): retired racers are fixed first,
+  then the ready ones are checked; best car to the front (`Cars[0]`, the convention everywhere), buy when carless,
+  repair when the whole bill is affordable (`RepairShop.Jobs`), sell the wreck and buy again when that gets them
+  racing, keep at most 2 cars (extras to the trade-in lot at the dealer's 60%, wrecks for scrap), bankrupt = cash
+  injection $50–500; then activation up to `6 + 2 × weeks`; then tuning.
+- `EngineTuner` (Parts/Cars, dyno-checked): bolt-on swaps scored `gain% / cost × priority` (block swap 10, blower 8,
+  carbs/injection 7, exhaust 6, manifold/camshaft 5, air 3), at least 3% gain, parts that stop fitting replaced to a
+  depth of 5, a same-family bigger engine as the block swap; new parts at the mail-order price, replaced parts traded
+  in. Run off the UI thread on clones, a few racers a day.
+- The simulator's wear goes onto the parts (`CarCondition.ApplyRace` with a made-up condition), crashes can total a
+  car, a pink-slipped car stays with the winner (the review sells it on), a carless loser retires.
+- Rivals' cars race with their real damage (no more `CarCondition.Runnable`); a rival whose car can't race isn't at the
+  diner.
 
 ## Step 2: damage, as real as AC allows (done, PR #18)
 

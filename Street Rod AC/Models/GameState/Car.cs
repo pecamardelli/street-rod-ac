@@ -38,6 +38,12 @@ namespace Street_Rod_AC.Models.GameState
         [LiteDB.BsonIgnore]
         public PartInstance? Engine => Parts.FirstOrDefault(p => p.ParentSlot == PartInstance.CarEngineSlot);
 
+        /// <summary>
+        /// Horsepower on the dyno, as the car was last looked at: what its engine makes, tuning and wear included. Null
+        /// until somebody has put it on the dyno; 0 when it does not run. The rivals choose, tune and race by it.
+        /// </summary>
+        public double? PowerHp { get; set; }
+
         // Purchase/Sale Info
         public decimal PurchasePrice { get; set; }
 

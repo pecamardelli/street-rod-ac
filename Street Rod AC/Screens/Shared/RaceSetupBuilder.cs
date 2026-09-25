@@ -103,10 +103,10 @@ namespace Street_Rod_AC.Screens.Shared
                 return new RaceSetupResult { PlayerCarProblem = string.Join("; ", damage) };
             }
 
-            // Each car goes in with the damage it carries. An opponent's car races whatever shape it is in (they do
-            // not look after their cars yet): it gets just enough to leave the line.
+            // Each car goes in with the damage it carries. The rivals look after their cars (OpponentLifeService), and
+            // one whose car can't race isn't offered a race (the diner, the events), so theirs goes in as it is too.
             var playerStart = CarCondition.StartState(entry.PlayerCar, groupOf);
-            var opponentStart = entry.OpponentCar == null ? null : CarCondition.Runnable(CarCondition.StartState(entry.OpponentCar, groupOf));
+            var opponentStart = entry.OpponentCar == null ? null : CarCondition.StartState(entry.OpponentCar, groupOf);
 
             var playerData = await PrepareCarDataAsync(entry.PlayerCar, playerStart);
             if (playerData is { CanDrive: false })

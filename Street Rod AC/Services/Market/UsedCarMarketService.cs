@@ -280,6 +280,16 @@ namespace Street_Rod_AC.Services.Market
 
         public List<DealerLocation> GetDefaultDealers()
         {
+            // The dealers of the dealer file, when there is one: the same the map shows
+            try
+            {
+                if (_dealerCatalog?.ToLocations() is { Count: > 0 } known) return known;
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Could not read the dealers: going with the built-in ones ({Error})", ex.Message);
+            }
+
             return new List<DealerLocation>
             {
                 new() { Id = "downtown_motors", Name = "Downtown Motors", Region = "Downtown" },
@@ -322,7 +332,9 @@ namespace Street_Rod_AC.Services.Market
             {
                 try
                 {
-                    listing.EngineSummary = parts.Describe(engine, parts.Evaluate(car));
+                    var report = parts.Evaluate(car);
+                    listing.EngineSummary = parts.Describe(engine, report);
+                    listing.PowerHp = PowerOf(report);
 
                     // Worked on when the engine is not made of the factory build's parts
                     if (_catalogRepo.GetCar(car.DefinitionId) is { } carDef && parts.GetStockBuild(carDef) is { } stock)
@@ -340,6 +352,9 @@ namespace Street_Rod_AC.Services.Market
 
             return listing;
         }
+
+        /// <summary>The dyno's horsepower; 0 for an engine that does not run</summary>
+        public static double PowerOf(Street_Rod_AC.Parts.Logic.EngineReport? report) => report is { Runs: true } ? report.Dyno!.MaxPowerHp : 0;
 
         public decimal ValueOf(Car car)
         {
@@ -433,6 +448,7 @@ namespace Street_Rod_AC.Services.Market
 
                 listing.Parts.Add(engine.Root);
                 listing.EngineSummary = parts.Describe(engine.Root, engine.Report);
+                listing.PowerHp = PowerOf(engine.Report);
                 listing.IsModified = engine.IsModified;
 
                 // Random.Shared: this runs on a worker thread, the service's own Random belongs to the caller's

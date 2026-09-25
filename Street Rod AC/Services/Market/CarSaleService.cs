@@ -1,6 +1,7 @@
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts.Cars;
+using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
 
@@ -74,6 +75,9 @@ namespace Street_Rod_AC.Services.Market
         public const decimal MaxAskingShare = 3m;
 
         public const string ScrapyardName = "the scrapyard";
+
+        /// <summary>The chance the buyer who calls is one of the rivals, when one of them wants the car and can pay</summary>
+        public const double RivalBuyerChance = 0.4;
 
         private static readonly string[] Buyers =
         {
@@ -185,9 +189,32 @@ namespace Street_Rod_AC.Services.Market
 
             if (WhyNotSellable(gameState, car) is { } refusal) return refusal;
 
-            // The buyer drives it away: it leaves the game
+            // A rival who called has to have the money still; they may have spent it since
+            Opponent? rival = null;
+            if (offer.RivalName != null)
+            {
+                rival = gameState.Racers.Find(offer.RivalName) as Opponent;
+                if (rival == null || rival.Money < offer.Amount)
+                {
+                    ad.Offer = null;
+                    _logger.Information("{Rival} can no longer pay ${Amount} for {Car}", offer.RivalName, offer.Amount, car.DefinitionId);
+                    return new SaleResult(SaleOutcome.NoOffer, $"{offer.RivalName} couldn't raise the money after all.", !Save(gameState));
+                }
+            }
+
             RemoveFromGarage(gameState, car);
             gameState.Player.Money += offer.Amount;
+
+            if (rival != null)
+            {
+                // It races under them now; tomorrow's review decides whether it is the car they drive
+                rival.Money -= offer.Amount;
+                rival.Cars.Add(car);
+                rival.Stats.CarsOwned++;
+                OpponentLifeService.AddTalk(gameState, gameState.Date, [$"{rival.Name} bought {gameState.Player.Name}'s car out of the paper."]);
+            }
+
+            // Anybody else drives it away: it leaves the game
             _logger.Information("Sold {Car} to {Buyer} out of the paper for ${Amount}", car.DefinitionId, offer.BuyerName, offer.Amount);
 
             var saveFailed = await SpendTimeAndSave(gameState, GameAction.SellCar);
@@ -232,10 +259,13 @@ namespace Street_Rod_AC.Services.Market
 
                 if (random.NextDouble() >= OfferChance(ad.AskingPrice, value)) continue;
 
+                var amount = OfferAmount(ad.AskingPrice, value, random.NextDouble());
+                var rival = RivalBuyer(gameState, car, amount, random);
                 ad.Offer = new CarOffer
                 {
-                    BuyerName = Buyers[random.Next(Buyers.Length)],
-                    Amount = OfferAmount(ad.AskingPrice, value, random.NextDouble()),
+                    BuyerName = rival?.Name ?? Buyers[random.Next(Buyers.Length)],
+                    RivalName = rival?.Name,
+                    Amount = amount,
                     Expires = currentDate.Date.AddDays(OfferDays).AddHours(GameState.DayEndHour)
                 };
                 _logger.Information("{Buyer} offers ${Amount} for {Car} (asking ${Asking}, worth ${Value})",
@@ -243,6 +273,25 @@ namespace Street_Rod_AC.Services.Market
             }
 
             if (gone > 0) _logger.Information("{Count} of the player's ads left the paper", gone);
+        }
+
+        /// <summary>
+        /// A rival who wants the car and can pay for it, now and then (<see cref="RivalBuyerChance"/>): one without a car
+        /// that can race, or whose car makes less power than this one, with room in the garage. Null for a buyer
+        /// from outside the racing crowd. Rolls the dice only when there is such a rival.
+        /// </summary>
+        public static Opponent? RivalBuyer(GameState gameState, Car car, decimal amount, Random random)
+        {
+            var power = Simulation.RaceSimulatorService.GetCarHP(car);
+            var wanting = gameState.Racers.ReadyToRace.Values.Concat(gameState.Racers.Retired.Values)
+                .OfType<Opponent>()
+                .Where(o => !o.IsKing && o.Money >= amount && o.Cars.Count < OpponentRules.MaxCars
+                            && (o.Cars.Count == 0 || Simulation.RaceSimulatorService.GetCarHP(o.Cars[0]) < power))
+                .OrderBy(o => o.Name, StringComparer.Ordinal)
+                .ToList();
+            if (wanting.Count == 0 || random.NextDouble() >= RivalBuyerChance) return null;
+
+            return wanting[random.Next(wanting.Count)];
         }
 
         /// <summary>

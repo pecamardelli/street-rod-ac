@@ -67,6 +67,9 @@ namespace Street_Rod_AC.Models.GameState
         /// <summary>What the seller says about the engine, e.g. "GM 327, 275 hp"; null when there is nothing to say</summary>
         public string? EngineSummary { get; set; }
 
+        /// <summary>Horsepower of the engine on the dyno; null when nobody has put it on one (older listings)</summary>
+        public double? PowerHp { get; set; }
+
         /// <summary>True when the engine is not as it left the factory</summary>
         public bool IsModified { get; set; }
 

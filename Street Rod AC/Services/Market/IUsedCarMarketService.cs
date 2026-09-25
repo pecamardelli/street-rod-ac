@@ -32,7 +32,7 @@ namespace Street_Rod_AC.Services.Market
         List<UsedCarListing> GetListingsByDealer(List<UsedCarListing> allListings, string dealerLocationId);
 
         /// <summary>
-        /// Gets default dealer locations
+        /// The dealers of the dealer file, or built-in ones when there is none
         /// </summary>
         List<DealerLocation> GetDefaultDealers();
 

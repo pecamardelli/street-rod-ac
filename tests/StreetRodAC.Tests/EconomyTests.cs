@@ -306,6 +306,54 @@ public class CarSaleServiceTests
     }
 
     [Fact]
+    public async Task A_rival_who_wants_the_car_answers_the_ad_and_races_it_afterwards()
+    {
+        _car.PowerHp = 300;
+        var rival = new Opponent("Vera", 40, Gender.Female, 92, 40) { Money = 5000m };
+        rival.Cars.Add(new Car("car_old") { PowerHp = 150 });
+        _state.Racers.AddRacer(rival);
+        var content = new Opponent("Hal", 40, Gender.Male, 92, 40) { Money = 5000m };
+        content.Cars.Add(new Car("car_fast") { PowerHp = 400 }); // has a faster car: not interested
+        _state.Racers.AddRacer(content);
+
+        await _service.PlaceAdAsync(_state, _car, 1500m);
+        var ad = _service.AdFor(_state, _car)!;
+
+        var random = new Random(1);
+        for (var day = 1; day <= 60 && ad.Offer?.RivalName == null; day++)
+        {
+            ad.Offer = null;
+            _service.ReviewAds(_state, _state.Date, random);
+        }
+
+        Assert.Equal("Vera", ad.Offer!.RivalName);
+        Assert.Equal("Vera", ad.Offer.BuyerName);
+
+        var result = await _service.AcceptOfferAsync(_state, ad);
+        Assert.True(result.Succeeded);
+        Assert.Contains(_car, rival.Cars);
+        Assert.Equal(5000m - 1500m, rival.Money);
+        Assert.DoesNotContain(_car, _state.Player.Cars);
+        Assert.Contains(_state.StreetTalk, t => t.Text.StartsWith("Vera bought"));
+    }
+
+    [Fact]
+    public async Task A_rival_who_spent_the_money_meanwhile_cannot_buy()
+    {
+        var rival = new Opponent("Vera", 40, Gender.Female, 92, 40) { Money = 100m };
+        _state.Racers.AddRacer(rival);
+        await _service.PlaceAdAsync(_state, _car, 1500m);
+        var ad = _service.AdFor(_state, _car)!;
+        ad.Offer = new CarOffer { BuyerName = "Vera", RivalName = "Vera", Amount = 1500m, Expires = _state.Date.AddDays(1) };
+
+        var result = await _service.AcceptOfferAsync(_state, ad);
+
+        Assert.Equal(SaleOutcome.NoOffer, result.Outcome);
+        Assert.Contains(_car, _state.Player.Cars);
+        Assert.Null(ad.Offer);
+    }
+
+    [Fact]
     public void Old_ads_and_ads_of_cars_that_are_gone_leave_the_paper_and_an_old_offer_lapses()
     {
         var gone = new CarSaleAd { CarInstanceId = Guid.NewGuid(), AskingPrice = 1000m, PostedDate = _state.Date };

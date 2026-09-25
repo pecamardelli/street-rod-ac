@@ -1,6 +1,7 @@
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Parts.Cars;
 using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.Parts;
@@ -38,6 +39,21 @@ namespace Street_Rod_AC.Services.Opponents
         /// </summary>
         public bool AlwaysAccept { get; set; }
 
+        public bool CanRace(Car car)
+        {
+            try
+            {
+                var groupOf = _partsService is { IsAvailable: true } parts ? CarCondition.Groups(parts.Catalog) : null;
+                return CarCondition.WhyCannotRace(car, groupOf).Count == 0;
+            }
+            catch (Exception ex)
+            {
+                // Not knowing is no reason to keep a racer from the tables
+                _logger.Warning("Could not tell whether the {Car} can race: {Error}", car.DefinitionId, ex.Message);
+                return true;
+            }
+        }
+
         /// <summary>
         /// Evaluate whether an opponent accepts a challenge
         /// </summary>
@@ -62,6 +78,29 @@ namespace Street_Rod_AC.Services.Opponents
                     Message = $"{opponent.Name}: You're on! Let's race!",
                     DeclineReason = null
                 };
+            }
+
+            if (!CanRace(opponentCar))
+            {
+                return new ChallengeResponse
+                {
+                    Accepted = false,
+                    Message = "My car's laid up. Come back when it's running.",
+                    DeclineReason = ChallengeDeclineReason.CarNotAvailable
+                };
+            }
+
+            // The King races for one thing, and he takes on anybody who has made it to his table
+            if (opponent.IsKing)
+            {
+                return isPinkSlip
+                    ? new ChallengeResponse { Accepted = true, Message = "Pink slips it is. Hope you said goodbye to that car." }
+                    : new ChallengeResponse
+                    {
+                        Accepted = false,
+                        Message = "I don't race for pocket money. Put your pink slip on the table, or go home.",
+                        DeclineReason = ChallengeDeclineReason.NotInterested
+                    };
             }
 
             // Get car definitions for value comparison

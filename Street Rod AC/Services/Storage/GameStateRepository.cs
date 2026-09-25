@@ -47,6 +47,7 @@ namespace Street_Rod_AC.Services.Storage
                     // A save from before the difficulty was picked plays on Normal
                     state.Rules ??= new GameRules();
                     state.NewspaperAds.PlayerCars ??= [];
+                    state.StreetTalk ??= [];
                 }
 
                 return state;

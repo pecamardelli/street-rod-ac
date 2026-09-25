@@ -41,6 +41,9 @@ namespace Street_Rod_AC.Models.GameState
         // Scheduled Tasks
         public List<ScheduledTaskState> ScheduledTasks { get; set; }
 
+        /// <summary>What the racers have been up to, newest last: the diner's "word on the street"</summary>
+        public List<StreetTalkItem> StreetTalk { get; set; }
+
         // Career Progression
         public CareerState Career { get; set; }
 
@@ -80,6 +83,7 @@ namespace Street_Rod_AC.Models.GameState
             UsedCarMarket = [];
             DealerLocations = [];
             ScheduledTasks = [];
+            StreetTalk = [];
             Career = CareerState.CreateNew();
             Rules = new GameRules();
 

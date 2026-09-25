@@ -557,6 +557,18 @@
         "genderModifier": -3,
         "finalAggression": 34
       }
+    },
+    {
+      "opponentId": "king",
+      "name": "The King",
+      "nickname": "Crown",
+      "age": 41,
+      "gender": "Male",
+      "skill": 100,
+      "aggression": 65,
+      "isKing": true,
+      "location": "Wherever the money is",
+      "biography": "Nobody remembers the last time he lost. He only races for pink slips, and only against somebody who has made a name for themselves."
     }
   ]
 }
