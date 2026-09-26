@@ -383,6 +383,10 @@ in the police chance; hiding the cops from AC's HUD leaderboard. Any other car c
 - **Rivals remember you:** a grudge rematch after a pink-slip loss, with talk lines to match. `StaticTalkService` today; the LLM talk planned in `docs/ai-integration.md` later.
 - **Newspaper articles written from race history** (the processed race sessions are already saved).
 - **Car history:** every car keeps its odometer, previous owners and wins, and its price reflects them.
+- **From `docs/ideas.txt` (2026-09-26), not yet planned:** main screen tweaks (smaller buttons set lower, the fade
+  starting lower, the cars less of the focus); an **engine stand**, where the internals are worked on in the proper
+  order (rods and pistons out before the crankshaft), while peripherals, manifolds and heads can be done in the car;
+  the **Chevrolet Corvair**, whose engine is in the back.
 - **Parts that fail in the race:** an over-revved engine throws a rod in AC, and you find the damaged part on the workbench afterwards. Since step 2 the whole rotating assembly takes the damage together (the parts view shows it); singling out the one part that failed is still open.
 
 ## Step 7: career gaps (done, PR #22, merged as `6aa3d39`)
@@ -595,7 +599,7 @@ comebacks announced as new faces; ad age by the hour; a null definition id stopp
 Cars page running the dyno for every rival ad. Buying a rival's car now has its own entry point, and the trade-in rule
 lives in one place (`PartPricing.TradeIn`). Build and tests pass; not yet tried in the game.
 
-### Step 13: the street encounter (in progress on `feature/street-encounter`)
+### Step 13: the street encounter (done, PR #27, merged as `f8d6612`)
 From `docs/ideas.txt`, after step 9 because it reuses its renderer work. Not SLRR's Valo City: the player's car seen
 from the driver's seat, looking left; a rival drives up and the race dialog pops up, as in Street Rod. Both cars have
 their engine sound and body movement under braking and throttle (the engine preview has both).
@@ -623,6 +627,17 @@ their engine sound and body movement under braking and throttle (the engine prev
   a street race the player comes back to the street.
 - 25 new tests (`StreetEncounterTests`); 750 in all. Checked with two off-screen harnesses (the viewport alone, and
   the whole screen on a copy of a save). **Tested by the user in the game (2026-09-26): "It's perfect!"**
+
+**Reviewed before the merge (2026-09-26):** an xhigh code review found 15 issues, all fixed in the PR. The worst: a
+rival's own pink-slip offer skipped the diner's value checks, so a junker could win a $20k car and do it again; the
+first offer showed at the slider's old range ($10 for a $60 offer) and pink slips could not be answered with cash; a
+failed way off the street left the screen dead; the rival's engine was heard from the wrong side (the renderer's space
+is right-handed, FMOD's is not). The others: a race past 22:00 came back to the street in the morning, a save during a
+day turnover, rivals met kept across loaded saves, the throttle stuck after Alt-Tab, a pop as a rival's engine
+started, the rival's bank kept after it left, the same bank in two files failing to load, FMOD updated twice a frame,
+the street redrawing at full rate forever, a first rival arriving already stopped on a slow machine. Who is out and
+their portraits now come from one place (`RacersOut`) for the diner and the street. 751 tests pass; **the fixes are
+not yet tried in the game.**
 
 ### Step 14: deeper simulation and police extras
 Research first: CSP limits much of it (it fills oil figures only for scripted cars).
