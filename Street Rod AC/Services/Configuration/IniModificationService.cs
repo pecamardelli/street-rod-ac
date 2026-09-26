@@ -31,6 +31,12 @@ namespace Street_Rod_AC.Services.Configuration
         /// <summary>Tyre wear in a race: 1 is AC's normal rate</summary>
         public const int RaceTyreWear = 1;
 
+        /// <summary>The most passes one test-and-tune runs</summary>
+        public const int MaxTunePasses = 20;
+
+        /// <summary>A test-and-tune's laps: more than its passes ever cross the line, so AC never ends the session</summary>
+        public const int TuneLaps = 50;
+
         private readonly string _cfgDirectory;
         private readonly AcConfigBackup _backup;
         private readonly IAppLogger _logger;
@@ -300,10 +306,15 @@ namespace Street_Rod_AC.Services.Configuration
             // keeps them out of sight until the patrol shows up
             var police = intent.Police is { Count: > 0 } sent && intent.RaceType != RaceType.DragRace ? sent : null;
 
+            // A test-and-tune is the player alone, pass after pass, in a race session that never ends at its line: the
+            // race mode runs the passes and ends it
+            var tune = intent.TunePasses is { } passes ? Math.Clamp(passes, 1, MaxTunePasses) : (int?)null;
+            var laps = tune != null ? TuneLaps : 1;
+
             // [RACE] - Player car info and track
             sb.AppendLine("[RACE]");
             sb.AppendLine("AI_LEVEL=100");
-            sb.AppendLine($"CARS={2 + (police?.Count ?? 0)}");
+            sb.AppendLine($"CARS={(tune != null ? 1 : 2 + (police?.Count ?? 0))}");
             sb.AppendLine($"CONFIG_TRACK={IniId(intent.TrackConfig, "track layout")}");
             sb.AppendLine("DRIFT_MODE=0");
             sb.AppendLine("FIXED_SETUP=0");
@@ -311,7 +322,7 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine($"MODEL={IniId(intent.PlayerCarId, "car")}");
             sb.AppendLine("MODEL_CONFIG=");
             sb.AppendLine("PENALTIES=0");
-            sb.AppendLine("RACE_LAPS=1");
+            sb.AppendLine($"RACE_LAPS={laps}");
             sb.AppendLine($"SKIN={IniId(intent.PlayerSkin, "skin")}");
             sb.AppendLine($"TRACK={IniId(intent.TrackId, "track")}");
             sb.AppendLine($"__CM_CUSTOM_MODE={RaceModeId}");  // the CSP mode that runs the race (see SrRaceMode)
@@ -326,9 +337,9 @@ namespace Street_Rod_AC.Services.Configuration
             var isDrag = intent.RaceType == RaceType.DragRace;
             sb.AppendLine("[SESSION_0]");
             sb.AppendLine("STARTING_POSITION=1");
-            sb.AppendLine(isDrag ? "NAME=Drag Race" : "NAME=Quick Race");
+            sb.AppendLine(tune != null ? "NAME=Test and Tune" : isDrag ? "NAME=Drag Race" : "NAME=Quick Race");
             sb.AppendLine("TYPE=3");
-            sb.AppendLine("LAPS=1");
+            sb.AppendLine($"LAPS={laps}");
             sb.AppendLine("DURATION_MINUTES=0");
             sb.AppendLine("SPAWN_SET=START");
             sb.AppendLine();
@@ -343,16 +354,19 @@ namespace Street_Rod_AC.Services.Configuration
             sb.AppendLine("NATION_CODE=");
             sb.AppendLine();
 
-            // [CAR_1] - Opponent (AI)
-            sb.AppendLine("[CAR_1]");
-            sb.AppendLine($"MODEL={IniId(intent.OpponentCarId, "car")}");
-            sb.AppendLine("MODEL_CONFIG=");
-            sb.AppendLine($"AI_LEVEL={intent.OpponentAILevel}");
-            sb.AppendLine($"AI_AGGRESSION={intent.OpponentAIAggression}");
-            sb.AppendLine($"SKIN={IniId(intent.OpponentSkin, "skin")}");
-            sb.AppendLine($"DRIVER_NAME={IniName(intent.OpponentName)}");
-            sb.AppendLine("NATIONALITY=");
-            sb.AppendLine("NATION_CODE=");
+            // [CAR_1] - Opponent (AI); none on a test-and-tune
+            if (tune == null)
+            {
+                sb.AppendLine("[CAR_1]");
+                sb.AppendLine($"MODEL={IniId(intent.OpponentCarId, "car")}");
+                sb.AppendLine("MODEL_CONFIG=");
+                sb.AppendLine($"AI_LEVEL={intent.OpponentAILevel}");
+                sb.AppendLine($"AI_AGGRESSION={intent.OpponentAIAggression}");
+                sb.AppendLine($"SKIN={IniId(intent.OpponentSkin, "skin")}");
+                sb.AppendLine($"DRIVER_NAME={IniName(intent.OpponentName)}");
+                sb.AppendLine("NATIONALITY=");
+                sb.AppendLine("NATION_CODE=");
+            }
 
             // [CAR_2]... - The police
             for (var i = 0; i < (police?.Count ?? 0); i++)
@@ -374,7 +388,16 @@ namespace Street_Rod_AC.Services.Configuration
             // to the race it came from, and the damage each car carries into it
             sb.AppendLine();
             sb.AppendLine("[STREET_ROD]");
-            sb.AppendLine(isDrag ? "RACE_TYPE=DRAG" : "RACE_TYPE=ROAD");
+            sb.AppendLine(tune != null ? $"RACE_TYPE={RaceTypes.TestAndTune}" : isDrag ? $"RACE_TYPE={RaceTypes.Drag}" : $"RACE_TYPE={RaceTypes.Road}");
+            if (tune != null) sb.AppendLine($"TUNE_PASSES={tune}");
+
+            // A bracket race: both dial-ins, and how the rival leaves and takes the stripe
+            if (intent.Bracket is { } bracket && isDrag && tune == null)
+            {
+                var ac = System.Globalization.CultureInfo.InvariantCulture;
+                sb.AppendLine($"DIAL_IN={bracket.PlayerDialIn.ToString("0.00", ac)},{bracket.OpponentDialIn.ToString("0.00", ac)}");
+                sb.AppendLine($"BRACKET_RIVAL={bracket.RivalReaction.ToString("0.000", ac)},{bracket.RivalMargin.ToString("0.000", ac)}");
+            }
             if (intent.ContextId is { } contextId)
             {
                 sb.AppendLine($"CONTEXT_ID={contextId:D}");
@@ -391,7 +414,7 @@ namespace Street_Rod_AC.Services.Configuration
             // The shape each car goes in, from its earlier races: the mode puts it into AC before the green
             foreach (var (index, start) in new[] { (0, intent.PlayerStart), (1, intent.OpponentStart) })
             {
-                if (start == null) continue;
+                if (start == null || (tune != null && index > 0)) continue;
                 foreach (var (key, value) in start.IniKeys(index)) sb.AppendLine($"{key}={value}");
             }
 

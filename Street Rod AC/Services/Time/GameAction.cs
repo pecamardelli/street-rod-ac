@@ -48,7 +48,10 @@ namespace Street_Rod_AC.Services.Time
         FreeRun,
 
         /// <summary>Get a car back from the police impound (1 hour)</summary>
-        CollectFromImpound
+        CollectFromImpound,
+
+        /// <summary>A test-and-tune at the strip: passes for timeslips, nothing at stake (1 hour)</summary>
+        TestAndTune
     }
 
     /// <summary>
@@ -78,6 +81,7 @@ namespace Street_Rod_AC.Services.Time
                 GameAction.SwitchCar => 15,
                 GameAction.FreeRun => 60,
                 GameAction.CollectFromImpound => 60,
+                GameAction.TestAndTune => 60,
                 _ => 30 // Default fallback
             };
         }

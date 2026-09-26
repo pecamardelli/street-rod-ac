@@ -681,8 +681,12 @@ A part's `Wear` is mileage and only replacing the part undoes it; its `Tear` is 
 Races set both from what Assetto Corsa reports at the end (`CarCondition.ApplyRace`, called by
 `RaceResultProcessor`):
 
-- AC's engine life (1000 new) caps the `Tear` of the rotating parts (groups Crankshafts, Connecting rods, Pistons,
-  Camshafts) at life/1000; the next race starts with 1000 x the weakest one's `Tear`.
+- AC's engine life (1000 new) lands on the rotating parts (groups Crankshafts, Connecting rods, Pistons, Camshafts).
+  The part that gave is the weakest one (`CarCondition.WeakestRotatingPart`; when two are as worn, the rods first,
+  then the pistons, the crankshaft, the camshafts). Its `Tear` goes down to life/1000, and the rest of the rotating
+  assembly loses 35% of that loss (`SharedEngineDamage`). The report names it ("a connecting rod let go"), and so does
+  the repair shop's engine rebuild ("Blown: the <part> let go", with the part's catalog name). The next race starts with 1000 x the weakest
+  one's `Tear`.
 - AC's gearbox damage (from 0 each race) comes off the transmission's `Tear`.
 - A bent steering rod (AC's `suspension_damage` / 0.05 m) comes off that corner's spring and shock.
 - The tyre's `Wear` loses AC's tyre wear; a blown tyre's `Tear` goes to 0.

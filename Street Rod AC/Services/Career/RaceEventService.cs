@@ -131,6 +131,32 @@ namespace Street_Rod_AC.Services.Career
                 Schedule = EventSchedule.Weekly
             });
 
+            // Bracket Night - any car, on the dial: the quickest car doesn't always win
+            AddEvent(events, new RaceEventDefinition
+            {
+                Id = "bracket_night",
+                Name = "Bracket Night",
+                Description = "Dial in and run what you brung. A breakout loses, so know your car!",
+                RaceType = RaceType.DragRace,
+                IsBracket = true,
+                MinReputation = 0,
+                Reward = new EventReward(450, 5),
+                Schedule = EventSchedule.Weekly
+            });
+
+            // Dial-In Shootout - the regulars, for more money
+            AddEvent(events, new RaceEventDefinition
+            {
+                Id = "dial_in_shootout",
+                Name = "Dial-In Shootout",
+                Description = "The strip's bracket regulars run for the big purse. Consistency pays.",
+                RaceType = RaceType.DragRace,
+                IsBracket = true,
+                MinReputation = 30,
+                Reward = new EventReward(900, 8),
+                Schedule = EventSchedule.Weekly
+            });
+
             // Underdog Challenge - Low HP cars
             AddEvent(events, new RaceEventDefinition
             {

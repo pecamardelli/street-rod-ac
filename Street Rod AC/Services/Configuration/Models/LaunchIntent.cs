@@ -192,10 +192,25 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// <summary>The game's time when the race starts, which AC's sun follows; null races at noon</summary>
         public DateTime? RaceTime { get; set; }
 
+        /// <summary>A bracket race's dial-ins and how the rival drives; null for a heads-up race</summary>
+        public BracketSetup? Bracket { get; set; }
+
+        /// <summary>Test-and-tune: the player alone on the strip for this many passes; null for a race</summary>
+        public int? TunePasses { get; set; }
+
+        /// <summary>Back to the garage after the session, where it was started from; else the player goes to the diner</summary>
+        public bool ReturnToGarage { get; set; }
+
+        /// <summary>The time the session takes in the game</summary>
+        public Time.GameAction SessionAction => TunePasses != null ? Time.GameAction.TestAndTune
+            : RaceType == RaceType.DragRace ? Time.GameAction.DragRace
+            : Time.GameAction.RoadRace;
+
         public override string Executable => "acs.exe";
 
-        public override string Description =>
-            $"Launch race: {PlayerName} vs {OpponentName}";
+        public override string Description => TunePasses != null
+            ? $"Launch test-and-tune: {PlayerName} on {TrackId}"
+            : $"Launch race: {PlayerName} vs {OpponentName}";
 
         public override IEnumerable<ModificationIntent> GetConfigurationIntents()
         {
@@ -217,6 +232,8 @@ namespace Street_Rod_AC.Services.Configuration.Models
                 OpponentStart = this.OpponentStart,
                 Police = this.Police,
                 RaceTime = this.RaceTime,
+                Bracket = this.Bracket,
+                TunePasses = this.TunePasses,
                 ContextId = Metadata.TryGetValue("RaceContext", out var context) && context is RaceContext raceContext
                     ? raceContext.ContextId
                     : null

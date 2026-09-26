@@ -47,7 +47,9 @@ A stop that comes before AC is started (while the cars' data is still being prep
 AC never starts, what was already applied goes back, the pending race is released and no time passes (`Cancelled`).
 The race is timed until the **last** AC process exits, so a Steam relaunch is one race, not a launch failure.
 - The race loading screen has a **Stop Race** button (`StopRaceCommand`), behind a confirmation that says what is at
-  stake.
+  stake. On a test-and-tune it says the passes already run still count: the mode writes the result after every pass.
+- Where the player goes afterwards and the time the session takes come from the launch intent
+  (`DragRaceLaunchIntent.ReturnToGarage`, `SessionAction`), set by the screen that started it.
 - Closing the main window during a race asks first; yes stops the race and the app closes once the launcher is done.
 
 ## Race Outcome

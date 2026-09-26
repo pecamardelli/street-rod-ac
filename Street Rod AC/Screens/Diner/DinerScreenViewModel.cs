@@ -66,6 +66,7 @@ namespace Street_Rod_AC.Screens.Diner
                 OnPropertyChanged(nameof(SelectedOpponent));
                 OnPropertyChanged(nameof(HasSelectedOpponent));
                 OnPropertyChanged(nameof(SelectedOpponentDisplay));
+                OnPropertyChanged(nameof(BracketNote));
 
                 // Update matchup stats when opponent changes
                 UpdateMatchupStats();
@@ -130,6 +131,7 @@ namespace Street_Rod_AC.Screens.Diner
                     OnPropertyChanged(nameof(SelectedTrack));
                     OnPropertyChanged(nameof(HasSelectedTrack));
                     OnPropertyChanged(nameof(SelectedRaceType));
+                    OnPropertyChanged(nameof(CanBracket));
 
                     // Update matchup stats when track changes
                     UpdateMatchupStats();
@@ -149,6 +151,33 @@ namespace Street_Rod_AC.Screens.Diner
         public bool HasSelectedTrack => SelectedTrack != null;
 
         public RaceType SelectedRaceType => SelectedTrack?.RaceType ?? RaceType.DragRace;
+
+        /// <summary>A bracket race can be run on the selected track: a drag strip that runs the quarter</summary>
+        public bool CanBracket => SelectedTrack is { RaceType: RaceType.DragRace } track
+            && Services.Race.BracketRules.RunsTheQuarter(track.Track, track.Configuration);
+
+        private bool _isBracket;
+
+        /// <summary>
+        /// Run it as a bracket race: dial-ins, a staggered start, and a breakout loses (<see cref="Services.Race.BracketRules"/>).
+        /// Only on a track that can take one (<see cref="CanBracket"/>).
+        /// </summary>
+        public bool IsBracket
+        {
+            get => _isBracket;
+            set
+            {
+                if (_isBracket == value) return;
+                _isBracket = value;
+                OnPropertyChanged(nameof(IsBracket));
+                OnPropertyChanged(nameof(BracketNote));
+            }
+        }
+
+        /// <summary>What the selected rival would dial in, for the bracket option</summary>
+        public string BracketNote => SelectedOpponent?.Opponent.Cars.FirstOrDefault() is { } car
+            ? $"{SelectedOpponent.Name} would dial in {Services.Race.BracketRules.Show(Services.Race.BracketRules.RivalDialInFor(car, SelectedOpponent.CarDefinition))}. You pick yours before the race."
+            : string.Empty;
 
         // Matchup stats
         public ObservableCollection<MatchupStatViewModel> MatchupStats { get; } = new();
@@ -760,6 +789,26 @@ namespace Street_Rod_AC.Screens.Diner
 
             _logger.Information("Opponent accepted challenge - launching race");
 
+            var ai = OpponentAIAdapter.ToAssettoCorsaAI(opponent, _gameState.Rules);
+
+            // A bracket race: the rival dials in from its car, the player picks theirs
+            Models.Race.BracketSetup? bracket = null;
+            if (IsBracket && CanBracket)
+            {
+                var rivalDialIn = Services.Race.BracketRules.RivalDialInFor(opponentCar, SelectedOpponent.CarDefinition);
+                var playerDialIn = await Dialogs.DialIn.DialInDialogViewModel.AskAsync(_dialogService, playerCar,
+                    _catalogRepository.GetCar(playerCar.DefinitionId), CarNames.Of(_catalogRepository, playerCar.DefinitionId),
+                    opponent.Name, rivalDialIn);
+                if (playerDialIn == null)
+                {
+                    _logger.Information("The player backed out of the bracket race at the dial-in");
+                    return;
+                }
+
+                bracket = Services.Race.BracketRules.Setup(playerDialIn.Value, rivalDialIn, ai.AILevel);
+                _logger.Information("Bracket race: dial-ins {Player} and {Rival}", bracket.PlayerDialIn, bracket.OpponentDialIn);
+            }
+
             // Whether the police turn up, rolled once the race is on
             var police = PoliceCars.Patrol(PoliceCars.Installed(), track.RaceType != RaceType.DragRace, _gameState.Date,
                 PoliceReputation, isPinkSlip, cashWager, track.Configuration?.Pitboxes ?? track.Track.Pitboxes,
@@ -777,7 +826,7 @@ namespace Street_Rod_AC.Screens.Diner
                 OpponentCarId = SelectedOpponent.CarDefinition.Id,
                 OpponentSkin = opponentCar.SkinId,
                 OpponentCar = opponentCar,
-                OpponentAI = OpponentAIAdapter.ToAssettoCorsaAI(opponent, _gameState.Rules),
+                OpponentAI = ai,
                 TrackId = track.TrackId,
                 TrackConfig = track.ConfigurationId,
                 RaceType = track.RaceType,
@@ -785,7 +834,8 @@ namespace Street_Rod_AC.Screens.Diner
                 IsPinkSlip = isPinkSlip,
                 DamagePercent = _gameState.Rules.RaceDamagePercent,
                 Police = police,
-                RaceTime = _gameState.Date
+                RaceTime = _gameState.Date,
+                Bracket = bracket
             });
 
             // Setting the cars up takes a moment: a player who walked out meanwhile has called it off

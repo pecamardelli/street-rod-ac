@@ -210,14 +210,15 @@ namespace Street_Rod_AC.Services.Race.Validation
         /// </summary>
         private ValidationResult ValidateBusinessRules(RaceResultJson raceResult)
         {
-            // For drag races, we expect exactly 2 participants
-            if (raceResult.Participants.Count != 2)
+            // A race has the player and one rival; a test-and-tune the player alone
+            var expected = raceResult.Session.RaceType == RaceTypes.TestAndTune ? 1 : 2;
+            if (raceResult.Participants.Count != expected)
             {
-                _logger.Warning("Expected 2 participants for drag race, found {Count}",
-                    raceResult.Participants.Count);
+                _logger.Warning("Expected {Expected} participant(s), found {Count}",
+                    expected, raceResult.Participants.Count);
                 return ValidationResult.Failure(
                     ValidationFailureReason.InvalidParticipantCount,
-                    $"Expected 2 participants, found {raceResult.Participants.Count}");
+                    $"Expected {expected} participant(s), found {raceResult.Participants.Count}");
             }
 
             // Validate that participants have names

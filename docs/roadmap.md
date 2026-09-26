@@ -497,6 +497,58 @@ the King's car priced before its record. Build and tests pass; not yet tried in 
 - **Each car's best elapsed time.**
 - **The part that failed:** name the one part that broke, not the whole rotating assembly (see step 2).
 
+**The user decided (2026-09-25), on `feature/strip-extras`:**
+- test-and-tune is free and costs only game time, like the free run; each pass gives a timeslip, with nothing at stake
+  beyond the usual wear;
+- bracket races come from the diner (a rival offers a bracket race as a race type), from bracket events, and the
+  dial-in comes from the test-and-tune slips and the car's best ET;
+- real bracket rules: each racer sets a dial-in, the slower car gets the green first by the difference, and breaking
+  out (running quicker than the dial-in) loses; the player picks theirs, suggested from the best ET, and rivals dial in
+  from their car's figures;
+- when the engine fails, the weakest (most worn) part of the rotating assembly breaks and goes to 0%, the others take
+  a smaller share, and the damage report and the repair shop name it.
+Also chosen (not asked): the best ET shows in the garage and in the car's history, and it suggests the dial-in.
+
+**As built** (see `docs/ac-integration/csp-lua-scripts.md` "Bracket races" and "Test-and-tune", schema 1.6):
+- **Test-and-tune:** the garage's Test & Tune button, an hour at the strip (`GameAction.TestAndTune`). It picks
+  ks_drag drag1000 when installed, else the longest strip that runs the quarter (`RaceSetupBuilder.PickStrip`).
+  - It goes through the race pipeline with the player alone (`RACE_TYPE=TUNE`, 6 passes). Each pass has its own
+    tree and timeslip, and the car is put back on the line after each.
+  - The result is written after every pass. Afterwards the slips show side by side in the timeslip dialog, with the
+    day's best.
+  - The car wears and can break as in a race. Nothing else changes: no stats, no money.
+- **Bracket races:**
+  - At the diner, a "Run it as a bracket race" box on any strip that runs the quarter (400 m and up). There are two
+    new bracket events, Bracket Night and Dial-In Shootout.
+  - The player picks a dial-in in a dialog (±0.01 and ±0.1). It is suggested from the car's best rounded up to 0.05,
+    or estimated from power and weight.
+  - The rival dials in from its car's best, else Hale's formula for a street car (`BracketRules.StreetEtFactor`,
+    not yet checked against AC's AI).
+  - The mode runs a tree for each lane and holds the rival to its green. The rival takes the stripe by capping its
+    AI top speed near the end.
+  - Red light = false start (no contest, the existing rule). A breakout loses unless the other broke out by more.
+  - The career decides again from the slips (`BracketRules.Decide`, `WinCondition.BracketFinish`, `PlayerBrokeOut`,
+    `OpponentBrokeOut`).
+- **Best ET:** `CarHistory.BestQuarterSeconds`/`Mph`/`Date`, from any quarter the car runs, whoever drives it. It
+  shows with the history, and the timeslip says when it is a new best.
+- **The part that failed:** the weakest rotating part takes the loss and the others 35% of it. The report says "a
+  connecting rod let go", and the repair shop names the part.
+- **Timeslip dialog:** any number of columns (lanes or passes), a DIAL row in a bracket race, "RL" on a red light,
+  and a note line.
+- **Tests:**
+  - `tools/sr_race_harness/test_strip.py`: the chase stub laid out as a straight strip, 8 scenarios, and golden
+    files for a bracket race and a test-and-tune.
+  - The C# contract test checks that the career and the mode pick the same bracket winner.
+
+Not yet tried in the game. **The user decided (2026-09-25):** they test these after the first release; the
+checklist is `docs/playtest-step-8.md`, "6. Strip extras (after the first release)".
+- the tree overlay and AC's own start lights together;
+- the rival held and let go at its green;
+- the stripe-taking with AC's real AI;
+- `setCarPosition` putting the car back on the line between passes, and going to the pits to end a test-and-tune;
+- whether the rivals' estimated dial-ins are near what AC's AI runs;
+- the diner's bracket box and the dial-in dialog.
+
 ### Step 12: a bigger opponent pool
 After step 10, since both touch the rivals and the newspaper.
 - New racers when the pool runs dry (`OpponentGenerationService` is written but unused).

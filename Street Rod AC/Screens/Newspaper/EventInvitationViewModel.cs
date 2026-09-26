@@ -19,6 +19,9 @@ namespace Street_Rod_AC.Screens.Newspaper
         public RaceType RaceType { get; set; }
         public bool IsPinkSlip { get; set; }
 
+        /// <summary>A bracket race: the player dials in before it</summary>
+        public bool IsBracket { get; set; }
+
         // Instance state
         public Guid InstanceId { get; set; }
         public DateTime? ExpiresAt { get; set; }
@@ -36,6 +39,7 @@ namespace Street_Rod_AC.Screens.Newspaper
 
         public string RaceTypeDisplay => RaceType switch
         {
+            RaceType.DragRace when IsBracket => "Bracket Race",
             RaceType.DragRace => "Drag Race",
             RaceType.Circuit => "Circuit Race",
             RaceType.Sprint => "Sprint Race",
@@ -72,6 +76,7 @@ namespace Street_Rod_AC.Screens.Newspaper
                 RewardDescription = definition.Reward.ScaledBy(prizeMultiplier).GetDescription(),
                 RaceType = definition.RaceType,
                 IsPinkSlip = definition.IsPinkSlip,
+                IsBracket = definition.IsBracketRace,
                 ExpiresAt = instance.ExpiresAt,
                 ExpiresInText = expiresIn,
                 IsExpiringSoon = isExpiringSoon,

@@ -17,6 +17,13 @@
     and come after the racers part way round the lap, with lights and a siren. A driver who stops with a cop on
     top of them is busted; the player who stays far enough ahead for long enough gets away. The line is home: a
     player who crosses it with cops still on their tail got away (the harness pins this: the_line_is_home)
+  - A bracket race (race.ini [STREET_ROD] DIAL_IN=player,rival): each lane gets its own tree, the slower dial-in
+    first by the difference, and the race is to the quarter mile. Leaving before your green is a red light (a false
+    start), and running quicker than your dial-in is a breakout, which loses unless the other car broke out by more.
+    The rival takes the stripe: near the end it lifts when its pace would beat its dial-in.
+  - Test-and-tune (RACE_TYPE=TUNE): the player alone on the strip, pass after pass, each with its own tree and
+    timeslip. After a pass the car is put back on the line. The session ends after TUNE_PASSES passes, a crash or a
+    breakdown, or when the player goes to the pits; the result is written after every pass, so closing AC keeps them.
   - Reports the race to the career, one JSON file per race, written once, and quits Assetto Corsa
 
   Full control: every race, drag races too, is a one-lap race session (Street Corsa never asks AC for its drag
@@ -35,13 +42,15 @@
 ]]
 
 -- manifest.ini [ABOUT] VERSION goes with it
-local SCRIPT_VERSION = "3.5.0"
+local SCRIPT_VERSION = "3.6.0"
 -- 1.1: session.context_id, participants[].car_index and participants[].is_player
 -- 1.2: session.end_reason, participants[].false_start, participants[].condition
 -- 1.3: participants[].disqualified, session.race_type
 -- 1.4: session.end_reason BROKE_DOWN, participants[].broke_down, participants[].breakdown, participants[].timeslip
 -- 1.5: pursuit, session.end_reason BUSTED; the police are never participants
-local SCHEMA_VERSION = "1.5"
+-- 1.6: session.race_type TUNE with one participant and its participants[].passes; timeslip.green_s,
+--      timeslip.red_light; participants[].dial_in_s and participants[].breakout in a bracket race
+local SCHEMA_VERSION = "1.6"
 
 -- How far AC bends a steering rod at most, in metres (suspensions.ini MAX_DAMAGE, 0.05 on every car the game has):
 -- a corner bent this far, with what it carried in, has given out
@@ -60,6 +69,25 @@ local MARKS = {
   { key = 'thousand_ft_s', metres = 1000 * FEET },
   { key = 'quarter_trap', metres = 1320 * FEET - TRAP_METRES, hidden = true },
   { key = 'quarter_mile_s', metres = 1320 * FEET, trap = 'quarter_trap', speed = 'quarter_mile_mph' }
+}
+
+-- The strip's own rules (a table: the mode is near Lua's 200 locals):
+-- QUARTER: the quarter mile, in metres
+-- TREE_STEP, TREE_AMBERS: the tree, a sportsman's: three ambers half a second apart, the green half a second after
+--   the last
+-- BRACKET_LEAD, BRACKET_WAIT: a bracket race's slower lane's tree starts this long after AC's start, and the race is
+--   over once both cars have crossed the quarter, one of them is out, or this long after the player crossed it
+-- STRIPE_FROM: the rival takes the stripe from this share of the quarter on
+-- TUNE_PASSES: the passes a test-and-tune has unless race.ini says otherwise; TUNE_SLIP: how long the slip shows before
+--   the car is put back on the line; TUNE_STAGE: how long it is held there before the tree comes on. A pass is over
+--   once the car is past the quarter and down to TUNE_DONE_KMH, has stood still for TUNE_STOPPED seconds after
+--   leaving, or after TUNE_PASS_SECONDS.
+local STRIP = {
+  QUARTER = 1320 * FEET,
+  TREE_STEP = 0.5, TREE_AMBERS = 3,
+  BRACKET_LEAD = 2.0, BRACKET_WAIT = 15,
+  STRIPE_FROM = 0.5,
+  TUNE_PASSES = 6, TUNE_SLIP = 6, TUNE_STAGE = 3, TUNE_DONE_KMH = 20, TUNE_STOPPED = 3, TUNE_PASS_SECONDS = 60
 }
 
 -- A crash: a collision with a change of velocity of at least this, in g over one frame
@@ -173,6 +201,7 @@ local MSG_BROKE_DOWN = {
 }
 local MSG_BUSTED = "Busted!\nThe cops have you and your car."
 local MSG_ESCAPED = "You lost the cops!"
+local MSG_RED_LIGHT = "Red light! You left before your green.\nNo contest, and everybody saw it."
 
 local sim = ac.getSim()
 
@@ -196,8 +225,18 @@ local playerCrashed = false
 -- Where the player's car stood before the green, for the false start
 local gridPosition = nil
 
--- DRAG or ROAD, from race.ini [STREET_ROD] RACE_TYPE
+-- DRAG, ROAD or TUNE, from race.ini [STREET_ROD] RACE_TYPE
 local raceType = nil
+
+-- A bracket race, nil in any other: dialIn by car index; decided, playerWon once it is; playerCrossedAt, the race
+-- clock when the player crossed the quarter; rivalReaction, rivalMargin: how the rival leaves and takes the stripe
+local bracket = nil
+
+-- Test-and-tune, nil in any other race: passes (the slips so far), maxPasses; state WAIT (for AC's start), STAGE
+-- (held on the line), TREE, RUN (the pass), SLIP (the slip shows) or OVER (the session ended); since, the race clock
+-- when the state began; stoppedFor, seconds standing still in a pass; teleportedAt, the session time the car was last
+-- put back
+local tune = nil
 
 -- A drag race's lanes: the sideways axis of the strip, from the player's car on the line. Each car's own lane is
 -- where it stood (data.laneStart).
@@ -270,11 +309,16 @@ local function createCarData(carIndex)
     brokeDown = false,
     breakdown = nil,
 
-    -- Timeslip (drag races): the race clock when the car left the line, how far down the strip it was last frame,
-    -- and the time at each mark
+    -- Timeslip (drag races): the race clock when the car got its green (AC's start but in a bracket race and on a
+    -- test-and-tune pass) and when it left the line, how far down the strip it was last frame, and the time at each
+    -- mark. stagedAt: where a test-and-tune pass starts, metres past laneStart (the car is not always put back exactly
+    -- on it). released: a bracket race's rival is held until its green.
+    greenAt = 0,
     leftAt = nil,
+    stagedAt = 0,
     lastMetres = 0,
     slip = {},
+    released = true,
 
     -- Final result
     finalPosition = nil
@@ -296,7 +340,7 @@ local function readRaceType()
   local ok, value = pcall(function()
     return ac.INIConfig.raceConfig():get('STREET_ROD', 'RACE_TYPE', '')
   end)
-  if ok and (value == 'DRAG' or value == 'ROAD') then return value end
+  if ok and (value == 'DRAG' or value == 'ROAD' or value == 'TUNE') then return value end
   return nil
 end
 
@@ -389,6 +433,36 @@ local function readPolice()
   end
 end
 
+-- A bracket race, from race.ini [STREET_ROD] DIAL_IN=player,rival: each lane's green on the race clock, the slower
+-- dial-in's tree first by the difference, and the rival held until its own. BRACKET_RIVAL=reaction,margin: how long
+-- the rival takes to leave after its green, and how far over its dial-in it aims when it takes the stripe.
+local function readBracket()
+  local dials = readNumbers('DIAL_IN', 2)
+  if not dials or carCount < 2 then return end
+  local player, rival = dials[1], dials[2]
+  if player <= 0 or rival <= 0 then return end
+  local slower = math.max(player, rival)
+  local lead = STRIP.BRACKET_LEAD + STRIP.TREE_AMBERS * STRIP.TREE_STEP
+  local rivalWay = readNumbers('BRACKET_RIVAL', 2)
+  bracket = { dialIn = { [0] = player, [1] = rival }, decided = false, playerWon = nil, playerCrossedAt = nil,
+    rivalReaction = rivalWay and math.max(0, math.min(1, rivalWay[1])) or 0.15,
+    rivalMargin = rivalWay and math.max(0, math.min(0.5, rivalWay[2])) or 0.05 }
+  carData[0].greenAt = lead + slower - player
+  carData[1].greenAt = lead + slower - rival
+  carData[1].released = false
+  ac.log(string.format('[Street Corsa] Bracket race: dial-ins %.2f and %.2f, greens at %.2f and %.2f s, the rival leaves %.2f s after its own',
+    player, rival, carData[0].greenAt, carData[1].greenAt, bracket.rivalReaction))
+end
+
+-- Test-and-tune, from race.ini [STREET_ROD] TUNE_PASSES: how many passes the session has
+local function readTune()
+  local passes = readNumbers('TUNE_PASSES', 1)
+  local count = passes and math.floor(passes[1]) or STRIP.TUNE_PASSES
+  tune = { passes = {}, maxPasses = math.max(1, math.min(20, count)), state = 'WAIT', since = 0, stoppedFor = 0,
+    teleportedAt = nil }
+  ac.log(string.format('[Street Corsa] Test-and-tune: up to %d passes', tune.maxPasses))
+end
+
 -- Seed the generator from several sources: os.time() alone changes once a second. The script clock, the
 -- game clock, a heap address (randomized per run) and the race's context id each add their own bits.
 local function seedRandom()
@@ -449,7 +523,7 @@ local function initializeSession()
       end
     end
   end
-  if raceType == 'DRAG' and player and not sim.isSessionStarted then
+  if (raceType == 'DRAG' or raceType == 'TUNE') and player and not sim.isSessionStarted then
     -- Each car's lane is the line it stands on
     for i = 0, carCount - 1 do
       local car = ac.getCar(i)
@@ -458,6 +532,13 @@ local function initializeSession()
     local look = vec3(player.look.x, 0, player.look.z):normalize()
     stripSide = vec3(-look.z, 0, look.x)
     stripForward = look
+  end
+  if raceType == 'DRAG' and stripForward then
+    local ok, err = pcall(readBracket)
+    if not ok then ac.log('[Street Corsa] Could not read the bracket: ' .. tostring(err)) end
+  elseif raceType == 'TUNE' and stripForward then
+    local ok, err = pcall(readTune)
+    if not ok then ac.log('[Street Corsa] Could not read the test-and-tune: ' .. tostring(err)) end
   end
 
   ac.log(string.format('[Street Corsa] Session started: %s with %d cars, context %s, physics allowed %s, session type %s, race %s',
@@ -516,6 +597,69 @@ end
 -- Forward declaration: puts the police away, lights and sirens too; defined with the chase further down
 local shutDownPolice
 
+local function round(value, places)
+  if type(value) ~= 'number' then return nil end
+  local k = 10 ^ (places or 0)
+  return math.floor(value * k + 0.5) / k
+end
+
+-- A car's quarter-mile crossing on the race clock and its elapsed time, or nil before it crossed
+local function quarterOf(data)
+  local et = data.slip.quarter_mile_s
+  if not et or not data.leftAt then return nil end
+  return data.leftAt + et, et
+end
+
+-- The same as the slip has it (timeslipOf), to the millisecond: green, plus reaction, plus elapsed time. A bracket
+-- race is decided on these, the numbers the career decides it on again (BracketRules.Decide, which adds them up in
+-- the same order), so the two never disagree over a car a fraction of a millisecond either side of its dial-in.
+local function slipQuarterOf(data)
+  local _, et = quarterOf(data)
+  if not et then return nil end
+  local green = data.greenAt ~= 0 and round(data.greenAt, 3) or 0
+  local elapsed = round(et, 3)
+  return green + round(data.leftAt - data.greenAt, 3) + elapsed, elapsed
+end
+
+-- Past the line, where nothing counts any more: AC's line, the quarter in a bracket race, never on a test-and-tune
+local function pastTheLine(data)
+  if tune then return false end
+  if bracket then return quarterOf(data) ~= nil end
+  return data.lapsCompleted >= 1
+end
+
+-- The best pass of a test-and-tune so far (the quickest quarter), or nil
+local function bestPass()
+  local best = nil
+  for _, pass in ipairs(tune and tune.passes or {}) do
+    if pass.quarter_mile_s and (not best or pass.quarter_mile_s < best.quarter_mile_s) then best = pass end
+  end
+  return best
+end
+
+-- What the player hears about the bracket race's result: their ET against their dial-in
+local function bracketLine()
+  local data = carData[0]
+  local _, et = slipQuarterOf(data)
+  if not bracket or not et then return '' end
+  local dial = bracket.dialIn[0]
+  return string.format('\nYour %.3f on a %.2f dial-in%s', et, dial, et < dial and ': BREAKOUT' or '')
+end
+
+-- The timeslip as the result has it, defined with the output further down
+local timeslipOf
+
+-- A test-and-tune pass that is over, added to the passes; false when the car never left the line
+local function recordPass(data)
+  local slip = timeslipOf(data)
+  if not slip then return false end
+  slip.pass = #tune.passes + 1
+  tune.passes[#tune.passes + 1] = slip
+  tune.last = slip
+  ac.log(string.format('[Street Corsa] Pass %d: R/T %s, 1/4 %s', slip.pass, tostring(slip.reaction_s), tostring(slip.quarter_mile_s)))
+  return true
+end
+
 -- End session: write results, show the result, and quit
 -- reason: FINISHED (WIN or LOSE), CRASH, FALSE_START, DISQUALIFIED, BROKE_DOWN, BUSTED or ABANDONED
 local function endSession(reason, won)
@@ -536,6 +680,12 @@ local function endSession(reason, won)
     chase.duration = sessionDuration - chase.startedAt
   end
   if shutDownPolice then pcall(shutDownPolice) end
+
+  -- A test-and-tune pass under way is one of the passes: the player may leave the strip still rolling past the quarter
+  if tune then
+    if (tune.state == 'TREE' or tune.state == 'RUN') and carData[0] then recordPass(carData[0]) end
+    tune.state = 'OVER'
+  end
 
   -- Write session results. Whatever goes wrong there, AC must still quit: the launcher waits for it.
   sessionEndTime = getISOTimestamp()
@@ -558,7 +708,8 @@ local function endSession(reason, won)
     resultTitle, resultMessage = busted and "Busted" or "Race Over", busted and MSG_CRASH .. "\n" .. MSG_BUSTED or MSG_CRASH
     holdPlayer(30)
   elseif reason == 'FALSE_START' then
-    resultTitle, resultMessage = "False Start", MSG_FALSE_START
+    local red = carData[0] and carData[0].redLight
+    resultTitle, resultMessage = red and "Red Light" or "False Start", red and MSG_RED_LIGHT or MSG_FALSE_START
     holdPlayer(30)
   elseif reason == 'DISQUALIFIED' then
     resultTitle, resultMessage = "Disqualified", MSG_DISQUALIFIED
@@ -566,8 +717,16 @@ local function endSession(reason, won)
   elseif reason == 'BROKE_DOWN' then
     resultTitle, resultMessage = "Broke Down", MSG_BROKE_DOWN[carData[0] and carData[0].breakdown or 'ENGINE'] or MSG_BROKE_DOWN.ENGINE
     holdPlayer(30)
+  elseif tune then
+    local best = bestPass()
+    resultTitle = "Strip Closed"
+    resultMessage = string.format('%d pass%s on the strip.', #tune.passes, #tune.passes == 1 and '' or 'es')
+    if best then
+      resultMessage = resultMessage .. string.format('\nBest: %.3f @ %.2f mph', best.quarter_mile_s, best.quarter_mile_mph or 0)
+    end
+    holdPlayer(30)
   else
-    resultTitle, resultMessage = "Race Over", won and MSG_WIN or MSG_LOSE
+    resultTitle, resultMessage = "Race Over", (won and MSG_WIN or MSG_LOSE) .. bracketLine()
     if busted then
       resultTitle, resultMessage = "Busted", resultMessage .. "\n" .. MSG_BUSTED
       holdPlayer(30)
@@ -648,7 +807,7 @@ local function updateCrashes(dt)
         holdAI(carIndex)
       elseif data.grace > 0 then
         data.grace = data.grace - dt
-      elseif data.lapsCompleted >= 1 then
+      elseif pastTheLine(data) then
         -- Past the line nothing counts: a rival that finishes first and wrecks itself at the end of the strip
         -- (205 km/h, 2026-09-24) has still won, and the player still gets to finish. The police have no hold on a
         -- racer past the line either.
@@ -680,7 +839,7 @@ local function updateBreakdowns()
   for carIndex = 0, carCount - 1 do
     local data = carData[carIndex]
     local car = ac.getCar(carIndex)
-    if data and car and not policeOf[carIndex] and not data.crashed and not data.disqualified and not data.brokeDown and data.lapsCompleted < 1 then
+    if data and car and not policeOf[carIndex] and not data.crashed and not data.disqualified and not data.brokeDown and not pastTheLine(data) then
       local ok, what = pcall(findBreakdown, car, data)
       if ok and what then
         data.brokeDown = true
@@ -699,28 +858,33 @@ local function updateBreakdowns()
 end
 
 -- A drag race's timeslips: each car's time at every mark down the strip, from the moment it left the line. The
--- moment a mark is passed is found between two frames, from where the car was on each side of it.
-local function updateTimeslips(tick)
-  if raceType ~= 'DRAG' or not stripForward or not sim.isSessionStarted then return end
-  local previousClock = raceClock or 0
-  raceClock = previousClock + tick
+-- moment a mark is passed is found between two frames, from where the car was on each side of it. The race clock
+-- (raceClock) runs from AC's start; previousClock is where it stood a tick ago. A car that leaves before its own green
+-- (a bracket race, a test-and-tune pass) has red-lit.
+local function updateTimeslips(previousClock, tick)
+  if (raceType ~= 'DRAG' and raceType ~= 'TUNE') or not stripForward or not sim.isSessionStarted then return end
   if tick <= 0 then return end
 
   for carIndex = 0, carCount - 1 do
     local data = carData[carIndex]
     local car = ac.getCar(carIndex)
     if data and car and data.laneStart then
-      local metres = (car.position - data.laneStart):dot(stripForward)
+      local metres = (car.position - data.laneStart):dot(stripForward) - data.stagedAt
+      local timing = not tune or tune.state == 'TREE' or tune.state == 'RUN'
       local function crossed(mark)
         if data.lastMetres >= mark or metres < mark then return nil end
         local share = (mark - data.lastMetres) / math.max(metres - data.lastMetres, 1e-6)
         return previousClock + share * tick
       end
 
-      if not data.leftAt then
+      if timing and not data.leftAt then
         data.leftAt = crossed(STAGE_METRES)
+        if data.leftAt and data.leftAt < data.greenAt then
+          data.redLight = true
+          ac.log(string.format('[Street Corsa] Car %d RED LIGHT: left %.3f s before its green', carIndex, data.greenAt - data.leftAt))
+        end
       end
-      if data.leftAt then
+      if timing and data.leftAt then
         for _, mark in ipairs(MARKS) do
           if data.slip[mark.key] == nil then
             local at = crossed(mark.metres)
@@ -738,6 +902,161 @@ local function updateTimeslips(tick)
 
       data.lastMetres = metres
     end
+  end
+end
+
+-- Whether the player wins a bracket race, from each car's quarter (at: crossed on the race clock, et) and dial-in;
+-- the rival's quarter is nil when it never got there. A breakout loses, unless the other car broke out by more; with
+-- neither, the first car to the quarter wins. The career decides the same way from the slips (BracketRules).
+local function bracketPlayerWins(playerAt, playerEt, rivalAt, rivalEt)
+  local playerOver = playerEt < bracket.dialIn[0]
+  if not rivalAt then return not playerOver end
+  local rivalOver = rivalEt < bracket.dialIn[1]
+  if playerOver and rivalOver then return bracket.dialIn[0] - playerEt < bracket.dialIn[1] - rivalEt end
+  if playerOver ~= rivalOver then return rivalOver end
+  return playerAt < rivalAt
+end
+
+-- Every frame of a bracket race: the rival held until its green and let go a moment after it; near the end it lifts
+-- when its pace would beat its dial-in; a player who left before their green has red-lit; the race is over once
+-- both cars have crossed the quarter, the rival is out, or a while after the player crossed it.
+local function updateBracket()
+  if not bracket then return end
+  local player, rival = carData[0], carData[1]
+  if not player or not rival then return end
+  if not sim.isSessionStarted or not raceClock then
+    if not rival.released then holdAI(1) end
+    return
+  end
+
+  if player.redLight then
+    player.falseStart = true
+    endSession('FALSE_START')
+    return
+  end
+
+  -- AC's own lights go green for both lanes at its start: the player's green is their own tree's (CSP has no way to
+  -- hide AC's lights)
+  if not bracket.told then
+    bracket.told = true
+    pcall(ac.setMessage, 'Bracket race', 'Not yet! Wait for your own tree, on the right.')
+  end
+
+  if not rival.released then
+    if raceClock >= rival.greenAt + bracket.rivalReaction and not rival.crashed and not rival.brokeDown then
+      rival.released = true
+      pcall(physics.setAIThrottleLimit, 1, 1)
+      pcall(physics.setAIStopCounter, 1, 0)
+      pcall(physics.awakeCar, 1)
+      pcall(physics.engageGear, 1, 1)
+      ac.log(string.format('[Street Corsa] Green for car 1 at %.2f s, away at %.2f s', rival.greenAt, raceClock))
+    else
+      holdAI(1)
+    end
+  elseif rival.leftAt and not quarterOf(rival) and not rival.crashed and not rival.brokeDown and not rival.disqualified then
+    -- Taking the stripe: from part way down, a car going faster than the pace that gets it to the quarter on its
+    -- dial-in (and the rival's margin) is held to that pace, AC's AI braking down to it. Only ever slower: a car that
+    -- can't make its dial-in goes flat out.
+    local car = ac.getCar(1)
+    local speed = car and car.speedKmh / 3.6 or 0
+    local top = 1e9
+    if car and rival.lastMetres > STRIP.STRIPE_FROM * STRIP.QUARTER then
+      local timeLeft = bracket.dialIn[1] + bracket.rivalMargin - (raceClock - rival.leftAt)
+      local pace = timeLeft > 0 and (STRIP.QUARTER - rival.lastMetres) / timeLeft or math.huge
+      if pace < speed then top = math.max(30, pace * 3.6) end
+    end
+    pcall(physics.setAITopSpeed, 1, top)
+  end
+
+  local playerAt, playerEt = slipQuarterOf(player)
+  if not playerAt then return end
+  bracket.playerCrossedAt = bracket.playerCrossedAt or raceClock
+  local rivalAt, rivalEt = slipQuarterOf(rival)
+  local rivalOut = rival.crashed or rival.brokeDown or rival.disqualified
+  if not rivalAt and not rivalOut and raceClock - bracket.playerCrossedAt < STRIP.BRACKET_WAIT then return end
+
+  bracket.decided = true
+  bracket.playerWon = rivalOut or bracketPlayerWins(playerAt, playerEt, rivalAt, rivalEt)
+  ac.log(string.format('[Street Corsa] Bracket race over: player %.3f on %.2f, rival %s on %.2f: %s', playerEt,
+    bracket.dialIn[0], rivalEt and string.format('%.3f', rivalEt) or 'no time', bracket.dialIn[1],
+    bracket.playerWon and 'WON' or 'LOST'))
+  endSession('FINISHED', bracket.playerWon)
+end
+
+-- Puts the player's car back on its line, stopped, facing down the strip
+local function backToTheLine()
+  local data = carData[0]
+  -- Marked first: AC may call onCarJumped from inside setCarPosition, and this jump is the mode's own
+  tune.teleportedAt = sessionDuration
+  pcall(physics.setCarVelocity, 0, vec3())
+  -- setCarPosition takes the opposite of the car's look (Test Drive's parkPlayer)
+  local ok, err = pcall(physics.setCarPosition, 0, data.laneStart, -stripForward)
+  if not ok then ac.log('[Street Corsa] Could not put the car back on the line: ' .. tostring(err)) end
+  data.grace = TELEPORT_GRACE_SECONDS
+end
+
+-- Every frame of a test-and-tune: the pass's states one after the other, and the result written after each pass
+local function updateTune(tick)
+  if not tune then return end
+  local data = carData[0]
+  local car = ac.getCar(0)
+  if not data or not car then return end
+
+  if not sim.isSessionStarted then
+    -- Held until AC's start: the first tree is the mode's own
+    pcall(physics.forceUserBrakesFor, 0.25, 1.0)
+    return
+  end
+  local now = raceClock or 0
+  local state = tune.state
+
+  if state == 'WAIT' or state == 'STAGE' then
+    pcall(physics.forceUserBrakesFor, 0.25, 1.0)
+    if state == 'WAIT' then
+      tune.state, tune.since = 'STAGE', now
+      pcall(ac.setMessage, 'Test and tune', string.format('Pass %d of %d: stage up', #tune.passes + 1, tune.maxPasses))
+    elseif now - tune.since >= STRIP.TUNE_STAGE then
+      -- The brakes come off at the first amber: from here the player holds the car
+      -- The pass is measured from where the car stands: put back short of or past its line, it still stages
+      data.leftAt, data.slip, data.redLight = nil, {}, false
+      data.stagedAt = (car.position - data.laneStart):dot(stripForward)
+      data.lastMetres = 0
+      data.greenAt = now + STRIP.TREE_AMBERS * STRIP.TREE_STEP
+      tune.state, tune.since, tune.stoppedFor = 'TREE', now, 0
+      pcall(physics.forceUserBrakesFor, 0, 0)
+      ac.log(string.format('[Street Corsa] Pass %d: tree on, green at %.2f s', #tune.passes + 1, data.greenAt))
+    end
+    return
+  end
+
+  if state == 'TREE' or state == 'RUN' then
+    if state == 'TREE' and now >= data.greenAt then tune.state = 'RUN' end
+    if data.leftAt and car.speedKmh < 3 then tune.stoppedFor = tune.stoppedFor + tick else tune.stoppedFor = 0 end
+    local done = (quarterOf(data) and car.speedKmh < STRIP.TUNE_DONE_KMH)
+      or (data.leftAt and tune.stoppedFor >= STRIP.TUNE_STOPPED)
+      or now - data.greenAt >= STRIP.TUNE_PASS_SECONDS
+    if not done then return end
+
+    if recordPass(data) then
+      -- Written after every pass: closing AC keeps what was run
+      endReason, sessionEndTime = 'FINISHED', getISOTimestamp()
+      local ok, err = pcall(writeSessionOutput)
+      if not ok then ac.log('[Street Corsa] ERROR: Writing the passes failed: ' .. tostring(err)) end
+    else
+      tune.last = nil
+    end
+    if #tune.passes >= tune.maxPasses then
+      tune.state = 'OVER'
+      endSession('FINISHED')
+      return
+    end
+    tune.state, tune.since = 'SLIP', now
+    return
+  end
+
+  if state == 'SLIP' and now - tune.since >= STRIP.TUNE_SLIP then
+    backToTheLine()
+    tune.state = 'WAIT'
   end
 end
 
@@ -814,12 +1133,6 @@ local function checkRaceFinish()
   end
 end
 
-local function round(value, places)
-  if type(value) ~= 'number' then return nil end
-  local k = 10 ^ (places or 0)
-  return math.floor(value * k + 0.5) / k
-end
-
 -- What the race left of the car, as AC tracks it: the career puts it on the car's parts. Every field is read on its
 -- own, so one AC does not have leaves the rest.
 local function carCondition(carIndex)
@@ -856,10 +1169,13 @@ local function carCondition(carIndex)
   return condition
 end
 
--- The timeslip as the result has it; nil for a car that never left the line, and in a road race
-local function timeslipOf(data)
-  if raceType ~= 'DRAG' or not data.leftAt then return nil end
-  local slip = { reaction_s = round(data.leftAt, 3) }
+-- The timeslip as the result has it; nil for a car that never left the line, and in a road race. The reaction is
+-- from the car's own green; green_s says when that was on the race clock, where it was not AC's start.
+timeslipOf = function(data)
+  if (raceType ~= 'DRAG' and raceType ~= 'TUNE') or not data.leftAt then return nil end
+  local slip = { reaction_s = round(data.leftAt - data.greenAt, 3) }
+  if data.greenAt ~= 0 then slip.green_s = round(data.greenAt, 3) end
+  if data.redLight then slip.red_light = true end
   for _, mark in ipairs(MARKS) do
     if not mark.hidden then slip[mark.key] = round(data.slip[mark.key], 3) end
     if mark.speed then slip[mark.speed] = round(data.slip[mark.speed], 2) end
@@ -877,6 +1193,22 @@ local function carDataToDict(data)
   local intensities = {}
   for i, g in ipairs(data.crashIntensities) do intensities[i] = round(g, 2) end
 
+  -- A bracket race: the car's dial-in, and whether it ran under it
+  local dialIn, breakout = nil, nil
+  if bracket and bracket.dialIn[data.carIndex] then
+    dialIn = round(bracket.dialIn[data.carIndex], 3)
+    local _, et = slipQuarterOf(data)
+    breakout = et ~= nil and et < bracket.dialIn[data.carIndex]
+  end
+
+  -- Test-and-tune: every pass, and the best of them as the car's timeslip
+  local passes = nil
+  local slip = timeslipOf(data)
+  if tune and data.carIndex == 0 then
+    passes = tune.passes
+    slip = bestPass()
+  end
+
   return {
     driver_name = data.driverName,
     car_name = data.carName,
@@ -886,7 +1218,10 @@ local function carDataToDict(data)
     disqualified = data.disqualified,
     broke_down = data.brokeDown,
     breakdown = data.breakdown,
-    timeslip = timeslipOf(data),
+    timeslip = slip,
+    passes = passes,
+    dial_in_s = dialIn,
+    breakout = breakout,
     performance = {
       final_position = data.finalPosition,
       laps_completed = data.lapsCompleted,
@@ -918,7 +1253,10 @@ writeSessionOutput = function()
   for carIndex = 0, carCount - 1 do
     local data = carData[carIndex]
     if data and not policeOf[carIndex] then
-      if #police > 0 then
+      if bracket and bracket.decided then
+        -- A bracket race is won at the quarter by its own rules, whoever led AC's race
+        data.finalPosition = (carIndex == 0) == bracket.playerWon and 1 or 2
+      elseif #police > 0 then
         data.finalPosition = #finishOrder + 1
         for position, index in ipairs(finishOrder) do
           if index == carIndex then data.finalPosition = position end
@@ -983,7 +1321,8 @@ writeSessionOutput = function()
   if not io.save(tempFilename, json) then
     error('Failed to write ' .. tempFilename)
   end
-  if not io.move(tempFilename, filename) then
+  -- A test-and-tune writes after every pass: each write replaces the last (io.move fails onto a file by default)
+  if not io.move(tempFilename, filename, false) then
     io.deleteFile(tempFilename)
     error('Failed to rename ' .. tempFilename .. ' to ' .. filename)
   end
@@ -1017,7 +1356,7 @@ local function judgeContact(carIndex, otherIndex)
   local data, otherData = carData[carIndex], carData[otherIndex]
   if not data or not otherData or not data.laneStart or not otherData.laneStart then return end
   if data.disqualified or otherData.disqualified then return end
-  if data.lapsCompleted >= 1 or otherData.lapsCompleted >= 1 then return end
+  if pastTheLine(data) or pastTheLine(otherData) then return end
 
   local car, other = ac.getCar(carIndex), ac.getCar(otherIndex)
   if not car or not other then return end
@@ -1730,15 +2069,19 @@ function script.update(dt)
 
   sim = ac.getSim()
 
-  -- Back on the pits menu (the player pressed Escape): nothing to track there
-  if sim.isInMainMenu then return end
+  -- Back on the pits menu (the player pressed Escape): nothing to track there. On a test-and-tune it is leaving the
+  -- strip, with the passes run so far.
+  if sim.isInMainMenu then
+    if tune and sessionActive and sim.isSessionStarted then endSession('FINISHED') end
+    return
+  end
 
   if sessionId == nil then
     initializeSession()
     return
   end
 
-  checkFalseStart()
+  if not tune then checkFalseStart() end
   if sessionEnded then return end
 
   updateCrashes(dt)
@@ -1750,12 +2093,21 @@ function script.update(dt)
   local tick = measureTick()
   sessionDuration = sessionDuration + tick
   updateAllTelemetry(tick)
-  updateTimeslips(tick)
+  local previousClock = raceClock or 0
+  if sim.isSessionStarted then raceClock = previousClock + tick end
+  updateTimeslips(previousClock, tick)
+
+  updateBracket()
+  if sessionEnded then return end
+
+  updateTune(tick)
+  if sessionEnded then return end
 
   updateChase(tick)
   if sessionEnded then return end
 
-  checkRaceFinish()
+  -- A bracket race is over at the quarter, a test-and-tune when the player is done
+  if not bracket and not tune then checkRaceFinish() end
 end
 
 -- AC puts a car back: after a drag run, on a jump start, a lane violation, or the player going to the pits
@@ -1782,6 +2134,17 @@ ac.onCarJumped(-1, function(carIndex)
     return
   end
 
+  -- Test-and-tune: the mode puts the car back on the line after each pass; anything else is the player going to
+  -- the pits, done with the strip
+  if tune then
+    if tune.teleportedAt and sessionDuration - tune.teleportedAt < TELEPORT_GRACE_SECONDS then return end
+    if sessionActive then
+      ac.log('[Street Corsa] Put back to the pits: the strip is done')
+      endSession('FINISHED')
+    end
+    return
+  end
+
   if not sessionActive or not data then return end
 
   -- Before it got anywhere, the car jumped the start; after, it is out of the race
@@ -1801,10 +2164,78 @@ local COLOR_BORDER = rgbm(1, 1, 1, 0.3)
 local COLOR_TEXT = rgbm(1, 1, 1, 1)
 local BOX_SIZE = vec2(600, 200)
 
-function script.drawUI()
-  if not showResultOverlay then return end
+local LAMP = { OFF = rgbm(0.15, 0.15, 0.15, 1), AMBER = rgbm(1, 0.65, 0, 1), GREEN = rgbm(0.1, 1, 0.2, 1),
+  RED = rgbm(1, 0.1, 0.1, 1), RADIUS = 16 }
 
+-- The player's own tree, when the mode gives the green (a bracket race, a test-and-tune pass): three ambers coming on
+-- half a second apart, then the green, or the red of a car that left early. Shown from a second before the first
+-- amber until two seconds after the green.
+local function drawTree(size)
+  local data = carData[0]
+  if not data or not raceClock or not (bracket or (tune and (tune.state == 'TREE' or tune.state == 'RUN'))) then return end
+  local firstAmber = data.greenAt - STRIP.TREE_AMBERS * STRIP.TREE_STEP
+  if raceClock < firstAmber - 1 or raceClock > data.greenAt + 2 then return end
+
+  local x = size.x - 70
+  local y = size.y * 0.3
+  ui.drawRectFilled(vec2(x - 30, y - 30), vec2(x + 30, y + (STRIP.TREE_AMBERS + 1) * 44 + 4), COLOR_BOX, 8)
+  for n = 1, STRIP.TREE_AMBERS do
+    local lit = raceClock >= firstAmber + (n - 1) * STRIP.TREE_STEP and raceClock < data.greenAt
+    ui.drawCircleFilled(vec2(x, y + (n - 1) * 44), LAMP.RADIUS, lit and LAMP.AMBER or LAMP.OFF, 24)
+  end
+  local bottom = vec2(x, y + STRIP.TREE_AMBERS * 44)
+  if data.redLight then
+    ui.drawCircleFilled(bottom, LAMP.RADIUS, LAMP.RED, 24)
+  else
+    ui.drawCircleFilled(bottom, LAMP.RADIUS, raceClock >= data.greenAt and LAMP.GREEN or LAMP.OFF, 24)
+  end
+  if bracket then
+    ui.pushFont(ui.Font.Main)
+    ui.drawTextClipped(string.format('Dial-in\n%.2f', bracket.dialIn[0]), vec2(x - 60, y + (STRIP.TREE_AMBERS + 1) * 44 + 8),
+      vec2(x + 30, y + (STRIP.TREE_AMBERS + 1) * 44 + 60), COLOR_TEXT, vec2(0.5, 0))
+    ui.popFont()
+  end
+end
+
+-- A test-and-tune pass's slip, while the car waits to go back to the line
+local function drawPassSlip(size)
+  if not tune or tune.state ~= 'SLIP' then return end
+  local slip = tune.last
+  local lines = {}
+  if slip then
+    lines[#lines + 1] = string.format('Pass %d of %d%s', slip.pass, tune.maxPasses, slip.red_light and '   RED LIGHT' or '')
+    local function mark(label, value, format) lines[#lines + 1] = string.format('%-8s %s', label, value and string.format(format, value) or '-') end
+    mark('R/T', slip.reaction_s, '%.3f')
+    mark("60'", slip.sixty_ft_s, '%.3f')
+    mark("330'", slip.three_thirty_ft_s, '%.3f')
+    mark('1/8 ET', slip.eighth_mile_s, '%.3f')
+    mark('1/8 MPH', slip.eighth_mile_mph, '%.2f')
+    mark('1/4 ET', slip.quarter_mile_s, '%.3f')
+    mark('1/4 MPH', slip.quarter_mile_mph, '%.2f')
+  else
+    lines[#lines + 1] = 'No time: the car never left the line'
+  end
+  local left = math.max(0, math.ceil(STRIP.TUNE_SLIP - ((raceClock or 0) - tune.since)))
+  lines[#lines + 1] = ''
+  lines[#lines + 1] = string.format('Back to the line in %d s. Go to the pits to leave the strip.', left)
+
+  local box = vec2(460, 40 + #lines * 22)
+  local topLeft = vec2((size.x - box.x) / 2, size.y * 0.15)
+  ui.drawRectFilled(topLeft, topLeft + box, COLOR_BOX, 10)
+  ui.drawRect(topLeft, topLeft + box, COLOR_BORDER, 10, nil, 2)
+  ui.pushFont(ui.Font.Monospace)
+  ui.drawTextClipped(table.concat(lines, '\n'), topLeft + vec2(20, 20), topLeft + box - vec2(20, 20), COLOR_TEXT, vec2(0, 0))
+  ui.popFont()
+end
+
+function script.drawUI()
   local size = ui.windowSize()
+  if not showResultOverlay then
+    pcall(drawTree, size)
+    pcall(drawPassSlip, size)
+    return
+  end
+
   ui.drawRectFilled(vec2(0, 0), size, COLOR_DIM)
 
   local topLeft = vec2((size.x - BOX_SIZE.x) / 2, (size.y - BOX_SIZE.y) / 2 - 50)

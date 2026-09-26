@@ -116,28 +116,51 @@ public sealed class CarConditionTests : IDisposable
 
         Assert.True(CarCondition.IsTotaled(car));
         Assert.Contains("The body is wrecked: the car is totaled.", report);
-        Assert.Contains(report, l => l.StartsWith("Engine: it blew"));
+        Assert.Contains("Engine: a connecting rod let go. It needs a rebuild before it runs again.", report);
         var problems = CarCondition.WhyCannotRace(car, GroupOf);
         Assert.Contains(problems, p => p.Contains("totaled"));
         Assert.Contains(problems, p => p.Contains("engine is blown"));
     }
 
     [Fact]
-    public void Engine_life_lands_on_the_rotating_parts_and_comes_back_as_the_next_start()
+    public void Engine_damage_lands_on_the_weakest_rotating_part_and_comes_back_as_the_next_start()
     {
         var car = NewCar();
         Part(car, "rod").Tear = 0.8;
+        Part(car, "piston").Tear = 0.9;
 
         var report = CarCondition.ApplyRace(car, Report(life: 640), 0.4, GroupOf);
 
-        // The race took the engine from 800 to 640: every rotating part is no better than that
-        foreach (var id in new[] { "crank", "rod", "piston", "cam" }) Assert.Equal(0.64, Part(car, id).Tear, 6);
+        // The race took the engine from 800 to 640: the worn rod gave, and took all of it
+        Assert.Equal(0.64, Part(car, "rod").Tear, 6);
+        // The rest of the rotating assembly took a share of the 0.16 with it
+        var share = 0.16 * CarCondition.SharedEngineDamage;
+        Assert.Equal(0.9 - share, Part(car, "piston").Tear, 6);
+        foreach (var id in new[] { "crank", "cam" }) Assert.Equal(1 - share, Part(car, id).Tear, 6);
         // What does not spin is not hurt by an over-rev
         Assert.Equal(1.0, Part(car, "block").Tear);
         Assert.Equal(1.0, Part(car, "carb").Tear);
-        Assert.Contains(report, l => l.Contains("80% → 64%"));
+        Assert.Contains("Engine: the connecting rods took a beating (80% → 64%).", report);
 
         Assert.Equal(640, CarCondition.StartState(car, GroupOf).EngineLife, 6);
+    }
+
+    [Fact]
+    public void When_the_rotating_parts_are_as_worn_the_rods_give_first_then_the_pistons()
+    {
+        var car = NewCar();
+        Assert.Equal("rod", CarCondition.WeakestRotatingPart(car, GroupOf)!.DefinitionId);
+
+        Part(car, "rod").Tear = 0.95;
+        Part(car, "piston").Tear = 0.7;
+        Part(car, "cam").Tear = 0.7;
+        Assert.Equal("piston", CarCondition.WeakestRotatingPart(car, GroupOf)!.DefinitionId);
+
+        var report = CarCondition.ApplyRace(car, Report(life: 0), 0.4, GroupOf);
+        Assert.Equal(0, Part(car, "piston").Tear);
+        Assert.True(Part(car, "cam").Tear > 0);
+        Assert.Contains("Engine: a piston let go. It needs a rebuild before it runs again.", report);
+        Assert.Equal(0, CarCondition.EngineLife(car, GroupOf));
     }
 
     [Fact]
@@ -150,6 +173,34 @@ public sealed class CarConditionTests : IDisposable
         CarCondition.ApplyRace(car, Report(life: 1000), 0.4, GroupOf);
 
         Assert.Equal(0.5, Part(car, "piston").Tear);
+    }
+
+    [Fact]
+    public void A_light_over_rev_wears_the_engine_race_after_race()
+    {
+        var car = NewCar();
+
+        // 0.3 of AC's 1000 a race: each goes into the next start, so they add up
+        CarCondition.ApplyRace(car, Report(life: 999.7), 0.4, GroupOf);
+        var start = CarCondition.StartState(car, GroupOf).EngineLife;
+        Assert.Equal(999.7, start, 6);
+        CarCondition.ApplyRace(car, Report(life: start - 0.3), 0.4, GroupOf);
+
+        Assert.Equal(999.4, CarCondition.EngineLife(car, GroupOf), 6);
+    }
+
+    [Fact]
+    public void An_engine_without_rotating_parts_keeps_its_life_on_the_block()
+    {
+        var car = NewCar();
+        car.Engine!.Children.RemoveAll(p => p.DefinitionId is "crank" or "rod" or "piston" or "cam");
+
+        var report = CarCondition.ApplyRace(car, Report(life: 0), 0.4, GroupOf);
+
+        Assert.Equal(0, Part(car, "block").Tear);
+        Assert.Equal(0, CarCondition.EngineLife(car, GroupOf));
+        Assert.Contains("Engine: the bottom end let go. It needs a rebuild before it runs again.", report);
+        Assert.Contains(CarCondition.WhyCannotRace(car, GroupOf), p => p.Contains("engine is blown"));
     }
 
     [Fact]
@@ -329,6 +380,58 @@ public sealed class CarConditionTests : IDisposable
     }
 
     [Fact]
+    public void A_bracket_race_tells_the_mode_both_dial_ins_whatever_the_culture()
+    {
+        var cfg = _temp.Combine("cfg");
+        Directory.CreateDirectory(cfg);
+        var service = new IniModificationService(cfg, _temp.Combine("AcRestore"));
+        var culture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+            Assert.True(service.ApplyIntent(new DragRaceIntent
+            {
+                PlayerCarId = "a", OpponentCarId = "b", PlayerName = "P", OpponentName = "O",
+                Bracket = new BracketSetup(12.4, 13.05, 0.2, 0.06)
+            }));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = culture;
+        }
+
+        var section = File.ReadAllLines(Path.Combine(cfg, "race.ini")).SkipWhile(l => l != "[STREET_ROD]").ToList();
+        Assert.Contains("RACE_TYPE=DRAG", section);
+        Assert.Contains("DIAL_IN=12.40,13.05", section);
+        Assert.Contains("BRACKET_RIVAL=0.200,0.060", section);
+    }
+
+    [Fact]
+    public void A_test_and_tune_is_the_player_alone_on_the_strip()
+    {
+        var cfg = _temp.Combine("cfg");
+        Directory.CreateDirectory(cfg);
+        var service = new IniModificationService(cfg, _temp.Combine("AcRestore"));
+
+        Assert.True(service.ApplyIntent(new DragRaceIntent
+        {
+            PlayerCarId = "a", PlayerName = "P", TunePasses = 6,
+            PlayerStart = new RaceStartState { EngineLife = 700 },
+            OpponentStart = new RaceStartState { EngineLife = 500 }
+        }));
+
+        var lines = File.ReadAllLines(Path.Combine(cfg, "race.ini"));
+        Assert.Contains("CARS=1", lines);
+        Assert.DoesNotContain("[CAR_1]", lines);
+        Assert.Contains($"LAPS={IniModificationService.TuneLaps}", lines);
+        var section = lines.SkipWhile(l => l != "[STREET_ROD]").ToList();
+        Assert.Contains("RACE_TYPE=TUNE", section);
+        Assert.Contains("TUNE_PASSES=6", section);
+        Assert.Contains("CAR_0_ENGINE_LIFE=700.0", section);
+        Assert.DoesNotContain(section, l => l.StartsWith("CAR_1_") || l.StartsWith("DIAL_IN"));
+    }
+
+    [Fact]
     public void A_bent_axle_toes_out_and_a_worn_gearbox_shifts_slower_in_the_cars_data()
     {
         var files = new Dictionary<string, string>
@@ -426,7 +529,8 @@ public sealed class CarConditionTests : IDisposable
         var jobs = RepairShop.Jobs(car, catalog);
         var engine = Assert.Single(jobs, j => j.Name == "Engine rebuild");
         var gearbox = Assert.Single(jobs, j => j.Name == "Gearbox rebuild");
-        Assert.Equal("Blown", engine.Detail);
+        Assert.StartsWith("Blown: the ", engine.Detail);
+        Assert.EndsWith(" let go", engine.Detail);
         Assert.True(engine.Cost > gearbox.Cost);
         Assert.Equal(GameAction.GarageWorkMajor, engine.Time);
         Assert.Equal(GameAction.GarageWorkMinor, gearbox.Time);
@@ -444,12 +548,30 @@ public sealed class CarConditionTests : IDisposable
     public void A_timeslip_shows_a_dash_for_a_mark_the_car_never_reached()
     {
         var rows = TimeslipDialogViewModel.BuildRows(
-            new Timeslip { ReactionSeconds = 0.4567, QuarterMileSeconds = 13.9, QuarterMileMph = 101.456 },
-            opponent: null);
+        [
+            new TimeslipLane("Me", new Timeslip { ReactionSeconds = 0.4567, QuarterMileSeconds = 13.9, QuarterMileMph = 101.456 }),
+            new TimeslipLane("Him", null)
+        ]);
 
-        Assert.Equal(new TimeslipRow("R/T", "0.457", "-"), rows[0]);
-        Assert.Equal(new TimeslipRow("1/4 ET", "13.900", "-"), rows.Single(r => r.Label == "1/4 ET"));
-        Assert.Equal(new TimeslipRow("1/4 MPH", "101.46", "-"), rows.Single(r => r.Label == "1/4 MPH"));
-        Assert.Equal("-", rows.Single(r => r.Label == "60'").Player);
+        Assert.Equal("R/T", rows[0].Label);
+        Assert.Equal(["0.457", "-"], rows[0].Values);
+        Assert.Equal(["13.900", "-"], rows.Single(r => r.Label == "1/4 ET").Values);
+        Assert.Equal(["101.46", "-"], rows.Single(r => r.Label == "1/4 MPH").Values);
+        Assert.Equal("-", rows.Single(r => r.Label == "60'").Values[0]);
+        Assert.DoesNotContain(rows, r => r.Label == "DIAL");
+    }
+
+    [Fact]
+    public void A_bracket_slip_starts_with_the_dial_ins_and_marks_a_red_light()
+    {
+        var rows = TimeslipDialogViewModel.BuildRows(
+        [
+            new TimeslipLane("Me", new Timeslip { ReactionSeconds = -0.052, RedLight = true }, 12.4),
+            new TimeslipLane("Him", new Timeslip { ReactionSeconds = 0.31 }, 13.05)
+        ]);
+
+        Assert.Equal("DIAL", rows[0].Label);
+        Assert.Equal(["12.40", "13.05"], rows[0].Values);
+        Assert.Equal(["-0.052 RL", "0.310"], rows.Single(r => r.Label == "R/T").Values);
     }
 }

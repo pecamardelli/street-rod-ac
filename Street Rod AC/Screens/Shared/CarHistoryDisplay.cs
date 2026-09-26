@@ -6,8 +6,8 @@ namespace Street_Rod_AC.Screens.Shared
     public static class CarHistoryDisplay
     {
         /// <summary>
-        /// "2 owners before you · won from Johnny on a pink slip · 5 wins in 8 races" for a car somebody has;
-        /// "3 previous owners, the last Johnny · 5 wins in 8 races" for one on a lot
+        /// "2 owners before you · won from Johnny on a pink slip · 5 wins in 8 races · best 13.52 @ 104 mph" for a car
+        /// somebody has; "3 previous owners, the last Johnny · 5 wins in 8 races" for one on a lot
         /// </summary>
         public static string Summary(CarHistory? history, bool forSale)
         {
@@ -16,7 +16,16 @@ namespace Street_Rod_AC.Screens.Shared
             var parts = new List<string> { Owners(history, forSale) };
             if (!forSale && HowBought(history) is { } how) parts.Add(how);
             parts.Add(Record(history));
+            parts.Add(BestQuarter(history));
             return string.Join(" · ", parts.Where(p => p.Length > 0));
+        }
+
+        /// <summary>"best 13.52 @ 104 mph", the car's best quarter mile; empty when it has never run one</summary>
+        public static string BestQuarter(CarHistory history)
+        {
+            if (history.BestQuarterSeconds is not { } et) return string.Empty;
+            var time = et.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+            return history.BestQuarterMph is { } mph ? $"best {time} @ {mph:0} mph" : $"best {time}";
         }
 
         /// <summary>"5 wins in 8 races, 2 cars won on pink slips"; "Never raced" when it hasn't</summary>

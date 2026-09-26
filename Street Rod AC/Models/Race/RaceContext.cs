@@ -91,6 +91,22 @@ namespace Street_Rod_AC.Models.Race
         /// True if opponent is event-only (don't track their stats)
         /// </summary>
         public bool IsEventOnlyOpponent { get; set; }
+
+        /// <summary>
+        /// Test-and-tune: the player alone on the strip, pass after pass, nothing at stake. There is no opponent:
+        /// its names and ids are empty.
+        /// </summary>
+        public bool IsTestAndTune { get; set; }
+
+        /// <summary>The player's dial-in in a bracket race, in seconds over the quarter; null in any other race</summary>
+        public double? PlayerDialIn { get; set; }
+
+        /// <summary>The opponent's dial-in in a bracket race; null in any other race</summary>
+        public double? OpponentDialIn { get; set; }
+
+        /// <summary>A bracket race: both racers dialled in (<see cref="Services.Race.BracketRules"/>)</summary>
+        [LiteDB.BsonIgnore]
+        public bool IsBracket => PlayerDialIn != null && OpponentDialIn != null;
     }
 
     /// <summary>

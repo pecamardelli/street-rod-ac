@@ -79,9 +79,12 @@ namespace Street_Rod_AC.Screens.RaceLoading
         private void ConfirmStopRace()
         {
             // Before AC has started, stopping calls the launch off and costs nothing
+            // A test-and-tune writes its result after every pass: the passes run so far count, whenever AC stops
             var atStake = Context is { } context && (context.IsPinkSlip || context.CashWager > 0);
             var message = !_launcher.IsAssettoCorsaRunning
                 ? "Call the race off?\n\nAssetto Corsa has not started yet, so nothing is lost."
+                : _launchIntent.TunePasses != null
+                    ? "Leave the strip now?\n\nThe passes you ran still count: their timeslips, and what they did to the car."
                 : atStake
                     ? "Stop Assetto Corsa now?\n\nStopping before the finish counts as a loss: what was at stake is lost."
                     : "Stop Assetto Corsa now?\n\nThe race will not count.";
@@ -135,7 +138,7 @@ namespace Street_Rod_AC.Screens.RaceLoading
                 }
             }
 
-            ReturnFromRace(towed: messages.Any(m => m.TowedToGarage));
+            ReturnFromRace(toGarage: _launchIntent.ReturnToGarage || messages.Any(m => m.TowedToGarage));
 
             // One at a time, over the screen the player came back to: the dialog service queues them. Each on its
             // own, so one that cannot be shown does not lose the rest
@@ -208,10 +211,7 @@ namespace Street_Rod_AC.Screens.RaceLoading
         {
             try
             {
-                var action = (Context?.RaceType ?? _launchIntent.RaceType) == RaceType.DragRace
-                    ? GameAction.DragRace
-                    : GameAction.RoadRace;
-                await _timeService.SpendTimeAsync(_gameState, action);
+                await _timeService.SpendTimeAsync(_gameState, _launchIntent.SessionAction);
 
                 if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
             }
@@ -224,13 +224,13 @@ namespace Street_Rod_AC.Screens.RaceLoading
         /// <summary>
         /// Back to the diner, or to the garage when the diner cannot be opened, or to the main menu when neither
         /// can: the player is never left on this screen. A player whose car was towed home after a crash goes to
-        /// the garage, where the car is.
+        /// the garage, where the car is, and so does one whose session started there (a test-and-tune).
         /// </summary>
-        private void ReturnFromRace(bool towed)
+        private void ReturnFromRace(bool toGarage)
         {
-            if (towed)
+            if (toGarage)
             {
-                _logger.Information("The car was towed home after a crash: navigating to the garage");
+                _logger.Information("Back from the strip, or towed home after a crash: navigating to the garage");
                 if (_navigationService.NavigateToGarage(_gameState, skipAnimation: true)) return;
             }
             else

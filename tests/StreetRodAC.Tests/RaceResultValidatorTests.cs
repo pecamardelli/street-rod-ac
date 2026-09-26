@@ -194,6 +194,16 @@ public sealed class RaceResultValidatorTests : IDisposable
         ((JArray)three["participants"]!).Add(three["participants"]![0]!.DeepClone());
         Assert.Equal(ValidationFailureReason.InvalidParticipantCount, (await Validate(three)).FailureReason);
 
+        // A race has two racers; a test-and-tune the player alone, and only that
+        var alone = Fixture();
+        ((JArray)alone["participants"]!).RemoveAt(1);
+        Assert.Equal(ValidationFailureReason.InvalidParticipantCount, (await Validate(alone)).FailureReason);
+        alone["session"]!["race_type"] = Street_Rod_AC.Models.Race.RaceTypes.TestAndTune;
+        Assert.True((await Validate(alone)).IsValid);
+        var tunePair = Fixture();
+        tunePair["session"]!["race_type"] = Street_Rod_AC.Models.Race.RaceTypes.TestAndTune;
+        Assert.Equal(ValidationFailureReason.InvalidParticipantCount, (await Validate(tunePair)).FailureReason);
+
         var noName = Fixture();
         noName["participants"]![0]!["driver_name"] = " ";
         Assert.False((await Validate(noName)).IsValid);

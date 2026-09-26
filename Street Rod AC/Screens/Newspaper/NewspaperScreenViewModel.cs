@@ -4,6 +4,7 @@ using Street_Rod_AC.Dialogs.Confirmation;
 using Street_Rod_AC.Dialogs.Information;
 using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Models.Race;
 using Street_Rod_AC.Navigation;
 using Street_Rod_AC.Screens.Shared;
 using Street_Rod_AC.Services;
@@ -12,6 +13,7 @@ using Street_Rod_AC.Services.Catalog;
 using Street_Rod_AC.Services.Market;
 using Street_Rod_AC.Services.News;
 using Street_Rod_AC.Services.Opponents;
+using Street_Rod_AC.Services.Race;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
 using Street_Rod_AC.ViewModels;
@@ -353,14 +355,19 @@ namespace Street_Rod_AC.Screens.Newspaper
                 return;
             }
 
+            // A bracket race is run to the quarter, on a strip that runs it: the mode only ends one there
             var definition = result.EventDefinition;
-            var track = RaceSetupBuilder.PickTrack(
-                _contentService.GetTracks(), definition.RaceType, definition.TrackId, result.EventInstanceId.GetHashCode());
+            var isBracket = definition.IsBracketRace;
+            var track = isBracket
+                ? RaceSetupBuilder.PickStrip(_contentService.GetTracks(), quarterOnly: true, definition.TrackId)
+                : RaceSetupBuilder.PickTrack(_contentService.GetTracks(), definition.RaceType, definition.TrackId, result.EventInstanceId.GetHashCode());
             if (track == null)
             {
                 _dialogService.ShowDialog(new InformationDialogViewModel(
                     _dialogService,
-                    "There is no track installed this event can be raced on.",
+                    isBracket
+                        ? "There is no drag strip installed that runs the quarter mile, and a bracket race is run to it."
+                        : "There is no track installed this event can be raced on.",
                     "Cannot Enter Event"));
                 return;
             }
@@ -370,6 +377,23 @@ namespace Street_Rod_AC.Screens.Newspaper
             var opponent = result.Opponent;
             var driver = opponent.PoolOpponent
                 ?? new Opponent(opponent.OpponentName, 25, Gender.Other, opponent.Skill, opponent.Aggression);
+            var ai = OpponentAIAdapter.ToAssettoCorsaAI(driver, _gameState.Rules);
+
+            // A bracket race: the rival dials in from its car (a one-off entrant's has no history), the player picks theirs
+            BracketSetup? bracket = null;
+            if (isBracket)
+            {
+                var rivalDialIn = BracketRules.RivalDialInFor(opponent.PoolOpponentCar ?? new Car(opponent.CarDefinitionId), opponentCarDef);
+                var playerDialIn = await Dialogs.DialIn.DialInDialogViewModel.AskAsync(_dialogService, playerCar, playerCarDef,
+                    CarNames.Of(playerCarDef), opponent.OpponentName, rivalDialIn);
+                if (playerDialIn == null)
+                {
+                    _logger.Information("The player backed out of {Event} at the dial-in", result.EventId);
+                    return;
+                }
+
+                bracket = BracketRules.Setup(playerDialIn.Value, rivalDialIn, ai.AILevel);
+            }
 
             var setup = await _raceSetup.BuildAsync(new RaceEntry
             {
@@ -379,7 +403,7 @@ namespace Street_Rod_AC.Screens.Newspaper
                 OpponentCarId = opponent.CarDefinitionId,
                 OpponentSkin = opponent.CarSkin,
                 OpponentCar = opponent.PoolOpponentCar,
-                OpponentAI = OpponentAIAdapter.ToAssettoCorsaAI(driver, _gameState.Rules),
+                OpponentAI = ai,
                 TrackId = track.Value.TrackId,
                 TrackConfig = track.Value.TrackConfig,
                 RaceType = definition.RaceType,
@@ -390,7 +414,8 @@ namespace Street_Rod_AC.Screens.Newspaper
                 EventInstanceId = result.EventInstanceId,
                 IsEventOnlyOpponent = !opponent.IsPoolOpponent,
                 // An organised event: the police stay away, but it runs at the game's hour, after dark too
-                RaceTime = _gameState.Date
+                RaceTime = _gameState.Date,
+                Bracket = bracket
             });
 
             // Setting the cars up takes a moment: a player who put the paper down meanwhile has called it off

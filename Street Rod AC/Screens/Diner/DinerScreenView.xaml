@@ -912,6 +912,34 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- Bracket race: on a strip that runs the quarter -->
+                            <Border Background="{StaticResource BgPanelBrush}"
+                                   BorderBrush="{StaticResource BorderLightBrush}"
+                                   BorderThickness="1"
+                                   CornerRadius="5"
+                                   Padding="15"
+                                   Margin="0,15,0,0"
+                                   Visibility="{Binding CanBracket, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <StackPanel>
+                                    <CheckBox Content="Run it as a bracket race"
+                                              IsChecked="{Binding IsBracket}"
+                                              FontSize="{StaticResource FontSizeBody}"
+                                              FontWeight="Bold"
+                                              Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="Each of you dials in the time you'll run. The slower car leaves first, by the difference; first to the quarter wins, but running under your dial-in is a breakout and loses."
+                                               FontSize="{StaticResource FontSizeSmall}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,6,0,0"/>
+                                    <TextBlock Text="{Binding BracketNote}"
+                                               FontSize="{StaticResource FontSizeSmall}"
+                                               Foreground="{StaticResource GoldBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,6,0,0"
+                                               Visibility="{Binding IsBracket, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                </StackPanel>
+                            </Border>
+
                             <!-- Bet Options Section -->
                             <Border Background="{StaticResource BgPanelBrush}"
                                    BorderBrush="{StaticResource BorderLightBrush}"

@@ -70,6 +70,14 @@ namespace Street_Rod_AC.Models.Career.Events
         public bool IsPinkSlip { get; set; }
 
         /// <summary>
+        /// A bracket race (a drag race only): dial-ins, a staggered start, a breakout loses (<see cref="Services.Race.BracketRules"/>)
+        /// </summary>
+        public bool IsBracket { get; set; }
+
+        /// <summary>Run as a bracket race: <see cref="IsBracket"/> on a drag race, the only kind that can be one</summary>
+        public bool IsBracketRace => IsBracket && RaceType == RaceType.DragRace;
+
+        /// <summary>
         /// Special opponents for this event (if set, uses these instead of pool)
         /// </summary>
         public List<EventOpponent>? SpecialOpponents { get; set; }

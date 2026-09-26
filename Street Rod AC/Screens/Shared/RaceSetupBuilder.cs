@@ -58,6 +58,18 @@ namespace Street_Rod_AC.Screens.Shared
 
         /// <summary>The game's time the race starts at, which AC's sun follows; null races at noon</summary>
         public DateTime? RaceTime { get; init; }
+
+        /// <summary>A bracket race's dial-ins and how the rival drives; null for a heads-up race</summary>
+        public BracketSetup? Bracket { get; init; }
+
+        /// <summary>
+        /// Test-and-tune: the player alone on the strip for this many passes, nothing at stake; null for a race. The
+        /// opponent's fields stay empty.
+        /// </summary>
+        public int? TunePasses { get; init; }
+
+        /// <summary>Back to the garage after the session, where it was started from; else the player goes to the diner</summary>
+        public bool ReturnToGarage { get; init; }
     }
 
     /// <summary>What came of putting a race together</summary>
@@ -186,6 +198,9 @@ namespace Street_Rod_AC.Screens.Shared
                 DamagePercent = entry.DamagePercent,
                 Police = entry.Police,
                 RaceTime = entry.RaceTime,
+                Bracket = entry.Bracket,
+                TunePasses = entry.TunePasses,
+                ReturnToGarage = entry.ReturnToGarage,
                 CarData = carData
             };
 
@@ -203,7 +218,10 @@ namespace Street_Rod_AC.Screens.Shared
                 RaceType = entry.RaceType,
                 EventId = entry.EventId,
                 EventInstanceId = entry.EventInstanceId,
-                IsEventOnlyOpponent = entry.IsEventOnlyOpponent
+                IsEventOnlyOpponent = entry.IsEventOnlyOpponent,
+                IsTestAndTune = entry.TunePasses != null,
+                PlayerDialIn = entry.Bracket?.PlayerDialIn,
+                OpponentDialIn = entry.Bracket?.OpponentDialIn
             };
 
             return intent;
@@ -250,6 +268,45 @@ namespace Street_Rod_AC.Screens.Shared
             }
 
             return candidates[(int)((uint)seed % (uint)candidates.Count)];
+        }
+
+        /// <summary>
+        /// The strip for a test-and-tune or a bracket race: the track asked for (<paramref name="trackId"/>) when it is
+        /// installed, else the drag strip AC ships (ks_drag, drag1000) when it is there, else the longest installed
+        /// dragstrip layout that runs the quarter (<see cref="BracketRules.RunsTheQuarter"/>), else the longest there
+        /// is. With <paramref name="quarterOnly"/> (a bracket race, which the mode ends at the quarter) only a layout
+        /// that runs the quarter will do. Null when there is none.
+        /// </summary>
+        public static (string TrackId, string? TrackConfig)? PickStrip(IEnumerable<Models.AC.TrackInfo> tracks,
+            bool quarterOnly = false, string? trackId = null)
+        {
+            var layouts = tracks
+                .Where(t => t.Type == Models.AC.TrackType.Dragstrip)
+                .SelectMany(t => t.Configurations.Count == 0
+                    ? new[] { (TrackId: t.TrackId, TrackConfig: (string?)null, Quarter: BracketRules.RunsTheQuarter(t, null), Metres: BracketRules.LengthMetres(t, null)) }
+                    : t.Configurations.Select(c => (TrackId: t.TrackId, TrackConfig: (string?)c.FolderName, Quarter: BracketRules.RunsTheQuarter(t, c), Metres: BracketRules.LengthMetres(t, c))))
+                .Where(l => !quarterOnly || l.Quarter)
+                .ToList();
+            if (layouts.Count == 0) return null;
+
+            if (!string.IsNullOrEmpty(trackId))
+            {
+                var asked = layouts.Where(l => string.Equals(l.TrackId, trackId, StringComparison.OrdinalIgnoreCase)).ToList();
+                if (asked.Count > 0) layouts = asked;
+            }
+
+            var defaults = new DragRaceLaunchIntent();
+            var stock = layouts.FirstOrDefault(l =>
+                string.Equals(l.TrackId, defaults.TrackId, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(l.TrackConfig, defaults.TrackConfig, StringComparison.OrdinalIgnoreCase));
+            if (stock.TrackId != null) return (stock.TrackId, stock.TrackConfig);
+
+            var best = layouts
+                .OrderByDescending(l => l.Quarter)
+                .ThenByDescending(l => l.Metres ?? 0)
+                .ThenBy(l => l.TrackId, StringComparer.OrdinalIgnoreCase)
+                .First();
+            return (best.TrackId, best.TrackConfig);
         }
 
         private async Task EnsurePartsAsync(Car car)
