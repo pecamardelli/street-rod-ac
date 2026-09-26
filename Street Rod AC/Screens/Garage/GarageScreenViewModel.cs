@@ -42,6 +42,12 @@ namespace Street_Rod_AC.Screens.Garage
         public RelayCommand ExitCommand { get; }
         public AsyncRelayCommand LaunchShowroomCommand { get; }
         public AsyncRelayCommand FreeRunCommand { get; }
+
+        /// <summary>The selected car at the strip on its own, pass after pass, for timeslips (<see cref="OnTestAndTune"/>)</summary>
+        public AsyncRelayCommand TestAndTuneCommand { get; }
+
+        /// <summary>How many passes a test-and-tune runs</summary>
+        public const int TestAndTunePasses = 6;
         public RelayCommand RepairsCommand { get; }
         public RelayCommand SellCommand { get; }
 
@@ -310,6 +316,7 @@ namespace Street_Rod_AC.Screens.Garage
             ExitCommand = new RelayCommand(OnExit);
             LaunchShowroomCommand = new AsyncRelayCommand(OnLaunchShowroom, CanLaunchShowroom);
             FreeRunCommand = new AsyncRelayCommand(OnFreeRun, () => SelectedCarHere && FreeRunTrack != null && !_launcher.IsExecutionLocked);
+            TestAndTuneCommand = new AsyncRelayCommand(OnTestAndTune, () => SelectedCarHere && !_launcher.IsExecutionLocked);
             LoadFreeRunTracks();
             RepairsCommand = new RelayCommand(OnRepairs, () => SelectedCarHere);
             SellCommand = new RelayCommand(OnSell, () => SelectedCarHere && !_launcher.IsExecutionLocked);
@@ -549,6 +556,62 @@ namespace Street_Rod_AC.Screens.Garage
             }
         }
 
+        /// <summary>
+        /// The selected car at the strip on its own: a test-and-tune, pass after pass, each with its own tree and timeslip,
+        /// nothing at stake but the car's wear. Run through the race pipeline (the race mode, a result, the timeslips
+        /// after), an hour goes by, and the player comes back to the garage.
+        /// </summary>
+        private async Task OnTestAndTune()
+        {
+            if (SelectedCar is not { } selected) return;
+            var car = selected.CarInstance;
+
+            try
+            {
+                var strip = Shared.RaceSetupBuilder.PickStrip(_contentService.GetTracks());
+                if (strip is not { } picked)
+                {
+                    _dialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(
+                        _dialogService, "There's no drag strip installed in Assetto Corsa to test at.", "No Strip"));
+                    return;
+                }
+
+                var (trackId, trackConfig) = picked;
+                _logger.Information("Test-and-tune: {Car} on {Track}/{Layout}", car.DefinitionId, trackId, trackConfig ?? "(none)");
+                var setup = await new Shared.RaceSetupBuilder(_partsService, _raceCarDataService).BuildAsync(new Shared.RaceEntry
+                {
+                    PlayerName = _gameState.Player.Name,
+                    PlayerCar = car,
+                    TrackId = trackId,
+                    TrackConfig = trackConfig,
+                    RaceType = Models.Race.RaceType.DragRace,
+                    DamagePercent = _gameState.Rules.RaceDamagePercent,
+                    RaceTime = _gameState.Date,
+                    TunePasses = TestAndTunePasses
+                });
+
+                // Setting the car up takes a moment: a player who left meanwhile has called it off
+                if (!ReferenceEquals(_navigationService.CurrentScreen, this)) return;
+
+                if (setup.Intent == null)
+                {
+                    _dialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(
+                        _dialogService,
+                        $"The car is not going anywhere: {setup.PlayerCarProblem}.\n\nThe Repairs button sorts it out.",
+                        "Car Won't Run"));
+                    return;
+                }
+
+                _navigationService.NavigateToRaceLoading(_gameState, setup.Intent);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Exception setting up the test-and-tune");
+                _dialogService.ShowDialog(new Dialogs.Information.InformationDialogViewModel(
+                    _dialogService, $"Could not go to the strip:\n\n{ex.Message}", "Launch Error"));
+            }
+        }
+
         /// <summary>The repair bay for the selected car: each job paid for, timed and saved as it is done</summary>
         private void OnRepairs()
         {
@@ -667,6 +730,7 @@ namespace Street_Rod_AC.Screens.Garage
             OnPropertyChanged(nameof(CollectButtonText));
             RelayCommand.RaiseCanExecuteChanged();
             FreeRunCommand?.RaiseCanExecuteChanged();
+            TestAndTuneCommand?.RaiseCanExecuteChanged();
         }
 
         /// <summary>"Sell", or where the selected car's sale stands when it is in the paper</summary>

@@ -334,9 +334,164 @@ public sealed class RaceResultProcessorTests : IDisposable
 
         var slip = messages[0].Timeslip;
         Assert.NotNull(slip);
-        Assert.Equal(PlayerName, slip!.PlayerName);
-        Assert.Equal(14.2, slip.Player!.QuarterMileSeconds);
-        Assert.Null(slip.Opponent);
+        Assert.Equal([PlayerName, OpponentName], slip!.Lanes.Select(l => l.Name));
+        Assert.Equal(14.2, slip.Lanes[0].Slip!.QuarterMileSeconds);
+        Assert.Null(slip.Lanes[1].Slip);
+    }
+
+    [Fact]
+    public void A_quarter_mile_is_the_cars_best_until_it_runs_a_better_one()
+    {
+        var (state, context, playerCar, rival) = World();
+        var json = File(playerPosition: 1);
+        json["participants"]![0]!["timeslip"] = JObject.Parse("{ \"reaction_s\": 0.5, \"quarter_mile_s\": 14.2, \"quarter_mile_mph\": 98.7 }");
+        json["participants"]![1]!["timeslip"] = JObject.Parse("{ \"reaction_s\": 0.3, \"quarter_mile_s\": 14.9, \"quarter_mile_mph\": 95 }");
+        playerCar.History.BestQuarterSeconds = 14.5;
+
+        var messages = Processor().ProcessRaceResult(Result(json), context, state);
+
+        Assert.Equal(14.2, playerCar.History.BestQuarterSeconds);
+        Assert.Equal(98.7, playerCar.History.BestQuarterMph);
+        Assert.Equal(state.Date, playerCar.History.BestQuarterDate);
+        Assert.Contains("A new best for your car: 14.20.", messages[0].Timeslip!.Note);
+        // The rival's car keeps its own
+        Assert.Equal(14.9, rival.Cars[0].History.BestQuarterSeconds);
+
+        Assert.False(playerCar.History.RecordQuarter(14.3, 97, state.Date));
+        Assert.False(playerCar.History.RecordQuarter(double.NaN, null, state.Date));
+        Assert.False(playerCar.History.RecordQuarter(2.0, null, state.Date));
+        Assert.Equal(14.2, playerCar.History.Copy().BestQuarterSeconds);
+    }
+
+    // ---- Bracket races ----
+
+    /// <summary>A bracket race between the player (dial-in 12.00) and the rival (13.00): each lane's slip, green and quarter</summary>
+    private static (GameState State, RaceContext Context, RaceResultJson Result) Bracket(
+        double playerEt, double playerReaction, double rivalEt, double rivalReaction, int playerPosition = 1)
+    {
+        var (state, context, _, _) = World();
+        context.PlayerDialIn = 12.0;
+        context.OpponentDialIn = 13.0;
+        var json = File(playerPosition);
+        // The rival's tree goes first; the player's green comes a second later
+        json["participants"]![0]!["timeslip"] = JObject.FromObject(new { green_s = 4.5, reaction_s = playerReaction, quarter_mile_s = playerEt });
+        json["participants"]![1]!["timeslip"] = JObject.FromObject(new { green_s = 3.5, reaction_s = rivalReaction, quarter_mile_s = rivalEt });
+        return (state, context, Result(json));
+    }
+
+    [Fact]
+    public void A_bracket_race_on_the_dial_goes_to_the_first_to_the_quarter()
+    {
+        // Both on their dial-ins: the player leaves sharper and gets there first (4.5 + 0.2 + 12.05 against
+        // 3.5 + 0.4 + 13.02), whatever AC's own order says
+        var (state, context, result) = Bracket(12.05, 0.2, 13.02, 0.4, playerPosition: 2);
+
+        var messages = Processor().ProcessRaceResult(result, context, state);
+
+        Assert.Equal(1, state.Player.Stats.Wins);
+        Assert.Equal(nameof(WinCondition.BracketFinish), _repository.Recorded.Single().WinCondition);
+        Assert.StartsWith("On your dial-in and first to the quarter: the race is yours.", messages[0].Timeslip!.Note);
+        Assert.Equal([12.0, 13.0], messages[0].Timeslip!.Lanes.Select(l => l.DialIn!.Value));
+    }
+
+    [Fact]
+    public void A_breakout_loses_even_first_to_the_quarter()
+    {
+        var (state, context, result) = Bracket(11.90, 0.2, 13.02, 0.4);
+
+        var messages = Processor().ProcessRaceResult(result, context, state);
+
+        Assert.Equal(1, state.Player.Stats.Losses);
+        Assert.Equal(nameof(WinCondition.PlayerBrokeOut), _repository.Recorded.Single().WinCondition);
+        Assert.Contains(messages, m => m.Title == "Breakout" && m.Text.Contains("12.00 dial-in"));
+    }
+
+    [Fact]
+    public void When_both_break_out_the_smaller_breakout_wins()
+    {
+        // The player 0.05 under, the rival 0.20 under
+        var (state, context, result) = Bracket(11.95, 0.2, 12.80, 0.4);
+
+        var messages = Processor().ProcessRaceResult(result, context, state);
+
+        Assert.Equal(1, state.Player.Stats.Wins);
+        Assert.Equal(nameof(WinCondition.OpponentBrokeOut), _repository.Recorded.Single().WinCondition);
+        Assert.Contains(messages, m => m.Title == "Rival Broke Out");
+    }
+
+    [Fact]
+    public void Bracket_rules_decide_from_the_slips()
+    {
+        Timeslip Slip(double green, double reaction, double? et) => new() { GreenSeconds = green, ReactionSeconds = reaction, QuarterMileSeconds = et };
+
+        // The rival never got there: the player wins unless they broke out
+        Assert.True(BracketRules.Decide(Slip(3.5, 0.3, 12.1), 12.0, Slip(4, 0.3, null), 11.5)!.Value.PlayerWon);
+        Assert.False(BracketRules.Decide(Slip(3.5, 0.3, 11.9), 12.0, null, 11.5)!.Value.PlayerWon);
+        // The player never got there: not the bracket's to decide
+        Assert.Null(BracketRules.Decide(Slip(3.5, 0.3, null), 12.0, Slip(4, 0.3, 11.6), 11.5));
+        // Neither broke out: the rival got there first
+        var lost = BracketRules.Decide(Slip(3.5, 0.5, 12.1), 12.0, Slip(4.0, 0.2, 11.6), 11.5)!.Value;
+        Assert.False(lost.PlayerWon);
+        Assert.False(lost.PlayerBrokeOut || lost.OpponentBrokeOut);
+    }
+
+    [Fact]
+    public void A_dial_in_comes_from_the_cars_best_or_its_figures()
+    {
+        var car = new Car("car_a");
+        Assert.Null(BracketRules.SuggestDialIn(car));
+        car.History.BestQuarterSeconds = 13.512;
+        Assert.Equal(13.55, BracketRules.SuggestDialIn(car));
+
+        // A 1970 street car: 300 hp, 1600 kg
+        var estimate = BracketRules.EstimateEt(300, 1600)!.Value;
+        Assert.InRange(estimate, 14.0, 15.0);
+        Assert.Null(BracketRules.EstimateEt(null, 1600));
+        Assert.Equal(13.55, BracketRules.RivalDialIn(car, 300, 1600));
+        Assert.Equal(BracketRules.UnknownCarDialIn, BracketRules.RivalDialIn(new Car("x"), null, null));
+
+        var (sharp, tight) = BracketRules.RivalDriving(100);
+        var (slow, loose) = BracketRules.RivalDriving(85);
+        Assert.True(sharp < slow && tight < loose);
+    }
+
+    // ---- Test-and-tune ----
+
+    private static RaceResultJson TuneFile(params double?[] quarters)
+    {
+        var json = File(playerPosition: 1);
+        json["session"]!["race_type"] = RaceTypes.TestAndTune;
+        ((JArray)json["participants"]!).RemoveAt(1);
+        var passes = new JArray(quarters.Select((q, i) => JObject.FromObject(new { pass = i + 1, reaction_s = 0.4, quarter_mile_s = q, quarter_mile_mph = q == null ? (double?)null : 100 })));
+        json["participants"]![0]!["passes"] = passes;
+        json["participants"]![0]!["timeslip"] = passes.OrderBy(p => (double?)p["quarter_mile_s"] ?? 99).First().DeepClone();
+        return Result(json);
+    }
+
+    [Fact]
+    public void Test_and_tune_hands_out_the_passes_and_changes_nothing_but_the_car()
+    {
+        var (state, context, playerCar, rival) = World(wager: 0);
+        context.IsTestAndTune = true;
+        context.OpponentName = string.Empty;
+        context.OpponentCarInstanceId = Guid.Empty;
+        var money = state.Player.Money;
+
+        var messages = Processor().ProcessRaceResult(TuneFile(13.9, null, 13.7), context, state);
+
+        var slip = messages[0].Timeslip!;
+        Assert.Equal("Test and Tune", slip.Title);
+        Assert.Equal(["Pass 1", "Pass 2", "Pass 3"], slip.Lanes.Select(l => l.Name));
+        Assert.Contains("pass 3, 13.70", slip.Note);
+        Assert.Contains("A new best for your car.", slip.Note);
+        Assert.Equal(13.7, playerCar.History.BestQuarterSeconds);
+
+        Assert.Equal(0, state.Player.Stats.Races);
+        Assert.Equal(money, state.Player.Money);
+        Assert.Equal(0, playerCar.History.Races);
+        Assert.Equal(0, rival.Stats.Races);
+        Assert.Null(state.PendingRace);
+        Assert.Equal(nameof(WinCondition.TestAndTune), _repository.Recorded.Single().WinCondition);
     }
 
     [Fact]

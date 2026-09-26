@@ -37,6 +37,44 @@ lane (measured sideways from where it stood on the line) is disqualified. The pl
 (`DISQUALIFIED`); a disqualified rival is held where it is and the player finishes to win, even when the hit crashed
 the player.
 
+**Bracket races** (step 11): race.ini `[STREET_ROD] DIAL_IN=player,rival` makes a drag race a bracket race.
+- **The trees:** each lane gets its own, a sportsman's tree: three ambers 0.5 s apart, the green 0.5 s after the
+  last. The slower dial-in's tree starts 2 s after AC's start, and the other lane's comes later by the difference in
+  dial-ins. CSP can't hide AC's own start lights, so the mode tells the player to wait for their own tree, drawn on
+  the right of the screen with the dial-in under it.
+- **The rival** is held (`setAIThrottleLimit`, `setAIStopCounter`) until its green, then let go a moment after it:
+  released, woken, put in first gear. `BRACKET_RIVAL=reaction,margin` sets how long it takes to leave (0.10 s for AI
+  level 100, up to 0.40 s) and how far over its dial-in it aims (0.02 to 0.14 s).
+- **The rival takes the stripe:** from half way down the quarter, a rival going faster than the pace that gets it to
+  the quarter on its dial-in plus its margin is held to that pace (`physics.setAITopSpeed`), so AC's AI brakes to it.
+  It is never made faster.
+- **Red light:** leaving the stage beam (0.2 m) before your green. The player's red light is a `FALSE_START`, the
+  existing no-contest rule.
+- **The finish:** the race is to the quarter, not AC's line (on `drag400` the quarter is 2.3 m past it). It ends
+  once both cars have crossed the quarter, the rival is out, or 15 s after the player crossed. The winner: a car
+  that broke out (ran quicker than its dial-in) loses, unless the other broke out by more; otherwise the first to
+  the quarter. "Past the line" means the quarter for crashes, breakdowns and contact.
+- **The result:** each slip has `green_s`, its `reaction_s` counted from that green, and the positions are the
+  bracket's.
+
+The career decides again from the slips with the same rules (`BracketRules.Decide`). The contract test checks that
+both agree on the harness's bracket race.
+
+**Test-and-tune** (step 11): `RACE_TYPE=TUNE` puts the player alone on the strip (`CARS=1`, `LAPS=50` so AC never
+ends the session) for `TUNE_PASSES` passes (the garage sends 6).
+- **Staging:** the car is held with forced brakes until AC's start. Then it is held 3 s on the line before each pass.
+- **Each pass:** the brakes come off at the first amber, and from there the player holds the car. The pass gets its
+  own tree and timeslip. A red light is only marked (`red_light`) and the pass goes on.
+- **End of a pass:** past the quarter and under 20 km/h, standing still 3 s after leaving, or 60 s after the green.
+  The slip then shows for 6 s.
+- **Back to the line:** `setCarVelocity` to 0, then `setCarPosition` on the car's spot, facing down the strip. The
+  mode's own teleport is not a trip to the pits.
+- **Writing the result:** the file is written after every pass, so closing AC keeps what was run.
+- **Ending the session:** the last pass, a crash or a breakdown ends it, and so does the player going to the pits
+  (the pits menu, or AC putting the car back).
+- **The result:** one participant with `passes` (each slip with its `pass` number); its `timeslip` is the best of
+  them.
+
 **Starting the race**: the game loads onto the pits menu, where a mode's `prepare()` and `update()` are not
 called. A module-level `setInterval` presses Drive (`ac.tryToStart(true)`); then `ac.setStartMessage` puts the mode
 in its preparation stage and `prepare()` ends it after 0.5 s.
@@ -140,7 +178,9 @@ gets away mid-race and still wins at the line. 21:00 is full night. Speed traps:
 player going past, pulled out and chased, a bust; the light bar lights the player's cockpit blue at night. With the
 Hemi and one cop for each racer (2026-09-25): a 140 hp Bel Air and a 130 hp Packard were both overtaken and busted,
 the Bel Air pulled over by the autopilot; a 450 hp Chevelle kept its lead to the line and the race ended there. The chase logic runs
-outside the game in `tools/sr_race_harness/test_chase.py` (lupa, a stub round track).
+outside the game in `tools/sr_race_harness/test_chase.py` (lupa, a stub round track). The bracket races and the
+test-and-tune run in `tools/sr_race_harness/test_strip.py`, on the same stub laid out as a straight strip.
+Neither has been driven in the game yet.
 
 **Time of day**: race.ini's `[LIGHTING] SUN_ANGLE` follows the game's clock when the race starts (Content Manager's
 formula, 0 at 13:00 and 16 degrees an hour; CSP takes angles past 80, so a race after 20:00 is run in the dark). A
@@ -251,7 +291,7 @@ car (`CarCondition.ApplyRace`), and back into AC at the start of the next race:
 | AC | After the race | Next race |
 |----|----------------|-----------|
 | `body_damage_kmh[4]` | `Car.BodyDamageKmh` (a car's parts have no panels); the worse of the car's and AC's per zone | `CAR_n_BODY`, set with `physics.setCarBodyDamage`: the scratches and dents of `damage.ini` come with it |
-| `engine_life` | `Tear` of the rotating engine parts (crankshaft, rods, pistons, camshafts): none is better than life/1000 | `CAR_n_ENGINE_LIFE` = 1000 x the weakest one's `Tear`, set with `physics.setCarEngineLife` |
+| `engine_life` | The weakest rotating part (crankshaft, rods, pistons, camshafts; the rods first when two are as worn) is the one that gave: its `Tear` goes down to life/1000, and the others lose 35% of that loss. The report and the repair shop name it ("a connecting rod let go") | `CAR_n_ENGINE_LIFE` = 1000 x the weakest one's `Tear`, set with `physics.setCarEngineLife` |
 | `gearbox_damage` (AC starts at 0) | subtracted from the transmission's `Tear` | No setter: drivetrain.ini shifts slower and engages in a narrower window (`AcDamageData`); `CAR_n_GEARBOX` tells the mode, which adds it to the race's |
 | `suspension_damage` (metres of steering rod, AC's MAX_DAMAGE 0.05) | /0.05 subtracted from that corner's spring and shock `Tear` | No setter: suspensions.ini `TOE_OUT` of the axle gains the mean bend of its corners in metres; `CAR_n_SUSPENSION` tells the mode |
 | `tyre_wear` (AC starts at 0) | subtracted from the tyre's `Wear`; `tyre_blown` sets its `Tear` to 0 | Nothing: the tyre's wear already lowers its grip in tyres.ini. AC's tyre km would count it twice |
@@ -280,6 +320,8 @@ with a script, and overheating is for the game to model.
 | race.ini `[STREET_ROD] CONTEXT_ID` | Working | Launcher to the mode: which race this is (see below) |
 | race.ini `[STREET_ROD] CAR_n_*` | Working | Launcher to the mode: the damage car n carries into the race (see below) |
 | race.ini `[STREET_ROD] POLICE`, `POLICE_SPOT` | Working | Launcher to the mode: which cars are the police, and how far round the lap they show up |
+| race.ini `[STREET_ROD] DIAL_IN`, `BRACKET_RIVAL` | Working (harness) | Launcher to the mode: a bracket race's dial-ins, and how the rival leaves and takes the stripe |
+| race.ini `[STREET_ROD] RACE_TYPE=TUNE`, `TUNE_PASSES` | Working (harness) | Launcher to the mode: a test-and-tune, and how many passes |
 | Result JSON | Working | The mode to the launcher, one file per race |
 
 ### Race Result File
@@ -329,9 +371,20 @@ Schema 1.5 added:
 | `session.end_reason` | string | Now also `BUSTED`: the police caught the player before the line |
 | `pursuit` | object or absent | Only when race.ini sent police: `police` (how many), `started` (the patrol showed up), `started_at_s`, `duration_s`, `player` and `rival`: `ESCAPED` or `BUSTED`. The police cars are never participants |
 
+Schema 1.6 added (step 11):
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `session.race_type` | string | Now also `TUNE`: a test-and-tune, with the player as the only participant |
+| `participants[].passes` | array or absent | A test-and-tune only: every pass's timeslip, in order, each with its `pass` number |
+| `participants[].timeslip.green_s` | number or absent | When the car got its own green, in seconds from AC's start (a bracket race, a test-and-tune pass); `reaction_s` is then from that green. Absent when the green was AC's |
+| `participants[].timeslip.red_light` | bool or absent | The car left before its green |
+| `participants[].dial_in_s` | number or absent | A bracket race only: the car's dial-in |
+| `participants[].breakout` | bool or absent | A bracket race only: the car ran quicker than its dial-in |
+
 ```json
 {
-  "metadata": { "schema_version": "1.5", "script_version": "3.5.0", "source": "sr_race_manager", "generated_at": "ISO8601" },
+  "metadata": { "schema_version": "1.6", "script_version": "3.6.0", "source": "sr_race_manager", "generated_at": "ISO8601" },
   "session": { "session_id": "UUID", "context_id": "UUID of the race context", "track_id": "...", "duration_seconds": 12.3, "end_reason": "FINISHED" },
   "participants": [
     { "driver_name": "...", "car_name": "...", "car_index": 0, "is_player": true, "false_start": false,

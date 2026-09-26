@@ -90,6 +90,10 @@ namespace Street_Rod_AC.Services.Race
             if (!RaceResultValidator.TryParseTimestamp(result.Session.StartTimestamp, out var startedAt))
                 throw new InvalidDataException($"session.start_timestamp is not a date: '{result.Session.StartTimestamp}'");
 
+            // A test-and-tune is no race: the player's car and its passes, nothing else
+            if (context.IsTestAndTune)
+                return ProcessTestAndTune(result, context, gameState, saveName, startedAt);
+
             var outcome = DetermineOutcome(result, context);
             _logger.Information("Race outcome: {WinCondition} - Winner: {Winner}",
                 outcome.WinCondition, outcome.Winner?.DriverName ?? "None");
@@ -100,9 +104,10 @@ namespace Street_Rod_AC.Services.Race
             // (wear first: a pink slip may move the car to its new owner)
             // 3. The state and the record that the race was applied, together or not at all
             var messages = new List<PlayerMessage>();
+            var newBest = false;
             ApplyAndSave(gameState, saveName, processedSession, () =>
             {
-                var damage = ApplyCarUpdates(gameState, outcome, context);
+                (var damage, newBest) = ApplyCarUpdates(gameState, outcome, context);
                 ApplyRace(gameState, outcome, context, messages);
 
                 // A crashed car is towed home, and the player goes with it to see what the crash did. A busted
@@ -123,13 +128,80 @@ namespace Street_Rod_AC.Services.Race
             // A drag race hands out timeslips, whatever came of it: first, before what the race did
             if (outcome.Player?.Timeslip != null || outcome.Opponent?.Timeslip != null)
             {
+                var note = context.IsBracket ? BracketNote(outcome, context) : null;
+                if (newBest) note = Join(note, $"A new best for your car: {BracketRules.Show(outcome.Player?.Timeslip?.QuarterMileSeconds)}.");
                 messages.Insert(0, new PlayerMessage("Timeslip", string.Empty)
                 {
-                    Timeslip = new TimeslipCard(context.PlayerName, outcome.Player?.Timeslip, context.OpponentName, outcome.Opponent?.Timeslip)
+                    Timeslip = new TimeslipCard(
+                        [
+                            new TimeslipLane(context.PlayerName, outcome.Player?.Timeslip, context.PlayerDialIn),
+                            new TimeslipLane(context.OpponentName, outcome.Opponent?.Timeslip, context.OpponentDialIn)
+                        ], note)
                 });
             }
 
             _logger.Information("Race result processed successfully");
+            return messages;
+        }
+
+        /// <summary>
+        /// A test-and-tune: what the passes did to the car (wear, damage, the odometer), its best quarter, and the passes'
+        /// slips for the player. Nothing else changes: no stats, no reputation, no money.
+        /// </summary>
+        private List<PlayerMessage> ProcessTestAndTune(RaceResultJson result, RaceContext context, GameState gameState, string saveName, DateTime startedAt)
+        {
+            var participant = result.Participants.FirstOrDefault(p => p.IsPlayer == true) ?? result.Participants.FirstOrDefault();
+            var outcome = new RaceDecision { Player = participant, WinCondition = WinCondition.TestAndTune };
+            var processedSession = CreateProcessedSession(result, outcome, context, startedAt, gameState.Date);
+            var passes = participant?.Passes ?? [];
+            _logger.Information("Test-and-tune: {Passes} pass(es), best {Best}", passes.Count, participant?.Timeslip?.QuarterMileSeconds);
+
+            var messages = new List<PlayerMessage>();
+            var newBest = false;
+            ApplyAndSave(gameState, saveName, processedSession, () =>
+            {
+                var car = gameState.Player.Cars.FirstOrDefault(c => c.InstanceId == context.PlayerCarInstanceId);
+                if (car != null && participant != null)
+                {
+                    var damage = ApplyCarDegradation(car, participant, PartGroups(), gameState.Rules.CarWearMultiplier);
+                    car.OdometerKM += RaceDistance(participant);
+                    foreach (var pass in passes)
+                        newBest |= car.History.RecordQuarter(pass.QuarterMileSeconds, pass.QuarterMileMph, gameState.Date);
+
+                    if (participant.Crash.Crashed)
+                    {
+                        messages.Add(new PlayerMessage("Towed Home", damage.Count == 0
+                            ? "Your car was towed back to the garage."
+                            : "Your car was towed back to the garage. Here's what the crash did:\n\n" + string.Join("\n", damage))
+                        {
+                            TowedToGarage = true
+                        });
+                    }
+                    else if (damage.Count > 0)
+                    {
+                        messages.Add(new PlayerMessage("Damage Report", string.Join("\n", damage)));
+                    }
+                }
+
+                if (gameState.PendingRace?.ContextId == context.ContextId) gameState.PendingRace = null;
+            });
+
+            if (passes.Count > 0)
+            {
+                var best = passes.Where(p => p.QuarterMileSeconds != null).MinBy(p => p.QuarterMileSeconds);
+                string? note = best == null ? null : $"Best of the day: pass {best.Pass ?? passes.IndexOf(best) + 1}, {BracketRules.Show(best.QuarterMileSeconds)}.";
+                if (newBest) note = Join(note, "A new best for your car.");
+                messages.Insert(0, new PlayerMessage("Timeslip", string.Empty)
+                {
+                    Timeslip = new TimeslipCard(
+                        passes.Select((p, i) => new TimeslipLane($"Pass {p.Pass ?? i + 1}", p)).ToList(), note, "Test and Tune")
+                });
+            }
+            else
+            {
+                messages.Insert(0, new PlayerMessage("Test and Tune", "You never made a full pass: there's no timeslip to take home."));
+            }
+
             return messages;
         }
 
@@ -344,6 +416,15 @@ namespace Street_Rod_AC.Services.Race
             else if (outcome.WinCondition == WinCondition.BothOut)
                 messages.Add(new PlayerMessage("Nobody Finished",
                     "Neither car made it to the line. It's a draw, and nothing changes hands."));
+            else if (outcome.WinCondition == WinCondition.PlayerBrokeOut)
+                messages.Add(new PlayerMessage("Breakout",
+                    $"You ran quicker than your {BracketRules.Show(context.PlayerDialIn)} dial-in. That's a breakout, and the race is {context.OpponentName}'s."));
+            else if (outcome.WinCondition == WinCondition.OpponentBrokeOut)
+            {
+                var theirs = FindRacer(gameState, context.OpponentName) is { } rival ? OpponentRules.Possessive(rival) : "their";
+                messages.Add(new PlayerMessage("Rival Broke Out",
+                    $"{context.OpponentName} ran quicker than {theirs} {BracketRules.Show(context.OpponentDialIn)} dial-in. The race is yours."));
+            }
 
             // Update career milestone counters
             UpdateMilestoneCounters(gameState, outcome, context);
@@ -601,6 +682,17 @@ namespace Street_Rod_AC.Services.Race
                 return outcome;
             }
 
+            // A bracket race is won at the quarter by its own rules: the dial-ins, then who got there first
+            if (context.IsBracket && BracketRules.Decide(playerParticipant.Timeslip, context.PlayerDialIn!.Value,
+                    opponentParticipant.Timeslip, context.OpponentDialIn!.Value) is { } bracket)
+            {
+                outcome.PlayerWon = bracket.PlayerWon;
+                outcome.WinCondition = bracket.PlayerBrokeOut && !bracket.PlayerWon ? WinCondition.PlayerBrokeOut
+                    : bracket.OpponentBrokeOut && bracket.PlayerWon ? WinCondition.OpponentBrokeOut
+                    : WinCondition.BracketFinish;
+                return outcome;
+            }
+
             // No crashes - determine by final position
             var playerPosition = playerParticipant.Performance.FinalPosition;
             var opponentPosition = opponentParticipant.Performance.FinalPosition;
@@ -729,20 +821,33 @@ namespace Street_Rod_AC.Services.Race
             }
         }
 
+        /// <summary>The bracket race in a line under the slip: who won and why</summary>
+        private static string? BracketNote(RaceDecision outcome, RaceContext context) => outcome.WinCondition switch
+        {
+            WinCondition.BracketFinish => outcome.PlayerWon ? "On your dial-in and first to the quarter: the race is yours."
+                : $"{context.OpponentName} got to the quarter first on the dial-in.",
+            WinCondition.PlayerBrokeOut => "You broke out: quicker than your dial-in.",
+            WinCondition.OpponentBrokeOut => $"{context.OpponentName} broke out: quicker than the dial-in.",
+            _ => null
+        };
+
+        private static string? Join(string? first, string second) => first == null ? second : first + "\n" + second;
+
         /// <summary>
-        /// What the race did to both cars, and their odometers. Returns the player's damage report, null when
-        /// nothing worth telling happened to the car.
+        /// What the race did to both cars, their odometers and their best quarters. Returns the player's damage report,
+        /// null when nothing worth telling happened to the car, and whether the player's car ran its best quarter.
         /// </summary>
-        private PlayerMessage? ApplyCarUpdates(GameState gameState, RaceDecision outcome, RaceContext context)
+        private (PlayerMessage? Report, bool NewBest) ApplyCarUpdates(GameState gameState, RaceDecision outcome, RaceContext context)
         {
             if (outcome.Player == null || outcome.Opponent == null)
             {
                 _logger.Warning("Participants not identified - skipping car updates");
-                return null;
+                return (null, false);
             }
 
             var groupOf = PartGroups();
             PlayerMessage? report = null;
+            var newBest = false;
 
             // Update player car
             var playerCar = gameState.Player.Cars.FirstOrDefault(c => c.InstanceId == context.PlayerCarInstanceId);
@@ -751,6 +856,7 @@ namespace Street_Rod_AC.Services.Race
                 var damage = ApplyCarDegradation(playerCar, outcome.Player, groupOf, gameState.Rules.CarWearMultiplier);
                 if (damage.Count > 0) report = new PlayerMessage("Damage Report", string.Join("\n", damage));
                 playerCar.OdometerKM += RaceDistance(outcome.Player);
+                newBest = playerCar.History.RecordQuarter(outcome.Player.Timeslip?.QuarterMileSeconds, outcome.Player.Timeslip?.QuarterMileMph, gameState.Date);
                 _logger.Debug("Player car updated: Odometer={Odometer}km, Engine={Engine}%, Transmission={Trans}%",
                     playerCar.OdometerKM, playerCar.EngineHealth * 100, playerCar.TransmissionHealth * 100);
             }
@@ -766,11 +872,12 @@ namespace Street_Rod_AC.Services.Race
             {
                 ApplyCarDegradation(opponentCar, outcome.Opponent, groupOf, gameState.Rules.CarWearMultiplier);
                 opponentCar.OdometerKM += RaceDistance(outcome.Opponent);
+                opponentCar.History.RecordQuarter(outcome.Opponent.Timeslip?.QuarterMileSeconds, outcome.Opponent.Timeslip?.QuarterMileMph, gameState.Date);
                 _logger.Debug("Opponent car updated: Odometer={Odometer}km",
                     opponentCar.OdometerKM);
             }
 
-            return report;
+            return (report, newBest);
         }
 
         /// <summary>The parts' groups off the catalog; null when there are no parts (the cars' own figures take the race)</summary>
@@ -1402,7 +1509,7 @@ namespace Street_Rod_AC.Services.Race
 
         /// <summary>True when the race has a winner and a loser (stats, money and reputation change)</summary>
         public bool IsDecided => WinCondition is not (WinCondition.Inconclusive or WinCondition.BothCrashed or WinCondition.BothOut
-            or WinCondition.FalseStart or WinCondition.BothBusted);
+            or WinCondition.FalseStart or WinCondition.BothBusted or WinCondition.TestAndTune);
 
         public RaceParticipant? Winner => !IsDecided ? null : PlayerWon ? Player : Opponent;
         public RaceParticipant? Loser => !IsDecided ? null : PlayerWon ? Opponent : Player;
@@ -1491,6 +1598,26 @@ namespace Street_Rod_AC.Services.Race
         /// <summary>
         /// The police caught both: no contest, nothing changes hands, both fined and impounded
         /// </summary>
-        BothBusted
+        BothBusted,
+
+        /// <summary>
+        /// A bracket race with neither car under its dial-in: the first to the quarter won
+        /// (<see cref="BracketRules"/>)
+        /// </summary>
+        BracketFinish,
+
+        /// <summary>
+        /// A bracket race: the player ran quicker than their dial-in and loses (unless the rival broke out by more,
+        /// which is <see cref="OpponentBrokeOut"/>)
+        /// </summary>
+        PlayerBrokeOut,
+
+        /// <summary>
+        /// A bracket race: the rival ran quicker than its dial-in (by more than the player, if both did): the player wins
+        /// </summary>
+        OpponentBrokeOut,
+
+        /// <summary>A test-and-tune: no race, nobody wins</summary>
+        TestAndTune
     }
 }

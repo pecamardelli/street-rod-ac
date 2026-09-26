@@ -84,7 +84,12 @@ public static class RepairShop
             if (torn.Count > 0)
             {
                 var life = CarCondition.EngineLife(car, groupOf) / CarCondition.NewEngineLife;
-                var detail = life <= 0 ? "Blown" : $"Damaged internals ({life * 100:0}% of its life left)";
+                var weakest = CarCondition.WeakestRotatingPart(car, groupOf);
+                var failed = weakest == null ? null : catalog.Get(weakest.DefinitionId) is { } definition ? definition.DisplayName ?? definition.Name : null;
+                var detail = life <= 0
+                    ? failed == null ? "Blown" : $"Blown: the {failed} let go"
+                    : failed == null ? $"Damaged internals ({life * 100:0}% of its life left)"
+                    : $"Damaged internals, worst the {failed} ({life * 100:0}% of its life left)";
                 jobs.Add(PartsJob("Engine rebuild", detail, torn, catalog, prices, GameAction.GarageWorkMajor, Refresh));
             }
         }

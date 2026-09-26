@@ -683,7 +683,7 @@ namespace Street_Rod_AC.Services.Race
             if (string.IsNullOrWhiteSpace(fileType))
                 return;
 
-            var expected = context.RaceType == RaceType.DragRace ? "DRAG" : "ROAD";
+            var expected = context.IsTestAndTune ? RaceTypes.TestAndTune : context.RaceType == RaceType.DragRace ? RaceTypes.Drag : RaceTypes.Road;
             if (!string.Equals(fileType, expected, StringComparison.OrdinalIgnoreCase))
             {
                 _logger.Warning("File {FileName} says the race was {FileRaceType}, but race {ContextId} is a {RaceType} ({Expected}) - applied as the race was set up",

@@ -42,6 +42,12 @@ namespace Street_Rod_AC.Models.Race
     /// <summary>One line of the victory screen's career sheet</summary>
     public sealed record VictoryStat(string Label, string Value);
 
-    /// <summary>Both lanes' timeslips of a drag race, as the strip hands them out</summary>
-    public sealed record TimeslipCard(string PlayerName, Timeslip? Player, string OpponentName, Timeslip? Opponent);
+    /// <summary>
+    /// Timeslips as the strip hands them out, a column each: both lanes of a drag race, or a test-and-tune's passes.
+    /// <paramref name="Note"/> is a line under the slip (who won a bracket race, a new best); null for none.
+    /// </summary>
+    public sealed record TimeslipCard(IReadOnlyList<TimeslipLane> Lanes, string? Note = null, string Title = "Timeslip");
+
+    /// <summary>One column of a <see cref="TimeslipCard"/>: whose it is, the slip (null for a car that never left), its dial-in in a bracket race</summary>
+    public sealed record TimeslipLane(string Name, Timeslip? Slip, double? DialIn = null);
 }

@@ -197,14 +197,62 @@ public static class CarCondition
     {
         if (condition.EngineLife is not { } life || !double.IsFinite(life)) return;
 
-        // AC reports the life left, having started from the car's: the rotating parts are no better than that
+        // AC reports the life left, having started from the car's (its weakest rotating part's). The weakest part is
+        // the one that gave: it takes the whole of the loss, down to what AC left, and the rest of the rotating
+        // assembly a share of it.
         var left = Clamp01(life / NewEngineLife);
         var before = EngineLife(car, groupOf) / NewEngineLife;
-        foreach (var part in RotatingParts(car, groupOf)) part.Tear = Math.Min(Clamp01(part.Tear), left);
+        if (left >= before - 0.0005) return;
+        if (WeakestRotatingPart(car, groupOf) is not { } failed) return;
 
-        if (left <= 0 && before > 0) report.Add("Engine: it blew. It needs a rebuild before it runs again.");
-        else if (left < before - 0.005) report.Add($"Engine: the bottom end took a beating ({before * 100:0}% → {left * 100:0}%).");
+        var loss = before - left;
+        foreach (var part in RotatingParts(car, groupOf))
+        {
+            part.Tear = ReferenceEquals(part, failed)
+                ? Math.Min(Clamp01(part.Tear), left)
+                : Math.Max(left, Clamp01(part.Tear) - loss * SharedEngineDamage);
+        }
+
+        var group = groupOf(failed.DefinitionId);
+        if (left <= 0 && before > 0) report.Add($"Engine: {FailedPartName(group)} let go. It needs a rebuild before it runs again.");
+        else if (loss > 0.005) report.Add($"Engine: {DamagedPartName(group)} took a beating ({before * 100:0}% → {left * 100:0}%).");
     }
+
+    /// <summary>The share of the failed part's loss the rest of the rotating assembly takes with it</summary>
+    public const double SharedEngineDamage = 0.35;
+
+    // Which rotating part gives first when two are as worn: the rods take the most of an over-rev
+    private static readonly string[] FailureOrder = { "Connecting rods", "Pistons", "Crankshafts", "Camshafts" };
+
+    /// <summary>
+    /// The rotating part that gives when the engine takes damage: the most worn one, the rods before the pistons,
+    /// the crankshaft and the camshafts when two are as worn. Null for an engine without rotating parts.
+    /// </summary>
+    public static PartInstance? WeakestRotatingPart(Car car, Func<string, string?> groupOf) =>
+        RotatingParts(car, groupOf)
+            .OrderBy(p => Math.Round(Clamp01(p.Tear), 4))
+            .ThenBy(p => Array.IndexOf(FailureOrder, groupOf(p.DefinitionId)) is var i and >= 0 ? i : FailureOrder.Length)
+            .FirstOrDefault();
+
+    /// <summary>The part of a group that let go, as the report says it: "a connecting rod"</summary>
+    public static string FailedPartName(string? group) => group switch
+    {
+        "Connecting rods" => "a connecting rod",
+        "Pistons" => "a piston",
+        "Crankshafts" => "the crankshaft",
+        "Camshafts" => "the camshaft",
+        _ => "the bottom end"
+    };
+
+    /// <summary>The parts of a group that took damage, as the report says it: "the connecting rods"</summary>
+    public static string DamagedPartName(string? group) => group switch
+    {
+        "Connecting rods" => "the connecting rods",
+        "Pistons" => "the pistons",
+        "Crankshafts" => "the crankshaft",
+        "Camshafts" => "the camshaft",
+        _ => "the bottom end"
+    };
 
     private static void ApplyGearbox(Car car, RaceCarCondition condition, Func<string, string?> groupOf, List<string> report)
     {

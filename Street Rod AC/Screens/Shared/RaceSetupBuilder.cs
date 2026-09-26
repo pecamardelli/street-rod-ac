@@ -58,6 +58,15 @@ namespace Street_Rod_AC.Screens.Shared
 
         /// <summary>The game's time the race starts at, which AC's sun follows; null races at noon</summary>
         public DateTime? RaceTime { get; init; }
+
+        /// <summary>A bracket race's dial-ins and how the rival drives; null for a heads-up race</summary>
+        public BracketSetup? Bracket { get; init; }
+
+        /// <summary>
+        /// Test-and-tune: the player alone on the strip for this many passes, nothing at stake; null for a race. The
+        /// opponent's fields stay empty.
+        /// </summary>
+        public int? TunePasses { get; init; }
     }
 
     /// <summary>What came of putting a race together</summary>
@@ -186,6 +195,8 @@ namespace Street_Rod_AC.Screens.Shared
                 DamagePercent = entry.DamagePercent,
                 Police = entry.Police,
                 RaceTime = entry.RaceTime,
+                Bracket = entry.Bracket,
+                TunePasses = entry.TunePasses,
                 CarData = carData
             };
 
@@ -203,7 +214,10 @@ namespace Street_Rod_AC.Screens.Shared
                 RaceType = entry.RaceType,
                 EventId = entry.EventId,
                 EventInstanceId = entry.EventInstanceId,
-                IsEventOnlyOpponent = entry.IsEventOnlyOpponent
+                IsEventOnlyOpponent = entry.IsEventOnlyOpponent,
+                IsTestAndTune = entry.TunePasses != null,
+                PlayerDialIn = entry.Bracket?.PlayerDialIn,
+                OpponentDialIn = entry.Bracket?.OpponentDialIn
             };
 
             return intent;
@@ -250,6 +264,35 @@ namespace Street_Rod_AC.Screens.Shared
             }
 
             return candidates[(int)((uint)seed % (uint)candidates.Count)];
+        }
+
+        /// <summary>
+        /// The strip for a test-and-tune: the drag strip AC ships (ks_drag, drag1000) when it is there, else the longest
+        /// installed dragstrip layout that runs the quarter (<see cref="BracketRules.RunsTheQuarter"/>), else the
+        /// longest there is. Null with no dragstrip installed.
+        /// </summary>
+        public static (string TrackId, string? TrackConfig)? PickStrip(IEnumerable<Models.AC.TrackInfo> tracks)
+        {
+            var layouts = tracks
+                .Where(t => t.Type == Models.AC.TrackType.Dragstrip)
+                .SelectMany(t => t.Configurations.Count == 0
+                    ? new[] { (t.TrackId, (string?)null, t.Length) }
+                    : t.Configurations.Select(c => (t.TrackId, (string?)c.FolderName, c.Length)))
+                .ToList();
+            if (layouts.Count == 0) return null;
+
+            var defaults = new DragRaceLaunchIntent();
+            var stock = layouts.FirstOrDefault(l =>
+                string.Equals(l.Item1, defaults.TrackId, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(l.Item2, defaults.TrackConfig, StringComparison.OrdinalIgnoreCase));
+            if (stock.Item1 != null) return (stock.Item1, stock.Item2);
+
+            var best = layouts
+                .OrderByDescending(l => BracketRules.RunsTheQuarter(l.Item3))
+                .ThenByDescending(l => BracketRules.LengthMetres(l.Item3) ?? 0)
+                .ThenBy(l => l.Item1, StringComparer.OrdinalIgnoreCase)
+                .First();
+            return (best.Item1, best.Item2);
         }
 
         private async Task EnsurePartsAsync(Car car)

@@ -22,6 +22,15 @@ namespace Street_Rod_AC.Models.GameState
         /// <summary>Cars won with it in pink-slip races</summary>
         public int PinkSlipsWon { get; set; }
 
+        /// <summary>The car's best quarter mile, in seconds, whoever drove it; null until it has run one</summary>
+        public double? BestQuarterSeconds { get; set; }
+
+        /// <summary>The trap speed of that run, in mph</summary>
+        public double? BestQuarterMph { get; set; }
+
+        /// <summary>When it was run, in game time</summary>
+        public DateTime? BestQuarterDate { get; set; }
+
         /// <summary>
         /// Everybody who has had the car, the one who has it now included. Somebody who had it twice (sold it and
         /// bought it back, lost it and won it back) is one owner.
@@ -49,6 +58,23 @@ namespace Street_Rod_AC.Models.GameState
             if (pinkSlip) PinkSlipsWon++;
         }
 
+        /// <summary>
+        /// A quarter mile the car ran (<paramref name="seconds"/>, at <paramref name="mph"/>): kept when it beats the
+        /// best. A time no car could run is not a run. True when it is the car's new best.
+        /// </summary>
+        public bool RecordQuarter(double? seconds, double? mph, DateTime date)
+        {
+            if (seconds is not { } et || !double.IsFinite(et) || et < MinQuarterSeconds || et > MaxQuarterSeconds) return false;
+            if (BestQuarterSeconds is { } best && best <= et) return false;
+            BestQuarterSeconds = et;
+            BestQuarterMph = mph is { } speed && double.IsFinite(speed) && speed > 0 ? speed : null;
+            BestQuarterDate = date;
+            return true;
+        }
+
+        /// <summary>The quickest and slowest quarter a car of the game could run: anything else is a bad file</summary>
+        public const double MinQuarterSeconds = 5, MaxQuarterSeconds = 60;
+
         /// <summary>A copy that shares nothing with this one: a listing and the car bought off it each keep their own</summary>
         public CarHistory Copy() => new()
         {
@@ -56,7 +82,10 @@ namespace Street_Rod_AC.Models.GameState
             Owners = Owners.Select(o => new CarOwner { Name = o.Name, Since = o.Since, How = o.How }).ToList(),
             Races = Races,
             Wins = Wins,
-            PinkSlipsWon = PinkSlipsWon
+            PinkSlipsWon = PinkSlipsWon,
+            BestQuarterSeconds = BestQuarterSeconds,
+            BestQuarterMph = BestQuarterMph,
+            BestQuarterDate = BestQuarterDate
         };
     }
 

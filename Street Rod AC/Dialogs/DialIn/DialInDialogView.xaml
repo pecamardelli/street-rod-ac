@@ -1,0 +1,101 @@
+<UserControl x:Class="Street_Rod_AC.Dialogs.DialIn.DialInDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="360" d:DesignWidth="460">
+    <Grid Width="460">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <Border Grid.Row="0"
+                Background="{StaticResource BgDarkBrush}"
+                BorderBrush="{StaticResource BorderDarkBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="20,15">
+            <StackPanel>
+                <TextBlock Text="Bracket Race: Your Dial-In"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           FontSize="{StaticResource FontSizeHeading}"
+                           FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding CarName}"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           FontSize="{StaticResource FontSizeSmall}"
+                           Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- The dial-in -->
+        <StackPanel Grid.Row="1" Margin="20">
+            <TextBlock Text="The quarter-mile time you'll run. The slower car gets the green first, by the difference. Run quicker than your dial-in and you've broken out: you lose."
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       FontSize="{StaticResource FontSizeSmall}"
+                       TextWrapping="Wrap"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,6">
+                <Button Content="−0.1" Command="{Binding DownTenthCommand}" Style="{StaticResource DialogSecondaryButtonStyle}" Width="54" Height="36" Margin="0,0,6,0"/>
+                <Button Content="−" Command="{Binding DownCommand}" Style="{StaticResource DialogSecondaryButtonStyle}" Width="40" Height="36"/>
+                <Border Background="{StaticResource CreamBrush}" Padding="16,4" Margin="12,0" MinWidth="120">
+                    <TextBlock Text="{Binding DialInDisplay}"
+                               FontFamily="Consolas"
+                               FontSize="{StaticResource FontSizeTitle}"
+                               FontWeight="Bold"
+                               Foreground="Black"
+                               TextAlignment="Center"/>
+                </Border>
+                <Button Content="+" Command="{Binding UpCommand}" Style="{StaticResource DialogSecondaryButtonStyle}" Width="40" Height="36"/>
+                <Button Content="+0.1" Command="{Binding UpTenthCommand}" Style="{StaticResource DialogSecondaryButtonStyle}" Width="54" Height="36" Margin="6,0,0,0"/>
+            </StackPanel>
+
+            <TextBlock Text="{Binding BestNote}"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       FontSize="{StaticResource FontSizeSmall}"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       Margin="0,6,0,14"/>
+
+            <Border Background="{StaticResource BgPanelBrush}"
+                    BorderBrush="{StaticResource BorderLightBrush}"
+                    BorderThickness="1"
+                    CornerRadius="5"
+                    Padding="12">
+                <StackPanel>
+                    <TextBlock Text="{Binding OpponentDisplay}"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               FontSize="{StaticResource FontSizeBody}"
+                               FontWeight="Bold"/>
+                    <TextBlock Text="{Binding StartNote}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="{StaticResource FontSizeSmall}"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <Border Grid.Row="2"
+                Background="{StaticResource BgDarkBrush}"
+                BorderBrush="{StaticResource BorderDarkBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="20,15">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Back"
+                        Command="{Binding CancelCommand}"
+                        Style="{StaticResource DialogSecondaryButtonStyle}"
+                        Width="100"
+                        Height="35"
+                        Margin="0,0,10,0"/>
+                <Button Content="Race"
+                        Command="{Binding ConfirmCommand}"
+                        Style="{StaticResource DialogPrimaryButtonStyle}"
+                        Width="100"
+                        Height="35"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

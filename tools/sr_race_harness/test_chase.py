@@ -65,12 +65,15 @@ function rgbm(r, g, b, m) return { r = r, g = g, b = b, m = m } end
 -- the track -----------------------------------------------------------------
 local function wrap(s) return s - math.floor(s / L) * L end
 local function pointAt(s, lateral)
+  -- A drag strip (world.straight): down the x axis, the lanes either side of it
+  if world.straight then return vec3(s, 0, lateral or 0), vec3(1, 0, 0), vec3(0, 0, 1) end
   local a = wrap(s) / R
   local dir = vec3(-math.sin(a), 0, math.cos(a))
   local right = vec3(-dir.z, 0, dir.x)
   return vec3(R * math.cos(a), 0, R * math.sin(a)):addScaled(right, lateral or 0), dir, right
 end
 local function progressOf(v)
+  if world.straight then return wrap(v.x) / L end
   local a = (math.atan2 or math.atan)(v.z, v.x)
   return wrap(a * R) / L
 end
@@ -80,7 +83,7 @@ local sim = { time = 0, isSessionStarted = false, isInMainMenu = false, isPaused
   trackLengthM = L, raceSessionType = 3 }
 local cars, controls = {}, {}
 for i = 0, world.cars - 1 do
-  cars[i] = { index = i, total = -10 * (i + 1), speedKmh = 0, lapCount = 0, damage = { [0] = 0, 0, 0, 0 }, engineLifeLeft = 1000,
+  cars[i] = { index = i, total = world.straight and -1 or -10 * (i + 1), lane = world.straight and (i == 0 and -2 or 2) or 0, speedKmh = 0, lapCount = 0, damage = { [0] = 0, 0, 0, 0 }, engineLifeLeft = 1000,
     gearboxDamage = 0, wheels = {}, aabbSize = vec3(1.9, 1.4, 5), aabbCenter = vec3(0, 0.6, 0), fuel = 40,
     waterTemperature = 90, oilTemperature = 100, oilPressure = 4, previousLapTimeMs = 0, racePosition = i + 1, collidedWith = 0,
     position = vec3(), velocity = vec3(), look = vec3(), up = vec3(0, 1, 0), side = vec3(), splinePosition = 0 }
@@ -88,7 +91,7 @@ for i = 0, world.cars - 1 do
   controls[i] = { throttle = 1, stop = 0, top = 1e9, active = true, placed = 0 }
 end
 local function refresh(car)
-  local pos, dir, right = pointAt(car.total, 0)
+  local pos, dir, right = pointAt(car.total, car.lane)
   car.position:set(pos)
   car.look:set(dir)
   car.side:set(right)
@@ -126,6 +129,13 @@ ac = {
   -- Each cop's target, as the mode announces it: the stub's cars block the cop behind it
   log = function(s)
     log[#log + 1] = s
+    -- The greens the mode gives, on its race clock: the harness's drivers leave on them
+    local g0 = s:match('greens at ([%d%.]+) and')
+    if g0 then world.green0 = tonumber(g0) end
+    local tree = s:match('tree on, green at ([%d%.]+) s')
+    if tree then world.green0 = tonumber(tree) end
+    local away = s:match('Green for car 1 at [%d%.]+ s, away at ([%d%.]+) s')
+    if away then world.away1 = tonumber(away) end
     local cop, racer = s:match('Cop (%d+) after car (%d+)')
     if not cop then cop, racer = s:match('Cop (%d+) in its speed trap saw car (%d+)') end
     if cop then targets[tonumber(cop)] = tonumber(racer) end
@@ -154,12 +164,21 @@ physics = {
   allowed = function() return true end,
   blockTeleportingToPits = function() return {} end,
   setCarBodyDamage = function() end, setCarEngineLife = function() end,
-  setCarNoInput = function() end, lockUserControlsFor = function() end, forceUserBrakesFor = function() end,
+  setCarNoInput = function() end, lockUserControlsFor = function() end,
+  -- The player's forced brakes, until world.brakesUntil (seconds of the stub's clock): the strip's drivers wait for them
+  forceUserBrakesFor = function(t, v) world.brakesUntil = (t > 0 and (v or 1) > 0) and sim.time / 1000 + t or nil end,
   setAIThrottleLimit = function(i, v) controls[i].throttle = v end,
   setAIStopCounter = function(i, v) controls[i].stop = v end,
   setAITopSpeed = function(i, v) controls[i].top = v / 3.6 end,
   disableCarCollisions = function() end,
   setCarVelocity = function(i, v) cars[i].speedKmh = v:length() * 3.6 end,
+  setCarPosition = function(i, pos, dir)
+    local car = cars[i]
+    car.total, car.speedKmh = pos.x, 0
+    placements[#placements + 1] = { index = i, t = sim.time / 1000, progress = progressOf(pos) }
+    refresh(car)
+  end,
+  engageGear = function() end,
   setAICarPosition = function(i, pos, facing)
     local car = cars[i]
     -- On the lap that puts it at most a quarter lap behind the player or up to three quarters ahead: the mode puts
@@ -240,17 +259,32 @@ script = {}
 -- the run ---------------------------------------------------------------------
 local function step(dt, t)
   sim.time = sim.time + dt * 1000
+  world.simSeconds = sim.time / 1000
   if not sim.isSessionStarted and t >= 3 then sim.isSessionStarted = true end
+  if world.menuAt and t >= world.menuAt then sim.isInMainMenu = true end
   for i = 0, world.cars - 1 do
     local car, c = cars[i], controls[i]
     local want
-    if not sim.isSessionStarted then want = 0
+    -- On the strip each car accelerates as its driver says (world.accel: m/s², 'hold' or 'stop'); an AI car with no
+    -- throttle coasts, one held stops
+    if world.straight then
+      local speed = car.speedKmh / 3.6
+      local a = sim.isSessionStarted and world.accel(i, t - 3, car) or 'hold'
+      if i > 0 and c.stop > 0 then a = 'hold' elseif i > 0 and c.throttle <= 0 and type(a) == 'number' then a = -2 end
+      c.stop = math.max(0, c.stop - dt)
+      if a == 'hold' or a == 'stop' then speed = 0 else speed = math.max(0, math.min(60, speed + a * dt)) end
+      -- An AI car held to a top speed brakes down to it
+      if i > 0 and speed > c.top then speed = math.max(c.top, speed - 8 * dt) end
+      want = speed
+    elseif not sim.isSessionStarted then want = 0
     elseif i == 0 then want = world.playerSpeed(t)
     elseif i == 1 then want = world.rivalSpeed(t)
     else want = world.copSpeed(t, i) end
-    if i > 0 and (c.throttle <= 0 or c.stop > 0) then want = 0 end
-    if i > 0 then want = math.min(want, c.top) end
-    c.stop = math.max(0, c.stop - dt)
+    if not world.straight then
+      if i > 0 and (c.throttle <= 0 or c.stop > 0) then want = 0 end
+      if i > 0 then want = math.min(want, c.top) end
+      c.stop = math.max(0, c.stop - dt)
+    end
     -- A car being stopped gently (the busted player, pulled over) stops
     if c.gentle then want = 0 end
     car.total = car.total + want * dt
@@ -284,13 +318,17 @@ end
 '''
 
 
-def run(name, cars, ini, player, rival, cop, max_seconds=400, length=2000.0, sides=6.0):
+def run(name, cars, ini, player, rival, cop, max_seconds=400, length=2000.0, sides=6.0, strip=None, menu_at=None):
+    """strip: a drag strip instead of the loop, strip(world, i, raceSeconds, car) giving each car's acceleration"""
     lua = lupa.LuaRuntime(unpack_returned_tuples=True)
     world = lua.table_from({
         'length': length, 'cars': cars, 'maxSeconds': max_seconds, 'sides': sides,
         'ini': lua.table_from(ini),
         'playerSpeed': player, 'rivalSpeed': rival, 'copSpeed': cop,
+        'straight': strip is not None, 'menuAt': menu_at,
     })
+    if strip is not None:
+        world['accel'] = lambda i, t, car: strip(world, i, t, car)
     runner = lua.execute(STUB, world)
     with open(MODE, encoding='utf-8') as f:
         source = f.read()

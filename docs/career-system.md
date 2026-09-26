@@ -263,11 +263,17 @@ public class RaceEventDefinition
 | Chevy Challenge | Road | BrandFilter("Chevrolet") | 10 | $600 + 5 rep |
 | High Stakes | Drag | None (pink slip) | 50 | 15 rep |
 | Underdog Challenge | Drag | Under 200 HP | 0 | $400 + 5 rep |
+| Bracket Night | Bracket | None | 0 | $450 + 5 rep |
+| Dial-In Shootout | Bracket | None | 30 | $900 + 8 rep |
 | European Invasion | Road | OriginFilter("European") | 20 | $800 + 7 rep |
 | Sixties Showdown | Road | 1960s | 20 | $850 + 8 rep |
 
 - **Road events** (`RaceType.Circuit`) are raced on one of the installed circuits (`RaceSetupBuilder.PickTrack`,
   the same pick for one invitation every time); drag events at the strip.
+- **Bracket events** (`RaceEventDefinition.IsBracket`, step 11) are drag races on the dial: the player picks a
+  dial-in before the race (the dial-in dialog), the rival dials in from its car (`BracketRules`), and the race is run
+  on a strip that runs the quarter (`RaceSetupBuilder.PickStrip`). See `docs/ac-integration/csp-lua-scripts.md`,
+  "Bracket races".
 - **At most five invitations** are open at once (`RaceEventService.MaxOpenEvents`). Eligible events are looked at
   in a shuffled order, so a full paper is not always the same five.
 - **A pink-slip event only draws a racer of the pool** (`EventOpponentService`): the car has to go into somebody's

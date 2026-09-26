@@ -122,11 +122,22 @@ namespace Street_Rod_AC.Models.Race
         public string? EndReason { get; set; }
 
         /// <summary>
-        /// The kind of race the mode ran, as race.ini told it (schema 1.3): <c>DRAG</c> or <c>ROAD</c>. The race's
-        /// context decides; this is only checked against it. Null in older files.
+        /// The kind of race the mode ran, as race.ini told it (schema 1.3): <c>DRAG</c> or <c>ROAD</c>, or
+        /// <see cref="RaceTypes.TestAndTune"/> (schema 1.6). The race's context decides; this is only checked against
+        /// it. Null in older files.
         /// </summary>
         [JsonProperty("race_type")]
         public string? RaceType { get; set; }
+    }
+
+    /// <summary>The <see cref="RaceSession.RaceType"/> values the race mode writes</summary>
+    public static class RaceTypes
+    {
+        public const string Drag = "DRAG";
+        public const string Road = "ROAD";
+
+        /// <summary>Test-and-tune: the player alone on the strip, pass after pass (schema 1.6)</summary>
+        public const string TestAndTune = "TUNE";
     }
 
     /// <summary>The <see cref="RaceSession.EndReason"/> values the race mode writes</summary>
@@ -216,9 +227,24 @@ namespace Street_Rod_AC.Models.Race
         [JsonProperty("condition")]
         public RaceCarCondition? Condition { get; set; }
 
-        /// <summary>The car's run down the strip, for a drag race (schema 1.4); null for a road race and older files</summary>
+        /// <summary>
+        /// The car's run down the strip, for a drag race (schema 1.4); on a test-and-tune the best of its passes. Null
+        /// for a road race and older files.
+        /// </summary>
         [JsonProperty("timeslip")]
         public Timeslip? Timeslip { get; set; }
+
+        /// <summary>Every pass of a test-and-tune, in order (schema 1.6); null in any other race</summary>
+        [JsonProperty("passes")]
+        public List<Timeslip>? Passes { get; set; }
+
+        /// <summary>The car's dial-in in a bracket race, in seconds over the quarter (schema 1.6); null in any other race</summary>
+        [JsonProperty("dial_in_s")]
+        public double? DialInSeconds { get; set; }
+
+        /// <summary>The car ran quicker than its dial-in in a bracket race (schema 1.6); null in any other race</summary>
+        [JsonProperty("breakout")]
+        public bool? Breakout { get; set; }
 
         [JsonProperty("performance")]
         public ParticipantPerformance Performance { get; set; } = new();
@@ -329,12 +355,25 @@ namespace Street_Rod_AC.Models.Race
 
     /// <summary>
     /// A drag strip timeslip. The elapsed times run from the moment the car leaves the line; the reaction time is
-    /// from AC's green to that moment. A mark the car never reached is null.
+    /// from the car's green to that moment: AC's, or since schema 1.6 the car's own tree in a bracket race and on a
+    /// test-and-tune pass. A mark the car never reached is null.
     /// </summary>
     public class Timeslip
     {
         [JsonProperty("reaction_s")]
         public double? ReactionSeconds { get; set; }
+
+        /// <summary>When the car got its own green, in seconds from AC's start (schema 1.6); null when that was AC's</summary>
+        [JsonProperty("green_s")]
+        public double? GreenSeconds { get; set; }
+
+        /// <summary>The car left before its green (schema 1.6); null when it didn't</summary>
+        [JsonProperty("red_light")]
+        public bool? RedLight { get; set; }
+
+        /// <summary>The pass's number on a test-and-tune, from 1 (schema 1.6); null in a race</summary>
+        [JsonProperty("pass")]
+        public int? Pass { get; set; }
 
         [JsonProperty("sixty_ft_s")]
         public double? SixtyFeetSeconds { get; set; }

@@ -119,8 +119,18 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// <summary>The time of day the race starts at, for AC's sun ([LIGHTING] SUN_ANGLE); null is noon</summary>
         public DateTime? RaceTime { get; set; }
 
-        public override string Description =>
-            $"Configure drag race: {PlayerName} ({PlayerCarId}) vs {OpponentName} ({OpponentCarId}) [AI: {OpponentAILevel}/{OpponentAIAggression}]";
+        /// <summary>A bracket race: the dial-ins and how the rival drives ([STREET_ROD] DIAL_IN, BRACKET_RIVAL); null for a heads-up race</summary>
+        public Street_Rod_AC.Models.Race.BracketSetup? Bracket { get; set; }
+
+        /// <summary>
+        /// Test-and-tune: the player alone on the strip for this many passes ([STREET_ROD] RACE_TYPE=TUNE, TUNE_PASSES);
+        /// null for a race. There is no opponent then.
+        /// </summary>
+        public int? TunePasses { get; set; }
+
+        public override string Description => TunePasses != null
+            ? $"Configure test-and-tune: {PlayerName} ({PlayerCarId}), {TunePasses} passes"
+            : $"Configure drag race: {PlayerName} ({PlayerCarId}) vs {OpponentName} ({OpponentCarId}) [AI: {OpponentAILevel}/{OpponentAIAggression}]";
 
         public override string TargetFile => "race.ini";
     }

@@ -109,6 +109,10 @@ A sale refuses a car that is out racing (`GameState.PendingRace`), moves the sel
 Every car keeps its history (`Car.History`, a `CarHistory`): the owners the game has seen, each with the date and how
 they got it (`CarAcquisition`: Dealer, PinkSlip, PrivateSale, Unknown), the owners before anybody in the game had it
 (`EarlierOwners`), and its races, wins and pink slips won, whoever drove it. The odometer is `Car.OdometerKM`.
+- **Its best quarter mile** (step 11): `BestQuarterSeconds`, `BestQuarterMph` and `BestQuarterDate`, from any drag
+  race's timeslip or test-and-tune pass, whoever drove it (`CarHistory.RecordQuarter`; a time under 5 s or over 60 s
+  is a bad file, not a run). It shows with the history ("best 13.52 @ 104 mph") and is the dial-in a bracket race
+  suggests. It does not move the price.
 - It goes with the car everywhere: a pink slip (the player's races and the rivals'), a sale out of the paper to a rival,
   and through a dealer's lot (`ListCar` copies it onto `UsedCarListing.History`, `CarPurchaseService.CarFrom` copies it
   back and adds the buyer). A relisted car keeps its id (`UsedCarListing.CarInstanceId`): whoever buys it gets that

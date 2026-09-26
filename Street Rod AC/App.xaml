@@ -23,6 +23,7 @@
              xmlns:information="clr-namespace:Street_Rod_AC.Dialogs.Information"
              xmlns:eventEntry="clr-namespace:Street_Rod_AC.Dialogs.EventEntry"
              xmlns:timeslip="clr-namespace:Street_Rod_AC.Dialogs.Timeslip"
+             xmlns:dialIn="clr-namespace:Street_Rod_AC.Dialogs.DialIn"
              xmlns:repairShop="clr-namespace:Street_Rod_AC.Dialogs.RepairShop"
              xmlns:sellCar="clr-namespace:Street_Rod_AC.Dialogs.SellCar"
              xmlns:victory="clr-namespace:Street_Rod_AC.Dialogs.Victory"
@@ -132,6 +133,10 @@
 
             <DataTemplate DataType="{x:Type timeslip:TimeslipDialogViewModel}">
                 <timeslip:TimeslipDialogView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type dialIn:DialInDialogViewModel}">
+                <dialIn:DialInDialogView/>
             </DataTemplate>
 
             <DataTemplate DataType="{x:Type repairShop:RepairShopDialogViewModel}">

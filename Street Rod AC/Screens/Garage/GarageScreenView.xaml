@@ -450,6 +450,7 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
                         <!-- Condition -->
@@ -533,6 +534,17 @@
                                 FontSize="{StaticResource FontSizeBody}"
                                 VerticalAlignment="Center"
                                 ToolTip="Take the car out on your own, on what its parts make of it. An hour goes by."/>
+
+                        <!-- Test-and-tune: passes at the strip for timeslips -->
+                        <Button Grid.Column="9"
+                                Content="Test &amp; Tune"
+                                Command="{Binding TestAndTuneCommand}"
+                                Style="{StaticResource DialogPrimaryButtonStyle}"
+                                Padding="15,5"
+                                Margin="10,0,0,0"
+                                FontSize="{StaticResource FontSizeBody}"
+                                VerticalAlignment="Center"
+                                ToolTip="An hour at the drag strip on your own: pass after pass, each with its own tree and timeslip. Nothing at stake but the car's wear."/>
                     </Grid>
                 </Border>
             </StackPanel>
