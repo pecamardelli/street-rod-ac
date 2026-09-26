@@ -176,6 +176,34 @@ public sealed class CarConditionTests : IDisposable
     }
 
     [Fact]
+    public void A_light_over_rev_wears_the_engine_race_after_race()
+    {
+        var car = NewCar();
+
+        // 0.3 of AC's 1000 a race: each goes into the next start, so they add up
+        CarCondition.ApplyRace(car, Report(life: 999.7), 0.4, GroupOf);
+        var start = CarCondition.StartState(car, GroupOf).EngineLife;
+        Assert.Equal(999.7, start, 6);
+        CarCondition.ApplyRace(car, Report(life: start - 0.3), 0.4, GroupOf);
+
+        Assert.Equal(999.4, CarCondition.EngineLife(car, GroupOf), 6);
+    }
+
+    [Fact]
+    public void An_engine_without_rotating_parts_keeps_its_life_on_the_block()
+    {
+        var car = NewCar();
+        car.Engine!.Children.RemoveAll(p => p.DefinitionId is "crank" or "rod" or "piston" or "cam");
+
+        var report = CarCondition.ApplyRace(car, Report(life: 0), 0.4, GroupOf);
+
+        Assert.Equal(0, Part(car, "block").Tear);
+        Assert.Equal(0, CarCondition.EngineLife(car, GroupOf));
+        Assert.Contains("Engine: the bottom end let go. It needs a rebuild before it runs again.", report);
+        Assert.Contains(CarCondition.WhyCannotRace(car, GroupOf), p => p.Contains("engine is blown"));
+    }
+
+    [Fact]
     public void The_gearbox_takes_this_races_damage_on_top_of_what_it_had()
     {
         var car = NewCar();

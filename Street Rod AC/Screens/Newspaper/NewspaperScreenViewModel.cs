@@ -355,17 +355,19 @@ namespace Street_Rod_AC.Screens.Newspaper
                 return;
             }
 
-            // A bracket race is run to the quarter, on a strip that runs it
+            // A bracket race is run to the quarter, on a strip that runs it: the mode only ends one there
             var definition = result.EventDefinition;
-            var isBracket = definition.IsBracket && definition.RaceType == RaceType.DragRace;
-            var track = isBracket && string.IsNullOrEmpty(definition.TrackId)
-                ? RaceSetupBuilder.PickStrip(_contentService.GetTracks())
+            var isBracket = definition.IsBracketRace;
+            var track = isBracket
+                ? RaceSetupBuilder.PickStrip(_contentService.GetTracks(), quarterOnly: true, definition.TrackId)
                 : RaceSetupBuilder.PickTrack(_contentService.GetTracks(), definition.RaceType, definition.TrackId, result.EventInstanceId.GetHashCode());
             if (track == null)
             {
                 _dialogService.ShowDialog(new InformationDialogViewModel(
                     _dialogService,
-                    "There is no track installed this event can be raced on.",
+                    isBracket
+                        ? "There is no drag strip installed that runs the quarter mile, and a bracket race is run to it."
+                        : "There is no track installed this event can be raced on.",
                     "Cannot Enter Event"));
                 return;
             }
@@ -382,7 +384,8 @@ namespace Street_Rod_AC.Screens.Newspaper
             if (isBracket)
             {
                 var rivalDialIn = BracketRules.RivalDialInFor(opponent.PoolOpponentCar ?? new Car(opponent.CarDefinitionId), opponentCarDef);
-                var playerDialIn = await AskDialInAsync(playerCar, playerCarDef, rivalDialIn, opponent.OpponentName);
+                var playerDialIn = await Dialogs.DialIn.DialInDialogViewModel.AskAsync(_dialogService, playerCar, playerCarDef,
+                    CarNames.Of(playerCarDef), opponent.OpponentName, rivalDialIn);
                 if (playerDialIn == null)
                 {
                     _logger.Information("The player backed out of {Event} at the dial-in", result.EventId);
@@ -433,16 +436,6 @@ namespace Street_Rod_AC.Screens.Newspaper
 
             _logger.Information("Entering {Event} on {Track} {Config}", result.EventId, track.Value.TrackId, track.Value.TrackConfig ?? "");
             _navigationService.NavigateToRaceLoading(_gameState, setup.Intent);
-        }
-
-        /// <summary>The player's dial-in for a bracket event, from the dial-in dialog; null when they back out</summary>
-        private Task<double?> AskDialInAsync(Car playerCar, Models.Catalog.CarDefinition playerCarDef, double rivalDialIn, string rivalName)
-        {
-            var answer = new TaskCompletionSource<double?>();
-            _dialogService.ShowDialog(new Dialogs.DialIn.DialInDialogViewModel(_dialogService, playerCar,
-                CarNames.Of(playerCarDef), BracketRules.EstimateFor(playerCar, playerCarDef), rivalName, rivalDialIn,
-                dialIn => answer.TrySetResult(dialIn)));
-            return answer.Task;
         }
 
         private void ShowRaceError(Exception ex)

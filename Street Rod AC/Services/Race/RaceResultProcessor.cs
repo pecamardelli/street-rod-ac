@@ -110,19 +110,9 @@ namespace Street_Rod_AC.Services.Race
                 (var damage, newBest) = ApplyCarUpdates(gameState, outcome, context);
                 ApplyRace(gameState, outcome, context, messages);
 
-                // A crashed car is towed home, and the player goes with it to see what the crash did. A busted
-                // player's car went to the impound instead, and the police message says so.
-                if (outcome.Player?.Crash.Crashed == true && outcome.Pursuit?.PlayerBusted != true)
-                {
-                    damage = new PlayerMessage("Towed Home", damage == null
-                        ? "Your car was towed back to the garage."
-                        : "Your car was towed back to the garage. Here's what the crash did:\n\n" + damage.Text)
-                    {
-                        TowedToGarage = true
-                    };
-                }
-
-                if (damage != null) messages.Add(damage);
+                // A busted player's car went to the impound instead of home, and the police message says so
+                var towed = outcome.Player?.Crash.Crashed == true && outcome.Pursuit?.PlayerBusted != true;
+                if (CarReport(damage, towed) is { } report) messages.Add(report);
             });
 
             // A drag race hands out timeslips, whatever came of it: first, before what the race did
@@ -168,19 +158,7 @@ namespace Street_Rod_AC.Services.Race
                     foreach (var pass in passes)
                         newBest |= car.History.RecordQuarter(pass.QuarterMileSeconds, pass.QuarterMileMph, gameState.Date);
 
-                    if (participant.Crash.Crashed)
-                    {
-                        messages.Add(new PlayerMessage("Towed Home", damage.Count == 0
-                            ? "Your car was towed back to the garage."
-                            : "Your car was towed back to the garage. Here's what the crash did:\n\n" + string.Join("\n", damage))
-                        {
-                            TowedToGarage = true
-                        });
-                    }
-                    else if (damage.Count > 0)
-                    {
-                        messages.Add(new PlayerMessage("Damage Report", string.Join("\n", damage)));
-                    }
+                    if (CarReport(damage, towed: participant.Crash.Crashed) is { } report) messages.Add(report);
                 }
 
                 if (gameState.PendingRace?.ContextId == context.ContextId) gameState.PendingRace = null;
@@ -834,27 +812,45 @@ namespace Street_Rod_AC.Services.Race
         private static string? Join(string? first, string second) => first == null ? second : first + "\n" + second;
 
         /// <summary>
-        /// What the race did to both cars, their odometers and their best quarters. Returns the player's damage report,
-        /// null when nothing worth telling happened to the car, and whether the player's car ran its best quarter.
+        /// What the player hears about their car after the session: towed home when it crashed (the player goes with
+        /// it to see what the crash did), else the damage report; null when there is nothing to tell
         /// </summary>
-        private (PlayerMessage? Report, bool NewBest) ApplyCarUpdates(GameState gameState, RaceDecision outcome, RaceContext context)
+        private static PlayerMessage? CarReport(IReadOnlyList<string> damage, bool towed)
+        {
+            if (towed)
+            {
+                return new PlayerMessage("Towed Home", damage.Count == 0
+                    ? "Your car was towed back to the garage."
+                    : "Your car was towed back to the garage. Here's what the crash did:\n\n" + string.Join("\n", damage))
+                {
+                    TowedToGarage = true
+                };
+            }
+
+            return damage.Count > 0 ? new PlayerMessage("Damage Report", string.Join("\n", damage)) : null;
+        }
+
+        /// <summary>
+        /// What the race did to both cars, their odometers and their best quarters. Returns the player's car's damage
+        /// report lines (none when nothing worth telling happened to it), and whether it ran its best quarter.
+        /// </summary>
+        private (List<string> Damage, bool NewBest) ApplyCarUpdates(GameState gameState, RaceDecision outcome, RaceContext context)
         {
             if (outcome.Player == null || outcome.Opponent == null)
             {
                 _logger.Warning("Participants not identified - skipping car updates");
-                return (null, false);
+                return ([], false);
             }
 
             var groupOf = PartGroups();
-            PlayerMessage? report = null;
+            var damage = new List<string>();
             var newBest = false;
 
             // Update player car
             var playerCar = gameState.Player.Cars.FirstOrDefault(c => c.InstanceId == context.PlayerCarInstanceId);
             if (playerCar != null)
             {
-                var damage = ApplyCarDegradation(playerCar, outcome.Player, groupOf, gameState.Rules.CarWearMultiplier);
-                if (damage.Count > 0) report = new PlayerMessage("Damage Report", string.Join("\n", damage));
+                damage = ApplyCarDegradation(playerCar, outcome.Player, groupOf, gameState.Rules.CarWearMultiplier);
                 playerCar.OdometerKM += RaceDistance(outcome.Player);
                 newBest = playerCar.History.RecordQuarter(outcome.Player.Timeslip?.QuarterMileSeconds, outcome.Player.Timeslip?.QuarterMileMph, gameState.Date);
                 _logger.Debug("Player car updated: Odometer={Odometer}km, Engine={Engine}%, Transmission={Trans}%",
@@ -877,7 +873,7 @@ namespace Street_Rod_AC.Services.Race
                     opponentCar.OdometerKM);
             }
 
-            return (report, newBest);
+            return (damage, newBest);
         }
 
         /// <summary>The parts' groups off the catalog; null when there are no parts (the cars' own figures take the race)</summary>

@@ -447,12 +447,41 @@ public sealed class RaceResultProcessorTests : IDisposable
         var estimate = BracketRules.EstimateEt(300, 1600)!.Value;
         Assert.InRange(estimate, 14.0, 15.0);
         Assert.Null(BracketRules.EstimateEt(null, 1600));
-        Assert.Equal(13.55, BracketRules.RivalDialIn(car, 300, 1600));
-        Assert.Equal(BracketRules.UnknownCarDialIn, BracketRules.RivalDialIn(new Car("x"), null, null));
+        // A rival dials in its car's best; without one the estimate, from the dyno over the spec sheet's power
+        var definition = new Street_Rod_AC.Models.Catalog.CarDefinition
+        {
+            Specs = new Street_Rod_AC.Models.Catalog.CarSpecsData { Bhp = "300 bhp", Weight = "1,600 kg" }
+        };
+        Assert.Equal(13.55, BracketRules.RivalDialInFor(car, definition));
+        Assert.Equal(estimate, BracketRules.RivalDialInFor(new Car("x"), definition));
+        Assert.Equal(BracketRules.EstimateEt(400, 1600), BracketRules.RivalDialInFor(new Car("x") { PowerHp = 400 }, definition));
+        Assert.Equal(BracketRules.UnknownCarDialIn, BracketRules.RivalDialInFor(new Car("x"), null));
 
         var (sharp, tight) = BracketRules.RivalDriving(100);
         var (slow, loose) = BracketRules.RivalDriving(85);
         Assert.True(sharp < slow && tight < loose);
+    }
+
+    [Fact]
+    public void A_bracket_race_only_goes_to_a_strip_that_runs_the_quarter()
+    {
+        static Street_Rod_AC.Models.AC.TrackInfo Strip(string id, string length, params (string Folder, string Length)[] layouts) => new()
+        {
+            TrackId = id,
+            Run = "dragstrip",
+            Length = length,
+            Configurations = layouts.Select(l => new Street_Rod_AC.Models.AC.TrackConfiguration { FolderName = l.Folder, Length = l.Length }).ToList()
+        };
+        var eighth = Strip("eighth", "201 m");
+        // A layout without a length of its own is the track's: 1,000 m; the other one is 660 ft
+        var modded = Strip("mod_strip", "1,000 m", ("short", "660 ft"), ("long", ""));
+
+        Assert.Equal(("mod_strip", "long"), Street_Rod_AC.Screens.Shared.RaceSetupBuilder.PickStrip([eighth, modded], quarterOnly: true));
+        Assert.Null(Street_Rod_AC.Screens.Shared.RaceSetupBuilder.PickStrip([eighth, Strip("x", "", ("short", "660 ft"))], quarterOnly: true));
+        // A test-and-tune takes the longest there is
+        Assert.Equal(("eighth", (string?)null), Street_Rod_AC.Screens.Shared.RaceSetupBuilder.PickStrip([eighth]));
+        // The track an event names, when it runs the quarter
+        Assert.Equal(("mod_strip", "long"), Street_Rod_AC.Screens.Shared.RaceSetupBuilder.PickStrip([eighth, modded], quarterOnly: true, "mod_strip"));
     }
 
     // ---- Test-and-tune ----

@@ -198,6 +198,14 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// <summary>Test-and-tune: the player alone on the strip for this many passes; null for a race</summary>
         public int? TunePasses { get; set; }
 
+        /// <summary>Back to the garage after the session, where it was started from; else the player goes to the diner</summary>
+        public bool ReturnToGarage { get; set; }
+
+        /// <summary>The time the session takes in the game</summary>
+        public Time.GameAction SessionAction => TunePasses != null ? Time.GameAction.TestAndTune
+            : RaceType == RaceType.DragRace ? Time.GameAction.DragRace
+            : Time.GameAction.RoadRace;
+
         public override string Executable => "acs.exe";
 
         public override string Description => TunePasses != null

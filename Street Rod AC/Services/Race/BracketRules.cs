@@ -39,7 +39,8 @@ namespace Street_Rod_AC.Services.Race
 
         /// <summary>
         /// The bracket race decided from the two slips; null when the player never got to the quarter (then the race
-        /// is decided like any other, by what stopped the car).
+        /// is decided like any other, by what stopped the car). The mode decides on the same numbers, the slips'
+        /// (rounded to the millisecond), added up in the same order, so both come to the same verdict.
         /// </summary>
         public static BracketOutcome? Decide(Timeslip? player, double playerDialIn, Timeslip? opponent, double opponentDialIn)
         {
@@ -82,10 +83,6 @@ namespace Street_Rod_AC.Services.Race
             return Clamp(RoundUp(StreetEtFactor * Math.Cbrt(pounds / hp)));
         }
 
-        /// <summary>A rival's dial-in: its car's best quarter when it has run one, else the estimate, else <see cref="UnknownCarDialIn"/></summary>
-        public static double RivalDialIn(Car car, double? powerHp, double? weightKg) =>
-            SuggestDialIn(car) ?? EstimateEt(powerHp, weightKg) ?? UnknownCarDialIn;
-
         /// <summary>
         /// The estimate for a car from what is known of it: the dyno figure of its parts (<see cref="Car.PowerHp"/>) or
         /// its spec sheet's power, and the spec sheet's weight; <see cref="UnknownCarDialIn"/> without them
@@ -96,7 +93,7 @@ namespace Street_Rod_AC.Services.Race
             return EstimateEt(power, Street_Rod_AC.Parts.Cars.AcSpecs.ParseWeight(definition?.Specs?.Weight)) ?? UnknownCarDialIn;
         }
 
-        /// <summary>A rival's dial-in for its car, from what is known of it (<see cref="RivalDialIn"/>)</summary>
+        /// <summary>A rival's dial-in: its car's best quarter when it has run one, else the estimate (<see cref="EstimateFor"/>)</summary>
         public static double RivalDialInFor(Car car, Models.Catalog.CarDefinition? definition) =>
             SuggestDialIn(car) ?? EstimateFor(car, definition);
 
@@ -122,26 +119,13 @@ namespace Street_Rod_AC.Services.Race
         public static double Clamp(double dialIn) =>
             double.IsFinite(dialIn) ? Math.Round(Math.Clamp(dialIn, MinDialIn, MaxDialIn), 2) : UnknownCarDialIn;
 
-        /// <summary>
-        /// A track's length from its ui_track.json, in metres: "1000", "1000m", "1.2 km", "0.25 mi"; null when it is not a
-        /// length
-        /// </summary>
-        public static double? LengthMetres(string? length)
-        {
-            if (string.IsNullOrWhiteSpace(length)) return null;
-            var text = length.Trim().ToLowerInvariant().Replace(',', '.');
-            var number = new string(text.TakeWhile(c => char.IsDigit(c) || c == '.').ToArray());
-            if (!double.TryParse(number, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value)
-                || !double.IsFinite(value) || value <= 0)
-                return null;
-            var unit = text[number.Length..].Trim();
-            if (unit.StartsWith("km")) return value * 1000;
-            if (unit.StartsWith("mi")) return value * 1609.344;
-            return value;
-        }
+        /// <summary>A layout's length from its ui_track.json, in metres: the layout's own, else the track's; null when neither is one</summary>
+        public static double? LengthMetres(Models.AC.TrackInfo track, Models.AC.TrackConfiguration? layout) =>
+            Street_Rod_AC.Parts.Cars.AcSpecs.ParseLength(string.IsNullOrWhiteSpace(layout?.Length) ? track.Length : layout.Length);
 
-        /// <summary>A strip that runs the quarter mile, for a bracket race: as long as <see cref="MinStripMetres"/></summary>
-        public static bool RunsTheQuarter(string? length) => LengthMetres(length) >= MinStripMetres;
+        /// <summary>A layout that runs the quarter mile, for a bracket race: as long as <see cref="MinStripMetres"/></summary>
+        public static bool RunsTheQuarter(Models.AC.TrackInfo track, Models.AC.TrackConfiguration? layout) =>
+            LengthMetres(track, layout) >= MinStripMetres;
 
         /// <summary>A time as the strip shows it: "12.45", whatever the culture</summary>
         public static string Show(double? seconds) =>

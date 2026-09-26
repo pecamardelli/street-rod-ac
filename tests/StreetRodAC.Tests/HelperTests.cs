@@ -38,6 +38,17 @@ public class AcSpecsTests
     public void Weight(string text, double expected) => Assert.Equal(expected, AcSpecs.ParseWeight(text)!.Value, 6);
 
     [Theory]
+    [InlineData("1000", 1000.0)]
+    [InlineData("1000m", 1000.0)]
+    [InlineData("1,000 m", 1000.0)]
+    [InlineData("1.000 m", 1000.0)]
+    [InlineData("402,3 m", 402.3)]
+    [InlineData("1.2 km", 1200.0)]
+    [InlineData("0.25 mi", 0.25 * 1609.344)]
+    [InlineData("660 ft", 660 * 0.3048)]
+    public void Length(string text, double expected) => Assert.Equal(expected, AcSpecs.ParseLength(text)!.Value, 6);
+
+    [Theory]
     [InlineData("")]
     [InlineData(null)]
     [InlineData("abc")]
@@ -48,6 +59,7 @@ public class AcSpecsTests
     {
         Assert.Null(AcSpecs.ParsePower(text));
         Assert.Null(AcSpecs.ParseWeight(text));
+        Assert.Null(AcSpecs.ParseLength(text));
         Assert.False(AcSpecs.TryParsePower(text, out _));
     }
 

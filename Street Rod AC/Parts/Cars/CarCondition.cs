@@ -79,10 +79,20 @@ public static class CarCondition
     public static PartInstance? Transmission(Car car, Func<string, string?> groupOf) =>
         car.Engine?.SelfAndDescendants().FirstOrDefault(p => groupOf(p.DefinitionId) == TransmissionGroup);
 
-    /// <summary>AC's engine life: its weakest rotating part's; an engine without any is taken as it is</summary>
+    /// <summary>
+    /// The parts AC's engine life stands for: the rotating parts, or the engine itself when it has none (a stand-in
+    /// block), so the life AC takes off it is kept somewhere
+    /// </summary>
+    private static List<PartInstance> LifeParts(Car car, Func<string, string?> groupOf)
+    {
+        var rotating = RotatingParts(car, groupOf).ToList();
+        return rotating.Count > 0 || car.Engine is not { } engine ? rotating : [engine];
+    }
+
+    /// <summary>AC's engine life: its weakest rotating part's (<see cref="LifeParts"/>); a car without an engine is taken as new</summary>
     public static double EngineLife(Car car, Func<string, string?> groupOf)
     {
-        var tears = RotatingParts(car, groupOf).Select(p => Clamp01(p.Tear)).ToList();
+        var tears = LifeParts(car, groupOf).Select(p => Clamp01(p.Tear)).ToList();
         return NewEngineLife * (tears.Count == 0 ? 1 : tears.Min());
     }
 
@@ -200,13 +210,15 @@ public static class CarCondition
         // AC reports the life left, having started from the car's (its weakest rotating part's). The weakest part is
         // the one that gave: it takes the whole of the loss, down to what AC left, and the rest of the rotating
         // assembly a share of it.
+        // AC was given the life to a tenth (RaceStartState) and reports it to a tenth: an engine it left alone comes
+        // back as it went in, and any loss below that counts
         var left = Clamp01(life / NewEngineLife);
         var before = EngineLife(car, groupOf) / NewEngineLife;
-        if (left >= before - 0.0005) return;
+        if (life >= Math.Round(before * NewEngineLife, 1, MidpointRounding.AwayFromZero) - 1e-6) return;
         if (WeakestRotatingPart(car, groupOf) is not { } failed) return;
 
         var loss = before - left;
-        foreach (var part in RotatingParts(car, groupOf))
+        foreach (var part in LifeParts(car, groupOf))
         {
             part.Tear = ReferenceEquals(part, failed)
                 ? Math.Min(Clamp01(part.Tear), left)
@@ -226,10 +238,11 @@ public static class CarCondition
 
     /// <summary>
     /// The rotating part that gives when the engine takes damage: the most worn one, the rods before the pistons,
-    /// the crankshaft and the camshafts when two are as worn. Null for an engine without rotating parts.
+    /// the crankshaft and the camshafts when two are as worn; the engine itself when it has no rotating parts. Null
+    /// for a car without an engine.
     /// </summary>
     public static PartInstance? WeakestRotatingPart(Car car, Func<string, string?> groupOf) =>
-        RotatingParts(car, groupOf)
+        LifeParts(car, groupOf)
             .OrderBy(p => Math.Round(Clamp01(p.Tear), 4))
             .ThenBy(p => Array.IndexOf(FailureOrder, groupOf(p.DefinitionId)) is var i and >= 0 ? i : FailureOrder.Length)
             .FirstOrDefault();

@@ -57,8 +57,10 @@ the player.
 - **The result:** each slip has `green_s`, its `reaction_s` counted from that green, and the positions are the
   bracket's.
 
-The career decides again from the slips with the same rules (`BracketRules.Decide`). The contract test checks that
-both agree on the harness's bracket race.
+The career decides again from the slips with the same rules (`BracketRules.Decide`). The mode decides on the slips'
+own numbers (rounded to the millisecond, added up in the same order), not its unrounded clocks, so a car a fraction
+of a millisecond either side of its dial-in is the same breakout to both. The contract test checks that both agree
+on the harness's bracket race.
 
 **Test-and-tune** (step 11): `RACE_TYPE=TUNE` puts the player alone on the strip (`CARS=1`, `LAPS=50` so AC never
 ends the session) for `TUNE_PASSES` passes (the garage sends 6).
@@ -68,10 +70,12 @@ ends the session) for `TUNE_PASSES` passes (the garage sends 6).
 - **End of a pass:** past the quarter and under 20 km/h, standing still 3 s after leaving, or 60 s after the green.
   The slip then shows for 6 s.
 - **Back to the line:** `setCarVelocity` to 0, then `setCarPosition` on the car's spot, facing down the strip. The
-  mode's own teleport is not a trip to the pits.
-- **Writing the result:** the file is written after every pass, so closing AC keeps what was run.
+  mode's own teleport is not a trip to the pits. Each pass is measured from where the car stands when the tree comes
+  on (`stagedAt`), so a car put back short of or past its spot still stages.
+- **Writing the result:** the file is written after every pass, so closing AC keeps what was run. Each write
+  replaces the last: `io.move(tmp, json, false)`, since CSP's `io.move` fails onto an existing file by default.
 - **Ending the session:** the last pass, a crash or a breakdown ends it, and so does the player going to the pits
-  (the pits menu, or AC putting the car back).
+  (the pits menu, or AC putting the car back). A pass under way then is kept as one of the passes.
 - **The result:** one participant with `passes` (each slip with its `pass` number); its `timeslip` is the best of
   them.
 

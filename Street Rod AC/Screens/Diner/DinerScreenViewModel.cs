@@ -154,7 +154,7 @@ namespace Street_Rod_AC.Screens.Diner
 
         /// <summary>A bracket race can be run on the selected track: a drag strip that runs the quarter</summary>
         public bool CanBracket => SelectedTrack is { RaceType: RaceType.DragRace } track
-            && Services.Race.BracketRules.RunsTheQuarter(track.Configuration?.Length ?? track.Track.Length);
+            && Services.Race.BracketRules.RunsTheQuarter(track.Track, track.Configuration);
 
         private bool _isBracket;
 
@@ -789,20 +789,23 @@ namespace Street_Rod_AC.Screens.Diner
 
             _logger.Information("Opponent accepted challenge - launching race");
 
+            var ai = OpponentAIAdapter.ToAssettoCorsaAI(opponent, _gameState.Rules);
+
             // A bracket race: the rival dials in from its car, the player picks theirs
             Models.Race.BracketSetup? bracket = null;
             if (IsBracket && CanBracket)
             {
                 var rivalDialIn = Services.Race.BracketRules.RivalDialInFor(opponentCar, SelectedOpponent.CarDefinition);
-                var playerDialIn = await AskDialInAsync(playerCar, rivalDialIn, opponent.Name);
+                var playerDialIn = await Dialogs.DialIn.DialInDialogViewModel.AskAsync(_dialogService, playerCar,
+                    _catalogRepository.GetCar(playerCar.DefinitionId), CarNames.Of(_catalogRepository, playerCar.DefinitionId),
+                    opponent.Name, rivalDialIn);
                 if (playerDialIn == null)
                 {
                     _logger.Information("The player backed out of the bracket race at the dial-in");
                     return;
                 }
 
-                bracket = Services.Race.BracketRules.Setup(playerDialIn.Value, rivalDialIn,
-                    OpponentAIAdapter.ToAssettoCorsaAI(opponent, _gameState.Rules).AILevel);
+                bracket = Services.Race.BracketRules.Setup(playerDialIn.Value, rivalDialIn, ai.AILevel);
                 _logger.Information("Bracket race: dial-ins {Player} and {Rival}", bracket.PlayerDialIn, bracket.OpponentDialIn);
             }
 
@@ -823,7 +826,7 @@ namespace Street_Rod_AC.Screens.Diner
                 OpponentCarId = SelectedOpponent.CarDefinition.Id,
                 OpponentSkin = opponentCar.SkinId,
                 OpponentCar = opponentCar,
-                OpponentAI = OpponentAIAdapter.ToAssettoCorsaAI(opponent, _gameState.Rules),
+                OpponentAI = ai,
                 TrackId = track.TrackId,
                 TrackConfig = track.ConfigurationId,
                 RaceType = track.RaceType,
@@ -854,17 +857,6 @@ namespace Street_Rod_AC.Screens.Diner
             // The loading screen launches the race, spends its time and comes back when AC is closed
             _logger.Information("Navigating to race loading screen");
             _navigationService.NavigateToRaceLoading(_gameState, setup.Intent);
-        }
-
-        /// <summary>The player's dial-in for a bracket race, from the dial-in dialog; null when they back out</summary>
-        private Task<double?> AskDialInAsync(Models.GameState.Car playerCar, double rivalDialIn, string rivalName)
-        {
-            var answer = new TaskCompletionSource<double?>();
-            var definition = _catalogRepository.GetCar(playerCar.DefinitionId);
-            _dialogService.ShowDialog(new Dialogs.DialIn.DialInDialogViewModel(_dialogService, playerCar,
-                CarNames.Of(_catalogRepository, playerCar.DefinitionId), Services.Race.BracketRules.EstimateFor(playerCar, definition),
-                rivalName, rivalDialIn, dialIn => answer.TrySetResult(dialIn)));
-            return answer.Task;
         }
 
         private void OnGarage()

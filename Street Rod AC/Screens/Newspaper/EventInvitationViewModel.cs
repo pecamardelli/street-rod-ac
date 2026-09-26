@@ -76,7 +76,7 @@ namespace Street_Rod_AC.Screens.Newspaper
                 RewardDescription = definition.Reward.ScaledBy(prizeMultiplier).GetDescription(),
                 RaceType = definition.RaceType,
                 IsPinkSlip = definition.IsPinkSlip,
-                IsBracket = definition.IsBracket && definition.RaceType == RaceType.DragRace,
+                IsBracket = definition.IsBracketRace,
                 ExpiresAt = instance.ExpiresAt,
                 ExpiresInText = expiresIn,
                 IsExpiringSoon = isExpiringSoon,

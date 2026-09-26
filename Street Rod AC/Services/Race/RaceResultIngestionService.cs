@@ -517,6 +517,17 @@ namespace Street_Rod_AC.Services.Race
                     return;
                 }
 
+                // The race's own file, with the wrong racers for it: it cannot settle the race, and is quarantined as
+                // one that fails validation, for this race
+                if (ParticipantMismatch(raceResult, context!) is { } wrongRacers)
+                {
+                    _logger.Warning("File {FileName} is not applied: {Reason} - quarantining", file.Name, wrongRacers);
+                    await QuarantineFileAsync(file, "Wrong participants", new[] { wrongRacers });
+                    result.FilesQuarantined++;
+                    result.FilesQuarantinedForContext++;
+                    return;
+                }
+
                 WarnOnRaceTypeMismatch(raceResult, context!, file);
 
                 // Step 5: Processing, with the file still in the inbox. On the thread that owns the game state; the
@@ -689,6 +700,20 @@ namespace Street_Rod_AC.Services.Race
                 _logger.Warning("File {FileName} says the race was {FileRaceType}, but race {ContextId} is a {RaceType} ({Expected}) - applied as the race was set up",
                     file.Name, fileType, context.ContextId, context.RaceType, expected);
             }
+        }
+
+        /// <summary>
+        /// Why the file does not fit the race the career set up, by its racers; null when it does. The validator only
+        /// holds the file to its own race_type (a TUNE file has the player alone): a race's context takes the player
+        /// and one rival, whatever the file says it ran.
+        /// </summary>
+        private static string? ParticipantMismatch(RaceResultJson raceResult, RaceContext context)
+        {
+            var expected = context.IsTestAndTune ? 1 : 2;
+            var count = raceResult.Participants.Count;
+            return count == expected
+                ? null
+                : $"race {context.ContextId} is {(context.IsTestAndTune ? "a test-and-tune, the player alone" : "a race of two")}, but the file has {count} participant(s)";
         }
 
         /// <summary>

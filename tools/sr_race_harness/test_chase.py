@@ -174,7 +174,8 @@ physics = {
   setCarVelocity = function(i, v) cars[i].speedKmh = v:length() * 3.6 end,
   setCarPosition = function(i, pos, dir)
     local car = cars[i]
-    car.total, car.speedKmh = pos.x, 0
+    -- world.placeOffset: how far past where it was asked the car lands (AC places the car's origin, not its position)
+    car.total, car.speedKmh = pos.x + (world.placeOffset or 0), 0
     placements[#placements + 1] = { index = i, t = sim.time / 1000, progress = progressOf(pos) }
     refresh(car)
   end,
@@ -244,7 +245,11 @@ end
 function JSON.stringify(v) return encode(v) end
 io.createDir = function() end
 io.save = function(p, s) saved[p] = s; return true end
-io.move = function(a, b) saved[b] = saved[a]; saved[a] = nil; return true end
+-- CSP's io.move fails onto an existing file unless failIfExists is false
+io.move = function(a, b, failIfExists)
+  if saved[b] ~= nil and failIfExists ~= false then return false end
+  saved[b] = saved[a]; saved[a] = nil; return true
+end
 io.deleteFile = function(p) saved[p] = nil end
 os.preciseClock = os.clock
 -- The mode seeds from the clock and a heap address, so each run would place its traps elsewhere and a test could
@@ -318,14 +323,16 @@ end
 '''
 
 
-def run(name, cars, ini, player, rival, cop, max_seconds=400, length=2000.0, sides=6.0, strip=None, menu_at=None):
-    """strip: a drag strip instead of the loop, strip(world, i, raceSeconds, car) giving each car's acceleration"""
+def run(name, cars, ini, player, rival, cop, max_seconds=400, length=2000.0, sides=6.0, strip=None, menu_at=None,
+        place_offset=0.0):
+    """strip: a drag strip instead of the loop, strip(world, i, raceSeconds, car) giving each car's acceleration;
+    place_offset: metres past the asked spot that setCarPosition leaves a car"""
     lua = lupa.LuaRuntime(unpack_returned_tuples=True)
     world = lua.table_from({
         'length': length, 'cars': cars, 'maxSeconds': max_seconds, 'sides': sides,
         'ini': lua.table_from(ini),
         'playerSpeed': player, 'rivalSpeed': rival, 'copSpeed': cop,
-        'straight': strip is not None, 'menuAt': menu_at,
+        'straight': strip is not None, 'menuAt': menu_at, 'placeOffset': place_offset,
     })
     if strip is not None:
         world['accel'] = lambda i, t, car: strip(world, i, t, car)

@@ -353,6 +353,25 @@ public sealed class RaceResultIngestionServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task A_test_and_tune_file_for_a_race_is_quarantined_and_settles_nothing()
+    {
+        var (state, context, rival) = World();
+        var file = ResultFile(context.ContextId);
+        var json = JObject.Parse(File.ReadAllText(file));
+        json["session"]!["race_type"] = RaceTypes.TestAndTune;
+        ((JArray)json["participants"]!).RemoveAt(1);
+        File.WriteAllText(file, json.ToString());
+
+        var result = await Service(state).ProcessOrphanedResultsAsync();
+
+        Assert.Equal(0, result.FilesProcessed);
+        Assert.Equal(1, result.FilesQuarantinedForContext);
+        Assert.False(File.Exists(file));
+        Assert.Equal(5000m, rival.Money);
+        Assert.False(await _sessions.IsContextSettledAsync("t", context.ContextId));
+    }
+
+    [Fact]
     public async Task A_file_that_names_another_kind_of_race_is_applied_as_the_race_was_set_up()
     {
         var (state, context, rival) = World();

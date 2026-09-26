@@ -233,8 +233,9 @@ local raceType = nil
 local bracket = nil
 
 -- Test-and-tune, nil in any other race: passes (the slips so far), maxPasses; state WAIT (for AC's start), STAGE
--- (held on the line), TREE, RUN (the pass) or SLIP (the slip shows); since, the race clock when the state began;
--- stoppedFor, seconds standing still in a pass; teleportedAt, the session time the car was last put back
+-- (held on the line), TREE, RUN (the pass), SLIP (the slip shows) or OVER (the session ended); since, the race clock
+-- when the state began; stoppedFor, seconds standing still in a pass; teleportedAt, the session time the car was last
+-- put back
 local tune = nil
 
 -- A drag race's lanes: the sideways axis of the strip, from the player's car on the line. Each car's own lane is
@@ -310,9 +311,11 @@ local function createCarData(carIndex)
 
     -- Timeslip (drag races): the race clock when the car got its green (AC's start but in a bracket race and on a
     -- test-and-tune pass) and when it left the line, how far down the strip it was last frame, and the time at each
-    -- mark. released: a bracket race's rival is held until its green.
+    -- mark. stagedAt: where a test-and-tune pass starts, metres past laneStart (the car is not always put back exactly
+    -- on it). released: a bracket race's rival is held until its green.
     greenAt = 0,
     leftAt = nil,
+    stagedAt = 0,
     lastMetres = 0,
     slip = {},
     released = true,
@@ -594,11 +597,28 @@ end
 -- Forward declaration: puts the police away, lights and sirens too; defined with the chase further down
 local shutDownPolice
 
+local function round(value, places)
+  if type(value) ~= 'number' then return nil end
+  local k = 10 ^ (places or 0)
+  return math.floor(value * k + 0.5) / k
+end
+
 -- A car's quarter-mile crossing on the race clock and its elapsed time, or nil before it crossed
 local function quarterOf(data)
   local et = data.slip.quarter_mile_s
   if not et or not data.leftAt then return nil end
   return data.leftAt + et, et
+end
+
+-- The same as the slip has it (timeslipOf), to the millisecond: green, plus reaction, plus elapsed time. A bracket
+-- race is decided on these, the numbers the career decides it on again (BracketRules.Decide, which adds them up in
+-- the same order), so the two never disagree over a car a fraction of a millisecond either side of its dial-in.
+local function slipQuarterOf(data)
+  local _, et = quarterOf(data)
+  if not et then return nil end
+  local green = data.greenAt ~= 0 and round(data.greenAt, 3) or 0
+  local elapsed = round(et, 3)
+  return green + round(data.leftAt - data.greenAt, 3) + elapsed, elapsed
 end
 
 -- Past the line, where nothing counts any more: AC's line, the quarter in a bracket race, never on a test-and-tune
@@ -620,10 +640,24 @@ end
 -- What the player hears about the bracket race's result: their ET against their dial-in
 local function bracketLine()
   local data = carData[0]
-  local _, et = quarterOf(data)
+  local _, et = slipQuarterOf(data)
   if not bracket or not et then return '' end
   local dial = bracket.dialIn[0]
   return string.format('\nYour %.3f on a %.2f dial-in%s', et, dial, et < dial and ': BREAKOUT' or '')
+end
+
+-- The timeslip as the result has it, defined with the output further down
+local timeslipOf
+
+-- A test-and-tune pass that is over, added to the passes; false when the car never left the line
+local function recordPass(data)
+  local slip = timeslipOf(data)
+  if not slip then return false end
+  slip.pass = #tune.passes + 1
+  tune.passes[#tune.passes + 1] = slip
+  tune.last = slip
+  ac.log(string.format('[Street Corsa] Pass %d: R/T %s, 1/4 %s', slip.pass, tostring(slip.reaction_s), tostring(slip.quarter_mile_s)))
+  return true
 end
 
 -- End session: write results, show the result, and quit
@@ -646,6 +680,12 @@ local function endSession(reason, won)
     chase.duration = sessionDuration - chase.startedAt
   end
   if shutDownPolice then pcall(shutDownPolice) end
+
+  -- A test-and-tune pass under way is one of the passes: the player may leave the strip still rolling past the quarter
+  if tune then
+    if (tune.state == 'TREE' or tune.state == 'RUN') and carData[0] then recordPass(carData[0]) end
+    tune.state = 'OVER'
+  end
 
   -- Write session results. Whatever goes wrong there, AC must still quit: the launcher waits for it.
   sessionEndTime = getISOTimestamp()
@@ -829,7 +869,7 @@ local function updateTimeslips(previousClock, tick)
     local data = carData[carIndex]
     local car = ac.getCar(carIndex)
     if data and car and data.laneStart then
-      local metres = (car.position - data.laneStart):dot(stripForward)
+      local metres = (car.position - data.laneStart):dot(stripForward) - data.stagedAt
       local timing = not tune or tune.state == 'TREE' or tune.state == 'RUN'
       local function crossed(mark)
         if data.lastMetres >= mark or metres < mark then return nil end
@@ -928,10 +968,10 @@ local function updateBracket()
     pcall(physics.setAITopSpeed, 1, top)
   end
 
-  local playerAt, playerEt = quarterOf(player)
+  local playerAt, playerEt = slipQuarterOf(player)
   if not playerAt then return end
   bracket.playerCrossedAt = bracket.playerCrossedAt or raceClock
-  local rivalAt, rivalEt = quarterOf(rival)
+  local rivalAt, rivalEt = slipQuarterOf(rival)
   local rivalOut = rival.crashed or rival.brokeDown or rival.disqualified
   if not rivalAt and not rivalOut and raceClock - bracket.playerCrossedAt < STRIP.BRACKET_WAIT then return end
 
@@ -942,9 +982,6 @@ local function updateBracket()
     bracket.playerWon and 'WON' or 'LOST'))
   endSession('FINISHED', bracket.playerWon)
 end
-
--- The timeslip as the result has it, defined with the output further down
-local timeslipOf
 
 -- Puts the player's car back on its line, stopped, facing down the strip
 local function backToTheLine()
@@ -980,8 +1017,10 @@ local function updateTune(tick)
       pcall(ac.setMessage, 'Test and tune', string.format('Pass %d of %d: stage up', #tune.passes + 1, tune.maxPasses))
     elseif now - tune.since >= STRIP.TUNE_STAGE then
       -- The brakes come off at the first amber: from here the player holds the car
+      -- The pass is measured from where the car stands: put back short of or past its line, it still stages
       data.leftAt, data.slip, data.redLight = nil, {}, false
-      data.lastMetres = (car.position - data.laneStart):dot(stripForward)
+      data.stagedAt = (car.position - data.laneStart):dot(stripForward)
+      data.lastMetres = 0
       data.greenAt = now + STRIP.TREE_AMBERS * STRIP.TREE_STEP
       tune.state, tune.since, tune.stoppedFor = 'TREE', now, 0
       pcall(physics.forceUserBrakesFor, 0, 0)
@@ -998,12 +1037,7 @@ local function updateTune(tick)
       or now - data.greenAt >= STRIP.TUNE_PASS_SECONDS
     if not done then return end
 
-    local slip = timeslipOf(data)
-    if slip then
-      slip.pass = #tune.passes + 1
-      tune.passes[#tune.passes + 1] = slip
-      tune.last = slip
-      ac.log(string.format('[Street Corsa] Pass %d: R/T %s, 1/4 %s', slip.pass, tostring(slip.reaction_s), tostring(slip.quarter_mile_s)))
+    if recordPass(data) then
       -- Written after every pass: closing AC keeps what was run
       endReason, sessionEndTime = 'FINISHED', getISOTimestamp()
       local ok, err = pcall(writeSessionOutput)
@@ -1012,6 +1046,7 @@ local function updateTune(tick)
       tune.last = nil
     end
     if #tune.passes >= tune.maxPasses then
+      tune.state = 'OVER'
       endSession('FINISHED')
       return
     end
@@ -1098,12 +1133,6 @@ local function checkRaceFinish()
   end
 end
 
-local function round(value, places)
-  if type(value) ~= 'number' then return nil end
-  local k = 10 ^ (places or 0)
-  return math.floor(value * k + 0.5) / k
-end
-
 -- What the race left of the car, as AC tracks it: the career puts it on the car's parts. Every field is read on its
 -- own, so one AC does not have leaves the rest.
 local function carCondition(carIndex)
@@ -1168,7 +1197,7 @@ local function carDataToDict(data)
   local dialIn, breakout = nil, nil
   if bracket and bracket.dialIn[data.carIndex] then
     dialIn = round(bracket.dialIn[data.carIndex], 3)
-    local _, et = quarterOf(data)
+    local _, et = slipQuarterOf(data)
     breakout = et ~= nil and et < bracket.dialIn[data.carIndex]
   end
 
@@ -1292,7 +1321,8 @@ writeSessionOutput = function()
   if not io.save(tempFilename, json) then
     error('Failed to write ' .. tempFilename)
   end
-  if not io.move(tempFilename, filename) then
+  -- A test-and-tune writes after every pass: each write replaces the last (io.move fails onto a file by default)
+  if not io.move(tempFilename, filename, false) then
     io.deleteFile(tempFilename)
     error('Failed to rename ' .. tempFilename .. ' to ' .. filename)
   end

@@ -29,9 +29,9 @@ def rollout(accel):
     return math.sqrt(2 * 0.2 / accel)
 
 
-def driver(accel, reaction, early=False):
+def driver(accel, reaction, early=False, stop_at=430):
     """A driver who leaves `reaction` seconds after their green (before it, by that much, when early), accelerating at
-    `accel` until 430 m. The player's green comes from the mode's log (world.green0)."""
+    `accel` until `stop_at` metres. The player's green comes from the mode's log (world.green0)."""
     def go(world, i, t, car):
         green = world['green0'] if i == 0 else None
         if i == 0:
@@ -42,7 +42,7 @@ def driver(accel, reaction, early=False):
             leave = green - reaction if early else green + reaction
             if t < leave:
                 return 'hold'
-        if car['total'] > 430:
+        if car['total'] > stop_at:
             return 'stop'
         return accel
     return go
@@ -116,6 +116,12 @@ def leaving_before_the_green_is_a_red_light():
     check('the player is marked', player['false_start'] is True, log)
 
 
+# When the harness takes the player to the pits (seconds of its clock): 3 s past pass 1's quarter, still at full
+# speed; and part way down pass 3
+MENU_PAST_QUARTER = 20
+MENU_THIRD_PASS = 60
+
+
 def tune_ini(passes):
     return {'STREET_ROD.RACE_TYPE': 'TUNE', 'STREET_ROD.TUNE_PASSES': str(passes)}
 
@@ -143,6 +149,35 @@ def going_to_the_pits_leaves_the_strip():
     passes = participant(result, 0)['passes']
     check(f'the pass run so far is kept ({len(passes)})', len(passes) == 1, log)
     check('finished, not abandoned', result['session']['end_reason'] == 'FINISHED', log)
+
+
+def leaving_past_the_quarter_keeps_the_pass():
+    # Still at full speed past the quarter when the player goes to the pits: the pass is run, and counts
+    result, log, _, _ = run('pits rolling', 1, tune_ini(6), None, None, None, length=STRIP_LENGTH,
+                            strip=strip(driver(8, 0.3, stop_at=900)), max_seconds=200, menu_at=MENU_PAST_QUARTER)
+    passes = participant(result, 0)['passes']
+    check(f'the pass under way is kept ({len(passes)})', len(passes) == 1, log)
+    check(f"with its quarter ({passes[0].get('quarter_mile_s')})", abs(passes[0]['quarter_mile_s'] - 10.23) < 0.05, log)
+
+
+def every_pass_is_written_over_the_last():
+    # A crash on the third pass: the file already holds two, and the last write must replace it (CSP's io.move fails
+    # onto an existing file unless told not to)
+    result, log, _, _ = run('tune crash', 1, tune_ini(6), None, None, None,
+                            length=STRIP_LENGTH, strip=strip(driver(8, 0.3)), max_seconds=200, menu_at=MENU_THIRD_PASS)
+    passes = participant(result, 0)['passes']
+    check(f'the passes after the first are written ({len(passes)})', len(passes) == 3, log)
+    check('no write failed', 'ERROR' not in log, log)
+
+
+def put_back_past_the_line_still_stages():
+    # AC leaves the car a little up the strip: each pass starts from where it stands
+    result, log, _, placements = run('past the line', 1, tune_ini(3), None, None, None, length=STRIP_LENGTH,
+                                     strip=strip(driver(8, 0.3)), max_seconds=200, place_offset=0.5)
+    passes = participant(result, 0)['passes']
+    check(f'every pass was timed ({len(passes)})', [p['pass'] for p in passes] == [1, 2, 3], log)
+    for p in passes:
+        check(f"each a full quarter ({p['quarter_mile_s']})", abs(p['quarter_mile_s'] - 10.23) < 0.05, log)
 
 
 def a_red_light_on_a_pass_is_only_a_red_light():
@@ -184,7 +219,8 @@ if __name__ == '__main__':
     for test in (golden_files, the_slower_dial_in_gets_the_green_first, the_rival_takes_the_stripe, a_breakout_loses,
                  first_to_the_quarter_on_the_dial_wins, leaving_before_the_green_is_a_red_light,
                  test_and_tune_runs_its_passes, going_to_the_pits_leaves_the_strip,
-                 a_red_light_on_a_pass_is_only_a_red_light):
+                 leaving_past_the_quarter_keeps_the_pass, every_pass_is_written_over_the_last,
+                 put_back_past_the_line_still_stages, a_red_light_on_a_pass_is_only_a_red_light):
         test()
         print(f'ok  {test.__name__}')
     sys.exit(0)

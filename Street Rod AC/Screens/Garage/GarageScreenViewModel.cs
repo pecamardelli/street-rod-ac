@@ -587,7 +587,8 @@ namespace Street_Rod_AC.Screens.Garage
                     RaceType = Models.Race.RaceType.DragRace,
                     DamagePercent = _gameState.Rules.RaceDamagePercent,
                     RaceTime = _gameState.Date,
-                    TunePasses = TestAndTunePasses
+                    TunePasses = TestAndTunePasses,
+                    ReturnToGarage = true
                 });
 
                 // Setting the car up takes a moment: a player who left meanwhile has called it off

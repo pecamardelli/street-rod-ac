@@ -94,7 +94,7 @@ NavigationService.NavigateTo[ScreenName](dependencies) : bool
 | Python Race App (removed) | was `apps\python\StreetRodRaceApp\` | Superseded by SR Race Manager; deleted 2026-09-24, in git history only |
 
 **Key Integration Points**:
-- Every race, drag races too, is a one-lap race session (`TYPE=3`, never AC's drag session, whose rules teleport the cars) in the `sr_race` CSP mode: `[RACE] __CM_CUSTOM_MODE=sr_race` and `[STREET_ROD] RACE_TYPE` in race.ini (`IniModificationService`), with AC's damage and tyre wear on in assists.ini for the race (kept and restored like race.ini)
+- Every race, drag races too, is a one-lap race session (`TYPE=3`, never AC's drag session, whose rules teleport the cars) in the `sr_race` CSP mode; a test-and-tune is the same race session with the player alone (`CARS=1`) and `TuneLaps` (50) laps, so AC never ends it and the mode ends it after its passes (never read `lapsCompleted >= 1` as finished there): `[RACE] __CM_CUSTOM_MODE=sr_race` and `[STREET_ROD] RACE_TYPE` in race.ini (`IniModificationService`), with AC's damage and tyre wear on in assists.ini for the race (kept and restored like race.ini)
 - The mode writes results to `Documents/Assetto Corsa/out/sr_race_manager/*.json` (schema 1.6: `end_reason`, `false_start`, `disqualified`, the car's `condition`, breakdowns and timeslips, the police chase's `pursuit` (the police cars are never participants), bracket dial-ins and breakouts, and a test-and-tune's `passes`) and quits via `ac.shutdownAssettoCorsa()`
 - Launcher reads JSON results after AC process exits
 

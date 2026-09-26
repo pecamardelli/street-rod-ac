@@ -74,6 +74,9 @@ namespace Street_Rod_AC.Models.Career.Events
         /// </summary>
         public bool IsBracket { get; set; }
 
+        /// <summary>Run as a bracket race: <see cref="IsBracket"/> on a drag race, the only kind that can be one</summary>
+        public bool IsBracketRace => IsBracket && RaceType == RaceType.DragRace;
+
         /// <summary>
         /// Special opponents for this event (if set, uses these instead of pool)
         /// </summary>

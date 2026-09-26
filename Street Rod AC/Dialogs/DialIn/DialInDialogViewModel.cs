@@ -39,6 +39,19 @@ namespace Street_Rod_AC.Dialogs.DialIn
             CancelCommand = new RelayCommand(OnCancel);
         }
 
+        /// <summary>
+        /// Asks the player for their dial-in against a rival's, the estimate for their car from its parts and spec
+        /// sheet; the dial-in they pick, or null when they back out
+        /// </summary>
+        public static Task<double?> AskAsync(DialogService dialogService, Car car, Models.Catalog.CarDefinition? definition,
+            string carName, string opponentName, double opponentDialIn)
+        {
+            var answer = new TaskCompletionSource<double?>();
+            dialogService.ShowDialog(new DialInDialogViewModel(dialogService, car, carName, BracketRules.EstimateFor(car, definition),
+                opponentName, opponentDialIn, dialIn => answer.TrySetResult(dialIn)));
+            return answer.Task;
+        }
+
         public string CarName { get; }
         public string OpponentName { get; }
         public double OpponentDialIn { get; }
