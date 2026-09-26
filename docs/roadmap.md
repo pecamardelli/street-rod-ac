@@ -491,7 +491,7 @@ The others: a grudge kept after the rival bought the car back, headlines naming 
 their story to a wreck, older saves showing used cars as first-owner cars, a car won back counting its owner twice,
 the King's car priced before its record. Build and tests pass; not yet tried in the game.
 
-### Step 11: strip extras
+### Step 11: strip extras (done, PR #25, merged as `fdac6cc`)
 - **Test-and-tune:** paid time at the strip for a timeslip with nothing at stake, building on the free run.
 - **Bracket racing** with a dial-in.
 - **Each car's best elapsed time.**
@@ -548,6 +548,13 @@ checklist is `docs/playtest-step-8.md`, "6. Strip extras (after the first releas
 - `setCarPosition` putting the car back on the line between passes, and going to the pits to end a test-and-tune;
 - whether the rivals' estimated dial-ins are near what AC's AI runs;
 - the diner's bracket box and the dial-in dialog.
+
+**Reviewed before the merge (2026-09-25):** an xhigh code review found 15 issues, all fixed in the PR. The worst: on a
+test-and-tune every write after the first pass failed (CSP's `io.move` does not overwrite by default), so a crash on a
+later pass was never applied. The others: a pass under way when the session ended was dropped, a car put back past its
+spot never staged, the mode and the career could disagree on a breakout at the dial-in, bracket events could go to a
+strip short of the quarter, strip lengths misread ("1,000 m", feet), small engine wear lost, an engine without rotating
+parts keeping no damage, and a TUNE file settling a race. Build and tests pass; not yet tried in the game.
 
 ### Step 12: a bigger opponent pool
 After step 10, since both touch the rivals and the newspaper.
