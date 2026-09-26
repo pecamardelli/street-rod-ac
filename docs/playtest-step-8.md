@@ -6,7 +6,7 @@ are `%AppData%\StreetRodAC\Logs` and `Documents\Assetto Corsa\logs\custom_shader
 `[Street Corsa]`).
 
 Already tested (2026-09-25): collisions, a police chase. Left for the first release: the end of the game (victory
-screen).
+screen), and the strip extras of step 11 (section 6).
 
 ## 1. Race rules
 
@@ -75,6 +75,29 @@ Car prices were all $5,000 until the 2026-09-25 audit, so this is the first time
       don't all go broke. Rivals' starting money was set against the old flat $5,000, so this is the likeliest thing
       to be off.
 - Your $1M starting money stays until the first release, so don't judge the player's side of the balance by it.
+
+## 6. Strip extras (after the first release)
+
+Step 11 (PR #25), run so far only in the harness (`tools/sr_race_harness/test_strip.py`). The user tests these after
+the first release (decided 2026-09-25).
+
+- [ ] **Test & Tune.** From the garage: the car is held until AC's start, then "stage up", the tree on the right, a
+      timeslip after each pass. The car goes back on the line between passes, and the passes show side by side
+      afterwards, with the best.
+- [ ] **Leaving the strip.** Going to the pits (or closing AC) in the middle of a test-and-tune keeps the passes run
+      so far and brings you back to the garage.
+- [ ] **A bracket race at the diner.** Tick the bracket box on ks_drag, pick a dial-in, race. AC's own lights go
+      green first: wait for your own tree on the right. The slower dial-in's green comes first.
+- [ ] **The rival leaves on its own green**, not AC's, and not stuck on the line.
+- [ ] **The rival takes the stripe.** Near the end it slows to run close to its dial-in, without breaking out.
+- [ ] **Rivals' dial-ins are believable**: close to what their cars actually run. They are an estimate from power
+      and weight (`BracketRules.StreetEtFactor`) until a car has a time.
+- [ ] **Breakout and red light.** Running under your dial-in loses; leaving before your green is a red light, no
+      contest.
+- [ ] **A bracket event** (Bracket Night, Dial-In Shootout) from the paper asks for your dial-in first.
+- [ ] **Best ET.** It shows with the car's history in the garage, and the slip says when it's a new best.
+- [ ] **The part that failed.** Blow an engine: the damage report names the part ("a connecting rod let go"), and
+      so does the Repairs dialog.
 
 ## Notes
 

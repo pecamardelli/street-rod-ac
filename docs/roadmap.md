@@ -540,7 +540,8 @@ Also chosen (not asked): the best ET shows in the garage and in the car's histor
     files for a bracket race and a test-and-tune.
   - The C# contract test checks that the career and the mode pick the same bracket winner.
 
-Not yet tried in the game (needs the user):
+Not yet tried in the game. **The user decided (2026-09-25):** they test these after the first release; the
+checklist is `docs/playtest-step-8.md`, "6. Strip extras (after the first release)".
 - the tree overlay and AC's own start lights together;
 - the rival held and let go at its green;
 - the stripe-taking with AC's real AI;
