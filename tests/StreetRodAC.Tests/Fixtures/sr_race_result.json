@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "generated_at": "2026-09-25T22:25:25Z",
-    "schema_version": "1.6",
-    "script_version": "3.6.0",
+    "generated_at": "2026-09-26T18:34:56Z",
+    "schema_version": "1.7",
+    "script_version": "3.7.0",
     "source": "sr_race_manager"
   },
   "participants": [
@@ -17,12 +17,23 @@
           0,
           0
         ],
+        "dirt": 0,
         "engine_life": 1000,
         "fuel_litres": 40,
         "gearbox_damage": 0,
+        "heat": {
+          "heat_life_lost": 0,
+          "lowest_oil_supply": 1,
+          "oil_life_lost": 0,
+          "oil_starved_s": 0,
+          "overheated_s": 0,
+          "peak_fade": 0,
+          "peak_water_c": 88
+        },
+        "max_fuel_litres": 60,
         "oil_pressure": 4,
         "oil_temperature_c": 100,
-        "water_temperature_c": 90,
+        "water_temperature_c": 88,
         "wheels": [
           {
             "suspension_damage": 0,
@@ -82,12 +93,23 @@
           0,
           0
         ],
+        "dirt": 0,
         "engine_life": 1000,
         "fuel_litres": 40,
         "gearbox_damage": 0,
+        "heat": {
+          "heat_life_lost": 0,
+          "lowest_oil_supply": 1,
+          "oil_life_lost": 0,
+          "oil_starved_s": 0,
+          "overheated_s": 0,
+          "peak_fade": 0,
+          "peak_water_c": 88
+        },
+        "max_fuel_litres": 60,
         "oil_pressure": 4,
         "oil_temperature_c": 100,
-        "water_temperature_c": 90,
+        "water_temperature_c": 88,
         "wheels": [
           {
             "suspension_damage": 0,
@@ -149,10 +171,10 @@
     "context_id": "6f1c2d3e-4b5a-4c6d-8e7f-90a1b2c3d4e5",
     "duration_seconds": 70,
     "end_reason": "FINISHED",
-    "end_timestamp": "2026-09-25T22:25:25Z",
+    "end_timestamp": "2026-09-26T18:34:56Z",
     "race_type": "ROAD",
     "session_id": "ca70e79d-eba4-47d2-b7e1-0cb9a70132b3",
-    "start_timestamp": "2026-09-25T22:25:25Z",
+    "start_timestamp": "2026-09-26T18:34:56Z",
     "track_id": "stub_loop"
   }
 }

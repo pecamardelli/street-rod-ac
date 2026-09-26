@@ -308,7 +308,7 @@ public sealed class AcConfigBackupTests : IDisposable
         Assert.Contains("TYRE_WEAR=1", raced);
         Assert.Contains("ABS=2", raced);             // the player's own assists stay
         Assert.Contains("VISUALDAMAGE=100", raced);
-        Assert.Contains("FUEL_RATE=0", raced);
+        Assert.Contains("FUEL_RATE=1", raced);      // the tank runs down, and what is left carries to the next race
 
         Assert.Equal(2, Service().RestoreAll());
         Assert.Equal(assists, File.ReadAllText(assistsFile));

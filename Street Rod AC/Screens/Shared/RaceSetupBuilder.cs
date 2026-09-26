@@ -156,9 +156,10 @@ namespace Street_Rod_AC.Screens.Shared
             if (playerData != null) carData.Add(playerData);
             if (sharedData != null) carData.Add(sharedData);
 
+            // The race mode runs each engine's heat from how its car is cooled. The rivals fill up before a race.
             var intent = BuildIntent(entry, opponentRacesAs, carData);
-            intent.PlayerStart = playerStart;
-            intent.OpponentStart = opponentStart;
+            intent.PlayerStart = playerStart with { Cooling = playerData?.Cooling };
+            intent.OpponentStart = opponentStart == null ? null : opponentStart with { Cooling = opponentData?.Cooling, FuelLitres = null };
             return new RaceSetupResult { Intent = intent };
         }
 

@@ -283,14 +283,15 @@ Located in the extension folder but NOT Street Rod specific:
 
 ### Current State
 The `sr_race` mode runs the race and reports it. The C# launcher:
-1. Installs the mode (`SrRaceMode`) and writes race.ini with `__CM_CUSTOM_MODE=sr_race`, and assists.ini with damage on
+1. Installs the mode (`SrRaceMode`) and writes race.ini with `__CM_CUSTOM_MODE=sr_race`, and assists.ini with damage,
+   tyre wear and fuel use on
 2. Launches AC and waits for the process to exit
 3. Reads the result the mode wrote to `Documents/Assetto Corsa/out/sr_race_manager/*.json`
 
 ### Damage
 
-Every race runs with AC's damage at 100% and tyre wear on (assists.ini). What AC reports in `condition` goes onto the
-car (`CarCondition.ApplyRace`), and back into AC at the start of the next race:
+Every race runs with AC's damage at 100%, tyre wear on and fuel use on (assists.ini `FUEL_RATE=1`). What AC reports
+in `condition` goes onto the car (`CarCondition.ApplyRace`), and back into AC at the start of the next race:
 
 | AC | After the race | Next race |
 |----|----------------|-----------|
@@ -299,21 +300,59 @@ car (`CarCondition.ApplyRace`), and back into AC at the start of the next race:
 | `gearbox_damage` (AC starts at 0) | subtracted from the transmission's `Tear` | No setter: drivetrain.ini shifts slower and engages in a narrower window (`AcDamageData`); `CAR_n_GEARBOX` tells the mode, which adds it to the race's |
 | `suspension_damage` (metres of steering rod, AC's MAX_DAMAGE 0.05) | /0.05 subtracted from that corner's spring and shock `Tear` | No setter: suspensions.ini `TOE_OUT` of the axle gains the mean bend of its corners in metres; `CAR_n_SUSPENSION` tells the mode |
 | `tyre_wear` (AC starts at 0) | subtracted from the tyre's `Wear`; `tyre_blown` sets its `Tear` to 0 | Nothing: the tyre's wear already lowers its grip in tyres.ini. AC's tyre km would count it twice |
-| distance | a little `Wear` on every engine part (1/40000 per km) | |
+| distance | a little `Wear` on every engine part (1/40000 per km), and 0.01 of dirt per km | |
+| `fuel_litres`, `max_fuel_litres` | `Car.FuelLitres` (null is a full tank), `Car.FuelTankLitres` | `CAR_n_FUEL`, set with `physics.setCarFuel`; -1 fills the tank to AC's `maxFuel`. A rival always goes in full |
+| `dirt` (0 to 1) | `Car.BodyDirt`, the worse of the car's and AC's | `CAR_n_DIRT`, set with `ac.setBodyDirt` (no permission needed) |
+| `heat` | the report says what the heat and the oil did (the life they took is in `engine_life`) | `CAR_n_COOLING` = cooling, fan, sump g (`EngineCooling`, see below) |
 
 The mode puts a car out of the race (a breakdown) when its engine life reaches 0, its gearbox's carried wear plus
-AC's gearbox damage reaches 1, a corner's carried bend plus AC's reaches 1, or a tyre blows. A car the last races
-left blown, with a gearbox or a corner under 10%, a blown tyre, or a body of 200 km/h or more (totaled) does not race
-or go on a free run until it is repaired (`CarCondition.WhyCannotRace`). An opponent's car races whatever shape it is
+AC's gearbox damage reaches 1, a corner's carried bend plus AC's reaches 1, a tyre blows, or its tank runs dry. A car
+the last races left blown, with a gearbox or a corner under 10%, a blown tyre, a body of 200 km/h or more (totaled),
+or less than 0.25 litres in the tank does not race or go on a free run until it is repaired or filled up
+(`CarCondition.WhyCannotRace`). An opponent's car races whatever shape it is
 in, with just enough to leave the line (`CarCondition.Runnable`), until opponents look after their cars.
 
 The garage's Repairs button (`RepairShop`) takes `Tear` off: an engine rebuild, a gearbox rebuild, a straightened
 corner, a new tyre for a blown one, body work. A part repair costs 60% of the damaged parts' new price as far as the
 damage goes, plus $15; body work $8 per km/h. Small jobs take `GarageWorkMinor` (30 min), big ones
-`GarageWorkMajor` (2 h). Mileage (`Wear`) is not repaired: a worn part is replaced.
+`GarageWorkMajor` (2 h). Mileage (`Wear`) is not repaired: a worn part is replaced. The same list fills the tank
+($0.11 a litre, 1970 premium) and washes the car ($3 once its dirt is 0.1 or more), 15 minutes each (`GarageChore`).
+The rivals fill up and wash their cars every day (`OpponentLifeService.LookAfter`).
 
-Oil temperature, oil pressure and water temperature are reported but not used: CSP fills oil figures only for cars
-with a script, and overheating is for the game to model.
+### Heat and oil (step 14)
+
+AC's water temperature is an estimate that changes nothing, and its oil figures are nothing to go by, so the mode runs
+its own engine heat and oil supply for both racers (`engineHeat` in `mode.lua`, one local: the chunk is at Lua's
+limit of 200) and makes them count. The career rates each car for it (`EngineCooling`, race.ini `CAR_n_COOLING`):
+
+- **Cooling** is what the radiator and water pump carry off over what the engine makes. The cooling was sized for the
+  engine as it left the factory: the car's factory power, or the block's own factory power (its least powerful
+  factory build) after a swap. A performance radiator (aluminium, racing, one with an electric fan) carries off 35%
+  more, a performance water pump 10% more; an engine whose factory build had a radiator and has none now gets 0.15.
+  Every factory car rates 1.00 to 1.35; tuned to 1.4x its power on a stock radiator it rates 0.71.
+- **Fan** is the share of the work done standing still: 0.15 without a fan, 0.35 stock, 0.5 performance, 0.55 for a
+  radiator with its own electric fan. Moving air does the rest by 60 km/h.
+- **Sump** is the g the oil pan holds its oil to: 1.05 stock, 1.25 deep or race, 1.3 for a race pan of 6.5 litres or
+  more. The cars pull 1 to 1.4 g in corners (Black Cat County, AI and autopilot, 2026-09-26; the longest spell over
+  1 g was 2.8 s), so a stock pan runs short only in a long sweeper at the limit.
+
+The radiators, fans and pumps of the source game have no figures: they are known by name (`EngineCooling.KindOf`).
+
+In the race, from the green to the line:
+- The water heads for 88 °C plus 50 °C for each unit of heat past 80% of what the radiator carries (load = throttle
+  x revs over the limiter; air = fan + the rest by speed), plus 0.4 °C per degree of air over 25 °C, with a time
+  constant of 60 s rising and 30 s falling. A drag race is too short to overheat. The mode sets the gauge
+  (`physics.setWaterTemperature`).
+- From 110 °C the engine goes flat at the top: `physics.setCarRestrictor` up to 250 at 135 °C. Measured on the Nova at
+  5000 rpm: 100 took 9% of the torque, 200 took 28%.
+- From 118 °C it cooks: 2 life a second for every degree past it. At 135 °C it boils over and the engine is dead.
+- Under a g past the sump's for 3 s the pickup runs dry in 0.5 s (and refills in 0.3 s); boiling water thins the oil.
+  A dry sump under throttle costs 10 life a second at the limiter.
+- The player hears about it: "Running hot" at 105 °C, "Overheating!" when it cooks, "Oil pressure!" when the sump runs
+  short. A breakdown the heat or the oil caused is `OVERHEAT` or `OIL`; an empty tank is `FUEL`.
+
+Checked in the game (2026-09-26, Black Cat County, autopilot): a car rated 0.30 went flat at 25 s, cooked from 46 s
+and boiled over at 90 s; its factory-rated rival stayed at 90 °C and lost nothing.
 
 ### Communication Methods
 
@@ -322,7 +361,7 @@ with a script, and overheating is for the game to model.
 | `ac.shutdownAssettoCorsa()` | Working | The mode quits AC once the result is written |
 | Signal files | Removed | Was in Python app, didn't work reliably |
 | race.ini `[STREET_ROD] CONTEXT_ID` | Working | Launcher to the mode: which race this is (see below) |
-| race.ini `[STREET_ROD] CAR_n_*` | Working | Launcher to the mode: the damage car n carries into the race (see below) |
+| race.ini `[STREET_ROD] CAR_n_*` | Working | Launcher to the mode: the damage, fuel, dirt and cooling car n carries into the race (see below) |
 | race.ini `[STREET_ROD] POLICE`, `POLICE_SPOT` | Working | Launcher to the mode: which cars are the police, and how far round the lap they show up |
 | race.ini `[STREET_ROD] DIAL_IN`, `BRACKET_RIVAL` | Working (harness) | Launcher to the mode: a bracket race's dial-ins, and how the rival leaves and takes the stripe |
 | race.ini `[STREET_ROD] RACE_TYPE=TUNE`, `TUNE_PASSES` | Working (harness) | Launcher to the mode: a test-and-tune, and how many passes |
@@ -386,9 +425,18 @@ Schema 1.6 added (step 11):
 | `participants[].dial_in_s` | number or absent | A bracket race only: the car's dial-in |
 | `participants[].breakout` | bool or absent | A bracket race only: the car ran quicker than its dial-in |
 
+Schema 1.7 added (step 14):
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `participants[].condition.max_fuel_litres` | number | What the tank holds |
+| `participants[].condition.dirt` | number | The body's dirt, 0 to 1 |
+| `participants[].condition.heat` | object | `peak_water_c`, `overheated_s` (time at 110 °C or more), `peak_fade` (the most restrictor), `heat_life_lost`, `oil_starved_s`, `oil_life_lost`, `lowest_oil_supply` (1 always, 0 dry) |
+| `participants[].breakdown` | string | Now also `OVERHEAT`, `OIL` and `FUEL` |
+
 ```json
 {
-  "metadata": { "schema_version": "1.6", "script_version": "3.6.0", "source": "sr_race_manager", "generated_at": "ISO8601" },
+  "metadata": { "schema_version": "1.7", "script_version": "3.7.0", "source": "sr_race_manager", "generated_at": "ISO8601" },
   "session": { "session_id": "UUID", "context_id": "UUID of the race context", "track_id": "...", "duration_seconds": 12.3, "end_reason": "FINISHED" },
   "participants": [
     { "driver_name": "...", "car_name": "...", "car_index": 0, "is_player": true, "false_start": false,

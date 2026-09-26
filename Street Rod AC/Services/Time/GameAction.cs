@@ -51,7 +51,10 @@ namespace Street_Rod_AC.Services.Time
         CollectFromImpound,
 
         /// <summary>A test-and-tune at the strip: passes for timeslips, nothing at stake (1 hour)</summary>
-        TestAndTune
+        TestAndTune,
+
+        /// <summary>A quick job on a car: filling it up, a wash (15 min)</summary>
+        GarageChore
     }
 
     /// <summary>
@@ -82,6 +85,7 @@ namespace Street_Rod_AC.Services.Time
                 GameAction.FreeRun => 60,
                 GameAction.CollectFromImpound => 60,
                 GameAction.TestAndTune => 60,
+                GameAction.GarageChore => 15,
                 _ => 30 // Default fallback
             };
         }

@@ -36,6 +36,7 @@ internal sealed class CatalogParts : ICarPartsService
     public BuiltEngine? CreateUsedEngine(CarDefinition car, double condition) => null;
     public string? Describe(PartInstance engine, EngineReport? report) => null;
     public EngineReport? Evaluate(Car car) => null;
+    public EngineCoolingRating? RateCooling(Car car, EngineReport? engine) => null;
     public SoundLibrary Sounds => throw new NotSupportedException();
     public CarSound? ChooseSound(Car car, EngineReport? report) => null;
     public double? FactoryEngineMass(Car car) => null;

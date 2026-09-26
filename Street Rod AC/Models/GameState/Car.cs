@@ -21,6 +21,18 @@ namespace Street_Rod_AC.Models.GameState
         public double[] BodyDamageKmh { get; set; } = new double[4];
 
         /// <summary>
+        /// The fuel in the tank, litres, as its last race left it; null for a full tank (a car that has not raced since
+        /// it was bought or filled up). It goes into the next race as it is, and the garage fills it up for money.
+        /// </summary>
+        public double? FuelLitres { get; set; }
+
+        /// <summary>What the tank holds, litres, as AC reported it after a race; null until the car has raced</summary>
+        public double? FuelTankLitres { get; set; }
+
+        /// <summary>The body's dirt, 0 clean to 1 filthy: it builds up race after race, and a wash takes it off</summary>
+        public double BodyDirt { get; set; }
+
+        /// <summary>
         /// Parts mounted on the car itself, each with everything that is mounted on it in turn.
         /// <see cref="PartInstance.ParentSlot"/> says where on the car: the engine goes on <see cref="PartInstance.CarEngineSlot"/>.
         /// </summary>

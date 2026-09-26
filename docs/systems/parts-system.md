@@ -698,14 +698,24 @@ Races set both from what Assetto Corsa reports at the end (`CarCondition.ApplyRa
 life; gearbox and tyres: `Wear` x `Tear`; body: from the damage), so prices and the garage follow the parts.
 `CarCondition.StartState` gives what the next race starts with; `AcDamageData` puts what AC cannot be told into the
 car's data (a worn gearbox shifts slower, a bent axle gets the mean bend of its corners as extra `TOE_OUT`).
-`CarCondition.WhyCannotRace` keeps a car home with a blown engine, a gearbox or corner under 10%, a blown tyre or a
-totaled body.
+`CarCondition.WhyCannotRace` keeps a car home with a blown engine, a gearbox or corner under 10%, a blown tyre, a
+totaled body or an empty tank.
 
 `RepairShop.Jobs` lists what the garage can fix, each with its cost and time: an engine rebuild (every engine part
 with `Tear`), a gearbox rebuild, a corner straightened, a new tyre for a blown one, body work. A part repair costs
 `PartShare` (60%) of the damaged parts' new price times the damage, plus `Labour` ($15); body work `BodyCostPerKmh`
-($8) per km/h. The garage's Repairs button shows them (`Dialogs/RepairShop`); the parts view shows a part's damage
-next to its wear.
+($8) per km/h. The same list fills the tank (`FuelPerLitre`, $0.11) and washes the car (`Wash`, $3), 15 minutes
+each. The garage's Repairs button shows them (`Dialogs/RepairShop`); the parts view shows a part's damage next to its
+wear.
+
+## Cooling and oil (`Parts/Cars/EngineCooling`)
+
+What the race mode's heat and oil work from (race.ini `CAR_n_COOLING`, see `docs/ac-integration/csp-lua-scripts.md`,
+"Heat and oil"). The radiators, fans and water pumps are plain parts with no figures, known by name (`KindOf`). A car's
+cooling was sized for its engine as it left the factory: the car's factory power, or its block's least powerful
+factory build after a swap. A performance radiator carries off 35% more, a performance water pump 10% more, and tuning
+past the factory's power is what makes an engine run hot. A deep or race oil pan holds its oil to more g than a stock
+one. `ICarPartsService.RateCooling` rates a car; `RaceCarDataService.Prepare` does it for every race.
 
 ## Bench (`tools/EngineBench`)
 

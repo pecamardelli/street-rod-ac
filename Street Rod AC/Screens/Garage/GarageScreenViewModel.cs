@@ -991,6 +991,11 @@ namespace Street_Rod_AC.Screens.Garage
         public string ConditionDisplay => Shared.ConditionDisplay.Of(CarInstance).Percent;
         public string MileageDisplay => $"{CarInstance.OdometerKM:N0} km";
 
+        /// <summary>What is in the tank: "Full" until a race says otherwise, then "12 of 60 l"</summary>
+        public string FuelDisplay => Parts.Cars.CarCondition.FuelLeft(CarInstance) is { } left && CarInstance.FuelTankLitres is { } tank
+            ? $"{left:0} of {tank:0} l"
+            : "Full";
+
         /// <summary>Who had the car before, how it came to the player, and how it has raced</summary>
         public string HistoryDisplay => Shared.CarHistoryDisplay.Summary(CarInstance.History, forSale: false);
         public bool HasPreviewImage => !string.IsNullOrEmpty(PreviewImagePath);
