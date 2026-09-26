@@ -45,8 +45,7 @@ namespace Street_Rod_AC.Services.Parts
         public decimal NewPrice(PartDefinition part, double priceMultiplier) =>
             PartPricing.Round(PartPricing.NewPrice(part) * GameRules.Sane(priceMultiplier));
 
-        public decimal TradeInPrice(PartInstance part) =>
-            PartPricing.Round(PartPricing.WorthOfAssembly(_parts.Catalog, part) * PartPricing.TradeInFactor);
+        public decimal TradeInPrice(PartInstance part) => PartPricing.TradeIn(_parts.Catalog, part);
 
         public async Task RefreshAdsAsync(Models.GameState.GameState gameState, DateTime currentDate)
         {
@@ -59,6 +58,12 @@ namespace Street_Rod_AC.Services.Parts
             var fresh = await Task.Run(() => IsAvailable ? CreateAds(wanted, currentDate, priceMultiplier) : null);
             if (fresh == null) return;
 
+            // A rival whose part nobody wanted lets a shop have it
+            foreach (var ad in ads.Where(ad => ad.SellerRival != null && IsExpired(ad, currentDate)))
+            {
+                RivalPartAds.Pay(gameState, ad, TradeInPrice(ad.Part));
+            }
+
             var expired = ads.RemoveAll(ad => IsExpired(ad, currentDate) || _parts.Catalog.Get(ad.Part.DefinitionId) == null);
             foreach (var ad in ads) ad.DaysActive = Math.Max(0, (int)(currentDate - ad.PostedDate).TotalDays);
 
@@ -69,7 +74,7 @@ namespace Street_Rod_AC.Services.Parts
             _logger.Information("Used parts ads: {Expired} gone, {Added} new, {Total} in the paper", expired, added.Count, ads.Count);
         }
 
-        private static bool IsExpired(PartAd ad, DateTime currentDate) => (currentDate - ad.PostedDate).TotalDays > AdLifetimeDays;
+        internal static bool IsExpired(PartAd ad, DateTime currentDate) => (currentDate - ad.PostedDate).TotalDays > AdLifetimeDays;
 
         private List<PartAd> CreateAds(int count, DateTime currentDate, double priceMultiplier)
         {
@@ -132,6 +137,7 @@ namespace Street_Rod_AC.Services.Parts
 
             gameState.Player.Money -= ad.AskingPrice;
             gameState.Player.Parts.Add(ad.Part);
+            RivalPartAds.Pay(gameState, ad, ad.AskingPrice);
             _logger.Information("Bought used {Part} from {Seller} for ${Price}", ad.Part.DefinitionId, ad.SellerName, ad.AskingPrice);
             return true;
         }

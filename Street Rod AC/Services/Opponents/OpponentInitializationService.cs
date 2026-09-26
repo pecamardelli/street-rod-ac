@@ -50,7 +50,7 @@ namespace Street_Rod_AC.Services.Opponents
         /// <summary>
         /// Initialize opponents for a new game
         /// </summary>
-        public void InitializeOpponents(GameState gameState, int? opponentCount = null)
+        public void InitializeOpponents(GameState gameState)
         {
             _logger.Information("Initializing opponents for new game");
 
@@ -65,21 +65,8 @@ namespace Street_Rod_AC.Services.Opponents
 
             _logger.Information("Loaded {Count} opponent definitions", allOpponents.Count);
 
-            // Determine how many opponents to use
-            List<Opponent> selectedOpponents;
-            if (opponentCount.HasValue && opponentCount.Value < allOpponents.Count)
-            {
-                // Select random subset
-                selectedOpponents = allOpponents.OrderBy(_ => _random.Next()).Take(opponentCount.Value).ToList();
-                _logger.Information("Selected {Count} random opponents from pool of {Total}",
-                    opponentCount.Value, allOpponents.Count);
-            }
-            else
-            {
-                // Use all opponents
-                selectedOpponents = allOpponents;
-                _logger.Information("Using all {Count} opponents", allOpponents.Count);
-            }
+            // Every one of them: EnsureNewcomers would bring in any left out on the first day anyway
+            var selectedOpponents = allOpponents;
 
             // The cars they can have, looked up once for all of them: installed ones only (AC cannot race a car
             // that was deleted from content\cars, however long the catalog remembers it), with a price
@@ -127,6 +114,52 @@ namespace Street_Rod_AC.Services.Opponents
         }
 
         public void EnsureKing(GameState gameState) => EnsureKing(gameState, null);
+
+        /// <summary>The game state last brought up to date: the definitions are read once per game, not once a day</summary>
+        private WeakReference<GameState>? _newcomersChecked;
+
+        public void EnsureNewcomers(GameState gameState)
+        {
+            if (_newcomersChecked != null && _newcomersChecked.TryGetTarget(out var done) && ReferenceEquals(done, gameState)) return;
+
+            var definitions = _opponentRepository.LoadAllOpponents();
+            var racers = gameState.Racers;
+            var known = racers.All.Concat(racers.Departed.Values).OfType<Opponent>().ToList();
+
+            // Portraits drawn after the save began (the King's). A save from before empty strings were kept may hold
+            // a racer without a definition id at all.
+            foreach (var racer in known.Where(r => string.IsNullOrEmpty(r.PortraitPath) && !string.IsNullOrEmpty(r.DefinitionId)))
+            {
+                racer.PortraitPath = definitions.FirstOrDefault(d => d.DefinitionId == racer.DefinitionId)?.PortraitPath;
+            }
+
+            // Known by definition, and by name for racers from before definitions were remembered
+            var newcomers = definitions
+                .Where(d => !d.IsKing
+                            && !known.Any(r => (!string.IsNullOrEmpty(d.DefinitionId) && r.DefinitionId == d.DefinitionId)
+                                               || string.Equals(r.Name, d.Name, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+            if (newcomers.Count == 0)
+            {
+                _newcomersChecked = new WeakReference<GameState>(gameState);
+                return;
+            }
+
+            var carPool = BuildCarPool();
+            foreach (var newcomer in newcomers)
+            {
+                newcomer.Status = RacerStatus.Inactive;
+                if (GenerateOpponentCar(newcomer, carPool, gameState.Date) is { } car) newcomer.Cars.Add(car);
+                newcomer.Money = GenerateOpponentMoney(newcomer);
+                racers.AddRacer(newcomer);
+            }
+
+            // Done for this game only once it all went through: a failure is tried again with tomorrow's review
+            _newcomersChecked = new WeakReference<GameState>(gameState);
+            _logger.Information("{Count} racer(s) defined since this game began join it, not on the street yet", newcomers.Count);
+        }
+
+        public decimal StartingMoney(Opponent opponent) => GenerateOpponentMoney(opponent);
 
         private void EnsureKing(GameState gameState, List<(CarDefinition Car, CarProfile Profile)>? carPool)
         {

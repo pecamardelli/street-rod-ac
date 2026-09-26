@@ -307,7 +307,7 @@ namespace Street_Rod_AC.Services.Market
         /// </summary>
         private const decimal MinListPrice = 500m;
 
-        public UsedCarListing ListCar(Car car, decimal price, string location, DateTime listedDate)
+        public UsedCarListing ListCar(Car car, decimal price, string location, DateTime listedDate, bool describeEngine = true)
         {
             // What a race did to the car is not always sane: a NaN odometer casts to int.MinValue, and an opponent's
             // health values carry a little noise above 1. The buyer gets the car at these numbers, so they are made sane here.
@@ -334,27 +334,33 @@ namespace Street_Rod_AC.Services.Market
                 CarInstanceId = car.InstanceId
             };
 
-            if (listing.Parts.Count > 0 && car.Engine is { } engine && _partsService is { IsAvailable: true } parts)
+            if (describeEngine && listing.Parts.Count > 0 && DescribeEngine(car) is { } engine)
             {
-                try
-                {
-                    var report = parts.Evaluate(car);
-                    listing.EngineSummary = parts.Describe(engine, report);
-                    listing.PowerHp = PowerOf(report);
-
-                    if (_catalogRepo.GetCar(car.DefinitionId) is { } carDef && parts.GetStockBuild(carDef) is { } stock)
-                    {
-                        listing.IsModified = CarValuation.IsModified(engine, stock);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // The listing still sells with its parts; the seller just has less to say about the engine
-                    _logger.Warning("Could not describe the engine of a {CarId}: {Error}", car.DefinitionId, ex.Message);
-                }
+                listing.EngineSummary = engine.Summary;
+                listing.PowerHp = engine.PowerHp;
+                listing.IsModified = engine.IsModified;
             }
 
             return listing;
+        }
+
+        public EngineDescription? DescribeEngine(Car car)
+        {
+            if (car.Engine is not { } engine || _partsService is not { IsAvailable: true } parts) return null;
+
+            try
+            {
+                var report = parts.Evaluate(car);
+                var modified = _catalogRepo.GetCar(car.DefinitionId) is { } carDef && parts.GetStockBuild(carDef) is { } stock
+                               && CarValuation.IsModified(engine, stock);
+                return new EngineDescription(parts.Describe(engine, report), PowerOf(report), modified);
+            }
+            catch (Exception ex)
+            {
+                // The car still sells with its parts; the seller just has less to say about the engine
+                _logger.Warning("Could not describe the engine of a {CarId}: {Error}", car.DefinitionId, ex.Message);
+                return null;
+            }
         }
 
         /// <summary>The dyno's horsepower; 0 for an engine that does not run</summary>

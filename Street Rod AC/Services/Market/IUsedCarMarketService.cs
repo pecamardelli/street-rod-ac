@@ -42,7 +42,11 @@ namespace Street_Rod_AC.Services.Market
         /// on. The car's part list moves to the listing; the caller no longer owns the car. The listing is
         /// returned, not added to the market.
         /// </summary>
-        UsedCarListing ListCar(Car car, decimal price, string location, DateTime listedDate);
+        /// <param name="describeEngine">False leaves out what the seller says about the engine, and the dyno run it takes</param>
+        UsedCarListing ListCar(Car car, decimal price, string location, DateTime listedDate, bool describeEngine = true);
+
+        /// <summary>What a seller says about the car's engine, off the dyno; null without an engine or parts to tell</summary>
+        EngineDescription? DescribeEngine(Car car);
 
         /// <summary>What the car is worth (<see cref="CarValuation"/>): its model's base price, its condition, its engine</summary>
         decimal ValueOf(Car car);
@@ -57,4 +61,7 @@ namespace Street_Rod_AC.Services.Market
         /// <summary>The id of the dealer that takes in the cars nobody asked about: the roughest lot of <paramref name="dealers"/></summary>
         string TradeInLocation(IReadOnlyList<DealerLocation>? dealers);
     }
+
+    /// <summary>An engine as a seller describes it: what it is, its dyno power, and whether somebody has been at it</summary>
+    public sealed record EngineDescription(string? Summary, double PowerHp, bool IsModified);
 }

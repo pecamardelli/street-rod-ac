@@ -12,5 +12,8 @@ namespace Street_Rod_AC.Services.Market
         /// </summary>
         Task<PurchaseResult> PurchaseAsync(
             Models.GameState.GameState gameState, UsedCarListing listing, CarDefinition carDef);
+
+        /// <summary>The same for a rival's car out of the paper (<see cref="RivalCarAd"/>), at the ad's price as it stands now</summary>
+        Task<PurchaseResult> PurchaseFromRivalAsync(Models.GameState.GameState gameState, RivalCarAd ad, CarDefinition carDef);
     }
 }

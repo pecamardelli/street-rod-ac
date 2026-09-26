@@ -209,7 +209,7 @@ namespace Street_Rod_AC
             CarFilterService = new CarFilterService(car => MarketService.ValueOf(car));
             MilestoneService = new MilestoneService();
             VictoryConditionService = new VictoryConditionService(
-                getTotalOpponents: gs => gs.Racers.TotalCount,
+                getTotalOpponents: OpponentsToDominate,
                 playerHasMostWins: gs => IsPlayerSeasonChampion(gs)
             );
             RaceEventService = new RaceEventService(
@@ -837,16 +837,26 @@ namespace Street_Rod_AC
         }
 
         /// <summary>
+        /// How many racers Total Domination asks the player to have beaten: everybody on the scene, and those who left
+        /// after the player beat them (they stay among the beaten, so they stay in the count). One who left unbeaten
+        /// is not asked for until they come back.
+        /// </summary>
+        private static int OpponentsToDominate(Models.GameState.GameState gameState) =>
+            gameState.Racers.TotalCount + gameState.Racers.Departed.Keys.Count(gameState.Career.DefeatedOpponentIds.Contains);
+
+        /// <summary>
         /// Check if the player has the most wins for Season Champion victory
         /// </summary>
         private static bool IsPlayerSeasonChampion(Models.GameState.GameState gameState)
         {
             var playerWins = gameState.Player.Stats.Wins;
 
-            // Every racer of the street, the King aside: his record is from before the season
+            // Every racer of the street, the King aside (his record is from before the season); those who left
+            // town too, or the champion would be whoever is left the day the best of them is away
             return gameState.Racers.ReadyToRace.Values
                 .Concat(gameState.Racers.Inactive.Values)
                 .Concat(gameState.Racers.Retired.Values)
+                .Concat(gameState.Racers.Departed.Values)
                 .Where(racer => racer is not Models.GameState.Opponent { IsKing: true })
                 .All(racer => racer.Stats.Wins <= playerWins);
         }

@@ -20,15 +20,19 @@ namespace Street_Rod_AC.Services.Opponents
     /// <summary>
     /// The rivals live like the player does. Every morning each racer (the GameMaker version's scr_review_racers):
     /// <list type="bullet">
-    /// <item>drives the best car they own, and sells what they don't need (more than <see cref="OpponentRules.MaxCars"/>, or a wreck);</item>
-    /// <item>without a car, buys one off the same lots the player buys from;</item>
+    /// <item>drives the best car they own, and sells what they don't need: a wreck for scrap, a spare over
+    /// <see cref="OpponentRules.MaxCars"/> through the paper (<see cref="RivalCarAds"/>), to a dealer when nobody calls;</item>
+    /// <item>without a car, buys one off the same lots the player buys from, or out of another rival's ad;</item>
+    /// <item>with money to spare, now and then trades up to a clearly stronger car and puts the old one in the paper;</item>
     /// <item>with a car that can't race, has it repaired if the whole bill is affordable, else sells it and buys
     /// another if that gets them racing, else sits it out (retired) until they can;</item>
-    /// <item>broke, scrapes some money together (<see cref="OpponentRules.IsBankrupt"/>) and comes back.</item>
+    /// <item>broke, scrapes some money together (<see cref="OpponentRules.IsBankrupt"/>) and comes back;</item>
+    /// <item>now and then gives up the scene for good (<see cref="OpponentRules.Leaves"/>): sells up and leaves town.</item>
     /// </list>
-    /// Then more racers come out onto the street as the weeks go by (<see cref="OpponentRules.MinActive"/>), and a
-    /// few with money to spare tune their engines (<see cref="EngineTuner"/>). What the street notices goes into
-    /// <see cref="GameState.StreetTalk"/>.
+    /// Then more racers come out onto the street as the weeks go by (<see cref="OpponentRules.MinActive"/>), new faces
+    /// first and, once there are none left, racers who left long ago; and a few with money to spare tune their engines
+    /// (<see cref="EngineTuner"/>), buying used out of the paper when it asks less and selling what came off there.
+    /// What the street notices goes into <see cref="GameState.StreetTalk"/>.
     ///
     /// The King lives the same way, but stays out of sight (inactive) until the player has earned a shot at him.
     ///
@@ -39,7 +43,8 @@ namespace Street_Rod_AC.Services.Opponents
         ICarPartsService parts,
         IUsedCarMarketService market,
         IContentCatalogRepository catalogRepo,
-        IOpponentInitializationService? initialization = null) : IOpponentLifeService
+        IOpponentInitializationService? initialization = null,
+        Random? random = null) : IOpponentLifeService
     {
         /// <summary>At most this many racers tune their engines in a day (each is a few dozen dyno runs)</summary>
         public const int MaxTunersPerDay = 3;
@@ -57,7 +62,7 @@ namespace Street_Rod_AC.Services.Opponents
         private readonly IContentCatalogRepository _catalogRepo = catalogRepo;
         private readonly IOpponentInitializationService? _initialization = initialization;
         private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("OpponentLife");
-        private readonly Random _random = new();
+        private readonly Random _random = random ?? new();
 
         // The day's catalog lookups: each model valued and named from the catalog once per review, not per car and line
         private Func<Car, decimal>? _valueOf;
@@ -66,6 +71,15 @@ namespace Street_Rod_AC.Services.Opponents
         public async Task ReviewDayAsync(GameState gameState, DateTime currentDate)
         {
             _initialization?.EnsureKing(gameState);
+            try
+            {
+                _initialization?.EnsureNewcomers(gameState);
+            }
+            catch (Exception ex)
+            {
+                // The racers on the street still have their day; the newcomers are looked for again tomorrow
+                _logger.Error(ex, "Could not bring in the racers defined since this game began");
+            }
             _valueOf = _market.Valuer();
             _carNames = CarNames.Book(_catalogRepo);
 
@@ -81,7 +95,9 @@ namespace Street_Rod_AC.Services.Opponents
                 .Concat(gameState.Racers.Inactive.Values.Where(r => r is Opponent { IsKing: true }))
                 .OfType<Opponent>()
                 .ToList();
+            RivalCarAds.Tidy(gameState);
             foreach (var racer in racers) ReviewRacer(gameState, racer, currentDate, groupOf, talk);
+            RivalCarAds.Tidy(gameState);
 
             Activate(gameState, currentDate, groupOf, talk);
 
@@ -104,7 +120,8 @@ namespace Street_Rod_AC.Services.Opponents
             {
                 CollectFromImpound(racer, date, talk);
                 PickBestCar(racer, groupOf);
-                SellSpares(gameState, racer, groupOf, talk);
+                ReviewAds(gameState, racer, date, talk);
+                SellSpares(gameState, racer, date, groupOf, talk);
 
                 if (racer.Cars.Count == 0) TryBuy(gameState, racer, date, talk);
 
@@ -117,13 +134,33 @@ namespace Street_Rod_AC.Services.Opponents
 
                 if (OpponentRules.IsBankrupt(IsReady(racer, groupOf), racer.Money, CheapestCar(gameState)))
                 {
+                    // Once per spell of being broke, not once per day of it
+                    if (!racer.IsBroke) racer.TimesBroke++;
+                    racer.IsBroke = true;
+                    if (racer.TimesBroke >= OpponentRules.MaxTimesBroke && CanLeave(gameState, racer))
+                    {
+                        Leave(gameState, racer, date, $"{racer.Name} went broke one time too many and quit the scene.", talk);
+                        return;
+                    }
+
                     var cash = OpponentRules.CashInjection(CheapestCar(gameState), _random.NextDouble());
                     racer.Money += cash;
                     talk.Add($"{racer.Name} is broke and scraped ${cash:N0} together to get back on the street.");
                     _logger.Information("{Racer} is broke: ${Cash} injected, now ${Money}", racer.Name, cash, racer.Money);
                 }
+                else
+                {
+                    racer.IsBroke = false;
 
-                MoveToWhereTheyBelong(gameState, racer, groupOf, talk);
+                    // Not on the day they bought one: a car is driven a while before it is judged
+                    if (IsReady(racer, groupOf) && racer.Cars[0].PurchaseDate.Date != date.Date && _random.NextDouble() < OpponentRules.TradeUpChance)
+                    {
+                        TryTradeUp(gameState, racer, date, groupOf, talk);
+                    }
+                }
+
+                MoveToWhereTheyBelong(gameState, racer, date, groupOf, talk);
+                MaybeLeave(gameState, racer, date, talk);
             }
             catch (Exception ex)
             {
@@ -132,12 +169,15 @@ namespace Street_Rod_AC.Services.Opponents
             }
         }
 
-        private void MoveToWhereTheyBelong(GameState gameState, Opponent racer, Func<string, string?>? groupOf, List<string> talk)
+        private void MoveToWhereTheyBelong(GameState gameState, Opponent racer, DateTime date, Func<string, string?>? groupOf, List<string> talk)
         {
             var ready = IsReady(racer, groupOf);
             var target = racer.IsKing
                 ? ready && new KingVictory().IsUnlocked(gameState.Career) ? RacerStatus.ReadyToRace : RacerStatus.Inactive
                 : ready ? RacerStatus.ReadyToRace : RacerStatus.Retired;
+
+            // How long they have been sitting out, for whether they give up (OpponentRules.Leaves)
+            racer.SittingOutSince = target == RacerStatus.Retired ? racer.SittingOutSince ?? date : null;
             if (racer.Status == target) return;
 
             var from = racer.Status;
@@ -161,6 +201,58 @@ namespace Street_Rod_AC.Services.Opponents
             }
 
             _logger.Information("{Racer}: {From} -> {To}", racer.Name, from, target);
+        }
+
+        // ----- leaving the scene -----
+
+        /// <summary>Laid up for too long, or just moving on: see <see cref="OpponentRules.Leaves"/></summary>
+        private void MaybeLeave(GameState gameState, Opponent racer, DateTime date, List<string> talk)
+        {
+            if (racer.Status is not (RacerStatus.ReadyToRace or RacerStatus.Retired)) return;
+
+            var sittingOut = racer.SittingOutSince is { } since ? (int?)(date.Date - since.Date).Days : null;
+            if (!OpponentRules.Leaves(racer.TimesBroke, sittingOut, _random.NextDouble()) || !CanLeave(gameState, racer)) return;
+
+            var why = sittingOut >= OpponentRules.LaidUpDays && racer.Cars.FirstOrDefault() is { } car
+                ? $"{racer.Name} gave up on {OpponentRules.Possessive(racer)} {CarName(car)} and quit the scene."
+                : $"{racer.Name}{Nickname(racer)} sold up and left town.";
+            Leave(gameState, racer, date, why, talk);
+        }
+
+        /// <summary>
+        /// Not the King, and not with something open with the player: a race about to start, a rematch they want, an
+        /// offer on the player's car
+        /// </summary>
+        private static bool CanLeave(GameState gameState, Opponent racer)
+        {
+            if (racer.IsKing || racer.Grudge != null) return false;
+            if (string.Equals(gameState.PendingRace?.OpponentName, racer.Name, StringComparison.Ordinal)) return false;
+            return !gameState.NewspaperAds.PlayerCars.Any(a => string.Equals(a.Offer?.RivalName, racer.Name, StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// Gone for good: the cars go to a dealer (a wreck for scrap; one in the impound stays with the police), their
+        /// ads come down, and they leave the street (<see cref="RacerStatus.Departed"/>). The parts they put in the
+        /// paper stay there; nobody is paid for them any more.
+        /// </summary>
+        private void Leave(GameState gameState, Opponent racer, DateTime date, string why, List<string> talk)
+        {
+            foreach (var car in racer.Cars.ToList())
+            {
+                if (car.IsImpounded) racer.Cars.Remove(car);
+                else Sell(gameState, racer, car, []);
+            }
+
+            gameState.NewspaperAds.RivalCars.RemoveAll(a => a.RivalName == racer.Name);
+            foreach (var ad in gameState.NewspaperAds.Parts.Where(a => a.SellerRival == racer.Name)) ad.SellerRival = null;
+
+            racer.Grudge = null;
+            racer.LeftDate = date;
+            racer.SittingOutSince = null;
+            gameState.Racers.MoveRacer(racer.Name, RacerStatus.Departed);
+
+            talk.Add(why);
+            _logger.Information("{Racer} left the scene: {Why}", racer.Name, why);
         }
 
         /// <summary>
@@ -203,19 +295,70 @@ namespace Street_Rod_AC.Services.Opponents
         private double Score(Car car, Func<string, string?>? groupOf) =>
             OpponentRules.CarScore(car.PowerHp ?? 0, CarValuation.ConditionOf(car), CanRace(car, groupOf), ValueOf(car));
 
-        /// <summary>Wrecks they don't drive go for scrap, and cars beyond the spare to a dealer</summary>
-        private void SellSpares(GameState gameState, Opponent racer, Func<string, string?>? groupOf, List<string> talk)
+        /// <summary>
+        /// Wrecks they don't drive go for scrap, and cars beyond the spare into the paper (a dealer takes them when
+        /// nobody calls, see <see cref="ReviewAds"/>)
+        /// </summary>
+        private void SellSpares(GameState gameState, Opponent racer, DateTime date, Func<string, string?>? groupOf, List<string> talk)
         {
-            while (racer.Cars.Count > 1)
+            // Cars in the impound can't be sold: with nothing else to spare they wait
+            foreach (var wreck in racer.Cars.Skip(1).Where(c => !c.IsImpounded && CarCondition.IsTotaled(c)).ToList())
             {
-                // Cars in the impound can't be sold: with nothing else to spare they wait
-                var spares = racer.Cars.Skip(1).Where(c => !c.IsImpounded).ToList();
-                if (spares.Count == 0) return;
-                var wreck = spares.FirstOrDefault(CarCondition.IsTotaled);
-                var sell = wreck ?? (racer.Cars.Count > OpponentRules.MaxCars ? spares.OrderBy(c => Score(c, groupOf)).First() : null);
-                if (sell == null) return;
+                Sell(gameState, racer, wreck, talk);
+            }
 
-                Sell(gameState, racer, sell, talk);
+            var over = racer.Cars.Count - OpponentRules.MaxCars;
+            if (over <= 0) return;
+
+            var advertised = RivalCarAds.AdvertisedBy(gameState, racer);
+            var spares = racer.Cars.Skip(1)
+                .Where(c => !c.IsImpounded && !advertised.Contains(c.InstanceId))
+                .OrderBy(c => Score(c, groupOf))
+                .Take(over - racer.Cars.Skip(1).Count(c => advertised.Contains(c.InstanceId)))
+                .ToList();
+            foreach (var spare in spares) Advertise(gameState, racer, spare, date, talk);
+        }
+
+        /// <summary>The car in the paper, asking less than a lot would and more than a dealer pays</summary>
+        private void Advertise(GameState gameState, Opponent racer, Car car, DateTime date, List<string> talk)
+        {
+            var value = ValueOf(car);
+            var asking = OpponentRules.AskingPrice(GameRules.Scale(value, gameState.Rules.CarPriceMultiplier),
+                Math.Round(value * (decimal)CarSaleService.DealerShare), _random.NextDouble());
+            if (asking <= 0)
+            {
+                Sell(gameState, racer, car, talk);
+                return;
+            }
+
+            // What the seller says about the engine, as a lot would: the ad keeps it, the paper's page reads it from there
+            var engine = _market.DescribeEngine(car);
+            RivalCarAds.Post(gameState, racer, car, asking, date, engine?.Summary, engine?.IsModified ?? false);
+            talk.Add($"{racer.Name} put {OpponentRules.Possessive(racer)} {CarName(car)} in the paper for ${asking:N0}.");
+            _logger.Information("{Racer} advertised the {Car} for ${Asking}", racer.Name, car.DefinitionId, asking);
+        }
+
+        /// <summary>
+        /// Their ads in the paper: one nobody answered for a week comes down in price, and one that ran its time goes
+        /// to a dealer after all
+        /// </summary>
+        private void ReviewAds(GameState gameState, Opponent racer, DateTime date, List<string> talk)
+        {
+            foreach (var (ad, _, car) in RivalCarAds.LiveOf(gameState, racer))
+            {
+                // By the calendar, as the other day counts are: not by the hour the review happens to run
+                var days = (date.Date - ad.PostedDate.Date).Days;
+                if (days >= CarSaleService.AdDays)
+                {
+                    talk.Add($"Nobody called about {racer.Name}'s {CarName(car)}.");
+                    Sell(gameState, racer, car, talk);
+                }
+                else if (days >= OpponentRules.AskReducedAfterDays && !ad.Reduced)
+                {
+                    var floor = Math.Round(ValueOf(car) * (decimal)CarSaleService.DealerShare);
+                    ad.AskingPrice = Math.Max(floor, CarValuation.RoundToHundred(ad.AskingPrice * OpponentRules.AskReduction));
+                    ad.Reduced = true;
+                }
             }
         }
 
@@ -229,6 +372,7 @@ namespace Street_Rod_AC.Services.Opponents
             racer.Cars.Remove(car);
             racer.Money += paid;
             racer.Stats.CarsSold++;
+            if (RivalCarAds.AdFor(gameState, car) is { } ad) gameState.NewspaperAds.RivalCars.Remove(ad);
 
             if (!totaled)
             {
@@ -243,17 +387,76 @@ namespace Street_Rod_AC.Services.Opponents
             return paid;
         }
 
-        /// <summary>The best car on the lots for the racer's money, as <see cref="OpponentRules.PurchaseScore"/> weighs them</summary>
+        /// <summary>A car for sale as a buyer weighs it: off a lot, or out of a rival's ad</summary>
+        private sealed record ForSale(decimal Price, double Hp, double Condition, UsedCarListing? Listing, RivalCarAds.Offer? Ad);
+
+        /// <summary>Everything for sale a racer could buy with <paramref name="budget"/>: the lots and the other rivals' ads</summary>
+        private List<ForSale> CarsForSale(GameState gameState, Opponent racer, decimal budget) =>
+        [
+            .. gameState.UsedCarMarket
+                .Where(l => !l.IsSold && l.Price > 0 && l.Price <= budget)
+                .Select(l => new ForSale(l.Price, l.PowerHp ?? 0, l.Condition, l, null)),
+            .. RivalCarAds.Live(gameState)
+                .Where(o => !ReferenceEquals(o.Seller, racer) && o.Ad.AskingPrice > 0 && o.Ad.AskingPrice <= budget)
+                .Select(o => new ForSale(o.Ad.AskingPrice, o.Car.PowerHp ?? 0, CarValuation.ConditionOf(o.Car), null, o))
+        ];
+
+        /// <summary>The best car on the lots and in the paper for the racer's money, as <see cref="OpponentRules.PurchaseScore"/> weighs them</summary>
         private bool TryBuy(GameState gameState, Opponent racer, DateTime date, List<string> talk)
         {
             var budget = racer.Money;
             if (budget <= 0) return false;
 
-            var listing = gameState.UsedCarMarket
-                .Where(l => !l.IsSold && l.Price > 0 && l.Price <= budget)
-                .OrderByDescending(l => OpponentRules.PurchaseScore(l.PowerHp ?? 0, l.Condition, (l.PowerHp ?? 0) > 0, l.Price, budget))
+            var pick = CarsForSale(gameState, racer, budget)
+                .OrderByDescending(c => OpponentRules.PurchaseScore(c.Hp, c.Condition, c.Hp > 0, c.Price, budget))
                 .FirstOrDefault();
-            if (listing == null) return false;
+            return pick != null && Buy(gameState, racer, pick, date, talk);
+        }
+
+        /// <summary>
+        /// Now and then a racer with money to spare buys a clearly stronger car (<see cref="OpponentRules.WorthTradingUp"/>)
+        /// and drives it; the old one goes into the paper
+        /// </summary>
+        private void TryTradeUp(GameState gameState, Opponent racer, DateTime date, Func<string, string?>? groupOf, List<string> talk)
+        {
+            if (racer.IsKing || racer.Cars.FirstOrDefault() is not { } current) return;
+
+            var currentHp = current.PowerHp ?? 0;
+            var pick = CarsForSale(gameState, racer, racer.Money)
+                .Where(c => c.Hp > 0 && OpponentRules.WorthTradingUp(currentHp, c.Hp, c.Price, racer.Money))
+                // A rival's car is there to look at: one that can't race is no step up
+                .Where(c => c.Ad == null || CanRace(c.Ad.Car, groupOf))
+                .OrderByDescending(c => OpponentRules.PurchaseScore(c.Hp, c.Condition, true, c.Price, racer.Money))
+                .FirstOrDefault();
+            if (pick == null || !Buy(gameState, racer, pick, date, talk)) return;
+
+            // A car off a lot that turns out not fit to race: they keep driving the old one, and it stays out of the paper
+            PickBestCar(racer, groupOf);
+            if (ReferenceEquals(racer.Cars[0], current)) return;
+
+            if (RivalCarAds.AdFor(gameState, current) == null && !current.IsImpounded) Advertise(gameState, racer, current, date, talk);
+        }
+
+        private bool Buy(GameState gameState, Opponent racer, ForSale pick, DateTime date, List<string> talk)
+        {
+            if (pick.Ad is { } offer)
+            {
+                var seller = offer.Seller;
+                var bought = RivalCarAds.HandOver(gameState, offer.Ad, racer.Name, date);
+                if (bought == null) return false;
+
+                racer.Money -= offer.Ad.AskingPrice;
+                racer.Cars.Insert(0, bought);
+                racer.Stats.CarsOwned++;
+                Grudges.CarBack(racer, bought);
+
+                talk.Add($"{racer.Name} bought {seller.Name}'s {CarName(bought)} out of the paper for ${offer.Ad.AskingPrice:N0}.");
+                _logger.Information("{Racer} bought {Seller}'s {Car} for ${Price} ({Hp:0} hp), ${Money} left",
+                    racer.Name, seller.Name, bought.DefinitionId, offer.Ad.AskingPrice, bought.PowerHp ?? 0, racer.Money);
+                return true;
+            }
+
+            var listing = pick.Listing!;
 
             // Off the lot, exactly as the player would have had it
             listing.IsSold = true;
@@ -316,25 +519,60 @@ namespace Street_Rod_AC.Services.Opponents
         private void Activate(GameState gameState, DateTime date, Func<string, string?>? groupOf, List<string> talk)
         {
             var racers = gameState.Racers;
-            var street = racers.All
+            // Those who left count: once the new faces run out, they are who comes back
+            var street = racers.All.Concat(racers.Departed.Values)
                 .Count(r => r is not Opponent { IsKing: true });
             var ready = racers.ReadyToRace.Values.Count(r => r is not Opponent { IsKing: true });
             var wanted = OpponentRules.MinActive(date, street) - ready;
             if (wanted <= 0) return;
 
             var newcomers = racers.Inactive.Values.OfType<Opponent>().Where(o => !o.IsKing).OrderBy(_ => _random.Next()).Take(wanted).ToList();
-            foreach (var racer in newcomers)
+            var comebacks = ComeBacks(gameState, date, wanted - newcomers.Count);
+            foreach (var back in comebacks)
+            {
+                racers.MoveRacer(back.Name, RacerStatus.Inactive);
+                talk.Add($"{back.Name}{Nickname(back)} is back in town.");
+            }
+
+            foreach (var racer in newcomers.Concat(comebacks))
             {
                 racers.MoveRacer(racer.Name, RacerStatus.Retired);
                 ReviewRacer(gameState, racer, date, groupOf, talk);
-                if (racer.Status == RacerStatus.ReadyToRace)
+                talk.RemoveAll(t => t == $"{racer.Name} is back on the street.");
+
+                // One who came back was announced as that: not a new face
+                if (racer.Status == RacerStatus.ReadyToRace && !comebacks.Contains(racer))
                 {
-                    talk.RemoveAll(t => t == $"{racer.Name} is back on the street.");
                     talk.Add(racer.Cars.FirstOrDefault() is { } car
                         ? $"A new face at the diner: {racer.Name}{Nickname(racer)}, in a {CarName(car)}."
                         : $"A new face at the diner: {racer.Name}{Nickname(racer)}.");
                 }
             }
+        }
+
+        /// <summary>
+        /// Racers who left at least <see cref="OpponentRules.ComeBackAfterDays"/> ago, the longest gone first, with a
+        /// fresh start: new money, nothing owed, broke no more
+        /// </summary>
+        private List<Opponent> ComeBacks(GameState gameState, DateTime date, int count)
+        {
+            if (count <= 0) return [];
+
+            var back = gameState.Racers.Departed.Values.OfType<Opponent>()
+                .Where(o => !o.IsKing && o.LeftDate is { } left && (date.Date - left.Date).Days >= OpponentRules.ComeBackAfterDays)
+                .OrderBy(o => o.LeftDate)
+                .Take(count)
+                .ToList();
+            foreach (var racer in back)
+            {
+                racer.Money = _initialization?.StartingMoney(racer) ?? OpponentRules.CashInjection(CheapestCar(gameState), _random.NextDouble());
+                racer.TimesBroke = 0;
+                racer.IsBroke = false;
+                racer.LeftDate = null;
+                _logger.Information("{Racer} came back to town with ${Money}", racer.Name, racer.Money);
+            }
+
+            return back;
         }
 
         /// <summary>A few racers with money to spare put it into their engines; the parts are tried on the dyno off the UI thread</summary>
@@ -352,7 +590,9 @@ namespace Street_Rod_AC.Services.Opponents
                 .OrderBy(_ => _random.Next())
                 .Take(MaxTunersPerDay)
                 .Select(r => new TuneJob(r.Racer, r.Racer.Cars[0], r.Racer.Cars[0].Engine!.InstanceId, PartTrees.Clone(r.Racer.Cars[0].Engine!, keepIds: true),
-                    r.Budget, _random.Next()))
+                    r.Budget, _random.Next(),
+                    // The paper as it is this morning, copied: the tuner reads it off this thread
+                    RivalPartAds.OffersFor(gameState, r.Racer).Select(o => o with { Part = PartTrees.Clone(o.Part, keepIds: true) }).ToList()))
                 .ToList();
             if (jobs.Count == 0) return;
 
@@ -364,7 +604,7 @@ namespace Street_Rod_AC.Services.Opponents
                 try
                 {
                     // One thing at a time: a racer works on the car over the weeks, not in a day
-                    return EngineTuner.TuneUp(catalog, builds, job.Engine, job.Budget, prices, new Random(job.Seed), maxUpgrades: 1);
+                    return EngineTuner.TuneUp(catalog, builds, job.Engine, job.Budget, prices, new Random(job.Seed), maxUpgrades: 1, used: job.Used);
                 }
                 catch (Exception ex)
                 {
@@ -375,16 +615,33 @@ namespace Street_Rod_AC.Services.Opponents
 
             for (var i = 0; i < jobs.Count; i++)
             {
-                var (racer, car, engineId, _, _, _) = jobs[i];
+                var (racer, car, engineId, _, _, _, _) = jobs[i];
                 var result = results[i];
                 if (result == null) continue;
 
-                // Still their car, still that engine, still the money: the day may have moved on meanwhile
+                // Still their car, still that engine, still the money, still the part in the paper: the day may have
+                // moved on meanwhile (another racer bought it this morning)
                 var index = car.Parts.FindIndex(p => p.InstanceId == engineId);
                 if (!racer.Cars.Contains(car) || index < 0 || racer.Money < result.Cost) continue;
+                if (result.Upgrades.Any(u => u.UsedAdId is { } id && gameState.NewspaperAds.Parts.All(a => a.AdId != id))) continue;
 
                 car.Parts[index] = result.Engine;
-                racer.Money += result.TradeIn - result.Cost;
+                racer.Money -= result.Cost;
+                foreach (var upgrade in result.Upgrades)
+                {
+                    if (upgrade.UsedAdId is { } adId) RivalPartAds.Take(gameState, adId);
+
+                    // What came off goes into the paper under their name, paid for when it sells (or at a shop's
+                    // trade-in when the ad runs out); a shop takes at once what is worth nothing there
+                    foreach (var removed in upgrade.Removed)
+                    {
+                        if (RivalPartAds.Post(gameState, catalog, racer, removed, gameState.Date, _random.NextDouble()) is { } ad)
+                            _logger.Information("{Racer} put the {Part} in the paper for ${Price}", racer.Name, removed.DefinitionId, ad.AskingPrice);
+                        else
+                            racer.Money += PartPricing.TradeIn(catalog, removed);
+                    }
+                }
+
                 car.PowerHp = MarketPower(result.Report);
                 if (groupOf != null) CarCondition.RefreshFigures(car, groupOf);
 
@@ -395,12 +652,12 @@ namespace Street_Rod_AC.Services.Opponents
                         : $"{racer.Name} put a {upgrade.Change} on {OpponentRules.Possessive(racer)} {CarName(car)} ({upgrade.PowerBefore:0} → {upgrade.PowerAfter:0} hp).");
                 }
 
-                _logger.Information("{Racer} tuned the {Car}: {Upgrades}; ${Cost} spent, ${TradeIn} back, ${Money} left",
-                    racer.Name, car.DefinitionId, string.Join(", ", result.Upgrades.Select(u => u.Change)), result.Cost, result.TradeIn, racer.Money);
+                _logger.Information("{Racer} tuned the {Car}: {Upgrades}; ${Cost} spent, ${Money} left",
+                    racer.Name, car.DefinitionId, string.Join(", ", result.Upgrades.Select(u => u.Change)), result.Cost, racer.Money);
             }
         }
 
-        private sealed record TuneJob(Opponent Racer, Car Car, Guid EngineId, PartInstance Engine, decimal Budget, int Seed);
+        private sealed record TuneJob(Opponent Racer, Car Car, Guid EngineId, PartInstance Engine, decimal Budget, int Seed, List<UsedPartOffer> Used);
 
         // ----- the parts and the dyno -----
 

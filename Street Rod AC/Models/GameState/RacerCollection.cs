@@ -10,11 +10,19 @@ namespace Street_Rod_AC.Models.GameState
         public Dictionary<string, Racer> Retired { get; set; }
         public Dictionary<string, Racer> ReadyToRace { get; set; }
 
+        /// <summary>
+        /// Racers who left the scene for good. Kept so their name stays theirs and one who comes back years later is
+        /// the same racer, but they are in none of the lookups the game races from: not in <see cref="All"/>, not
+        /// found by <see cref="Find"/>.
+        /// </summary>
+        public Dictionary<string, Racer> Departed { get; set; }
+
         public RacerCollection()
         {
             Inactive = [];
             Retired = [];
             ReadyToRace = [];
+            Departed = [];
         }
 
         public void AddRacer(Racer racer)
@@ -24,6 +32,7 @@ namespace Street_Rod_AC.Models.GameState
                 RacerStatus.Inactive => Inactive,
                 RacerStatus.Retired => Retired,
                 RacerStatus.ReadyToRace => ReadyToRace,
+                RacerStatus.Departed => Departed,
                 _ => ReadyToRace
             };
 
@@ -55,7 +64,8 @@ namespace Street_Rod_AC.Models.GameState
         /// <summary>The racer whose name matches whatever its case, the exact match first</summary>
         private Racer? FindIgnoringCase(string name) =>
             Find(name)
-            ?? ReadyToRace.Concat(Inactive).Concat(Retired)
+            ?? (Departed.TryGetValue(name, out var departed) ? departed : null)
+            ?? ReadyToRace.Concat(Inactive).Concat(Retired).Concat(Departed)
                 .FirstOrDefault(entry => string.Equals(entry.Key, name, StringComparison.OrdinalIgnoreCase)).Value;
 
         public void MoveRacer(string name, RacerStatus newStatus)
@@ -69,6 +79,8 @@ namespace Street_Rod_AC.Models.GameState
                 Retired.Remove(name);
             else if (ReadyToRace.TryGetValue(name, out racer))
                 ReadyToRace.Remove(name);
+            else if (Departed.TryGetValue(name, out racer))
+                Departed.Remove(name);
 
             if (racer != null)
             {
@@ -77,7 +89,7 @@ namespace Street_Rod_AC.Models.GameState
             }
         }
 
-        /// <summary>Every racer, whatever their status: ready to race, sitting out, not on the street yet</summary>
+        /// <summary>Every racer on the scene, whatever their status: ready to race, sitting out, not on the street yet. Not those who left.</summary>
         [LiteDB.BsonIgnore]
         public IEnumerable<Racer> All => ReadyToRace.Values.Concat(Retired.Values).Concat(Inactive.Values);
 
