@@ -24,11 +24,13 @@ internal sealed class FakeMarket(decimal value, List<DealerLocation>? dealers = 
     public string TradeInLocation(IReadOnlyList<DealerLocation>? known) => "industrial_motors";
     public List<DealerLocation> GetDefaultDealers() => dealers ?? [];
 
-    public UsedCarListing ListCar(Car car, decimal price, string location, DateTime listedDate)
+    public UsedCarListing ListCar(Car car, decimal price, string location, DateTime listedDate, bool describeEngine = true)
     {
         Listed.Add((car, price, location));
         return new UsedCarListing { CarDefinitionId = car.DefinitionId, Price = price, DealerLocation = location, ListedDate = listedDate };
     }
+
+    public EngineDescription? DescribeEngine(Car car) => null;
 
     public Task<List<UsedCarListing>> SpawnListingsAsync(List<DealerLocation> dealers, DateTime currentDate, double priceMultiplier) => throw new NotSupportedException();
     /// <summary>What a refresh does with the listings there are; unset, a refresh is not expected</summary>

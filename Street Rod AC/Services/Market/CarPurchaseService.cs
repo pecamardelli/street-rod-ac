@@ -40,8 +40,6 @@ namespace Street_Rod_AC.Services.Market
         public async Task<PurchaseResult> PurchaseAsync(
             Models.GameState.GameState gameState, UsedCarListing listing, CarDefinition carDef)
         {
-            if (listing.PrivateSeller != null) return await PurchaseFromRivalAsync(gameState, listing, carDef);
-
             if (gameState.Player.Money < listing.Price)
             {
                 _logger.Warning("Purchase failed: insufficient funds");
@@ -115,17 +113,17 @@ namespace Street_Rod_AC.Services.Market
         /// A rival's car out of the paper (<see cref="RivalCarAds"/>): that very car, from the rival's garage, the money to
         /// the rival. Nothing to put together, so nothing is awaited before the car changes hands.
         /// </summary>
-        private async Task<PurchaseResult> PurchaseFromRivalAsync(Models.GameState.GameState gameState, UsedCarListing listing, CarDefinition carDef)
+        public async Task<PurchaseResult> PurchaseFromRivalAsync(Models.GameState.GameState gameState, RivalCarAd ad, CarDefinition carDef)
         {
-            // The ad as it stands now: its price may have come down since the page was drawn
-            var ad = RivalCarAds.AdOf(gameState, listing);
-            if (ad == null)
+            // The ad as it stands now: sold meanwhile, or its price come down since the page was drawn
+            if (gameState.NewspaperAds.RivalCars?.Contains(ad) != true)
             {
                 _logger.Warning("Purchase failed: the ad is gone");
                 return new PurchaseResult(PurchaseOutcome.NoLongerAvailable, "This car is no longer available.");
             }
 
             var price = ad.AskingPrice;
+            var seller = ad.RivalName;
             if (gameState.Player.Money < price)
             {
                 _logger.Warning("Purchase failed: insufficient funds");
@@ -147,7 +145,7 @@ namespace Street_Rod_AC.Services.Market
             gameState.Player.SelectedCarInstanceId ??= car.InstanceId;
 
             _logger.Information("Purchase completed: {CarName} from {Seller} for ${Price}, new bankroll: ${Bankroll}",
-                carDef.Name, listing.PrivateSeller, price, gameState.Player.Money);
+                carDef.Name, seller, price, gameState.Player.Money);
 
             try
             {
@@ -161,7 +159,7 @@ namespace Street_Rod_AC.Services.Market
             var saveFailed = !GameSaves.TrySave(_gameStateRepository, gameState, _logger, "a purchase");
 
             return new PurchaseResult(PurchaseOutcome.Bought,
-                $"You bought {listing.PrivateSeller}'s {carDef.Brand} {carDef.Name} for ${price:N0}.\n\n" +
+                $"You bought {seller}'s {carDef.Brand} {carDef.Name} for ${price:N0}.\n\n" +
                 "You can now find it in your garage.",
                 saveFailed);
         }

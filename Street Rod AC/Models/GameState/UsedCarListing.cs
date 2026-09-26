@@ -97,13 +97,6 @@ namespace Street_Rod_AC.Models.GameState
         /// and on listings from before it was kept.
         /// </summary>
         public Guid? CarInstanceId { get; set; }
-
-        /// <summary>
-        /// The rival selling the car through the paper (<see cref="RivalCarAd"/>), when this listing stands for their ad
-        /// rather than a car on a lot. Such a listing is made up to show the ad and never kept in the market: its
-        /// <see cref="Id"/> is the ad's.
-        /// </summary>
-        public string? PrivateSeller { get; set; }
     }
 
     /// <summary>

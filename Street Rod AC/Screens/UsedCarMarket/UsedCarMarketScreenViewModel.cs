@@ -168,12 +168,14 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             Listings.Clear();
 
             // A market that failed to spawn is empty, not missing. The rivals' own ads come after the lots.
-            var availableListings = _marketService.GetAvailableListings(_gameState.UsedCarMarket ?? []);
+            var availableListings = _marketService.GetAvailableListings(_gameState.UsedCarMarket ?? [])
+                .Select(l => (Listing: l, Offer: (RivalCarAds.Offer?)null))
+                .ToList();
             foreach (var offer in RivalCarAds.Live(_gameState))
             {
                 try
                 {
-                    availableListings.Add(RivalCarAds.AsListing(offer, _marketService));
+                    availableListings.Add((RivalCarAds.AsListing(offer, _marketService), offer));
                 }
                 catch (Exception ex)
                 {
@@ -182,7 +184,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             }
             _logger.Information("Loading {Count} available listings", availableListings.Count);
 
-            foreach (var listing in availableListings)
+            foreach (var (listing, rivalOffer) in availableListings)
             {
                 var carDef = _catalogRepo.GetCar(listing.CarDefinitionId);
                 if (carDef == null)
@@ -208,7 +210,9 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
                     Listing = listing,
                     CarDefinition = carDef,
                     CarProfile = profile,
-                    DealerName = listing.PrivateSeller != null ? UsedCarListingViewModel.PrivateSellerName(listing.PrivateSeller) : dealerLocation?.Name ?? "Unknown",
+                    RivalAd = rivalOffer?.Ad,
+                    PrivateSeller = rivalOffer?.Seller.Name,
+                    DealerName = rivalOffer != null ? UsedCarListingViewModel.PrivateSellerName(rivalOffer.Seller.Name) : dealerLocation?.Name ?? "Unknown",
                     CanAfford = _gameState.Player.Money >= listing.Price
                 };
 
@@ -228,7 +232,7 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
             }
             else if (_selectedDealer == PrivateSellers)
             {
-                ListingsView.Filter = obj => obj is UsedCarListingViewModel { Listing.PrivateSeller: not null };
+                ListingsView.Filter = obj => obj is UsedCarListingViewModel { RivalAd: not null };
             }
             else
             {
@@ -304,11 +308,20 @@ namespace Street_Rod_AC.Screens.UsedCarMarket
         public string DealerName { get; set; } = string.Empty;
         public bool CanAfford { get; set; }
 
+        /// <summary>
+        /// The rival's ad this stands for, when the car is a racer's own in the paper rather than on a lot: the
+        /// <see cref="Listing"/> is then made up to show it (<see cref="RivalCarAds.AsListing"/>), and the ad is what is bought
+        /// </summary>
+        public RivalCarAd? RivalAd { get; set; }
+
+        /// <summary>The racer selling it, with <see cref="RivalAd"/></summary>
+        public string? PrivateSeller { get; set; }
+
         /// <summary>How a racer selling their own car shows where a dealer's name would</summary>
         public static string PrivateSellerName(string rival) => $"{rival} (private)";
 
         /// <summary>Who sells it, for the purchase question</summary>
-        public string SellerLine => Listing.PrivateSeller != null ? $"Seller: {Listing.PrivateSeller}" : $"Dealer: {DealerName}";
+        public string SellerLine => PrivateSeller != null ? $"Seller: {PrivateSeller}" : $"Dealer: {DealerName}";
 
         public string DisplayName => $"{CarDefinition.Brand} {CarDefinition.Name}";
         public string YearDisplay => CarDefinition.Year?.ToString() ?? "Unknown";

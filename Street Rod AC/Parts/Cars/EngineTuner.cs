@@ -5,12 +5,13 @@ using Street_Rod_AC.Parts.Logic;
 namespace Street_Rod_AC.Parts.Cars;
 
 /// <summary>
-/// One thing done to an engine, and what it came to. <paramref name="TradeIn"/> is what a shop pays for the parts that
-/// came off (<paramref name="Removed"/>, loose, each without what was on it; a swapped-out engine whole).
-/// <paramref name="UsedAdId"/> is the ad the part was bought from, when it was bought used out of the paper.
+/// One thing done to an engine, and what it came to. <paramref name="Removed"/> are the parts that came off (loose,
+/// each without what was on it; a swapped-out engine whole), for whoever did the work to sell on or trade in;
+/// <paramref name="TradeIn"/> is what a shop would pay for them. <paramref name="UsedAdId"/> is the ad the part was
+/// bought from, when it was bought used out of the paper.
 /// </summary>
 public sealed record TuneUpgrade(string Change, string Group, double PowerBefore, double PowerAfter, decimal Cost, decimal TradeIn,
-    Guid? UsedAdId = null, IReadOnlyList<PartInstance>? Removed = null);
+    IReadOnlyList<PartInstance> Removed, Guid? UsedAdId = null);
 
 /// <summary>A part or a whole engine for sale in the paper, as a tuner weighs it against a new one</summary>
 public sealed record UsedPartOffer(Guid AdId, PartInstance Part, decimal Price);
@@ -21,7 +22,7 @@ public sealed record TuneResult(PartInstance Engine, EngineReport Report, IReadO
     /// <summary>What the new parts cost</summary>
     public decimal Cost => Upgrades.Sum(u => u.Cost);
 
-    /// <summary>What the parts that came off fetch</summary>
+    /// <summary>What a shop would pay for the parts that came off</summary>
     public decimal TradeIn => Upgrades.Sum(u => u.TradeIn);
 }
 
@@ -123,17 +124,18 @@ public static class EngineTuner
             return UsedFor(part, newPrice)?.Price ?? newPrice;
         }
 
-        void Consider(PartInstance tuned, string change, string group, decimal cost, decimal tradeIn, Guid? adId, IReadOnlyList<PartInstance> removed)
+        void Consider(PartInstance tuned, string change, string group, decimal cost, decimal tradeIn, Guid? adId, IReadOnlyList<PartInstance> removed,
+            double maxPower = double.PositiveInfinity)
         {
             var after = EngineFactory.Evaluate(catalog, tuned);
             if (after is not { Runs: true }) return;
 
             var gain = after.Dyno!.MaxPowerHp / power - 1;
-            if (gain < MinGain) return;
+            if (gain < MinGain || after.Dyno.MaxPowerHp > maxPower) return;
 
             var score = gain * 100 / (double)Math.Max(1m, cost) * Priority(group);
             if (best == null || score > best.Score)
-                best = new Candidate(tuned, after, new TuneUpgrade(change, group, power, after.Dyno.MaxPowerHp, cost, tradeIn, adId, removed), score);
+                best = new Candidate(tuned, after, new TuneUpgrade(change, group, power, after.Dyno.MaxPowerHp, cost, tradeIn, removed, adId), score);
         }
 
         // Bolt-ons: every part of a kind worth tuning, against what else goes where it sits
@@ -186,7 +188,7 @@ public static class EngineTuner
                 tunedParent.Children[index] = replacement;
 
                 trials--;
-                var tradeIn = TradeIn(catalog, old, withChildren: false) + replaced.Sum(p => TradeIn(catalog, p, withChildren: false));
+                var tradeIn = TradeIn(catalog, old) + replaced.Sum(p => TradeIn(catalog, p));
                 Consider(tuned, offer != null ? $"used {Name(newDefinition)}" : Name(newDefinition), group, cost, tradeIn, offer?.AdId,
                     [Loose(old), .. replaced.Select(p => Loose(p))]);
             }
@@ -210,20 +212,20 @@ public static class EngineTuner
                 if (EngineFactory.CreateStock(catalog, build, UsedEngineCondition, random) is not { } stock) continue;
 
                 trials--;
-                Consider(stock.Root, $"the engine of a {build.Build.Name}", BlockGroup, cost, TradeIn(catalog, root, withChildren: true), null,
+                Consider(stock.Root, $"the engine of a {build.Build.Name}", BlockGroup, cost, PartPricing.TradeIn(catalog, root), null,
                     [Loose(root, withChildren: true)]);
             }
 
-            // A whole engine somebody put in the paper, of the family and not too big
+            // A whole engine somebody put in the paper, of the family. Not too big is the engine's own dyno figure: it
+            // may have been worked on well past the stock build of its block.
             var engines = used
-                .Where(o => o.Part.Children.Count > 0 && o.Price <= budget)
-                .Select(o => (Offer: o, Build: builds.Runnable.FirstOrDefault(b => b.BlockId.Equals(o.Part.DefinitionId, StringComparison.OrdinalIgnoreCase))))
-                .Where(e => e.Build != null && e.Build.Family == current.Family && e.Build.PowerHp <= power * MaxSwapPower)
+                .Where(o => o.Part.Children.Count > 0 && o.Price <= budget
+                            && builds.Runnable.Any(b => b.Family == current.Family && b.BlockId.Equals(o.Part.DefinitionId, StringComparison.OrdinalIgnoreCase)))
                 .OrderBy(_ => random.Next())
                 .Take(3)
                 .ToList();
 
-            foreach (var (offer, build) in engines)
+            foreach (var offer in engines)
             {
                 if (trials <= 0) break;
 
@@ -231,9 +233,10 @@ public static class EngineTuner
                 engine.ParentSlot = root.ParentSlot;
                 engine.OwnSlot = root.OwnSlot;
 
+                var name = catalog.Get(offer.Part.DefinitionId) is { } block ? Name(block) : offer.Part.DefinitionId;
                 trials--;
-                Consider(engine, $"a used {build!.Build.Name} engine out of the paper", BlockGroup, offer.Price, TradeIn(catalog, root, withChildren: true),
-                    offer.AdId, [Loose(root, withChildren: true)]);
+                Consider(engine, $"a used {name} out of the paper", BlockGroup, offer.Price, PartPricing.TradeIn(catalog, root),
+                    offer.AdId, [Loose(root, withChildren: true)], maxPower: power * MaxSwapPower);
             }
         }
 
@@ -254,14 +257,9 @@ public static class EngineTuner
         PartPricing.Round(build.Build.Parts.Sum(p => p.Part != null && catalog.Get(p.Part) is { } d ? PartPricing.NewPrice(d) : 0)
                           * PartPricing.UsedShopFactor * UsedEngineCondition * Multiplier.Sane(priceMultiplier));
 
-    /// <summary>What a shop pays for a part that came off, with or without what is on it</summary>
-    private static decimal TradeIn(PartsCatalog catalog, PartInstance part, bool withChildren)
-    {
-        var worth = withChildren
-            ? PartPricing.WorthOfAssembly(catalog, part)
-            : catalog.Get(part.DefinitionId) is { } definition ? PartPricing.Worth(definition, part) : 0;
-        return PartPricing.Round(worth * PartPricing.TradeInFactor);
-    }
+    /// <summary>What a shop pays for a part that came off, without what is on it</summary>
+    private static decimal TradeIn(PartsCatalog catalog, PartInstance part) =>
+        PartPricing.Round((catalog.Get(part.DefinitionId) is { } definition ? PartPricing.Worth(definition, part) : 0) * PartPricing.TradeInFactor);
 
     /// <summary>
     /// A new <paramref name="definition"/> in the place of <paramref name="old"/>, with what was on the old part moved

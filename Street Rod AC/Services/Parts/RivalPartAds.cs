@@ -31,10 +31,6 @@ namespace Street_Rod_AC.Services.Parts
             return ad;
         }
 
-        /// <summary>What a shop gives for the part when the ad runs out</summary>
-        public static decimal TradeIn(PartsCatalog catalog, PartInstance part) =>
-            PartPricing.Round(PartPricing.WorthOfAssembly(catalog, part) * PartPricing.TradeInFactor);
-
         /// <summary>The rival who placed the ad gets <paramref name="amount"/>, when they are still around; nothing for the paper's other sellers</summary>
         public static void Pay(GameState gameState, PartAd ad, decimal amount)
         {
@@ -42,10 +38,14 @@ namespace Street_Rod_AC.Services.Parts
             if (gameState.Racers.Find(ad.SellerRival) is { } seller) seller.Money += amount;
         }
 
-        /// <summary>The paper's parts a rival could buy for their engine: everybody's ads but their own</summary>
+        /// <summary>
+        /// The paper's parts a rival could buy for their engine: everybody's ads but their own, and none that ran out
+        /// and waits for the shops to take it (<see cref="PartsShopService.RefreshAdsAsync"/> pays its seller the trade-in)
+        /// </summary>
         public static List<UsedPartOffer> OffersFor(GameState gameState, Racer buyer) =>
             gameState.NewspaperAds.Parts
-                .Where(a => a.AskingPrice > 0 && !string.Equals(a.SellerRival, buyer.Name, StringComparison.Ordinal))
+                .Where(a => a.AskingPrice > 0 && !string.Equals(a.SellerRival, buyer.Name, StringComparison.Ordinal)
+                            && !PartsShopService.IsExpired(a, gameState.Date))
                 .Select(a => new UsedPartOffer(a.AdId, a.Part, a.AskingPrice))
                 .ToList();
 

@@ -72,6 +72,9 @@ namespace Street_Rod_AC.Models.GameState
         /// <summary>How often they went broke and scraped money together; one time too many and they give up the scene</summary>
         public int TimesBroke { get; set; }
 
+        /// <summary>Broke right now: a spell of being broke counts once in <see cref="TimesBroke"/>, however many days it lasts</summary>
+        public bool IsBroke { get; set; }
+
         /// <summary>Game date they started sitting out (<see cref="RacerStatus.Retired"/>); null while racing or not on the street yet</summary>
         public DateTime? SittingOutSince { get; set; }
 

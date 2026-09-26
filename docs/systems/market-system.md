@@ -90,8 +90,9 @@ holds the confirmation and result dialogs).
 A car bought counts in `Player.Stats.CarsOwned`.
 
 **A rival's car out of the paper** (step 12): the Used Cars page lists the rivals' ads after the lots, as listings made
-up from the car (`RivalCarAds.AsListing`, `UsedCarListing.PrivateSeller`, the ad's id as the listing's). Buying one
-(`CarPurchaseService.PurchaseFromRivalAsync`) pays the ad's price as it stands now to the rival and hands over that very
+up from the car for the page only (`RivalCarAds.AsListing`: the car's own figures and the engine as the ad described it
+when posted, no dyno run). The row carries the ad (`UsedCarListingViewModel.RivalAd`), and buying it
+(`CarPurchaseService.PurchaseFromRivalAsync`, called with the ad) pays the ad's price as it stands now to the rival and hands over that very
 car from their garage (`RivalCarAds.HandOver`, `CarAcquisition.PrivateSale`); nothing is put together. See
 `opponent-system.md`, "A bigger pool".
 

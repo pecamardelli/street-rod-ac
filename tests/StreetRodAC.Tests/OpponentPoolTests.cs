@@ -198,6 +198,25 @@ public class OpponentPoolLifeTests
     }
 
     [Fact]
+    public async Task A_spell_of_being_broke_counts_once_however_long_it_lasts()
+    {
+        var racer = Racer("Dee", 10m, RacerStatus.Retired);
+        _state.UsedCarMarket.Add(new UsedCarListing { CarDefinitionId = "car_x", Price = 2000m, PowerHp = 150, Condition = 0.8f, DealerLocation = "downtown_motors" });
+        var life = Life(0.5); // $700 a day scraped together: three days broke before the car is in reach
+
+        for (var day = 0; day < 3; day++) await life.ReviewDayAsync(_state, _state.Date.AddDays(day));
+
+        Assert.Equal(1, racer.TimesBroke);
+        Assert.True(racer.IsBroke);
+        Assert.NotEqual(RacerStatus.Departed, racer.Status);
+
+        // Back on the street, then broke again: that is the second time
+        await life.ReviewDayAsync(_state, _state.Date.AddDays(3));
+        Assert.False(racer.IsBroke);
+        Assert.NotEmpty(racer.Cars);
+    }
+
+    [Fact]
     public async Task A_racer_with_a_race_on_or_a_grudge_does_not_leave()
     {
         var pending = Racer("Pat", 10m, RacerStatus.Retired);
@@ -219,6 +238,7 @@ public class OpponentPoolLifeTests
     public async Task With_no_new_faces_left_a_racer_who_left_long_ago_comes_back()
     {
         var gone = new Opponent("Gus", 50, Gender.Male, 92, 40) { Status = RacerStatus.Departed, LeftDate = _state.Date, TimesBroke = 3 };
+        gone.Cars.Add(GoodCar());
         _state.Racers.AddRacer(gone);
         var later = GameState.GetStartingDateTime().AddDays(OpponentRules.ComeBackAfterDays);
 
@@ -230,6 +250,10 @@ public class OpponentPoolLifeTests
         Assert.Null(gone.LeftDate);
         Assert.True(gone.Money > 0);
         Assert.Contains(_state.StreetTalk, t => t.Text.Contains("back in town"));
+
+        // Back, not new
+        Assert.Equal(RacerStatus.ReadyToRace, gone.Status);
+        Assert.DoesNotContain(_state.StreetTalk, t => t.Text.Contains("new face"));
     }
 
     [Fact]
@@ -250,13 +274,12 @@ public class OpponentPoolLifeTests
         spare.OdometerKM = 1234;
         var seller = Racer("Sal", 100m, RacerStatus.ReadyToRace, GoodCar(), spare);
         var ad = RivalCarAds.Post(_state, seller, spare, 700m, _state.Date);
-        var offer = Assert.Single(RivalCarAds.Live(_state));
-        var listing = RivalCarAds.AsListing(offer, _market);
+        Assert.Single(RivalCarAds.Live(_state));
         var service = new CarPurchaseService(new RaceResultProcessorTests.FakeRepository(), new NoParts(), new QuietTime());
 
         // The price came down since the page was drawn: the ad's price is paid
         ad.AskingPrice = 600m;
-        var result = await service.PurchaseAsync(_state, listing, new CarDefinition { Id = "car_a", Name = "A", Brand = "Ford" });
+        var result = await service.PurchaseFromRivalAsync(_state, ad, new CarDefinition { Id = "car_a", Name = "A", Brand = "Ford" });
 
         Assert.True(result.Succeeded);
         Assert.Same(spare, Assert.Single(_state.Player.Cars));
@@ -266,7 +289,7 @@ public class OpponentPoolLifeTests
         Assert.Empty(_state.NewspaperAds.RivalCars);
 
         // Sold means gone
-        var again = await service.PurchaseAsync(_state, listing, new CarDefinition { Id = "car_a", Name = "A", Brand = "Ford" });
+        var again = await service.PurchaseFromRivalAsync(_state, ad, new CarDefinition { Id = "car_a", Name = "A", Brand = "Ford" });
         Assert.Equal(PurchaseOutcome.NoLongerAvailable, again.Outcome);
     }
 
@@ -322,7 +345,7 @@ public class RivalPartAdsTests
         await shop.RefreshAdsAsync(_state, _state.Date.AddDays(30));
 
         Assert.DoesNotContain(ad, _state.NewspaperAds.Parts);
-        Assert.Equal(RivalPartAds.TradeIn(_parts.Catalog, part), _seller.Money);
+        Assert.Equal(PartPricing.TradeIn(_parts.Catalog, part), _seller.Money);
         Assert.True(_seller.Money > 0);
     }
 
@@ -338,6 +361,15 @@ public class RivalPartAdsTests
         Assert.True(RivalPartAds.Take(_state, ad.AdId));
         Assert.False(RivalPartAds.Take(_state, ad.AdId));
         Assert.Equal(ad.AskingPrice, _seller.Money);
+    }
+
+    [Fact]
+    public void An_ad_that_ran_out_is_not_for_sale_to_rivals_while_it_waits_for_the_shops()
+    {
+        RivalPartAds.Post(_state, _parts.Catalog, _seller, SomePart(), _state.Date.AddDays(-11), 0.5);
+        var buyer = new Opponent("Bea", 30, Gender.Female, 92, 50);
+
+        Assert.Empty(RivalPartAds.OffersFor(_state, buyer));
     }
 }
 
@@ -382,7 +414,7 @@ public class UsedTuningTests(ITestOutputHelper output)
                 Assert.Equal(0, p.ParentSlot);
                 Assert.DoesNotContain(used.Engine.SelfAndDescendants(), q => q.InstanceId == p.InstanceId);
             });
-            Assert.Equal(usedUpgrade.TradeIn, usedUpgrade.Removed!.Sum(p => RivalPartAds.TradeIn(catalog, p)));
+            Assert.Equal(usedUpgrade.TradeIn, usedUpgrade.Removed!.Sum(p => PartPricing.TradeIn(catalog, p)));
             return;
         }
 

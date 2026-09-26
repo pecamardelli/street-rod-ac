@@ -54,6 +54,10 @@ public static class PartPricing
     public static double WorthOfAssembly(PartsCatalog catalog, PartInstance root) =>
         root.SelfAndDescendants().Sum(p => catalog.Get(p.DefinitionId) is { } definition ? Worth(definition, p) : 0);
 
+    /// <summary>What a shop pays for a part with everything that is mounted on it: the one trade-in rule for the player and the rivals</summary>
+    public static decimal TradeIn(PartsCatalog catalog, PartInstance part) =>
+        Round(WorthOfAssembly(catalog, part) * TradeInFactor);
+
     public static decimal Round(double price)
     {
         // A decimal holds up to 7.9e28 and nothing that is not a number: the cast would throw

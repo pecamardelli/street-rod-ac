@@ -12,8 +12,7 @@ namespace Street_Rod_AC.Services.Opponents
         /// Loads opponent definitions and adds them to the game state
         /// </summary>
         /// <param name="gameState">The game state to initialize</param>
-        /// <param name="opponentCount">Number of opponents to initialize (default: all available)</param>
-        void InitializeOpponents(GameState gameState, int? opponentCount = null);
+        void InitializeOpponents(GameState gameState);
 
         /// <summary>
         /// Puts the King in the game when he isn't in it yet (a save from before him): out of sight, with his money

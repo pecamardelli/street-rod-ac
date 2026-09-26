@@ -130,7 +130,7 @@ and more as racers leave, every new face is out by about week 21.
 
 **Leaving** (`OpponentRules.Leaves`, `RacerStatus.Departed`, `RacerCollection.Departed`): each day a racer on the
 street leaves with a 0.2% chance ("sold up and left town"); one sitting out 45 days or more with a 5% chance ("gave
-up on their car"); one going broke a third time (`Opponent.TimesBroke`) always. Never the King, nor a racer with a
+up on their car"); one going broke a third time (`Opponent.TimesBroke`, counted once per spell of being broke, `Opponent.IsBroke`) always. Never the King, nor a racer with a
 race pending, a grudge, or an offer on the player's car. Their cars go to a dealer (a wreck for scrap; an impounded one
 stays with the police), their car ads come down, and their part ads stay without a seller to pay. A departed racer is
 in no pool the game races from (`All`, `Find`), but keeps their name.

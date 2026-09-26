@@ -65,7 +65,9 @@ namespace Street_Rod_AC.Screens.Shared
             try
             {
                 // The only await that can throw (the car's factory engine) comes before anything changes hands
-                result = await _purchaseService.PurchaseAsync(gameState, car.Listing, car.CarDefinition);
+                result = car.RivalAd is { } ad
+                    ? await _purchaseService.PurchaseFromRivalAsync(gameState, ad, car.CarDefinition)
+                    : await _purchaseService.PurchaseAsync(gameState, car.Listing, car.CarDefinition);
             }
             catch (Exception ex)
             {

@@ -34,6 +34,12 @@ namespace Street_Rod_AC.Models.GameState
 
         /// <summary>The price came down once already</summary>
         public bool Reduced { get; set; }
+
+        /// <summary>What the seller says about the engine, as a lot's listing does; null when they had nothing to say</summary>
+        public string? EngineSummary { get; set; }
+
+        /// <summary>Somebody has been at the engine</summary>
+        public bool IsModified { get; set; }
     }
 
     /// <summary>
