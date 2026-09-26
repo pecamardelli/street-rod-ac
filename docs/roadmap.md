@@ -556,7 +556,7 @@ spot never staged, the mode and the career could disagree on a breakout at the d
 strip short of the quarter, strip lengths misread ("1,000 m", feet), small engine wear lost, an engine without rotating
 parts keeping no damage, and a TUNE file settling a race. Build and tests pass; not yet tried in the game.
 
-### Step 12: a bigger opponent pool (in progress on `feature/opponent-pool`)
+### Step 12: a bigger opponent pool (done, PR #26, merged as `52e9b4a`)
 After step 10, since both touch the rivals and the newspaper.
 - New racers when the pool runs dry (`OpponentGenerationService` is written but unused).
 - Rivals put their own cars in the paper and buy used parts out of the ads.
@@ -585,6 +585,15 @@ now and then, which is what fills the paper.
 
 **Portraits:** the 30 new racers and the King were drawn with `generate-portraits.js` (ComfyUI, juggernautXL) on
 2026-09-26; the King's definition points at `king.png`.
+
+**Reviewed before the merge (2026-09-26):** an xhigh code review found 15 issues, all fixed in the PR. The worst: a
+rival counted as going broke once per day of it, not once per spell, so almost every broke rival quit within three
+days. The others: Total Domination could be won with racers on the scene unbeaten once beaten ones left, and Season
+Champion ignored racers away from town; a trade-up to a car that can't race put the only racing car in the paper; a
+tuned used engine out of the paper passed the swap-power cap on its stock build; rivals could buy expired part ads;
+comebacks announced as new faces; ad age by the hour; a null definition id stopping the whole daily review; the Used
+Cars page running the dyno for every rival ad. Buying a rival's car now has its own entry point, and the trade-in rule
+lives in one place (`PartPricing.TradeIn`). Build and tests pass; not yet tried in the game.
 
 ### Step 13: the street encounter
 From `docs/ideas.txt`, after step 9 because it reuses its renderer work. Not SLRR's Valo City: the player's car seen
