@@ -76,6 +76,9 @@ namespace Street_Rod_AC.Services.Talk
         /// <summary>Opponent rejected the challenge</summary>
         ChallengeRejected,
 
+        /// <summary>The opponent pulled up beside the player's car on the street, with an offer</summary>
+        PulledUp,
+
         /// <summary>Custom/AI-generated contextual response</summary>
         Custom
     }

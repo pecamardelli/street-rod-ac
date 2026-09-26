@@ -13,6 +13,7 @@
 | Garage | `Screens/Garage/` | In-game hub: 3D garage with the selected car, overlay buttons to every other in-game screen |
 | CarSelection | `Screens/CarSelection/` | Select car for activity |
 | Diner | `Screens/Diner/` | Meet opponents, accept challenges |
+| Cruise | `Screens/Cruise/` | Sit at the curb in your car; rivals pull up with an offer (see `cruise.md`) |
 | Newspaper | `Screens/Newspaper/` | Street News (articles on the last 3 days' races, `NewsWriter`), race invitations, used car and parts ads, the player's ads |
 | DealerMap | `Screens/DealerMap/` | The city, with a pin per dealer |
 | DealerLot | `Screens/DealerLot/` | One dealer's cars parked in 3D; click one to look at it |
@@ -30,6 +31,7 @@ Init → MainMenu (NewGame, LoadGame and Settings are cards on it, not screens)
 Garage (hub) ←→ CarSelection
   │
   ├──→ Diner (challenges)      [Hit the streets]
+  │      └──→ Cruise ──→ RaceLoading ──→ Cruise   [Cruise the streets]
   ├──→ Career                   [Career stats]
   ├──→ DealerMap → DealerLot    [Car dealers]
   └──→ Newspaper → UsedCarMarket
@@ -57,6 +59,7 @@ Each screen folder contains:
 | NavigateToGarage(gameState) | Garage |
 | NavigateToCarSelection(gameState) | CarSelection |
 | NavigateToDiner(gameState) | Diner |
+| NavigateToCruise(gameState) | Cruise |
 | NavigateToNewspaper(gameState) | Newspaper |
 | NavigateToDealerMap(gameState) | DealerMap |
 | NavigateToDealerLot(gameState, dealerId) | DealerLot |

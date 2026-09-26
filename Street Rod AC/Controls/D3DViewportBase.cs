@@ -661,6 +661,9 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
 
     #region Body rock
 
+    /// <summary>How the running engine leans the rocked car, in world space; none while nothing rocks it</summary>
+    protected SlimDX.Matrix CarLean => _rock?.WorldLean ?? SlimDX.Matrix.Identity;
+
     /// <summary>Only the garage leans the parts it shows along with the body</summary>
     protected virtual bool LeansParts => false;
 

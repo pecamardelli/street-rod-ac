@@ -75,6 +75,9 @@
     <None Update="Assets\Sounds\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\Streets\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <!-- The CSP mode races run in, installed into AC before each race by SrRaceMode -->
     <None Include="..\apps\new-modes\sr_race\*" LinkBase="AcModes\sr_race">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

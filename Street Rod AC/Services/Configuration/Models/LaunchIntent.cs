@@ -201,6 +201,9 @@ namespace Street_Rod_AC.Services.Configuration.Models
         /// <summary>Back to the garage after the session, where it was started from; else the player goes to the diner</summary>
         public bool ReturnToGarage { get; set; }
 
+        /// <summary>Back to the street after the race, where the rival was met, rather than to the diner</summary>
+        public bool ReturnToCruise { get; set; }
+
         /// <summary>The time the session takes in the game</summary>
         public Time.GameAction SessionAction => TunePasses != null ? Time.GameAction.TestAndTune
             : RaceType == RaceType.DragRace ? Time.GameAction.DragRace

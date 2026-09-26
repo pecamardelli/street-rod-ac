@@ -67,6 +67,20 @@
             </Button.Triggers>
         </Button>
 
+        <!-- Out to the street -->
+        <Button Grid.Row="0"
+                Content="CRUISE THE STREETS"
+                Command="{Binding CruiseCommand}"
+                Style="{StaticResource DialogPrimaryButtonStyle}"
+                Foreground="{StaticResource BgPanelBrush}"
+                Background="{StaticResource GoldBrush}"
+                FontWeight="Bold"
+                Padding="24,12"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0,30,20,0"
+                ToolTip="Sit at the curb with the engine running and see who pulls up"/>
+
         <!-- Main Content -->
         <Grid Grid.Row="0" Margin="20,100,20,20">
             <Grid.ColumnDefinitions>

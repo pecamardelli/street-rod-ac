@@ -1,0 +1,38 @@
+{
+  "_comment": [
+    "The street the Cruise screen is set in. street_<light>.kn5 are built by tools/StreetScene (prepare_street.py, then",
+    "StreetSceneBuilder) from Poly Haven's Pretville Street panorama, projected from where it was shot: the middle of the",
+    "scene, 1.7 m up. Positions are metres from there, headings degrees about the vertical (0 faces +z, down the long",
+    "street; the curb and the pink building are on the right of a car facing it).",
+    "",
+    "player: where the player's car is parked, a little off the middle towards the curb so the rival's lane is clear.",
+    "laneOffset: how far to the player's left the rival's car drives, centre to centre.",
+    "rivalStop: where the rival's centre stops, metres ahead of the player's centre (negative is behind).",
+    "approachFrom / leaveTo: how far behind the rival starts and how far ahead it goes out of sight.",
+    "sun: the key light's direction, towards the sun, as measured in the panorama (prepare_street.py's light.json).",
+    "lights: the renderer's light for each light of the day; colours are r, g, b 0-255. cubemapAmbient is the fill",
+    "the renderer lights cars with from its reflections: anything over 0 is a bright white fill whatever the hour, so",
+    "dusk and night have 0, and the cars take the ambient colours instead. lamps are street lights lit at night,",
+    "at x, y, z."
+  ],
+  "id": "pretville",
+  "title": "Pretville Street",
+  "credit": "Pretville Street HDRI by Dimitrios Savva and Jarod Guest, Poly Haven (CC0)",
+  "player": { "x": -1.5, "z": 0.0, "heading": 0.0 },
+  "laneOffset": 3.3,
+  "rivalStop": 0.35,
+  "approachFrom": 45.0,
+  "leaveTo": 70.0,
+  "sun": [ -0.548, 0.363, 0.754 ],
+  "lights": {
+    "day": { "brightness": 1.5, "color": [ 200, 180, 170 ], "ambient": 2.0, "ambientUp": [ 150, 180, 210 ], "ambientDown": [ 150, 140, 125 ], "cubemapAmbient": 0.5 },
+    "dusk": { "brightness": 0.9, "color": [ 255, 160, 100 ], "ambient": 1.1, "ambientUp": [ 150, 120, 150 ], "ambientDown": [ 110, 85, 70 ], "cubemapAmbient": 0.0 },
+    "night": {
+      "brightness": 0.25, "color": [ 150, 170, 230 ], "ambient": 0.6, "ambientUp": [ 60, 80, 130 ], "ambientDown": [ 60, 50, 45 ], "cubemapAmbient": 0.0,
+      "lamps": [
+        { "x": 4.6, "y": 4.0, "z": 3.1, "color": [ 255, 190, 120 ], "brightness": 0.6, "range": 14.0 },
+        { "x": -6.5, "y": 4.0, "z": 9.0, "color": [ 255, 190, 120 ], "brightness": 0.5, "range": 12.0 }
+      ]
+    }
+  }
+}

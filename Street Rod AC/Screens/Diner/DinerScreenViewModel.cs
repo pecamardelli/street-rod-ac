@@ -35,12 +35,16 @@ namespace Street_Rod_AC.Screens.Diner
         private readonly IGameTimeService _timeService;
         private readonly IGameStateRepository _gameStateRepo;
         private readonly RaceSetupBuilder _raceSetup;
+        private readonly ChallengeLauncher _launcher;
         private readonly IAppLogger _logger;
 
         // Back from a race: the player never left, so the visit is not paid for again
         private readonly bool _returning;
 
         public RelayCommand GarageCommand { get; }
+
+        /// <summary>Out to the street, to sit at the curb and wait for a rival to pull up</summary>
+        public RelayCommand CruiseCommand { get; }
         public RelayCommand<OpponentDisplayViewModel> SelectOpponentCommand { get; }
         public RelayCommand<TrackCardViewModel> SelectTrackCommand { get; }
         public AsyncRelayCommand ChallengeCommand { get; }
@@ -255,7 +259,9 @@ namespace Street_Rod_AC.Screens.Diner
         public bool HasStakesNote => IsCashBet && StakesNote.Length > 0;
 
         /// <summary>The reputation the police go by: the better known of the two racers</summary>
-        private int PoliceReputation => Math.Max(_gameState.Player.Stats.Reputation, SelectedOpponent?.Opponent.Stats.Reputation ?? 0);
+        private int PoliceReputation => SelectedOpponent is { } selected
+            ? ChallengeLauncher.PoliceReputation(_gameState.Player, selected.Opponent)
+            : _gameState.Player.Stats.Reputation;
 
         /// <summary>The chance of the police on a road race with the selected rival, now; 0 for a drag race or with no police car installed</summary>
         private double PoliceChance =>
@@ -343,8 +349,11 @@ namespace Street_Rod_AC.Screens.Diner
             _gameStateRepo = gameStateRepo;
             _raceSetup = raceSetup;
             _logger = AppLoggerFactory.CreateLogger("Diner");
+            _launcher = new ChallengeLauncher(navigationService, dialogService, gameState, catalogRepository, challengeService,
+                raceSetup, _logger);
 
             GarageCommand = new RelayCommand(OnGarage);
+            CruiseCommand = new RelayCommand(() => _navigationService.NavigateToCruise(_gameState));
             SelectOpponentCommand = new RelayCommand<OpponentDisplayViewModel>(OnSelectOpponent);
             SelectTrackCommand = new RelayCommand<TrackCardViewModel>(OnSelectTrack);
             // Async: preparing the cars' data takes a moment, and a second click meanwhile must not start a second race
@@ -762,101 +771,23 @@ namespace Street_Rod_AC.Screens.Diner
                 return;
             }
 
-            var isPinkSlip = IsPinkSlipBet;
-            var cashWager = IsCashBet ? WagerAmount : 0m;
-            var track = SelectedTrack;
-
-            _logger.Information("Challenge setup: Track={TrackId}, Config={Config}, IsPinkSlip={PinkSlip}, Wager={Wager}",
-                track.TrackId, track.ConfigurationId ?? "(none)", isPinkSlip, cashWager);
-
-            // Whether the opponent takes it on, before any work goes into the cars
-            var response = _challengeService.EvaluateChallenge(
-                opponent,
-                _gameState.Player,
-                playerCar,
-                opponentCar,
-                isPinkSlip,
-                cashWager,
-                _gameState.Rules.PinkSlipFactor);
-
-            if (!response.Accepted)
+            // The loading screen launches the race, spends its time and comes back when AC is closed; a rival who
+            // turns it down says why at the table
+            var outcome = await _launcher.RunAsync(new ChallengeRequest
             {
-                // Show rejection via talk container
-                _logger.Information("Opponent declined: {Message}", response.Message);
-                OpponentMessage = response.Message;
-                return;
-            }
-
-            _logger.Information("Opponent accepted challenge - launching race");
-
-            var ai = OpponentAIAdapter.ToAssettoCorsaAI(opponent, _gameState.Rules);
-
-            // A bracket race: the rival dials in from its car, the player picks theirs
-            Models.Race.BracketSetup? bracket = null;
-            if (IsBracket && CanBracket)
-            {
-                var rivalDialIn = Services.Race.BracketRules.RivalDialInFor(opponentCar, SelectedOpponent.CarDefinition);
-                var playerDialIn = await Dialogs.DialIn.DialInDialogViewModel.AskAsync(_dialogService, playerCar,
-                    _catalogRepository.GetCar(playerCar.DefinitionId), CarNames.Of(_catalogRepository, playerCar.DefinitionId),
-                    opponent.Name, rivalDialIn);
-                if (playerDialIn == null)
-                {
-                    _logger.Information("The player backed out of the bracket race at the dial-in");
-                    return;
-                }
-
-                bracket = Services.Race.BracketRules.Setup(playerDialIn.Value, rivalDialIn, ai.AILevel);
-                _logger.Information("Bracket race: dial-ins {Player} and {Rival}", bracket.PlayerDialIn, bracket.OpponentDialIn);
-            }
-
-            // Whether the police turn up, rolled once the race is on
-            var police = PoliceCars.Patrol(PoliceCars.Installed(), track.RaceType != RaceType.DragRace, _gameState.Date,
-                PoliceReputation, isPinkSlip, cashWager, track.Configuration?.Pitboxes ?? track.Track.Pitboxes,
-                [playerCar.DefinitionId, SelectedOpponent.CarDefinition.Id], Random.Shared);
-            if (police != null)
-                _logger.Information("The police will show up: {Count} car(s), {Share:P0} into the race", police.Count, police.SpotShare);
-
-            // Both cars race on what their parts make of them, the same way an event does; a player's car that
-            // will not go stays home
-            var setup = await _raceSetup.BuildAsync(new RaceEntry
-            {
-                PlayerName = _gameState.Player.Name,
-                PlayerCar = playerCar,
-                OpponentName = opponent.Name,
-                OpponentCarId = SelectedOpponent.CarDefinition.Id,
-                OpponentSkin = opponentCar.SkinId,
+                Opponent = opponent,
                 OpponentCar = opponentCar,
-                OpponentAI = ai,
-                TrackId = track.TrackId,
-                TrackConfig = track.ConfigurationId,
-                RaceType = track.RaceType,
-                CashWager = cashWager,
-                IsPinkSlip = isPinkSlip,
-                DamagePercent = _gameState.Rules.RaceDamagePercent,
-                Police = police,
-                RaceTime = _gameState.Date,
-                Bracket = bracket
-            });
+                OpponentDefinition = SelectedOpponent.CarDefinition,
+                PlayerCar = playerCar,
+                Track = SelectedTrack.Track,
+                Configuration = SelectedTrack.Configuration,
+                RaceType = SelectedTrack.RaceType,
+                IsPinkSlip = IsPinkSlipBet,
+                CashWager = IsCashBet ? WagerAmount : 0m,
+                Bracket = IsBracket && CanBracket
+            }, this);
 
-            // Setting the cars up takes a moment: a player who walked out meanwhile has called it off
-            if (!ReferenceEquals(_navigationService.CurrentScreen, this))
-            {
-                _logger.Information("The player left the diner while the challenge was set up; no race");
-                return;
-            }
-
-            if (setup.Intent == null)
-            {
-                _dialogService.ShowDialog(new InformationDialogViewModel(
-                    _dialogService,
-                    $"Your car is not going anywhere: {setup.PlayerCarProblem}.\n\nSort it out in the garage first.",
-                    "Car Won't Run"));
-                return;
-            }
-
-            // The loading screen launches the race, spends its time and comes back when AC is closed
-            _logger.Information("Navigating to race loading screen");
-            _navigationService.NavigateToRaceLoading(_gameState, setup.Intent);
+            if (outcome.Status == ChallengeStatus.Declined) OpponentMessage = outcome.Message ?? "";
         }
 
         private void OnGarage()

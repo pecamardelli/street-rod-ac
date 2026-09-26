@@ -595,12 +595,34 @@ comebacks announced as new faces; ad age by the hour; a null definition id stopp
 Cars page running the dyno for every rival ad. Buying a rival's car now has its own entry point, and the trade-in rule
 lives in one place (`PartPricing.TradeIn`). Build and tests pass; not yet tried in the game.
 
-### Step 13: the street encounter
+### Step 13: the street encounter (in progress on `feature/street-encounter`)
 From `docs/ideas.txt`, after step 9 because it reuses its renderer work. Not SLRR's Valo City: the player's car seen
 from the driver's seat, looking left; a rival drives up and the race dialog pops up, as in Street Rod. Both cars have
-their engine sound and body movement under braking and throttle (the engine preview has both). **Decide first:** the
-street scene. The showroom research (`reports/AC showrooms for dealer and garage.md`) found nothing licensed to ship,
-so it is likely one we build.
+their engine sound and body movement under braking and throttle (the engine preview has both).
+
+**The user decided (2026-09-26):**
+- the street is one we build: a CC0 panorama (Poly Haven) projected on a ground and a dome, written as a KN5;
+- a new place, **Cruise**, reached from the diner: the player sits at the curb, the clock runs, a rival the game picks
+  pulls up and makes an offer, to take, change or wave off; the diner's challenge panel stays;
+- the light follows the game's clock (day, dusk, night), more rivals after 20:00.
+
+**As built** (see `docs/screens/cruise.md`):
+- **The street** is Poly Haven's Pretville Street, a 1950s American film set (CC0), made into three KN5s (day, dusk,
+  night) by `tools/StreetScene` (`prepare_street.py`, then `StreetSceneBuilder`): a lit floor that takes the cars'
+  shadows, and a self-lit ground ring and dome, all mapped from where the photo was taken. `Assets/Streets/pretville`.
+- **The view** (`StreetViewport3D`) is from the player's car's own driver eyes, looking out of the side window; drag to
+  look round. The player's engine idles and rocks the car and the view.
+- **The rival** drives up the lane and stops alongside (`RivalDrive`), and pulls away when waved off: wheels turning,
+  nose diving on the brakes and squatting on the launch, brake lights, headlights at night, and its engine turned by
+  the wheels, heard from where the car is.
+- **Two engines at once:** `EngineAudio` has a second channel, sharing the bank when both cars have the same sound.
+- **Who and what** (`StreetEncounters`): waits of 50/35/18 minutes on average by day, at dusk and from 20:00; grudges
+  come looking, the bold are out at night, the King seldom; drag races mostly; cash within the street's limits for the
+  hour, pink slips now and then (always with the King or a grudge). A rival is met once a night.
+- **One way to start a race:** the diner's challenge code moved into `ChallengeLauncher`, which both screens use. After
+  a street race the player comes back to the street.
+- 25 new tests (`StreetEncounterTests`); 750 in all. Checked with two off-screen harnesses (the viewport alone, and
+  the whole screen on a copy of a save). **Tested by the user in the game (2026-09-26): "It's perfect!"**
 
 ### Step 14: deeper simulation and police extras
 Research first: CSP limits much of it (it fills oil figures only for scripted cars).

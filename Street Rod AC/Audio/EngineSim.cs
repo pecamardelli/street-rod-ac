@@ -126,6 +126,38 @@ public sealed class EngineSim
         Enter(EngineState.Stopping);
     }
 
+    /// <summary>Already running, at idle: a car that drives up has had its engine going all along</summary>
+    public void StartRunning()
+    {
+        if (State == EngineState.Running) return;
+        FailedToStart = false;
+        Rpm = Idle;
+        Enter(EngineState.Running);
+        _stateTime = CatchFlareSeconds;
+    }
+
+    /// <summary>
+    /// In gear with the clutch out: the wheels hold the engine at <paramref name="rpm"/>, whatever it makes, and the
+    /// throttle only says how hard it pulls. The body leans with that pull. Let go of (a plain <see cref="Tick"/>),
+    /// it runs on free from there.
+    /// </summary>
+    public void TickCoupled(double dt, double rpm, double throttle)
+    {
+        dt = Math.Clamp(dt, 0, 0.05);
+        _time += dt;
+        _stateTime += dt;
+        if (State != EngineState.Running) StartRunning();
+
+        Rpm = Math.Max(0, rpm);
+        _cut = false;
+        _load += (Math.Clamp(throttle, 0, 1) - _load) * Math.Min(1, dt / IntakeLag);
+        WatchForBackfire(throttle);
+
+        var pull = _spec.TorqueAt(Math.Max(Rpm, 400)) * _load - Losses(Rpm, _load);
+        var firing = Idle / Math.Max(Rpm, Idle);
+        _body.Tick(dt, _time, pull / PeakTorque, firing, Rpm);
+    }
+
     private void Enter(EngineState state)
     {
         State = state;

@@ -21,6 +21,8 @@ namespace Street_Rod_AC.Services.Talk
             return context.Trigger switch
             {
                 TalkTrigger.OpponentSelected when context.Grudge != null => GetGrudgeMessages(context),
+                TalkTrigger.PulledUp when context.Grudge != null => GetGrudgeMessages(context),
+                TalkTrigger.PulledUp => GetPulledUpMessages(context),
                 TalkTrigger.BetTypeChanged when context.IsPinkSlipBet && context.Grudge != null => GetRematchMessages(context),
                 TalkTrigger.OpponentSelected => GetGreetingMessages(context),
                 TalkTrigger.TrackSelected => GetTrackSelectedMessages(context),
@@ -104,6 +106,48 @@ namespace Street_Rod_AC.Services.Talk
                 "I respect your skills. Let's race.",
                 "Two evenly matched racers. I like it."
             };
+        }
+
+        /// <summary>A rival who has pulled up beside the player's car in the street, window down</summary>
+        private List<string> GetPulledUpMessages(TalkContext context)
+        {
+            if (context.Opponent.IsKing)
+            {
+                return
+                [
+                    "Heard you've been making noise. Pink slips. Right now.",
+                    "You wanted the King? Here I am. Your car against mine.",
+                    "Nobody sits on my street without paying. Pink slips."
+                ];
+            }
+
+            var car = context.PlayerCar is { } playerCar ? Catalog.CarNames.Short(playerCar) : "car";
+            if (context.IsPinkSlipBet)
+            {
+                return
+                [
+                    $"Nice {car}. Be a shame to lose it. Pinks?",
+                    "Winner drives home in both. You in?",
+                    $"I like that {car}. I'll like it more in my garage."
+                ];
+            }
+
+            var lines = new List<string>
+            {
+                $"Nice {car}. What's it got?",
+                "You gonna sit there all night, or you wanna run?",
+                "Light's about to change. Let's see what you've got.",
+                "Hey! You racing, or just parked?",
+                $"That {car} as quick as it looks?"
+            };
+
+            if (context.Opponent.Aggression >= 70)
+            {
+                lines.Add("I'll blow your doors off. Put your money where your mouth is.");
+                lines.Add("Pull up to the line if you've got the guts.");
+            }
+
+            return lines;
         }
 
         /// <summary>A rival who lost a pink slip to the player, and wants a rematch</summary>

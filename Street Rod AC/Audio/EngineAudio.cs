@@ -8,8 +8,8 @@ namespace Street_Rod_AC.Audio;
 
 /// <summary>
 /// Plays car engines outside the game, through Assetto Corsa's own FMOD and the same banks a race uses. One FMOD
-/// system for the app, one car bank loaded at a time: two copies of a bank (a sound shared by two cars) cannot be
-/// loaded side by side, and a bank can be hundreds of MB.
+/// system for the app, and a car bank loaded for each of two channels at most (<see cref="EngineChannel"/>): a bank
+/// can be hundreds of MB. Two cars on one sound share its bank, as FMOD cannot load a bank twice.
 ///
 /// FMOD Studio is thread safe as initialised here, so banks load on a worker while the UI thread plays.
 /// </summary>
@@ -52,10 +52,17 @@ public sealed class EngineAudio
     private string? _failedFolder;
     private DateTime _failedAt;
 
-    // The car bank that is loaded, known by its path
-    private IntPtr _bank;
-    private string? _bankPath;
-    private EngineVoice? _voice;
+    /// <summary>A car bank loaded to be heard, known by its path, and its engine</summary>
+    private sealed class Channel
+    {
+        public IntPtr Bank;
+        public string? BankPath;
+        public EngineVoice? Voice;
+    }
+
+    // One a channel: the car on show, and a second one beside it (the Cruise screen's rival). Two channels on the
+    // same bank share it, as FMOD loads a bank only once.
+    private readonly Channel[] _channels = [new(), new()];
 
     private EngineAudio() { }
 
@@ -69,13 +76,13 @@ public sealed class EngineAudio
     /// Loads a car's sound and gets its engine ready to play: the bank, then the engine's samples, so it starts on
     /// the press of a button. Replaces whatever sound was loaded before. Null when the sound cannot be played here.
     /// </summary>
-    public async Task<EngineVoice?> LoadAsync(CarSound sound)
+    public async Task<EngineVoice?> LoadAsync(CarSound sound, EngineChannel channel = EngineChannel.Main)
     {
         // Nothing here touches the UI: the gate is let go of on the worker, and the caller still resumes on its own
         await _gate.WaitAsync().ConfigureAwait(false);
         try
         {
-            return await Task.Run(() => Load(sound)).ConfigureAwait(false);
+            return await Task.Run(() => Load(sound, _channels[(int)channel])).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -117,8 +124,7 @@ public sealed class EngineAudio
             // All of it on the worker, and the gate let go of there too
             await Task.Run(() =>
             {
-                var bank = ReleaseBank();
-                if (bank != IntPtr.Zero) WaitUntilUnloaded(bank);
+                foreach (var bank in ReleaseAll()) WaitUntilUnloaded(bank);
                 SuspendMixer();
             }).ConfigureAwait(false);
         }
@@ -161,7 +167,7 @@ public sealed class EngineAudio
 
             // A rested mixer paces the Studio thread the release waits on (the bank unload just below among it)
             ResumeMixer();
-            ReleaseBank();
+            ReleaseAll();
 
             var system = _system;
             _system = IntPtr.Zero;
@@ -186,7 +192,32 @@ public sealed class EngineAudio
         if (_shutDown) throw new OperationCanceledException("the app is closing");
     }
 
-    private EngineVoice? Load(CarSound sound)
+    /// <summary>
+    /// Lets go of one channel's sound (the Cruise screen's rival, once it is gone): the bank too, unless the other
+    /// channel plays it. The other channel plays on. Never throws.
+    /// </summary>
+    public async Task ReleaseAsync(EngineChannel channel)
+    {
+        await _gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await Task.Run(() =>
+            {
+                var bank = Release(_channels[(int)channel]);
+                if (bank != IntPtr.Zero) WaitUntilUnloaded(bank);
+            }).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "The {Channel} engine sound could not be let go of", channel);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private EngineVoice? Load(CarSound sound, Channel channel)
     {
         if (!EnsureSystem()) return null;
         ResumeMixer();
@@ -198,21 +229,33 @@ public sealed class EngineAudio
         var events = EngineEvents.Read(sound.GuidsText, sound.DonorId);
         if (events.Engine == null) throw new InvalidDataException("the GUIDs name no engine_ext event");
 
-        if (_voice != null && string.Equals(_bankPath, bankPath, StringComparison.OrdinalIgnoreCase)) return _voice;
+        if (channel.Voice != null && string.Equals(channel.BankPath, bankPath, StringComparison.OrdinalIgnoreCase)) return channel.Voice;
 
-        UnloadBank();
+        var released = Release(channel);
+        if (released != IntPtr.Zero) WaitUntilUnloaded(released);
         ThrowIfShutDown();
 
         var started = DateTime.Now;
-        Check(FMOD_Studio_System_LoadBankFile(_system, Utf8(bankPath), LoadBankNormal, out var bank), "load " + Path.GetFileName(bankPath));
-        _bank = bank;
-        _bankPath = bankPath;
+        var sharing = _channels.FirstOrDefault(c => c != channel && c.Bank != IntPtr.Zero &&
+                                                    string.Equals(c.BankPath, bankPath, StringComparison.OrdinalIgnoreCase));
+        IntPtr bank;
+        if (sharing != null)
+        {
+            bank = sharing.Bank;
+        }
+        else
+        {
+            Check(FMOD_Studio_System_LoadBankFile(_system, Utf8(bankPath), LoadBankNormal, out bank), "load " + Path.GetFileName(bankPath));
+        }
+
+        channel.Bank = bank;
+        channel.BankPath = bankPath;
 
         var voice = new EngineVoice(this, _system, events);
         voice.LoadSamples(() => _shutDown);
         ThrowIfShutDown();
-        voice.Level = MeasureLevel(bankPath, events.Engine.Value);
-        _voice = voice;
+        voice.Level = sharing?.Voice?.Level ?? MeasureLevel(bankPath, events.Engine.Value);
+        channel.Voice = voice;
 
         _logger.Information("Engine sound {Bank} ready in {Ms} ms ({Params})", Path.GetFileName(bankPath),
             (int)(DateTime.Now - started).TotalMilliseconds, voice.Describe());
@@ -278,22 +321,33 @@ public sealed class EngineAudio
         }
     }
 
-    private void UnloadBank()
+    /// <summary>Every channel let go of; the bank handles to wait on</summary>
+    private List<IntPtr> ReleaseAll()
     {
-        var bank = ReleaseBank();
-        if (bank != IntPtr.Zero) WaitUntilUnloaded(bank);
+        var banks = new List<IntPtr>();
+        foreach (var channel in _channels)
+        {
+            var bank = Release(channel);
+            if (bank != IntPtr.Zero) banks.Add(bank);
+        }
+
+        return banks;
     }
 
-    /// <summary>Stops the voice and asks FMOD to unload the bank; the bank handle to wait on, or zero</summary>
-    private IntPtr ReleaseBank()
+    /// <summary>
+    /// Stops the channel's voice and asks FMOD to unload its bank, unless the other channel still plays it; the bank
+    /// handle to wait on, or zero
+    /// </summary>
+    private IntPtr Release(Channel channel)
     {
-        _voice?.Dispose();
-        _voice = null;
+        channel.Voice?.Dispose();
+        channel.Voice = null;
 
-        var bank = _bank;
-        _bank = IntPtr.Zero;
-        _bankPath = null;
+        var bank = channel.Bank;
+        channel.Bank = IntPtr.Zero;
+        channel.BankPath = null;
         if (bank == IntPtr.Zero || _system == IntPtr.Zero) return IntPtr.Zero;
+        if (_channels.Any(c => c.Bank == bank)) return IntPtr.Zero;
 
         return Warn(FMOD_Studio_Bank_Unload(bank), "unload bank") ? bank : IntPtr.Zero;
     }
@@ -357,7 +411,14 @@ public sealed class EngineAudio
     }
 
     /// <summary>A voice that is no longer the loaded one must not touch FMOD</summary>
-    internal bool IsCurrent(EngineVoice voice) => ReferenceEquals(_voice, voice);
+    internal bool IsCurrent(EngineVoice voice) => _channels.Any(c => ReferenceEquals(c.Voice, voice));
+}
+
+/// <summary>Where an engine plays: the car on show, or a second car beside it</summary>
+public enum EngineChannel
+{
+    Main,
+    Second
 }
 
 /// <summary>The event ids a car's engine needs out of its GUIDs text</summary>
@@ -514,6 +575,26 @@ public sealed class EngineVoice : IDisposable
 
         var gainDb = Level == null ? 0 : EngineLoudness.GainDb(Level, rpm, throttle);
         Warn(FMOD_Studio_EventInstance_SetVolume(_engineInstance, volume * (float)Math.Pow(10, gainDb / 20)), "set volume");
+    }
+
+    /// <summary>
+    /// Where the engine is heard from, as a direction from the listener (x right, y up, z ahead): only the way it
+    /// comes from, never how far, which the caller's volume says. The point is put a metre off, inside any event's
+    /// own distance falloff. An event made without 3D takes no notice.
+    /// </summary>
+    public void SetDirection(float x, float y, float z)
+    {
+        if (!Usable || _engineInstance == IntPtr.Zero) return;
+
+        var length = MathF.Sqrt(x * x + y * y + z * z);
+        if (length < 1e-4f) (x, y, z, length) = (0f, 0f, 1f, 1f);
+        var attributes = new Attributes3D
+        {
+            Position = new Vector { X = x / length, Y = y / length, Z = z / length },
+            Forward = new Vector { Z = 1f },
+            Up = new Vector { Y = 1f }
+        };
+        Warn(FMOD_Studio_EventInstance_Set3DAttributes(_engineInstance, ref attributes), "set 3d attributes");
     }
 
     /// <summary>On the limiter: the bank's own stutter, for as long as the engine bangs against it</summary>
