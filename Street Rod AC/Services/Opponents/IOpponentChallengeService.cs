@@ -32,6 +32,13 @@ namespace Street_Rod_AC.Services.Opponents
         /// is laid up is not at the diner and turns every challenge down
         /// </summary>
         bool CanRace(Car car);
+
+        /// <summary>
+        /// Whether the rival would put their pink slip up against the player's car at all, going by what the two
+        /// cars are worth: the checks <see cref="EvaluateChallenge"/> makes of a pink-slip race before any dice. A
+        /// rival who offers pink slips unasked only offers what they would take.
+        /// </summary>
+        bool WouldStakePinkSlips(Opponent opponent, Car playerCar, Car opponentCar);
     }
 
     /// <summary>

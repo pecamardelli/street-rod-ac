@@ -1,0 +1,332 @@
+<UserControl x:Class="Street_Rod_AC.Screens.Cruise.CruiseScreenView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:controls="clr-namespace:Street_Rod_AC.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="720" d:DesignWidth="1280">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="GlassBrush" Color="#C0101010"/>
+        <SolidColorBrush x:Key="GlassBorderBrush" Color="#60FFE68C"/>
+    </UserControl.Resources>
+
+    <Grid Background="Black">
+        <!-- The street, from the driver's seat -->
+        <controls:StreetViewport3D x:Name="Street"
+                                   Scene="{Binding Scene}"
+                                   Light="{Binding Light}"
+                                   PlayerCar="{Binding PlayerCar}"
+                                   Stage="{Binding Stage}"
+                                   RunningEngine="{Binding PlayerEngine}"/>
+
+        <!-- No 3D: the street goes on without the picture -->
+        <TextBlock Text="The street can't be shown on this machine, but the racers still come by."
+                   FontSize="{StaticResource FontSizeBody}"
+                   Foreground="{StaticResource TextSecondaryBrush}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Visibility="{Binding HasFailed, ElementName=Street, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+        <!-- The clock -->
+        <Border Background="{StaticResource GlassBrush}"
+                BorderBrush="{StaticResource GlassBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="5"
+                Padding="18,12"
+                Margin="20,20,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                IsHitTestVisible="False">
+            <StackPanel>
+                <TextBlock Text="{Binding ClockDisplay}"
+                           FontSize="{StaticResource FontSizeHeadingLarge}"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource GoldBrush}"/>
+                <TextBlock Text="{Binding DateDisplay}"
+                           FontSize="{StaticResource FontSizeSmall}"
+                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                <TextBlock Text="{Binding LightDisplay}"
+                           FontSize="{StaticResource FontSizeCaption}"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           Margin="0,2,0,0"/>
+                <TextBlock Text="{Binding BankrollDisplay}"
+                           FontSize="{StaticResource FontSizeBody}"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource AccentSuccessBrush}"
+                           Margin="0,8,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Where to go instead -->
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Margin="0,20,20,0">
+            <Button Content="DINER"
+                    Command="{Binding DinerCommand}"
+                    Style="{StaticResource DialogSecondaryButtonStyle}"
+                    Padding="22,10"
+                    Margin="0,0,10,0"/>
+            <Button Content="GARAGE"
+                    Command="{Binding GarageCommand}"
+                    Style="{StaticResource DialogSecondaryButtonStyle}"
+                    Padding="22,10"/>
+        </StackPanel>
+
+        <!-- What is going on, and the player's own throttle -->
+        <Border Background="{StaticResource GlassBrush}"
+                BorderBrush="{StaticResource GlassBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="5"
+                Padding="14,10"
+                Margin="20,0,0,20"
+                MaxWidth="560"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="RevButton"
+                        Content="REV"
+                        Style="{StaticResource DialogPrimaryButtonStyle}"
+                        Padding="18,8"
+                        Margin="0,0,14,0"
+                        ToolTip="Hold to rev your engine (or hold the space bar)"
+                        PreviewMouseLeftButtonDown="RevButton_Down"
+                        PreviewMouseLeftButtonUp="RevButton_Up"
+                        MouseLeave="RevButton_Leave"/>
+                <TextBlock Text="{Binding StatusText}"
+                           FontSize="{StaticResource FontSizeSmall}"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           TextWrapping="Wrap"
+                           VerticalAlignment="Center"
+                           MaxWidth="440"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Drag to look round -->
+        <TextBlock Text="Drag to look around · double-click to look back out"
+                   FontSize="{StaticResource FontSizeTiny}"
+                   Foreground="#90FFFFFF"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Bottom"
+                   Margin="0,0,0,8"
+                   IsHitTestVisible="False"/>
+
+        <!-- The rival at the window, and their offer -->
+        <Border Width="400"
+                Background="{StaticResource GlassBrush}"
+                BorderBrush="{StaticResource GoldBrush}"
+                BorderThickness="2"
+                CornerRadius="6"
+                Padding="18"
+                Margin="0,80,20,20"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Visibility="{Binding IsEncounterShown, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Style.Triggers>
+                        <Trigger Property="Visibility" Value="Visible">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.4"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel>
+                <!-- Who -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Width="84" Height="84"
+                            CornerRadius="4"
+                            BorderBrush="{StaticResource BorderLightBrush}"
+                            BorderThickness="1"
+                            ClipToBounds="True"
+                            Margin="0,0,14,0">
+                        <Image Source="{Binding RivalPortrait, TargetNullValue={x:Null}}"
+                               Stretch="UniformToFill"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding RivalName}"
+                                   FontSize="{StaticResource FontSizeHeading}"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding RivalNickname}"
+                                   FontSize="{StaticResource FontSizeSmall}"
+                                   FontStyle="Italic"
+                                   Foreground="{StaticResource GoldBrush}"/>
+                        <TextBlock Text="{Binding RivalCarName}"
+                                   FontSize="{StaticResource FontSizeSmall}"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,4,0,0"/>
+                        <TextBlock Text="{Binding RivalStanding}"
+                                   FontSize="{StaticResource FontSizeCaption}"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- What they say through the window -->
+                <Border Background="{StaticResource BgMediumBrush}"
+                        CornerRadius="4"
+                        Padding="12,8"
+                        Margin="0,14,0,0">
+                    <TextBlock Text="{Binding RivalLine}"
+                               FontSize="{StaticResource FontSizeSmall}"
+                               FontStyle="Italic"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               TextWrapping="Wrap"/>
+                </Border>
+
+                <!-- The race -->
+                <TextBlock Text="{Binding RaceDisplay}"
+                           FontSize="{StaticResource FontSizeBody}"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           TextWrapping="Wrap"
+                           Margin="0,14,0,6"/>
+
+                <ItemsControl ItemsSource="{Binding MatchupStats}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding PlayerValue}"
+                                           FontSize="{StaticResource FontSizeCaption}"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Label}"
+                                           FontSize="{StaticResource FontSizeCaption}"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Margin="8,0"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding OpponentValue}"
+                                           FontSize="{StaticResource FontSizeCaption}"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           TextAlignment="Right"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- For what -->
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Content="CASH"
+                            Command="{Binding CashBetCommand}"
+                            Padding="10,6"
+                            Margin="0,0,4,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource DialogSecondaryButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsCashBet}" Value="True">
+                                        <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}"/>
+                                        <Setter Property="BorderThickness" Value="2"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button Grid.Column="1"
+                            Content="PINK SLIPS"
+                            Command="{Binding PinkSlipBetCommand}"
+                            Padding="10,6"
+                            Margin="4,0,0,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource DialogSecondaryButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsPinkSlipBet}" Value="True">
+                                        <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}"/>
+                                        <Setter Property="BorderThickness" Value="2"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+
+                <TextBlock Text="{Binding BetDisplay}"
+                           FontSize="{StaticResource FontSizeHeadingLarge}"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"
+                           Margin="0,10,0,4">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource AccentSuccessBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsPinkSlipBet}" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <StackPanel Visibility="{Binding IsCashBet, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Slider Value="{Binding Wager}"
+                            Minimum="{Binding MinWager, Mode=OneWay}"
+                            Maximum="{Binding MaxWager, Mode=OneWay}"
+                            TickFrequency="5"
+                            IsSnapToTickEnabled="True"
+                            IsEnabled="{Binding CanChangeBet}"/>
+                    <Grid>
+                        <TextBlock FontSize="{StaticResource FontSizeTiny}"
+                                   Foreground="{StaticResource TextSecondaryBrush}">
+                            <Run Text="$"/><Run Text="{Binding MinWager, StringFormat='{}{0:N0}', Mode=OneWay}"/>
+                        </TextBlock>
+                        <TextBlock FontSize="{StaticResource FontSizeTiny}"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Right">
+                            <Run Text="$"/><Run Text="{Binding MaxWager, StringFormat='{}{0:N0}', Mode=OneWay}"/>
+                        </TextBlock>
+                    </Grid>
+                </StackPanel>
+
+                <TextBlock Text="{Binding PoliceNote}"
+                           FontSize="{StaticResource FontSizeTiny}"
+                           Foreground="{StaticResource WarningBrush}"
+                           HorizontalAlignment="Center"
+                           Margin="0,6,0,0"
+                           Visibility="{Binding HasPoliceNote, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                <!-- Yes or no -->
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Content="WAVE OFF"
+                            Command="{Binding WaveOffCommand}"
+                            Style="{StaticResource DialogSecondaryButtonStyle}"
+                            Padding="10,12"
+                            Margin="0,0,5,0"/>
+                    <Button Grid.Column="1"
+                            Content="{Binding AcceptText}"
+                            Command="{Binding AcceptCommand}"
+                            Foreground="{StaticResource BgPanelBrush}"
+                            Background="{StaticResource GoldBrush}"
+                            FontWeight="Bold"
+                            Style="{StaticResource DialogPrimaryButtonStyle}"
+                            Padding="10,12"
+                            Margin="5,0,0,0"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

@@ -264,9 +264,7 @@ public class ShowcaseViewport3D : D3DViewportBase
             var bytes = CarModelFiles.EstimateBytes(directory);
             if (bytes > budget && _lineup.Count > 0) continue;
 
-            var skin = entry.Skin != null && Directory.Exists(Path.Combine(directory, "skins", entry.Skin))
-                ? entry.Skin
-                : Kn5RenderableCar.DefaultSkin;
+            var skin = SkinOrDefault(directory, entry.Skin);
 
             try
             {

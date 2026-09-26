@@ -129,17 +129,23 @@ namespace Street_Rod_AC.Services.Opponents
             }
         }
 
+        public bool WouldStakePinkSlips(Opponent opponent, Car playerCar, Car opponentCar)
+        {
+            // The King takes on anybody who has made it to his table
+            if (opponent.IsKing) return true;
+
+            var playerCarDef = _catalogRepository.GetCar(playerCar.DefinitionId);
+            var opponentCarDef = _catalogRepository.GetCar(opponentCar.DefinitionId);
+            return playerCarDef != null && opponentCarDef != null
+                   && ValueMismatch(opponent, playerCar, playerCarDef, opponentCar, opponentCarDef) == null;
+        }
+
         /// <summary>
-        /// Evaluate a pink slip challenge
+        /// The rival's no to a pink-slip race over what the cars are worth, or null when the values are no reason
+        /// to turn it down. A rival out for a rematch looks past the difference, not past a car worth nothing.
         /// </summary>
-        private ChallengeResponse EvaluatePinkSlipChallenge(
-            Opponent opponent,
-            Player player,
-            Car playerCar,
-            CarDefinition playerCarDef,
-            Car opponentCar,
-            CarDefinition opponentCarDef,
-            double pinkSlipFactor)
+        private ChallengeResponse? ValueMismatch(Opponent opponent, Car playerCar, CarDefinition playerCarDef,
+            Car opponentCar, CarDefinition opponentCarDef)
         {
             // What each car is worth as it stands: model, condition, engine. The same sum the market uses.
             var playerCarValue = ValueOf(playerCar, playerCarDef);
@@ -157,17 +163,10 @@ namespace Street_Rod_AC.Services.Opponents
                 };
             }
 
-            // A rival who lost a pink slip to the player takes any pink-slip race with them, whatever the cars are
-            // worth: that is what they've been waiting for (Grudges). A car worth nothing is still nothing to stake.
-            if (Grudges.WantsRematch(opponent))
-            {
-                _logger.Information("{Name} wants the rematch: pink slips accepted", opponent.Name);
-                return new ChallengeResponse { Accepted = true, Message = "About time. Let's settle this." };
-            }
+            if (Grudges.WantsRematch(opponent)) return null;
 
+            // Won't risk an expensive car for a cheap one
             var valueRatio = (double)(playerCarValue / opponentCarValue);
-
-            // Check car value mismatch (won't risk expensive car for cheap car)
             if (valueRatio < 0.6)
             {
                 return new ChallengeResponse
@@ -176,6 +175,31 @@ namespace Street_Rod_AC.Services.Opponents
                     Message = GetCarValueMismatchMessage(opponent, isPlayerCarCheaper: true),
                     DeclineReason = ChallengeDeclineReason.CarValueMismatch
                 };
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Evaluate a pink slip challenge
+        /// </summary>
+        private ChallengeResponse EvaluatePinkSlipChallenge(
+            Opponent opponent,
+            Player player,
+            Car playerCar,
+            CarDefinition playerCarDef,
+            Car opponentCar,
+            CarDefinition opponentCarDef,
+            double pinkSlipFactor)
+        {
+            if (ValueMismatch(opponent, playerCar, playerCarDef, opponentCar, opponentCarDef) is { } mismatch) return mismatch;
+
+            // A rival who lost a pink slip to the player takes any pink-slip race with them, whatever the cars are
+            // worth: that is what they've been waiting for (Grudges). A car worth nothing is still nothing to stake.
+            if (Grudges.WantsRematch(opponent))
+            {
+                _logger.Information("{Name} wants the rematch: pink slips accepted", opponent.Name);
+                return new ChallengeResponse { Accepted = true, Message = "About time. Let's settle this." };
             }
 
             // Calculate acceptance chance based on multiple factors
@@ -218,7 +242,8 @@ namespace Street_Rod_AC.Services.Opponents
                 acceptanceChance -= 0.15;
             }
 
-            // Car value ratio factor (more willing if player's car is worth more)
+            // Car value ratio factor (more willing if player's car is worth more); both are worth something by now
+            var valueRatio = (double)(ValueOf(playerCar, playerCarDef) / ValueOf(opponentCar, opponentCarDef));
             if (valueRatio > 1.2)
             {
                 acceptanceChance += 0.15;

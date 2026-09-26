@@ -41,6 +41,9 @@ namespace Street_Rod_AC.Screens.RaceLoading
         }
 
         private bool _isLoading = true;
+
+        // The race's time took the day over into the next morning
+        private bool _raceRanIntoNextDay;
         public bool IsLoading
         {
             get => _isLoading;
@@ -211,7 +214,8 @@ namespace Street_Rod_AC.Screens.RaceLoading
         {
             try
             {
-                await _timeService.SpendTimeAsync(_gameState, _launchIntent.SessionAction);
+                var spent = await _timeService.SpendTimeAsync(_gameState, _launchIntent.SessionAction);
+                _raceRanIntoNextDay = spent.NewDayStarted;
 
                 if (!string.IsNullOrEmpty(_gameState.SaveName)) _gameStateRepo.Save(_gameState, _gameState.SaveName);
             }
@@ -222,15 +226,32 @@ namespace Street_Rod_AC.Screens.RaceLoading
         }
 
         /// <summary>
-        /// Back to the diner, or to the garage when the diner cannot be opened, or to the main menu when neither
-        /// can: the player is never left on this screen. A player whose car was towed home after a crash goes to
-        /// the garage, where the car is, and so does one whose session started there (a test-and-tune).
+        /// Back to the diner (or the street, for a race met there), or to the garage when that cannot be opened, or
+        /// to the main menu when neither can: the player is never left on this screen. A player whose car was towed
+        /// home after a crash goes to the garage, where the car is, and so does one whose session started there (a
+        /// test-and-tune).
         /// </summary>
         private void ReturnFromRace(bool toGarage)
         {
             if (toGarage)
             {
                 _logger.Information("Back from the strip, or towed home after a crash: navigating to the garage");
+                if (_navigationService.NavigateToGarage(_gameState, skipAnimation: true)) return;
+            }
+            else if (_launchIntent.ReturnToCruise && _raceRanIntoNextDay)
+            {
+                // The street's night ended while they raced: home, as the street itself sends the player at the day's end
+                _logger.Information("The street race ran past the night's end: home to the garage");
+                _dialogService.ShowDialog(new InformationDialogViewModel(_dialogService,
+                    "By the time the race is done the street's gone quiet. You head home and call it a night.", "Late Night"));
+                if (_navigationService.NavigateToGarage(_gameState, skipAnimation: true)) return;
+            }
+            else if (_launchIntent.ReturnToCruise)
+            {
+                _logger.Information("Back to the street, where the rival was met");
+                if (_navigationService.NavigateToCruise(_gameState)) return;
+
+                _logger.Warning("The street could not be opened after the race: going to the garage");
                 if (_navigationService.NavigateToGarage(_gameState, skipAnimation: true)) return;
             }
             else

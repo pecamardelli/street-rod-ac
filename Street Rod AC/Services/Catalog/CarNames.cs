@@ -33,6 +33,23 @@ namespace Street_Rod_AC.Services.Catalog
             return id => names.TryGetValue(id, out var name) ? name : names[id] = Of(catalog, id);
         }
 
+        /// <summary>
+        /// The model as people say it in passing: no make, and nothing from the year on, which in the catalog's names
+        /// is the engine and gearbox ("Charger R/T 1969 440 Magnum 4-speed" is a Charger R/T). The whole name when
+        /// that would leave nothing.
+        /// </summary>
+        public static string Short(CarDefinition definition)
+        {
+            var name = definition.Name.Trim();
+            if (definition.Brand.Length > 0 && name.StartsWith(definition.Brand, StringComparison.OrdinalIgnoreCase))
+                name = name[definition.Brand.Length..].Trim();
+
+            var words = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var year = Array.FindIndex(words, w => w.Length == 4 && (w.StartsWith("19") || w.StartsWith("20")) && w.All(char.IsDigit));
+            var kept = year > 0 ? string.Join(' ', words.Take(year)) : name;
+            return kept.Length > 0 ? kept : definition.Name;
+        }
+
         public static string Of(CarDefinition definition)
         {
             var name = definition.Brand.Length == 0 || definition.Name.StartsWith(definition.Brand, StringComparison.OrdinalIgnoreCase)

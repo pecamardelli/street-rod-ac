@@ -67,6 +67,16 @@ namespace Street_Rod_AC.Models.GameState
         [BsonIgnore]
         public string SaveName { get; set; } = string.Empty;
 
+        /// <summary>
+        /// The rivals met on the street on <see cref="MetOnTheStreetOn"/>: one waved off does not come round again the
+        /// same night. Not saved, and gone with a game loaded again: that game's night has met nobody yet.
+        /// </summary>
+        [BsonIgnore]
+        public HashSet<Guid> MetOnTheStreet { get; } = [];
+
+        [BsonIgnore]
+        public DateTime MetOnTheStreetOn { get; set; }
+
         public GameState()
         {
             var gameStart = GetStartingDateTime();

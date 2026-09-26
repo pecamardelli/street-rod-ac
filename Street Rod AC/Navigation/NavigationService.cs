@@ -305,6 +305,20 @@ namespace Street_Rod_AC.Navigation
                 _raceSetup,
                 returning));
 
+        public bool NavigateToCruise(GameState gameState) => SafeNavigate("street", () =>
+            new Screens.Cruise.CruiseScreenViewModel(
+                this,
+                _dialogService,
+                gameState,
+                _catalogRepository,
+                _opponentChallengeService,
+                _contentService,
+                _talkService,
+                _timeService,
+                _gameStateRepository,
+                _raceSetup,
+                _carPartsService));
+
         public bool NavigateToNewspaper(GameState gameState, bool skipAnimation = false) => SafeNavigate("newspaper", () =>
             new Screens.Newspaper.NewspaperScreenViewModel(
                 this,

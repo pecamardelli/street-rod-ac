@@ -23,6 +23,7 @@ public sealed class EngineRunner : INotifyPropertyChanged
     private const double MaxCatchUp = 0.25;
 
     private readonly IAppLogger _logger = AppLoggerFactory.CreateLogger("EngineAudio");
+    private readonly EngineChannel _channel;
     private EngineSpec? _spec;
     private EngineSim? _sim;
     private EngineVoice? _voice;
@@ -34,6 +35,20 @@ public sealed class EngineRunner : INotifyPropertyChanged
     private double _pedal;
     private bool _listening;
     private bool _soundFailed;
+
+    // Driven by the wheels (a car on the move): the engine's speed and the throttle, or null when it runs free
+    private double? _drivenRpm;
+    private double _drivenThrottle;
+
+    // Where the engine is heard from, and how loud against its full volume
+    private (float X, float Y, float Z)? _direction;
+    private float _volumeScale = 1f;
+
+    /// <param name="channel">Where it plays: the car on show, or a second one beside it (<see cref="EngineAudio"/>)</param>
+    public EngineRunner(EngineChannel channel = EngineChannel.Main)
+    {
+        _channel = channel;
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -108,15 +123,19 @@ public sealed class EngineRunner : INotifyPropertyChanged
         NotifyAll();
         if (sound == null) return;
 
-        var voice = await EngineAudio.Shared.LoadAsync(sound);
+        var voice = await EngineAudio.Shared.LoadAsync(sound, _channel);
         if (version != _loadVersion) return;
 
         _voice = voice;
         _soundFailed = voice == null;
         IsLoading = false;
 
-        // Started while the sound was on its way: it joins in
-        if (IsRunning) _voice?.Start((float)Rpm, (float)(_sim?.Load ?? 0));
+        // Started while the sound was on its way: it joins in, silent until the next frame gives it its volume
+        if (IsRunning)
+        {
+            _voice?.Start((float)Rpm, (float)(_sim?.Load ?? 0));
+            _voice?.SetVolume(0f);
+        }
         NotifyAll();
     }
 
@@ -167,6 +186,45 @@ public sealed class EngineRunner : INotifyPropertyChanged
         NotifyAll();
     }
 
+    /// <summary>
+    /// Running already, at idle, without the starter: a car that drives up. Nothing happens with no engine or one
+    /// that is running.
+    /// </summary>
+    public void StartRunning()
+    {
+        if (_sim == null || IsRunning || _spec?.Runs != true) return;
+
+        if (_voice == null && !IsLoading && _spec.Sound != null) _ = LoadSoundAsync();
+        _sim.StartRunning();
+        _voice?.Start((float)_sim.Rpm, 0f);
+
+        // Silent until the first frame: that one plays it at its volume, from where it is
+        _voice?.SetVolume(0f);
+        StartTicking();
+        NotifyAll();
+    }
+
+    /// <summary>
+    /// In gear, the wheels turning the engine at <paramref name="rpm"/> with the throttle at
+    /// <paramref name="throttle"/>; null lets it run free again (the clutch in)
+    /// </summary>
+    public void Drive(double? rpm, double throttle = 0)
+    {
+        _drivenRpm = rpm;
+        _drivenThrottle = throttle;
+        if (rpm != null) StartTicking();
+    }
+
+    /// <summary>
+    /// Where the engine is heard from, as a direction from the listener (x right, y up, z ahead), and how loud
+    /// against its full volume (distance, a closed window); null direction plays it straight on
+    /// </summary>
+    public void Place((float X, float Y, float Z)? direction, float volumeScale)
+    {
+        _direction = direction;
+        _volumeScale = Math.Clamp(volumeScale, 0f, 1f);
+    }
+
     /// <summary>The throttle key is down or up</summary>
     public void SetKey(bool down)
     {
@@ -188,6 +246,7 @@ public sealed class EngineRunner : INotifyPropertyChanged
         _keyDown = false;
         _pedalHeld = null;
         _pedal = 0;
+        _drivenRpm = null;
         if (_spec != null) _sim = NewSim(_spec);
         Rpm = 0;
         StopTicking();
@@ -204,6 +263,8 @@ public sealed class EngineRunner : INotifyPropertyChanged
         _spec = null;
         _sim = null;
         _voice = null;
+        _direction = null;
+        _volumeScale = 1f;
         IsLoading = false;
         NotifyAll();
     }
@@ -230,10 +291,10 @@ public sealed class EngineRunner : INotifyPropertyChanged
 
         var dt = _lastFrame == TimeSpan.Zero ? 1.0 / 60 : (now - _lastFrame).TotalSeconds;
         _lastFrame = now;
-        Tick(dt);
+        Tick(dt, now);
     }
 
-    private void Tick(double dt)
+    private void Tick(double dt, TimeSpan frame)
     {
         var sim = _sim;
         if (sim == null)
@@ -253,7 +314,8 @@ public sealed class EngineRunner : INotifyPropertyChanged
         while (left > 1e-6)
         {
             var step = Math.Min(left, MaxStep);
-            sim.Tick(step, sim.State == EngineState.Running ? _pedal : 0);
+            if (_drivenRpm is { } driven) sim.TickCoupled(step, driven, _drivenThrottle);
+            else sim.Tick(step, sim.State == EngineState.Running ? _pedal : 0);
             left -= step;
         }
 
@@ -268,12 +330,13 @@ public sealed class EngineRunner : INotifyPropertyChanged
             else
             {
                 _voice.Set((float)Rpm, (float)sim.Load);
-                _voice.SetVolume(Volume * EngineAudio.Shared.Volume * (float)Math.Clamp(Rpm / FadeOutRpm, 0, 1), Rpm, sim.Load);
+                _voice.SetVolume(Volume * _volumeScale * EngineAudio.Shared.Volume * (float)Math.Clamp(Rpm / FadeOutRpm, 0, 1), Rpm, sim.Load);
                 _voice.SetLimiter(sim.OnLimiter);
+                if (_direction is { } d) _voice.SetDirection(d.X, d.Y, d.Z);
             }
         }
 
-        EngineAudio.Shared.Update();
+        EngineAudio.Shared.UpdateForFrame(frame);
 
         Notify(nameof(Rpm));
         Notify(nameof(RpmDisplay));
@@ -283,7 +346,7 @@ public sealed class EngineRunner : INotifyPropertyChanged
         PoseChanged?.Invoke();
 
         // Nothing left moving and nothing held: the clock can rest
-        if (sim.IsAtRest && _pedal < 1e-3 && !_keyDown && _pedalHeld == null) StopTicking();
+        if (sim.IsAtRest && _pedal < 1e-3 && !_keyDown && _pedalHeld == null && _drivenRpm == null) StopTicking();
     }
 
     private void NotifyAll()

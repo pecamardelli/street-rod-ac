@@ -178,6 +178,27 @@ internal static partial class FmodStudio
     [LibraryImport(StudioDll)]
     public static partial int FMOD_Studio_EventInstance_SetParameterValue(IntPtr instance, byte[] nameUtf8, float value);
 
+    /// <summary>A vector in FMOD's space: x right, y up, z ahead of the listener</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Vector
+    {
+        public float X;
+        public float Y;
+        public float Z;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Attributes3D
+    {
+        public Vector Position;
+        public Vector Velocity;
+        public Vector Forward;
+        public Vector Up;
+    }
+
+    [LibraryImport(StudioDll)]
+    public static partial int FMOD_Studio_EventInstance_Set3DAttributes(IntPtr instance, ref Attributes3D attributes);
+
     [LibraryImport(StudioDll)]
     public static partial int FMOD_Studio_System_GetLowLevelSystem(IntPtr system, out IntPtr coreSystem);
 
