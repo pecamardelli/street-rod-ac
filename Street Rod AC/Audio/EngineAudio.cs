@@ -144,6 +144,17 @@ public sealed class EngineAudio
         if (_system != IntPtr.Zero) Warn(FMOD_Studio_System_Update(_system), "update");
     }
 
+    // The frame FMOD was last updated on: two engines running update it once between them
+    private TimeSpan _updatedFrame = TimeSpan.MinValue;
+
+    /// <summary>The frame's update, however many engines ask for it on <paramref name="frame"/> (WPF's rendering time)</summary>
+    public void UpdateForFrame(TimeSpan frame)
+    {
+        if (frame == _updatedFrame) return;
+        _updatedFrame = frame;
+        Update();
+    }
+
     /// <summary>
     /// Releases the FMOD system for good, at exit: what plays, then the banks, then the system. After this nothing
     /// loads. Never throws. A load or unload in progress sees <see cref="_shutDown"/> and cuts itself short; one that
@@ -245,7 +256,16 @@ public sealed class EngineAudio
         }
         else
         {
-            Check(FMOD_Studio_System_LoadBankFile(_system, Utf8(bankPath), LoadBankNormal, out bank), "load " + Path.GetFileName(bankPath));
+            var result = FMOD_Studio_System_LoadBankFile(_system, Utf8(bankPath), LoadBankNormal, out bank);
+            if (result != ResultOk)
+            {
+                // The same bank from another file (a library sound and a car's own copy of it): FMOD knows a bank by
+                // its id, not its path, and will not load it twice. The other channel has it loaded already
+                sharing = SameBankElsewhere(channel, events.Engine.Value);
+                if (sharing == null) throw new FmodException("load " + Path.GetFileName(bankPath), result);
+                bank = sharing.Bank;
+                _logger.Information("{Bank} is the bank the other engine plays already: shared", Path.GetFileName(bankPath));
+            }
         }
 
         channel.Bank = bank;
@@ -260,6 +280,14 @@ public sealed class EngineAudio
         _logger.Information("Engine sound {Bank} ready in {Ms} ms ({Params})", Path.GetFileName(bankPath),
             (int)(DateTime.Now - started).TotalMilliseconds, voice.Describe());
         return voice;
+    }
+
+    /// <summary>The other channel, when its bank holds <paramref name="engine"/>: FMOD finds the event only in a loaded bank</summary>
+    private Channel? SameBankElsewhere(Channel channel, Guid engine)
+    {
+        var other = _channels.FirstOrDefault(c => c != channel && c.Bank != IntPtr.Zero);
+        if (other == null) return null;
+        return FMOD_Studio_System_GetEventByID(_system, ref engine, out _) == ResultOk ? other : null;
     }
 
     // Evening the sound out is a nicety: a bank that cannot be measured plays as its author mixed it

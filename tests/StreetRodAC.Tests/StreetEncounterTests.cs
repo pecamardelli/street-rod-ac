@@ -266,8 +266,31 @@ public class StreetEncounterTests
         sore.Grudge = new Grudge();
         var time = new DateTime(1969, 6, 21, 12, 0, 0);
 
-        Assert.True(StreetEncounters.OfferFrom(king, 1000m, RaceType.DragRace, time, 1.0, new Random(1))!.PinkSlips);
-        Assert.True(StreetEncounters.OfferFrom(sore, 1000m, RaceType.DragRace, time, 1.0, new Random(1))!.PinkSlips);
+        Assert.True(StreetEncounters.OfferFrom(king, 1000m, RaceType.DragRace, time, 1.0, true, new Random(1))!.PinkSlips);
+        Assert.True(StreetEncounters.OfferFrom(sore, 1000m, RaceType.DragRace, time, 1.0, true, new Random(1))!.PinkSlips);
+    }
+
+    [Fact]
+    public void Pink_slips_are_only_offered_against_a_car_the_rival_would_stake_theirs_on()
+    {
+        var king = Rival("King");
+        king.IsKing = true;
+        var sore = Rival("Sore");
+        sore.Grudge = new Grudge();
+        var bold = Rival("Bold", aggression: 100, money: 500m);
+        var time = new DateTime(1969, 6, 21, 12, 0, 0);
+
+        // The King and a sore loser want the car or nothing; anybody else puts cash up instead
+        Assert.Null(StreetEncounters.OfferFrom(king, 1000m, RaceType.DragRace, time, 1.0, false, new Random(1)));
+        Assert.Null(StreetEncounters.OfferFrom(sore, 1000m, RaceType.DragRace, time, 1.0, false, new Random(1)));
+
+        var random = new Random(3);
+        for (var i = 0; i < 300; i++)
+        {
+            var offer = StreetEncounters.OfferFrom(bold, 1000m, RaceType.DragRace, time, 100.0, false, random);
+            Assert.NotNull(offer);
+            Assert.False(offer.PinkSlips);
+        }
     }
 
     [Fact]
@@ -279,7 +302,7 @@ public class StreetEncounterTests
 
         for (var i = 0; i < 300; i++)
         {
-            var offer = StreetEncounters.OfferFrom(rival, 1000m, RaceType.DragRace, time, 0.0, random);
+            var offer = StreetEncounters.OfferFrom(rival, 1000m, RaceType.DragRace, time, 0.0, true, random);
             Assert.NotNull(offer);
             Assert.False(offer.PinkSlips);
             Assert.InRange(offer.Wager, 10m, 60m);
@@ -293,7 +316,7 @@ public class StreetEncounterTests
         var broke = Rival("Broke", money: 0m);
         var time = new DateTime(1969, 6, 21, 12, 0, 0);
 
-        Assert.Null(StreetEncounters.OfferFrom(broke, 1000m, RaceType.DragRace, time, 0.0, new Random(2)));
+        Assert.Null(StreetEncounters.OfferFrom(broke, 1000m, RaceType.DragRace, time, 0.0, true, new Random(2)));
     }
 
     #endregion

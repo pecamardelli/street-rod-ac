@@ -104,16 +104,18 @@ namespace Street_Rod_AC.Services.Street
         /// <summary>
         /// What the rival offers. The King and a rival with a grudge want pink slips; anybody else now and then
         /// (the bolder, the likelier, and the difficulty's pink-slip figure on top); otherwise cash, a share of what
-        /// the street's limits allow tonight that grows with the rival's aggression. Null when the two of them
-        /// cannot scrape a cash bet together and pink slips are not on.
+        /// the street's limits allow tonight that grows with the rival's aggression. Pink slips only when
+        /// <paramref name="wouldStakePinkSlips"/> (the rival would stake their car against the player's, going by what
+        /// the two are worth). Null when the two of them cannot scrape a cash bet together and pink slips are not on,
+        /// and for the King or a rival with a grudge who would not stake their car.
         /// </summary>
         public static StreetOffer? OfferFrom(Opponent rival, decimal playerMoney, RaceType raceType, DateTime time,
-            double pinkSlipFactor, Random random)
+            double pinkSlipFactor, bool wouldStakePinkSlips, Random random)
         {
-            if (rival.IsKing || rival.Grudge != null) return new StreetOffer(raceType, true, 0m);
+            if (rival.IsKing || rival.Grudge != null) return wouldStakePinkSlips ? new StreetOffer(raceType, true, 0m) : null;
 
             var aggression = Math.Clamp(rival.Aggression, 0, 100) / 100.0;
-            if (random.NextDouble() < PinkSlipOffer * pinkSlipFactor * (0.5 + aggression))
+            if (random.NextDouble() < PinkSlipOffer * pinkSlipFactor * (0.5 + aggression) && wouldStakePinkSlips)
                 return new StreetOffer(raceType, true, 0m);
 
             var (min, max) = MatchupCalculator.WagerLimits(raceType, playerMoney, rival.Money, rival.Stats.Reputation, time);

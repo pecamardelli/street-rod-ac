@@ -22,12 +22,14 @@ namespace Street_Rod_AC.Screens.Cruise
                 if (_window == null) return;
                 _window.PreviewKeyDown += OnWindowKeyDown;
                 _window.PreviewKeyUp += OnWindowKeyUp;
+                _window.Deactivated += OnWindowDeactivated;
             };
             Unloaded += (_, _) =>
             {
                 if (_window == null) return;
                 _window.PreviewKeyDown -= OnWindowKeyDown;
                 _window.PreviewKeyUp -= OnWindowKeyUp;
+                _window.Deactivated -= OnWindowDeactivated;
                 _window = null;
             };
         }
@@ -47,6 +49,9 @@ namespace Street_Rod_AC.Screens.Cruise
             ViewModel?.Rev(false);
             e.Handled = true;
         }
+
+        // A key let go of in another window never comes back here: the throttle goes up with the focus
+        private void OnWindowDeactivated(object? sender, EventArgs e) => ViewModel?.Rev(false);
 
         private void RevButton_Down(object sender, MouseButtonEventArgs e) => ViewModel?.Rev(true);
 

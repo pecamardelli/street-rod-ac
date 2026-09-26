@@ -371,68 +371,21 @@ namespace Street_Rod_AC.Screens.Diner
             var previous = SelectedOpponent?.Opponent;
             Opponents.Clear();
 
-            // Get opponents from the ReadyToRace collection
-            var readyOpponents = _gameState.Racers.ReadyToRace.Values
-                .OfType<Opponent>()
-                .ToList();
-
-            if (readyOpponents.Count == 0)
+            var racersOut = RacersOut.Today(_gameState, _challengeService, _catalogRepository, _logger);
+            if (racersOut.Count == 0)
                 _logger.Information("No opponents available at diner");
             else
-                _logger.Information("Loading {Count} opponents", readyOpponents.Count);
+                _logger.Information("Loading {Count} opponents", racersOut.Count);
 
-            foreach (var opponent in readyOpponents)
+            foreach (var (opponent, _, carDef) in racersOut)
             {
-                // Get opponent's car
-                var opponentCar = opponent.Cars.FirstOrDefault();
-                if (opponentCar == null)
-                {
-                    _logger.Warning("Opponent {Name} has no cars", opponent.Name);
-                    continue;
-                }
-
-                // A racer whose car came back from a race today unable to go is at the garage, not the diner
-                if (!_challengeService.CanRace(opponentCar))
-                {
-                    _logger.Information("{Name}'s car can't race today: not at the diner", opponent.Name);
-                    continue;
-                }
-
-                // Get car definition
-                var carDef = _catalogRepository.GetCar(opponentCar.DefinitionId);
-                if (carDef == null)
-                {
-                    _logger.Warning("Car definition not found for opponent {Name}", opponent.Name);
-                    continue;
-                }
-
-                // Get portrait path and resolve to absolute path
-                var portraitPath = opponent.PortraitPath;
-                if (!string.IsNullOrEmpty(portraitPath))
-                {
-                    // Remove leading slash if present and make it relative to app directory
-                    var relativePath = portraitPath.TrimStart('/', '\\');
-                    portraitPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativePath);
-
-                    if (!File.Exists(portraitPath))
-                    {
-                        _logger.Warning("Portrait not found for opponent {Name}: {Path}", opponent.Name, portraitPath);
-                        portraitPath = null;
-                    }
-                }
-
-                // Calculate difficulty relative to player
-                var difficulty = CalculateDifficulty(opponent);
-
-                var displayVm = new OpponentDisplayViewModel
+                Opponents.Add(new OpponentDisplayViewModel
                 {
                     Opponent = opponent,
                     CarDefinition = carDef,
-                    PortraitPath = portraitPath,
-                    Difficulty = difficulty
-                };
-
-                Opponents.Add(displayVm);
+                    PortraitPath = RacersOut.PortraitOf(opponent, _logger),
+                    Difficulty = CalculateDifficulty(opponent)
+                });
             }
 
             _logger.Information("Loaded {Count} opponents into diner view", Opponents.Count);

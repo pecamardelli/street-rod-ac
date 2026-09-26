@@ -39,15 +39,12 @@ namespace Street_Rod_AC.Screens.Cruise
         private static readonly TimeSpan TickInterval = TimeSpan.FromSeconds(1.5);
         private const int MinutesPerTick = 5;
 
-        // The first rival is not due before the street is up on screen
-        private const int FirstWaitAtLeast = 10;
+        // A rival due while the street is not up on screen waits for it, this long at most: one that turned up before
+        // would be there already, with no drive up the lane. A street that never comes up (no 3D) is not waited on again
+        private static readonly TimeSpan StreetLoadWait = TimeSpan.FromSeconds(20);
 
         // A rival who pulled up blips the throttle at the player now and then
         private static readonly TimeSpan BlipEvery = TimeSpan.FromSeconds(4.5);
-
-        // The rivals met tonight, whoever it was: a rival waved off does not come round again the same night
-        private static DateTime _metOn;
-        private static readonly HashSet<Guid> MetTonight = [];
 
         private readonly NavigationService _navigationService;
         private readonly DialogService _dialogService;
@@ -70,6 +67,9 @@ namespace Street_Rod_AC.Screens.Cruise
         private bool _ticking;
         private bool _leaving;
         private bool _spending;
+        private Task? _spendTask;
+        private DateTime? _streetNotUpSince;
+        private bool _settingTerms;
         private int _encounterVersion;
 
         private Opponent? _rival;
@@ -260,6 +260,8 @@ namespace Street_Rod_AC.Screens.Cruise
             get => _wager;
             set
             {
+                // A slider squeezing the old figure into the old range while new terms go up says nothing
+                if (_settingTerms) return;
                 var clamped = MatchupCalculator.ClampWager(Math.Round(value / 5m) * 5m, MinWager, MaxWager);
                 if (!SetProperty(ref _wager, clamped)) return;
                 OnPropertyChanged(nameof(BetDisplay));
@@ -312,10 +314,10 @@ namespace Street_Rod_AC.Screens.Cruise
             base.Enter();
             _logger.Information("Entered the street");
 
-            if (_metOn != _gameState.Date.Date)
+            if (_gameState.MetOnTheStreetOn != _gameState.Date.Date)
             {
-                _metOn = _gameState.Date.Date;
-                MetTonight.Clear();
+                _gameState.MetOnTheStreetOn = _gameState.Date.Date;
+                _gameState.MetOnTheStreet.Clear();
             }
 
             var playerCar = SelectedCar();
@@ -348,12 +350,37 @@ namespace Street_Rod_AC.Screens.Cruise
             OnPropertyChanged(nameof(Scene));
             OnPropertyChanged(nameof(PlayerCar));
             RefreshClock();
+            StartStreet(playerCar);
+        }
 
+        /// <summary>The player's engine turning over, and the clock going round till somebody comes along</summary>
+        private void StartStreet(Car playerCar)
+        {
+            // Heard from inside the car from the start, not only once the street is up
+            PlayerEngine.Place(null, StreetStage.OwnEngineVolume);
             _ = StartOwnEngineAsync(playerCar);
 
-            _dueAt = _gameState.Date.AddMinutes(Math.Max(FirstWaitAtLeast, StreetEncounters.MinutesToNext(_gameState.Date, _random)));
+            ScheduleNext();
+            _streetNotUpSince = null;
             _ticking = true;
             _clock.Start();
+        }
+
+        /// <summary>A way off the street failed: back at the curb as Exit left it, the rival gone</summary>
+        public override void Resume()
+        {
+            base.Resume();
+            _logger.Information("Back on the street after a way off it failed");
+            _leaving = false;
+
+            CloseEncounter();
+            ForgetRival();
+            var playerCar = SelectedCar();
+            if (playerCar == null || PlayerCar == null) return;
+
+            StatusText = "You pull over to the curb and let the engine idle.";
+            RefreshClock();
+            StartStreet(playerCar);
         }
 
         public override void Exit()
@@ -394,7 +421,7 @@ namespace Street_Rod_AC.Screens.Cruise
         /// <summary>Holds the throttle down (the Rev button); false lets it up</summary>
         public void Rev(bool down)
         {
-            if (!PlayerEngine.IsRunning) PlayerEngine.StartRunning();
+            if (down && !PlayerEngine.IsRunning) PlayerEngine.StartRunning();
             PlayerEngine.SetKey(down);
         }
 
@@ -406,13 +433,32 @@ namespace Street_Rod_AC.Screens.Cruise
             _ = System.Windows.Application.Current.Dispatcher.InvokeAsync(() => _navigationService.NavigateToGarage(_gameState));
         }
 
-        private void Leave(bool toGarage)
+        private async void Leave(bool toGarage)
         {
             if (_leaving) return;
             _leaving = true;
+            _ticking = false;
+            _clock.Stop();
+
+            try
+            {
+                // A tick spending its time may be turning the day over on a worker: the save waits for it to finish
+                if (_spendTask is { IsCompleted: false } spending) await spending;
+            }
+            catch
+            {
+                // The tick logs its own failure
+            }
+
             Save();
-            if (toGarage) _navigationService.NavigateToGarage(_gameState);
-            else _navigationService.NavigateToDiner(_gameState);
+            var went = toGarage ? _navigationService.NavigateToGarage(_gameState) : _navigationService.NavigateToDiner(_gameState);
+            if (went || !ReferenceEquals(_navigationService.CurrentScreen, this)) return;
+
+            // Still here (the other screen could not be opened): the street goes on
+            _leaving = false;
+            if (_ticking) return;
+            _ticking = true;
+            _clock.Start();
         }
 
         private void Save()
@@ -439,7 +485,9 @@ namespace Street_Rod_AC.Screens.Cruise
             _spending = true;
             try
             {
-                var result = await _timeService.SpendTimeAsync(_gameState, MinutesPerTick);
+                var spend = _timeService.SpendTimeAsync(_gameState, MinutesPerTick);
+                _spendTask = spend;
+                var result = await spend;
                 if (!_ticking) return;
 
                 RefreshClock();
@@ -452,7 +500,7 @@ namespace Street_Rod_AC.Screens.Cruise
                 // The light moves on while nobody is about; the street is loaded again for it
                 Light = StreetLights.At(_gameState.Date);
 
-                if (_gameState.Date >= _dueAt) await SomebodyPullsUpAsync();
+                if (_gameState.Date >= _dueAt && IsStreetUp()) await SomebodyPullsUpAsync();
             }
             catch (Exception ex)
             {
@@ -485,6 +533,19 @@ namespace Street_Rod_AC.Screens.Cruise
             _navigationService.NavigateToGarage(_gameState);
         }
 
+        /// <summary>The street is on screen to drive a rival up, or has been waited on long enough</summary>
+        private bool IsStreetUp()
+        {
+            if (Stage.IsShown)
+            {
+                _streetNotUpSince = null;
+                return true;
+            }
+
+            _streetNotUpSince ??= DateTime.UtcNow;
+            return DateTime.UtcNow - _streetNotUpSince.Value >= StreetLoadWait;
+        }
+
         private void ScheduleNext()
         {
             _dueAt = _gameState.Date.AddMinutes(StreetEncounters.MinutesToNext(_gameState.Date, _random));
@@ -494,18 +555,17 @@ namespace Street_Rod_AC.Screens.Cruise
 
         #region A rival pulls up
 
-        /// <summary>The racers out tonight: on the scene, with a car that can race and that the game can show</summary>
-        private List<Opponent> RivalsOut() => _gameState.Racers.ReadyToRace.Values
-            .OfType<Opponent>()
-            .Where(o => o.Cars.FirstOrDefault() is { } car && _challengeService.CanRace(car)
-                        && _catalogRepository.GetCar(car.DefinitionId) != null
-                        && Directory.Exists(Path.Combine(AppSettings.Instance.CarsPath, car.DefinitionId)))
+        /// <summary>The racers out tonight (<see cref="RacersOut"/>), in a car the street can show</summary>
+        private List<Opponent> RivalsOut() => RacersOut.Today(_gameState, _challengeService, _catalogRepository)
+            .Where(r => Directory.Exists(Path.Combine(AppSettings.Instance.CarsPath, r.Car.DefinitionId)))
+            .Select(r => r.Opponent)
             .ToList();
 
         private async Task SomebodyPullsUpAsync()
         {
             var time = _gameState.Date;
-            var rival = StreetEncounters.PickRival(RivalsOut(), _gameState.Player.Stats.Reputation, time, MetTonight, _random);
+            var met = _gameState.MetOnTheStreet;
+            var rival = StreetEncounters.PickRival(RivalsOut(), _gameState.Player.Stats.Reputation, time, met, _random);
             ScheduleNext();
 
             if (rival == null)
@@ -523,12 +583,15 @@ namespace Street_Rod_AC.Screens.Cruise
                 return;
             }
 
+            // Pink slips only against a car the rival would stake theirs on: the diner's own check of what they are worth
+            var car = rival.Cars.First();
+            var wouldStake = SelectedCar() is { } playerCar && _challengeService.WouldStakePinkSlips(rival, playerCar, car);
             var offer = StreetEncounters.OfferFrom(rival, _gameState.Player.Money, raceType.Value, time,
-                _gameState.Rules.PinkSlipFactor, _random);
+                _gameState.Rules.PinkSlipFactor, wouldStake, _random);
             if (offer == null)
             {
-                // Nobody has the money for a bet tonight: they cruise on by
-                MetTonight.Add(rival.OpponentId);
+                // Nothing they would race for tonight: they cruise on by
+                met.Add(rival.OpponentId);
                 return;
             }
 
@@ -540,11 +603,10 @@ namespace Street_Rod_AC.Screens.Cruise
                 configuration = track.Configurations.FirstOrDefault(c => Services.Race.BracketRules.RunsTheQuarter(track, c)) ?? configuration;
             }
 
-            var car = rival.Cars.First();
             var definition = _catalogRepository.GetCar(car.DefinitionId)!;
             var version = ++_encounterVersion;
 
-            MetTonight.Add(rival.OpponentId);
+            met.Add(rival.OpponentId);
             _rival = rival;
             _rivalCar = car;
             _rivalDefinition = definition;
@@ -570,13 +632,7 @@ namespace Street_Rod_AC.Screens.Cruise
             if (_rival == null || _offer == null) return;
 
             StatusText = $"{_rival.Name} pulls up alongside and rolls the window down.";
-            RivalPortrait = PortraitOf(_rival);
-
-            _isPinkSlipBet = _offer.PinkSlips;
-            (MinWager, MaxWager) = _offer.PinkSlips
-                ? (0m, 0m)
-                : MatchupCalculator.WagerLimits(_offer.RaceType, _gameState.Player.Money, _rival.Money, _rival.Stats.Reputation, _gameState.Date);
-            _wager = _offer.PinkSlips ? 0m : _offer.Wager;
+            RivalPortrait = RacersOut.PortraitOf(_rival, _logger);
 
             MatchupStats.Clear();
             if (SelectedCar() is { } playerCar && _catalogRepository.GetCar(playerCar.DefinitionId) is { } playerDefinition)
@@ -589,17 +645,47 @@ namespace Street_Rod_AC.Screens.Cruise
             foreach (var name in new[]
                      {
                          nameof(RivalName), nameof(RivalNickname), nameof(RivalPortrait), nameof(RivalCarName), nameof(RivalStanding),
-                         nameof(RaceDisplay), nameof(CanChangeBet), nameof(IsPinkSlipBet), nameof(IsCashBet), nameof(Wager),
-                         nameof(MinWager), nameof(MaxWager), nameof(BetDisplay)
+                         nameof(RaceDisplay), nameof(CanChangeBet)
                      })
             {
                 OnPropertyChanged(name);
             }
 
-            OnBetChanged();
+            // The cash limits even with pink slips on the table: the player may put cash up instead
+            var (min, max) = MatchupCalculator.WagerLimits(_offer.RaceType, _gameState.Player.Money, _rival.Money,
+                _rival.Stats.Reputation, _gameState.Date);
+            SetTerms(_offer.PinkSlips, min, max, _offer.PinkSlips ? min : _offer.Wager);
             _ = SayAsync(TalkTrigger.PulledUp);
             Blip();
             _blips.Start();
+        }
+
+        /// <summary>
+        /// Puts the rival's terms up. The slider takes the range and the figure one at a time, and squeezes the figure
+        /// into whatever range it has at that moment: what it writes back meanwhile is ignored, and the figure is
+        /// given to it once more with the whole range in place.
+        /// </summary>
+        private void SetTerms(bool pinkSlips, decimal min, decimal max, decimal wager)
+        {
+            _settingTerms = true;
+            try
+            {
+                _isPinkSlipBet = pinkSlips;
+                MinWager = min;
+                MaxWager = max;
+                _wager = wager;
+                foreach (var name in new[] { nameof(IsPinkSlipBet), nameof(IsCashBet), nameof(MinWager), nameof(MaxWager), nameof(Wager), nameof(BetDisplay) })
+                {
+                    OnPropertyChanged(name);
+                }
+            }
+            finally
+            {
+                _settingTerms = false;
+            }
+
+            OnPropertyChanged(nameof(Wager));
+            OnBetChanged();
         }
 
         private async Task SayAsync(TalkTrigger trigger)
@@ -644,13 +730,6 @@ namespace Street_Rod_AC.Screens.Cruise
             release.Start();
         }
 
-        private static string? PortraitOf(Opponent rival)
-        {
-            if (string.IsNullOrEmpty(rival.PortraitPath)) return null;
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, rival.PortraitPath.TrimStart('/', '\\'));
-            return File.Exists(path) ? path : null;
-        }
-
         private void WaveOff()
         {
             if (_rival == null) return;
@@ -671,11 +750,19 @@ namespace Street_Rod_AC.Screens.Cruise
         private void OnRivalGone()
         {
             RivalEngine.Detach();
+            ForgetRival();
+
+            // The rival's bank can be hundreds of MB, and the next rival may be a long wait away
+            _ = EngineAudio.Shared.ReleaseAsync(EngineChannel.Second);
+            if (_ticking) ScheduleNext();
+        }
+
+        private void ForgetRival()
+        {
             _rival = null;
             _rivalCar = null;
             _rivalDefinition = null;
             _offer = null;
-            if (_ticking) ScheduleNext();
         }
 
         private async Task OnAccept()

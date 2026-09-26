@@ -82,13 +82,22 @@ A `D3DViewportBase` like the garage's, the lot's and the main screen's:
 - `CarSlot.LocalMatrix` *is* the car node's matrix: a car that moves and rocks cannot be placed by one and rocked by
   the other. `CarBodyRock.Apply` takes the placement and puts the lean on it.
 - The first frame comes before the player's car has loaded: a rival sent up before `StreetStage.IsShown` would be
-  there at once. The screen's first rival is never due before 10 game minutes (a few seconds).
+  there at once. A rival who is due waits for the street to be shown (after a light change too), 20 real seconds at
+  most: a street that never comes up (no 3D) is not waited on again.
+- The renderer's space is right-handed (a car's +x is its left), FMOD's left-handed: the listener's right is
+  `look x up`, not `up x look`, or every rival is heard from the wrong side.
+- The camera is aimed only when something moves it (the player's engine rocking the car, a drag, a new lens):
+  aiming it every frame marks the renderer dirty and the street never stops drawing.
 
 ## Two engines at once
 
 `EngineAudio` has two channels (`EngineChannel.Main`, `Second`): the player's car and the rival's. Each loads its own
-bank; two cars on one sound share the bank, as FMOD cannot load one twice. `ReleaseAsync(Second)` lets the rival's go
-when the screen does; a race still releases everything (`UnloadAllAsync`). The rival is heard from where the car is:
+bank; two cars on one sound share the bank, as FMOD cannot load one twice. FMOD knows a bank by its id, not its path:
+the same bank in two files (a library sound and a car's own copy) is found by its engine event in the other channel's
+bank and shared too. `ReleaseAsync(Second)` lets the rival's go once the rival has driven off, and when the screen
+goes; a race still releases everything (`UnloadAllAsync`). FMOD is updated once a frame, however many engines run
+(`EngineAudio.UpdateForFrame`), and an engine started running is silent until its first frame gives it its volume and
+direction. The rival is heard from where the car is:
 `EngineVoice.SetDirection` puts the event a metre off in that direction (FMOD's 3D attributes, the listener left at
 its default), which pans it without FMOD's own distance falloff, and the volume falls off with distance
 (`StreetViewport3D.HearRival`). The player's own engine plays at 55%, heard from inside.
@@ -101,13 +110,18 @@ its default), which pans it without FMOD's own distance falloff, and the volume 
 - **Who:** the racers on the scene with a car that can race and that is installed. A rival with a grudge is four times
   likelier (they come looking), one within 15 reputation of the player 1.5 times, the King a quarter as likely. At
   night the bold are out (weight 0.5 + aggression), by day it hardly matters. A rival met is not met again that night,
-  race or not (`MetTonight`, kept for the game day across the race and back).
+  race or not (`GameState.MetOnTheStreet`, kept for the game day across the race and back, not saved: a game loaded
+  again has met nobody yet).
 - **The race:** a drag race 65% of the time, 80% at night, on an installed track of that kind; a drag strip's quarter
   mile when it has one.
 - **The offer:** the King and a rival with a grudge want pink slips, and the bet cannot be changed. Anybody else offers
   pink slips now and then (6% on Normal, times 0.5 + aggression, times the difficulty's pink-slip figure), otherwise
   cash: somewhere between the street's minimum and maximum for the hour and the two wallets
-  (`MatchupCalculator.WagerLimits`), higher with aggression. A rival nobody can bet with drives on by.
+  (`MatchupCalculator.WagerLimits`), higher with aggression. A rival nobody can bet with drives on by. Pink slips
+  are only offered against a car the rival would stake theirs on (`IOpponentChallengeService.WouldStakePinkSlips`,
+  the diner's own value checks): anybody else offers cash instead, and the King or a rival with a grudge drives on by.
+  The rival's own terms are taken as they stand; changed terms are put to them like a diner challenge. Cash can be put
+  up instead of pink slips the rival offered, within the hour's limits.
 - **Taking it:** the offer as made is taken without asking again; changed terms (the other kind of bet, another sum)
   are put to the rival like a diner challenge ("HOW ABOUT THIS?"), and a no is said through the window with the offer
   still standing. The race goes through **`Screens/Shared/ChallengeLauncher.cs`**, which the diner now uses too: the
@@ -116,7 +130,10 @@ its default), which pans it without FMOD's own distance falloff, and the volume 
 - **The rival talks** (`TalkTrigger.PulledUp`: lines about the player's car by its short name, `CarNames.Short`; the
   King's and a grudge's own) and blips the throttle every few seconds. The player revs back with the REV button or the
   space bar.
-- **The night ends** at 22:00 like any day: the player goes home to the garage, the game is saved.
+- **The night ends** at 22:00 like any day: the player goes home to the garage, the game is saved. A street race
+  that runs past it sends the player home from the race too. Leaving for the garage or the diner waits for a tick
+  that is still spending its time before it saves; a way off the street that fails puts the player back at the curb
+  (`Resume`), the clock going round again.
 
 A player whose car cannot race (or is impounded), or who has none, is sent back to the garage on the way in.
 

@@ -32,10 +32,9 @@ public class StreetViewport3D : D3DViewportBase
     // Where the eyes are in a car that does not say: a little left of the middle, over the seat
     private static readonly Sx.Vector3 FallbackEye = new(0.36f, 1.05f, -0.15f);
 
-    // Loud beside the window, fading as it goes up the street; the player's own engine heard from inside
+    // Loud beside the window, fading as it goes up the street
     private const float RivalFullVolumeWithin = 5f;
     private const float RivalQuietest = 0.06f;
-    private const float OwnEngineVolume = 0.55f;
 
     private const int SettleFrames = 4;
     private static readonly TimeSpan SceneFadeOut = TimeSpan.FromMilliseconds(600);
@@ -52,6 +51,7 @@ public class StreetViewport3D : D3DViewportBase
     private float _lookYaw = DefaultLookYaw;
     private float _lookPitch = -2f;
     private System.Windows.Point? _dragFrom;
+    private float _aimedAspect;
 
     // The rival's car
     private CarSlot? _rivalSlot;
@@ -164,9 +164,7 @@ public class StreetViewport3D : D3DViewportBase
 
         ApplyLighting(renderer, scene, light);
 
-        var skin = player.Skin != null && Directory.Exists(Path.Combine(player.Directory, "skins", player.Skin))
-            ? player.Skin
-            : Kn5RenderableCar.DefaultSkin;
+        var skin = SkinOrDefault(player.Directory, player.Skin);
         var placement = Placement(scene, scene.Player, 0f);
         renderer.MainSlot.LocalMatrix = placement;
         await TrackDeviceWork(renderer.MainSlot.SetCarAsync(CarDescription.FromDirectory(player.Directory), skin));
@@ -343,9 +341,7 @@ public class StreetViewport3D : D3DViewportBase
                 _rivalSlot ??= renderer.AddCar(null);
                 _rivalSlot.LocalMatrix = hidden;
 
-                var skin = car.Skin != null && Directory.Exists(Path.Combine(car.Directory, "skins", car.Skin))
-                    ? car.Skin
-                    : Kn5RenderableCar.DefaultSkin;
+                var skin = SkinOrDefault(car.Directory, car.Skin);
                 await TrackDeviceWork(_rivalSlot.SetCarAsync(CarDescription.FromDirectory(car.Directory), skin));
                 if (Renderer != renderer || load != _rivalLoad) return;
 
@@ -371,8 +367,7 @@ public class StreetViewport3D : D3DViewportBase
         _pitch.Reset();
 
         var engine = stage.RivalEngine;
-        var idle = engine?.Spec?.IdleRpm is > 200 and var i ? i : 800;
-        var limiter = engine?.Spec?.LimiterRpm is > 1000 and var l ? l : 6000;
+        var (idle, limiter) = RpmRange(engine);
 
         if (stage.Phase == RivalPhase.Alongside)
         {
@@ -387,10 +382,17 @@ public class StreetViewport3D : D3DViewportBase
             _rivalPosition = -scene.ApproachFrom;
         }
 
-        engine?.StartRunning();
+        // Placed and heard from where it is before it makes a sound
         PlaceRival();
+        HearRival();
+        engine?.StartRunning();
         AnimateFor(TimeSpan.FromSeconds(1));
     }
+
+    /// <summary>The engine's idle and limiter, or a V8's of the day when it does not say</summary>
+    private static (double Idle, double Limiter) RpmRange(EngineRunner? engine) =>
+        (engine?.Spec?.IdleRpm is > 200 and var idle ? idle : 800,
+         engine?.Spec?.LimiterRpm is > 1000 and var limiter ? limiter : 6000);
 
     private void StartLeaving(StreetStage stage)
     {
@@ -401,8 +403,7 @@ public class StreetViewport3D : D3DViewportBase
         }
 
         var engine = stage.RivalEngine;
-        var idle = engine?.Spec?.IdleRpm is > 200 and var i ? i : 800;
-        var limiter = engine?.Spec?.LimiterRpm is > 1000 and var l ? l : 6000;
+        var (idle, limiter) = RpmRange(engine);
         engine?.SetPedal(null);
         _drive = RivalDrive.Leave(_rivalPosition, _scene.LeaveTo, idle, limiter);
         _driveTime = 0f;
@@ -414,6 +415,7 @@ public class StreetViewport3D : D3DViewportBase
         _drive = null;
         _rivalReady = false;
         _rivalLoad++;
+        _pitch.Reset();
         _rivalRock?.Release();
         _rivalRock = null;
         if (_rivalSlot != null) _rivalSlot.LocalMatrix = Sx.Matrix.Translation(0f, -50f, 0f);
@@ -433,7 +435,7 @@ public class StreetViewport3D : D3DViewportBase
         _rivalRock.Apply(body, _wheelAngle, placement);
     }
 
-    /// <summary>Moves the rival along its drive by a frame; true while it has somewhere to be</summary>
+    /// <summary>Moves the rival along its drive by a frame; true while it moves, its engine runs or its body settles</summary>
     private bool StepRival(float dt)
     {
         var stage = _stageListened;
@@ -471,7 +473,7 @@ public class StreetViewport3D : D3DViewportBase
 
         PlaceRival();
         HearRival();
-        return true;
+        return _drive != null || engine is { IsActive: true } || !_pitch.IsSettled;
     }
 
     /// <summary>The rival's engine heard from where the car is, from where the player looks</summary>
@@ -484,10 +486,11 @@ public class StreetViewport3D : D3DViewportBase
         var offset = car - camera.Position;
         var distance = offset.Length();
 
-        // Into the listener's own axes: x right, y up, z where they look
+        // Into the listener's own axes, as FMOD takes them: x right, y up, z where they look. The renderer's space
+        // is right-handed (a car's +x is its left), so right is look x up
         var look = Sx.Vector3.Normalize(camera.Look);
-        var right = Sx.Vector3.Normalize(Sx.Vector3.Cross(Sx.Vector3.UnitY, look));
-        var up = Sx.Vector3.Cross(look, right);
+        var right = Sx.Vector3.Normalize(Sx.Vector3.Cross(look, Sx.Vector3.UnitY));
+        var up = Sx.Vector3.Cross(right, look);
         var direction = (Sx.Vector3.Dot(offset, right), Sx.Vector3.Dot(offset, up), Sx.Vector3.Dot(offset, look));
 
         var volume = Math.Clamp(RivalFullVolumeWithin / Math.Max(distance, 0.1f), RivalQuietest, 1f);
@@ -517,6 +520,7 @@ public class StreetViewport3D : D3DViewportBase
         camera.FovY = FieldOfView * MathF.PI / 180f;
         camera.LookAt(eye, eye + direction, up);
         camera.SetLens(renderer.AspectRatio);
+        _aimedAspect = renderer.AspectRatio;
         renderer.IsDirty = true;
     }
 
@@ -566,17 +570,12 @@ public class StreetViewport3D : D3DViewportBase
 
     protected override bool StepFrame(GarageRenderer renderer, float dt)
     {
+        // The player's engine shakes the car, and the view with it (OnPoseChanged aims the camera as it does); a
+        // viewport that changed shape is aimed again for its new lens
+        if (renderer.AspectRatio != _aimedAspect) AimCamera(renderer);
+
         var moving = StepRival(dt);
-
-        // The player's engine shakes the car, and the view with it
-        if (RunningEngine is { IsActive: true } own)
-        {
-            own.Place(null, OwnEngineVolume);
-            moving = true;
-        }
-
-        AimCamera(renderer);
-        return moving || !_pitch.IsSettled;
+        return moving || RunningEngine is { IsActive: true };
     }
 
     protected override void OnFramePresented()

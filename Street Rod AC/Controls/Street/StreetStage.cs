@@ -28,6 +28,9 @@ public enum RivalPhase
 /// </summary>
 public sealed class StreetStage
 {
+    /// <summary>The player's own engine, heard from inside the car, against its full volume</summary>
+    public const float OwnEngineVolume = 0.55f;
+
     public StreetCar? RivalCar { get; private set; }
 
     /// <summary>The rival's engine, which the viewport drives while the car moves</summary>

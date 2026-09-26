@@ -659,6 +659,12 @@ public abstract class D3DViewportBase : System.Windows.Controls.Grid
 
     #endregion
 
+    /// <summary>The car's skin when its folder has it, or the car's default one</summary>
+    protected static string SkinOrDefault(string carDirectory, string? skin) =>
+        skin != null && System.IO.Directory.Exists(System.IO.Path.Combine(carDirectory, "skins", skin))
+            ? skin
+            : AcTools.Render.Kn5Specific.Objects.Kn5RenderableCar.DefaultSkin;
+
     #region Body rock
 
     /// <summary>How the running engine leans the rocked car, in world space; none while nothing rocks it</summary>

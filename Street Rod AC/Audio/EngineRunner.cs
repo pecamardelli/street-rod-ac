@@ -130,8 +130,12 @@ public sealed class EngineRunner : INotifyPropertyChanged
         _soundFailed = voice == null;
         IsLoading = false;
 
-        // Started while the sound was on its way: it joins in
-        if (IsRunning) _voice?.Start((float)Rpm, (float)(_sim?.Load ?? 0));
+        // Started while the sound was on its way: it joins in, silent until the next frame gives it its volume
+        if (IsRunning)
+        {
+            _voice?.Start((float)Rpm, (float)(_sim?.Load ?? 0));
+            _voice?.SetVolume(0f);
+        }
         NotifyAll();
     }
 
@@ -193,6 +197,9 @@ public sealed class EngineRunner : INotifyPropertyChanged
         if (_voice == null && !IsLoading && _spec.Sound != null) _ = LoadSoundAsync();
         _sim.StartRunning();
         _voice?.Start((float)_sim.Rpm, 0f);
+
+        // Silent until the first frame: that one plays it at its volume, from where it is
+        _voice?.SetVolume(0f);
         StartTicking();
         NotifyAll();
     }
@@ -256,6 +263,8 @@ public sealed class EngineRunner : INotifyPropertyChanged
         _spec = null;
         _sim = null;
         _voice = null;
+        _direction = null;
+        _volumeScale = 1f;
         IsLoading = false;
         NotifyAll();
     }
@@ -282,10 +291,10 @@ public sealed class EngineRunner : INotifyPropertyChanged
 
         var dt = _lastFrame == TimeSpan.Zero ? 1.0 / 60 : (now - _lastFrame).TotalSeconds;
         _lastFrame = now;
-        Tick(dt);
+        Tick(dt, now);
     }
 
-    private void Tick(double dt)
+    private void Tick(double dt, TimeSpan frame)
     {
         var sim = _sim;
         if (sim == null)
@@ -327,7 +336,7 @@ public sealed class EngineRunner : INotifyPropertyChanged
             }
         }
 
-        EngineAudio.Shared.Update();
+        EngineAudio.Shared.UpdateForFrame(frame);
 
         Notify(nameof(Rpm));
         Notify(nameof(RpmDisplay));
