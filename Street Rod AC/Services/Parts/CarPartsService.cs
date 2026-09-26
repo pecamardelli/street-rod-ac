@@ -29,6 +29,7 @@ namespace Street_Rod_AC.Services.Parts
         private readonly Lazy<PartsCatalog> _catalog;
         private readonly Lazy<EngineBuildIndex> _builds;
         private readonly Lazy<SoundLibrary> _sounds;
+        private readonly Lazy<EngineCooling> _cooling;
         private readonly object _assignLock = new();
         private readonly ConcurrentDictionary<string, AcCarSpecs?> _specs = new();
 
@@ -55,6 +56,7 @@ namespace Street_Rod_AC.Services.Parts
             _catalog = new Lazy<PartsCatalog>(LoadCatalog);
             _builds = new Lazy<EngineBuildIndex>(CreateIndex);
             _sounds = new Lazy<SoundLibrary>(LoadSounds);
+            _cooling = new Lazy<EngineCooling>(() => EngineCooling.Create(Catalog, Builds));
         }
 
         public PartsCatalog Catalog => _catalog.Value;
@@ -161,6 +163,20 @@ namespace Street_Rod_AC.Services.Parts
                 car.DefinitionId, request.BlockId, request.Cylinders, request.Family, request.LimiterRpm, choice.Sound.Name, choice.Reason,
                 sound == null ? " (its own bank)" : "");
             return sound;
+        }
+
+        public Models.Race.EngineCoolingRating? RateCooling(Car car, EngineReport? engine)
+        {
+            if (!IsAvailable || !car.HasPartsAssigned) return null;
+
+            // A car whose factory engine came with a radiator has none without it; a make without radiators keeps
+            // its factory's cooling
+            var definition = _catalogRepo.GetCar(car.DefinitionId);
+            var stock = definition == null ? null : GetStockBuild(definition);
+            var factoryHadRadiator = stock?.Build.Parts.Any(r => r.Part is { } id && Catalog.Get(id) is { } part
+                && EngineCooling.KindOf(part) == EngineCooling.Kind.Radiator) == true;
+            return _cooling.Value.Rate(car.Parts.SelectMany(p => p.SelfAndDescendants()), engine?.Dyno?.MaxPowerHp ?? 0,
+                stock?.PowerHp, factoryHadRadiator);
         }
 
         // The index weighed every build when it put them on the dyno

@@ -59,6 +59,12 @@ namespace Street_Rod_AC.Services.Parts
         /// <summary>The car's engine on the dyno; null for a car without one or without parts</summary>
         EngineReport? Evaluate(Car car);
 
+        /// <summary>
+        /// How the car's engine is cooled and oiled, for the race mode's heat and oil (<see cref="EngineCooling"/>),
+        /// with <paramref name="engine"/> the car's engine on the dyno; null for a car without parts
+        /// </summary>
+        Models.Race.EngineCoolingRating? RateCooling(Car car, EngineReport? engine);
+
         /// <summary>Every engine sound there is: the library's and the installed cars' own, read once</summary>
         SoundLibrary Sounds { get; }
 

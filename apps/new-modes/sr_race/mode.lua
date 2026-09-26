@@ -11,8 +11,11 @@
   - Puts each car into AC as its earlier races left it (race.ini [STREET_ROD] CAR_n_*): the body's damage, which
     brings the scratches and dents with it, and the engine's life. AC cannot be told about a worn gearbox or a bent
     corner; the career puts those into the car's data, and this mode adds them to what the race does.
-  - Judges a breakdown: a blown engine, a gearbox or a corner that gives out, a blown tyre. A player's breakdown ends
-    the race; a rival's is held where it stopped, and the player still has to finish
+  - Judges a breakdown: a blown engine, a gearbox or a corner that gives out, a blown tyre, an empty tank. A player's
+    breakdown ends the race; a rival's is held where it stopped, and the player still has to finish
+  - Runs each racer's engine heat and oil (engineHeat): a car cooled too little for what its engine makes runs hot,
+    goes flat, cooks and can boil over; a stock sump surges under g held too long. The career rates the car, and
+    sends its fuel and dirt from its earlier races
   - Runs the police chase when the career sends cops (race.ini [STREET_ROD] POLICE): they wait hidden on the grid
     and come after the racers part way round the lap, with lights and a siren. A driver who stops with a cop on
     top of them is busted; the player who stays far enough ahead for long enough gets away. The line is home: a
@@ -42,7 +45,7 @@
 ]]
 
 -- manifest.ini [ABOUT] VERSION goes with it
-local SCRIPT_VERSION = "3.6.0"
+local SCRIPT_VERSION = "3.7.0"
 -- 1.1: session.context_id, participants[].car_index and participants[].is_player
 -- 1.2: session.end_reason, participants[].false_start, participants[].condition
 -- 1.3: participants[].disqualified, session.race_type
@@ -50,7 +53,8 @@ local SCRIPT_VERSION = "3.6.0"
 -- 1.5: pursuit, session.end_reason BUSTED; the police are never participants
 -- 1.6: session.race_type TUNE with one participant and its participants[].passes; timeslip.green_s,
 --      timeslip.red_light; participants[].dial_in_s and participants[].breakout in a bracket race
-local SCHEMA_VERSION = "1.6"
+-- 1.7: condition.max_fuel_litres, condition.dirt and condition.heat; participants[].breakdown FUEL, OVERHEAT and OIL
+local SCHEMA_VERSION = "1.7"
 
 -- How far AC bends a steering rod at most, in metres (suspensions.ini MAX_DAMAGE, 0.05 on every car the game has):
 -- a corner bent this far, with what it carried in, has given out
@@ -197,7 +201,10 @@ local MSG_BROKE_DOWN = {
   ENGINE = "The engine let go!\nYou're out of the race.",
   GEARBOX = "The gearbox gave out!\nYou're out of the race.",
   SUSPENSION = "The suspension gave out!\nYou're out of the race.",
-  TYRE = "A tyre blew!\nYou're out of the race."
+  TYRE = "A tyre blew!\nYou're out of the race.",
+  OVERHEAT = "The engine boiled over and cooked itself!\nYou're out of the race.",
+  OIL = "The oil pressure went, and the bottom end with it!\nYou're out of the race.",
+  FUEL = "You ran out of gas!\nYou're out of the race."
 }
 local MSG_BUSTED = "Busted!\nThe cops have you and your car."
 local MSG_ESCAPED = "You lost the cops!"
@@ -370,10 +377,211 @@ local function readNumbers(key, count)
   return numbers
 end
 
+-- Heat, oil, fuel and dirt (docs/roadmap.md, step 14). AC's water temperature is an estimate that changes nothing, and
+-- stock cars have no oil to speak of, so the mode runs its own engine heat and oil supply and makes them count: the
+-- water gauge shows it, a hot engine goes flat at the top (AC's restrictor, which takes power off at high rpm: on the
+-- Nova at 5000 rpm, 100 took 9% and 200 took 28%), a cooking engine loses its life, and one that boils blows its head
+-- gasket. Oil surges off the pickup under g held too long (long hard corners, hard braking, a hard launch); a sump
+-- that runs dry under throttle wears the bottom end. The career rates each car (race.ini [STREET_ROD] CAR_n_COOLING=cooling,fan,oil):
+--   cooling: what the radiator and water pump carry off, over what the engine makes (1: a factory engine at full
+--            throttle, carried off at speed with a little to spare)
+--   fan:     the share of that the fan keeps up at a standstill (moving air does the rest by FULL_AIR_KMH)
+--   oil:     the g the sump holds its oil to (a stock pan surges first)
+-- The fuel the car goes in with (CAR_n_FUEL, litres; below 0 fills the tank) and its dirt (CAR_n_DIRT, 0 to 1) are
+-- the career's too. A car that runs its tank dry is out of the race. One local for all of it: the chunk is at Lua's
+-- limit of 200.
+local engineHeat = (function()
+  local M = {}
+
+  local THERMOSTAT = 88     -- °C the water sits at while the radiator keeps up
+  local OPENS = 0.8         -- share of the radiator's work the thermostat covers before the water climbs
+  local PER_EXCESS = 50     -- °C the water settles higher for every unit of heat past that
+  local MAX_WATER = 160
+  local RISE_S = 60         -- time constants: an engine takes a minute to heat through, half that to cool
+  local FALL_S = 30
+  local FULL_AIR_KMH = 60   -- moving air carries the radiator's full load from here
+  local WARM = 105          -- the player hears about it
+  local HOT = 110           -- power fades from here...
+  local BOIL = 135          -- ...to MAX_FADE here, where the water boils and the head gasket goes
+  local MAX_FADE = 250
+  local COOKING = 118       -- engine life goes from here, LIFE_PER_C each second for every degree past it
+  local LIFE_PER_C = 2
+  local SURGE_HOLD_S = 3    -- a sump holds its oil this long past its g before the pickup sucks air (the cars pull
+                            -- 1 to 1.4 g in corners: a stock pan starves only in a long sweeper at the limit)
+  local STARVE_S = 0.5      -- and runs dry this fast
+  local REFILL_S = 0.3
+  local OIL_LIFE = 10       -- life a dry sump costs each second at the limiter under throttle (off it, the bearings
+                            -- carry little)
+  local DRY_TANK = 0.02     -- litres: the engine dies
+
+  local function clamp01(x) return math.max(0, math.min(1, x)) end
+  local function rounded(x, places) local k = 10 ^ places; return math.floor(x * k + 0.5) / k end
+
+  -- A car's heat and oil, with what the career rated it (a factory car's figures when race.ini has none)
+  local function state(data)
+    if not data.heat then
+      data.heat = { cooling = 1, fan = 0.35, oilG = 1.05, water = THERMOSTAT, supply = 1, surgeFor = 0, peak = THERMOSTAT,
+        hotFor = 0, cookedLife = 0, starvedFor = 0, oilLife = 0, lowestSupply = 1, fade = 0, peakFade = 0, told = {}, life = nil }
+    end
+    return data.heat
+  end
+
+  -- At the start, from race.ini: the car's rating, fuel and dirt
+  function M.start(carIndex, data)
+    local h = state(data)
+    local prefix = 'CAR_' .. carIndex .. '_'
+    local rating = readNumbers(prefix .. 'COOLING', 3)
+    if rating then
+      h.cooling = math.max(0.02, rating[1])
+      h.fan = clamp01(rating[2])
+      h.oilG = math.max(0.1, rating[3])
+    end
+    local dirt = readNumbers(prefix .. 'DIRT', 1)
+    if dirt then pcall(ac.setBodyDirt, carIndex, clamp01(dirt[1])) end
+
+    local fuel = readNumbers(prefix .. 'FUEL', 1)
+    if physics.allowed() then
+      pcall(physics.setWaterTemperature, carIndex, h.water)
+      local car = ac.getCar(carIndex)
+      if fuel and car then
+        local litres = fuel[1] < 0 and car.maxFuel or math.min(fuel[1], car.maxFuel)
+        pcall(physics.setCarFuel, carIndex, math.max(0, litres))
+      end
+    end
+    ac.log(string.format('[Street Corsa] Car %d: cooling %.2f, fan %.2f, sump %.2f g, fuel %s, dirt %s', carIndex, h.cooling,
+      h.fan, h.oilG, fuel and string.format('%.1f', fuel[1]) or 'as AC has it', dirt and string.format('%.2f', dirt[1]) or 'as AC has it'))
+  end
+
+  local function tell(carIndex, h, key, title, text)
+    if carIndex ~= 0 or h.told[key] then return end
+    h.told[key] = true
+    pcall(ac.setMessage, title, text)
+  end
+
+  -- Takes life off the engine, and remembers what took the last of it. AC reads the life back a frame late, so the
+  -- mode goes on from what it set last, or from AC's own when that is less (an over-rev)
+  local function wear(carIndex, car, h, amount, cause)
+    if amount <= 0 or not physics.allowed() then return end
+    local life = math.min(car.engineLifeLeft, h.life or math.huge) - amount
+    if life <= 0 then h.cause = h.cause or cause end
+    h.life = math.max(0, life)
+    pcall(physics.setCarEngineLife, carIndex, h.life)
+  end
+
+  -- One car, one frame, from the green to the line
+  local function step(carIndex, car, h, dt)
+    local limiter = car.rpmLimiter and car.rpmLimiter > 0 and car.rpmLimiter or 6500
+    local revs = clamp01(car.rpm / limiter)
+    local load = clamp01(car.gas) * revs
+
+    -- The water heads for where the radiator can hold it, as fast as the engine's mass lets it
+    local air = h.fan + (1 - h.fan) * math.min(1, car.speedKmh / FULL_AIR_KMH)
+    local excess = load / math.max(0.02, h.cooling * air)
+    local ambient = sim.ambientTemperature or 25
+    local target = math.min(MAX_WATER, math.max(THERMOSTAT, THERMOSTAT + (excess - OPENS) * PER_EXCESS + (ambient - 25) * 0.4))
+    h.water = h.water + (target - h.water) * (1 - math.exp(-dt / (target > h.water and RISE_S or FALL_S)))
+    h.peak = math.max(h.peak, h.water)
+
+    -- The oil: the pickup keeps it while the car pulls less g than the sump holds, or for a moment more; boiling water
+    -- thins it
+    local g = math.max(math.abs(car.acceleration.x), math.abs(car.acceleration.z))
+    if g > h.oilG then h.surgeFor = h.surgeFor + dt else h.surgeFor = math.max(0, h.surgeFor - dt * 2) end
+    local thin = 1 - clamp01((h.water - 120) / 40) * 0.5
+    if h.surgeFor > SURGE_HOLD_S then
+      h.supply = math.max(0, h.supply - dt / STARVE_S)
+    else
+      h.supply = h.supply + dt / REFILL_S
+    end
+    h.supply = math.min(h.supply, thin)
+    h.lowestSupply = math.min(h.lowestSupply, h.supply)
+
+    if physics.allowed() then
+      pcall(physics.setWaterTemperature, carIndex, h.water)
+      local fade = clamp01((h.water - HOT) / (BOIL - HOT)) * MAX_FADE
+      if math.abs(fade - h.fade) >= 2 or (fade == 0 and h.fade ~= 0) then
+        h.fade = fade
+        h.peakFade = math.max(h.peakFade, fade)
+        pcall(physics.setCarRestrictor, carIndex, fade)
+      end
+    end
+
+    if h.water >= HOT then h.hotFor = h.hotFor + dt end
+    if h.water >= BOIL then
+      local left = math.min(car.engineLifeLeft, h.life or math.huge)
+      if left > 0 then
+        h.cookedLife = h.cookedLife + left
+        wear(carIndex, car, h, left + 1, 'OVERHEAT')
+        ac.log(string.format('[Street Corsa] Car %d boiled over at %.0f C', carIndex, h.water))
+      end
+    elseif h.water > COOKING then
+      local amount = (h.water - COOKING) * LIFE_PER_C * dt
+      h.cookedLife = h.cookedLife + amount
+      wear(carIndex, car, h, amount, 'OVERHEAT')
+      tell(carIndex, h, 'cooking', 'Overheating!', 'Steam from under the hood. Back off or it lets go.')
+    elseif h.water > WARM then
+      tell(carIndex, h, 'warm', 'Running hot', 'The temperature gauge is climbing. Ease off!')
+    end
+
+    if h.supply < 0.5 and revs > 0.4 and car.gas > 0.2 then
+      h.starvedFor = h.starvedFor + dt
+      local amount = (1 - h.supply) * revs * OIL_LIFE * dt
+      h.oilLife = h.oilLife + amount
+      wear(carIndex, car, h, amount, 'OIL')
+      tell(carIndex, h, 'oil', 'Oil pressure!', 'The oil light flickers: the sump is surging.')
+    end
+  end
+
+  -- Every frame: the racers still running (running(data) says who), from the green; the police are left alone
+  function M.update(dt, running)
+    if not sim.isSessionStarted or dt <= 0 then return end
+    for carIndex = 0, carCount - 1 do
+      local data = carData[carIndex]
+      local car = ac.getCar(carIndex)
+      if data and car and not policeOf[carIndex] and running(data) then
+        local ok, err = pcall(step, carIndex, car, state(data), dt)
+        if not ok and not data.heatFault then
+          data.heatFault = true
+          ac.log('[Street Corsa] The heat model failed for car ' .. carIndex .. ': ' .. tostring(err))
+        end
+      end
+    end
+  end
+
+  -- What took the last of the engine's life, when its heat or its oil did: 'OVERHEAT' or 'OIL'
+  function M.cause(data) return data.heat and data.heat.cause end
+
+  -- A car whose tank has run dry
+  function M.outOfFuel(car) return car.fuel <= DRY_TANK end
+
+  -- What the result says of it: the tank, the dirt, and how its heat and oil went
+  function M.report(carIndex, data, condition)
+    local car = ac.getCar(carIndex)
+    if car then
+      pcall(function() condition.max_fuel_litres = rounded(car.maxFuel, 2) end)
+      pcall(function() condition.dirt = rounded(clamp01(car.dirt), 3) end)
+    end
+    local h = data and data.heat
+    if not h then return end
+    condition.heat = {
+      peak_water_c = rounded(h.peak, 1),
+      overheated_s = rounded(h.hotFor, 1),
+      peak_fade = rounded(h.peakFade, 0),
+      heat_life_lost = rounded(h.cookedLife, 1),
+      oil_starved_s = rounded(h.starvedFor, 1),
+      oil_life_lost = rounded(h.oilLife, 1),
+      lowest_oil_supply = rounded(h.lowestSupply, 2)
+    }
+  end
+
+  return M
+end)()
+
 -- The shape a car goes into the race in, from the career: body and engine into AC, the gearbox and the corners
 -- remembered for the breakdowns (AC starts those new; the car's data already carries what they do)
 local function applyStartState(carIndex, data)
   local prefix = 'CAR_' .. carIndex .. '_'
+  local heatOk, heatErr = pcall(engineHeat.start, carIndex, data)
+  if not heatOk then ac.log('[Street Corsa] Could not rate car ' .. carIndex .. ' for heat, fuel and dirt: ' .. tostring(heatErr)) end
   local gearbox = readNumbers(prefix .. 'GEARBOX', 1)
   if gearbox then data.startGearbox = math.max(0, gearbox[1]) end
   local suspension = readNumbers(prefix .. 'SUSPENSION', 4)
@@ -819,10 +1027,11 @@ local function updateCrashes(dt)
   end
 end
 
--- What gave out on a car, or nil: the engine's life run out, the gearbox or a corner past what it could take with
--- what it carried in, a blown tyre
+-- What gave out on a car, or nil: the engine's life run out (OVERHEAT or OIL when its heat or its oil took the last of
+-- it), the gearbox or a corner past what it could take with what it carried in, a blown tyre, an empty tank
 local function findBreakdown(car, data)
-  if car.engineLifeLeft <= 0 then return 'ENGINE' end
+  if car.engineLifeLeft <= 0 then return engineHeat.cause(data) or 'ENGINE' end
+  if engineHeat.outOfFuel(car) then return 'FUEL' end
   if data.startGearbox + math.max(0, car.gearboxDamage) >= 1 then return 'GEARBOX' end
   for w = 0, 3 do
     local wheel = car.wheels[w]
@@ -1149,6 +1358,7 @@ local function carCondition(carIndex)
   pcall(function() condition.oil_temperature_c = round(car.oilTemperature, 1) end)
   pcall(function() condition.oil_pressure = round(car.oilPressure, 2) end)
   pcall(function() condition.fuel_litres = round(car.fuel, 2) end)
+  engineHeat.report(carIndex, carData[carIndex], condition)
 
   -- One entry per corner, in AC's order, whatever fails to read: a wheel that cannot be read keeps its place, never
   -- leaves a gap that moves the later wheels into the wrong corners. Each entry names its corner, which also keeps an
@@ -2093,6 +2303,9 @@ function script.update(dt)
   local tick = measureTick()
   sessionDuration = sessionDuration + tick
   updateAllTelemetry(tick)
+  engineHeat.update(tick, function(data)
+    return not data.crashed and not data.disqualified and not data.brokeDown and not data.busted and not pastTheLine(data)
+  end)
   local previousClock = raceClock or 0
   if sim.isSessionStarted then raceClock = previousClock + tick end
   updateTimeslips(previousClock, tick)

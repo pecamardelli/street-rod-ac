@@ -387,10 +387,10 @@ namespace Street_Rod_AC.Services.Race
                     $"{context.OpponentName} hit you in your own lane. That's a DQ, and the race is yours."));
             else if (outcome.WinCondition == WinCondition.PlayerBrokeDown)
                 messages.Add(new PlayerMessage("Broke Down",
-                    $"Your {Breakdowns.Describe(outcome.Player?.Breakdown)} gave out before the line. The race is {context.OpponentName}'s."));
+                    $"Your {Breakdowns.WhatHappened(outcome.Player?.Breakdown)} before the line. The race is {context.OpponentName}'s."));
             else if (outcome.WinCondition == WinCondition.OpponentBrokeDown)
                 messages.Add(new PlayerMessage("Rival Broke Down",
-                    $"{context.OpponentName}'s {Breakdowns.Describe(outcome.Opponent?.Breakdown)} gave out before the line. The race is yours."));
+                    $"{context.OpponentName}'s {Breakdowns.WhatHappened(outcome.Opponent?.Breakdown)} before the line. The race is yours."));
             else if (outcome.WinCondition == WinCondition.BothOut)
                 messages.Add(new PlayerMessage("Nobody Finished",
                     "Neither car made it to the line. It's a draw, and nothing changes hands."));

@@ -86,7 +86,8 @@ for i = 0, world.cars - 1 do
   cars[i] = { index = i, total = world.straight and -1 or -10 * (i + 1), lane = world.straight and (i == 0 and -2 or 2) or 0, speedKmh = 0, lapCount = 0, damage = { [0] = 0, 0, 0, 0 }, engineLifeLeft = 1000,
     gearboxDamage = 0, wheels = {}, aabbSize = vec3(1.9, 1.4, 5), aabbCenter = vec3(0, 0.6, 0), fuel = 40,
     waterTemperature = 90, oilTemperature = 100, oilPressure = 4, previousLapTimeMs = 0, racePosition = i + 1, collidedWith = 0,
-    position = vec3(), velocity = vec3(), look = vec3(), up = vec3(0, 1, 0), side = vec3(), splinePosition = 0 }
+    position = vec3(), velocity = vec3(), look = vec3(), up = vec3(0, 1, 0), side = vec3(), splinePosition = 0,
+    rpm = 900, rpmLimiter = 6000, gas = 0, acceleration = vec3(), maxFuel = 60, dirt = 0, restrictor = 0 }
   for w = 0, 3 do cars[i].wheels[w] = { isBlown = false, suspensionDamage = 0, tyreWear = 0, tyreVirtualKM = 0 } end
   controls[i] = { throttle = 1, stop = 0, top = 1e9, active = true, placed = 0 }
 end
@@ -141,6 +142,7 @@ ac = {
     if cop then targets[tonumber(cop)] = tonumber(racer) end
   end,
   setMessage = function(t, d) log[#log + 1] = '[message] ' .. t .. ': ' .. tostring(d) end,
+  setBodyDirt = function(i, v) cars[i].dirt = v end,
   setCarActive = function(i, a) controls[i].active = a end,
   getCarLeaderboardPosition = function(i) return cars[i].racePosition end,
   getTrackID = function() return 'stub_loop' end,
@@ -163,7 +165,11 @@ ac = {
 physics = {
   allowed = function() return true end,
   blockTeleportingToPits = function() return {} end,
-  setCarBodyDamage = function() end, setCarEngineLife = function() end,
+  setCarBodyDamage = function() end,
+  setCarEngineLife = function(i, v) cars[i].engineLifeLeft = v end,
+  setCarFuel = function(i, v) cars[i].fuel = v end,
+  setWaterTemperature = function(i, v) cars[i].waterTemperature = v end,
+  setCarRestrictor = function(i, v) cars[i].restrictor = v; cars[i].peakRestrictor = math.max(cars[i].peakRestrictor or 0, v) end,
   setCarNoInput = function() end, lockUserControlsFor = function() end,
   -- The player's forced brakes, until world.brakesUntil (seconds of the stub's clock): the strip's drivers wait for them
   forceUserBrakesFor = function(t, v) world.brakesUntil = (t > 0 and (v or 1) > 0) and sim.time / 1000 + t or nil end,
@@ -294,6 +300,16 @@ local function step(dt, t)
     if c.gentle then want = 0 end
     car.total = car.total + want * dt
     car.speedKmh = want * 3.6
+    -- The engine: world.engine(i, raceSeconds, car) gives the throttle, the revs as a share of the limiter and the g the
+    -- car pulls; without it a moving car cruises at 60% throttle and revs. world.fuelBurn: litres a second at full throttle
+    if sim.isSessionStarted and world.engine then
+      local gas, revs, g = world.engine(i, t - 3, car)
+      car.gas, car.rpm, car.acceleration.x = gas, revs * car.rpmLimiter, g or 0
+    else
+      car.gas = want > 0 and 0.6 or 0
+      car.rpm = want > 0 and 0.6 * car.rpmLimiter or 900
+    end
+    if world.fuelBurn and sim.isSessionStarted then car.fuel = math.max(0, car.fuel - world.fuelBurn * car.gas * dt) end
     refresh(car)
   end
   for _, timer in ipairs(timers) do
@@ -324,16 +340,19 @@ end
 
 
 def run(name, cars, ini, player, rival, cop, max_seconds=400, length=2000.0, sides=6.0, strip=None, menu_at=None,
-        place_offset=0.0):
+        place_offset=0.0, engine=None, fuel_burn=None):
     """strip: a drag strip instead of the loop, strip(world, i, raceSeconds, car) giving each car's acceleration;
-    place_offset: metres past the asked spot that setCarPosition leaves a car"""
+    place_offset: metres past the asked spot that setCarPosition leaves a car; engine(i, raceSeconds): each car's
+    throttle, revs (a share of the limiter) and g; fuel_burn: litres a second at full throttle"""
     lua = lupa.LuaRuntime(unpack_returned_tuples=True)
     world = lua.table_from({
         'length': length, 'cars': cars, 'maxSeconds': max_seconds, 'sides': sides,
         'ini': lua.table_from(ini),
         'playerSpeed': player, 'rivalSpeed': rival, 'copSpeed': cop,
-        'straight': strip is not None, 'menuAt': menu_at, 'placeOffset': place_offset,
+        'straight': strip is not None, 'menuAt': menu_at, 'placeOffset': place_offset, 'fuelBurn': fuel_burn,
     })
+    if engine is not None:
+        world['engine'] = lambda i, t, car: engine(i, t)
     if strip is not None:
         world['accel'] = lambda i, t, car: strip(world, i, t, car)
     runner = lua.execute(STUB, world)

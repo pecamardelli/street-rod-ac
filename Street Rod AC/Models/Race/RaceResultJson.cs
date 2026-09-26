@@ -173,14 +173,32 @@ namespace Street_Rod_AC.Models.Race
         public const string Suspension = "SUSPENSION";
         public const string Tyre = "TYRE";
 
+        /// <summary>The engine boiled over: its heat took the last of its life (schema 1.7)</summary>
+        public const string Overheat = "OVERHEAT";
+
+        /// <summary>The sump ran dry and took the last of the engine's life (schema 1.7)</summary>
+        public const string Oil = "OIL";
+
+        /// <summary>The tank ran dry (schema 1.7)</summary>
+        public const string Fuel = "FUEL";
+
         /// <summary>The breakdown in the player's words: "engine", "gearbox"...</summary>
         public static string Describe(string? breakdown) => breakdown switch
         {
-            Engine => "engine",
+            Engine or Overheat or Oil => "engine",
             Gearbox => "gearbox",
             Suspension => "suspension",
             Tyre => "tyre",
             _ => "car"
+        };
+
+        /// <summary>What happened, for a sentence that starts with whose car it was: "engine gave out", "car ran out of gas"</summary>
+        public static string WhatHappened(string? breakdown) => breakdown switch
+        {
+            Overheat => "engine boiled over",
+            Oil => "engine lost its oil pressure",
+            Fuel => "car ran out of gas",
+            _ => Describe(breakdown) + " gave out"
         };
     }
 
@@ -327,9 +345,56 @@ namespace Street_Rod_AC.Models.Race
         [JsonProperty("fuel_litres")]
         public double? FuelLitres { get; set; }
 
+        /// <summary>What the tank holds (schema 1.7)</summary>
+        [JsonProperty("max_fuel_litres")]
+        public double? MaxFuelLitres { get; set; }
+
+        /// <summary>The body's dirt, 0 clean to 1 filthy, as the race left it: it went in as the car carried it (schema 1.7)</summary>
+        [JsonProperty("dirt")]
+        public double? Dirt { get; set; }
+
+        /// <summary>How the engine's heat and oil went, as the race mode runs them (schema 1.7)</summary>
+        [JsonProperty("heat")]
+        public RaceHeatReport? Heat { get; set; }
+
         /// <summary>Front left, front right, rear left, rear right</summary>
         [JsonProperty("wheels")]
         public List<WheelCondition>? Wheels { get; set; }
+    }
+
+    /// <summary>
+    /// The engine's heat and oil over a race, as the race mode runs them (its engineHeat). The engine life they took is
+    /// already in <see cref="RaceCarCondition.EngineLife"/>; these say what took it.
+    /// </summary>
+    public class RaceHeatReport
+    {
+        /// <summary>The hottest the water got, °C</summary>
+        [JsonProperty("peak_water_c")]
+        public double? PeakWaterC { get; set; }
+
+        /// <summary>How long the engine ran hot enough to go flat, seconds</summary>
+        [JsonProperty("overheated_s")]
+        public double? OverheatedSeconds { get; set; }
+
+        /// <summary>The most power the heat took, as AC's restrictor (0 none, 250 at the boil)</summary>
+        [JsonProperty("peak_fade")]
+        public double? PeakFade { get; set; }
+
+        /// <summary>Engine life the heat took, as AC counts it (1000 a new engine)</summary>
+        [JsonProperty("heat_life_lost")]
+        public double? HeatLifeLost { get; set; }
+
+        /// <summary>How long the sump ran short of oil at speed, seconds</summary>
+        [JsonProperty("oil_starved_s")]
+        public double? OilStarvedSeconds { get; set; }
+
+        /// <summary>Engine life the lack of oil took</summary>
+        [JsonProperty("oil_life_lost")]
+        public double? OilLifeLost { get; set; }
+
+        /// <summary>The least oil the pickup had, 1 always to 0 dry</summary>
+        [JsonProperty("lowest_oil_supply")]
+        public double? LowestOilSupply { get; set; }
     }
 
     public class WheelCondition

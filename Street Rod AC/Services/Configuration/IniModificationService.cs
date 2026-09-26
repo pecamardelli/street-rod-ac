@@ -22,7 +22,7 @@ namespace Street_Rod_AC.Services.Configuration
         /// <summary>The CSP mode a race runs in: race.ini selects it by its folder name under extension\lua\new-modes</summary>
         public const string RaceModeId = "sr_race";
 
-        /// <summary>AC's assists file, where the damage and tyre wear rates are</summary>
+        /// <summary>AC's assists file, where the damage, fuel and tyre wear rates are</summary>
         public const string AssistsFile = "assists.ini";
 
         /// <summary>Mechanical and body damage in a race, in percent: AC's full rate, which an easy game turns down</summary>
@@ -30,6 +30,9 @@ namespace Street_Rod_AC.Services.Configuration
 
         /// <summary>Tyre wear in a race: 1 is AC's normal rate</summary>
         public const int RaceTyreWear = 1;
+
+        /// <summary>Fuel use in a race: 1 is AC's normal rate. The fuel a race burns stays burned (Car.FuelLitres).</summary>
+        public const int RaceFuelRate = 1;
 
         /// <summary>The most passes one test-and-tune runs</summary>
         public const int MaxTunePasses = 20;
@@ -422,9 +425,9 @@ namespace Street_Rod_AC.Services.Configuration
         }
 
         /// <summary>
-        /// A race is run with Assetto Corsa's damage and tyre wear on, whatever the player last picked in AC: the
-        /// engine can blow and the body takes what it hits. The rest of the assists (and visual damage) stay the
-        /// player's. Kept and put back like race.ini.
+        /// A race is run with Assetto Corsa's damage, tyre wear and fuel use on, whatever the player last picked in AC:
+        /// the engine can blow, the body takes what it hits and the tank runs down. The rest of the assists (and visual
+        /// damage) stay the player's. Kept and put back like race.ini.
         /// </summary>
         private void ApplyRaceDamage(int damagePercent)
         {
@@ -433,8 +436,9 @@ namespace Street_Rod_AC.Services.Configuration
             {
                 ini.Set("ASSISTS", "DAMAGE", damage.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 ini.Set("ASSISTS", "TYRE_WEAR", RaceTyreWear.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                ini.Set("ASSISTS", "FUEL_RATE", RaceFuelRate.ToString(System.Globalization.CultureInfo.InvariantCulture));
             });
-            _logger.Information("Race assists: DAMAGE={Damage}, TYRE_WEAR={TyreWear}", damage, RaceTyreWear);
+            _logger.Information("Race assists: DAMAGE={Damage}, TYRE_WEAR={TyreWear}, FUEL_RATE={FuelRate}", damage, RaceTyreWear, RaceFuelRate);
         }
 
         private bool ApplyFreeRunIntent(FreeRunIntent intent)

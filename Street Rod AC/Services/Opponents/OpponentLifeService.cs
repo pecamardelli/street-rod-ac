@@ -119,6 +119,7 @@ namespace Street_Rod_AC.Services.Opponents
             try
             {
                 CollectFromImpound(racer, date, talk);
+                LookAfter(racer);
                 PickBestCar(racer, groupOf);
                 ReviewAds(gameState, racer, date, talk);
                 SellSpares(gameState, racer, date, groupOf, talk);
@@ -482,6 +483,19 @@ namespace Street_Rod_AC.Services.Opponents
             talk.Add($"{racer.Name} bought a {CarName(car)}{(dealer == null ? "" : $" off {dealer}'s lot")} for ${listing.Price:N0}.");
             _logger.Information("{Racer} bought the {Car} for ${Price} ({Hp:0} hp), ${Money} left", racer.Name, car.DefinitionId, listing.Price, car.PowerHp ?? 0, racer.Money);
             return true;
+        }
+
+        /// <summary>
+        /// The racers fill up and wash their cars every day, pennies next to their racing: a rival's tank is never what
+        /// keeps them from a race (<see cref="CarCondition.WhyCannotRace"/>)
+        /// </summary>
+        private static void LookAfter(Opponent racer)
+        {
+            foreach (var car in racer.Cars)
+            {
+                car.FuelLitres = null;
+                car.BodyDirt = 0;
+            }
         }
 
         /// <summary>The whole bill or nothing: half a repair doesn't get a car racing</summary>
