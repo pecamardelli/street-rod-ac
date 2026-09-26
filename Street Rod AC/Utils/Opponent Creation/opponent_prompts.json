@@ -82,7 +82,6 @@
       "age": 28,
       "prompt": "1960s street racer portrait, caucasian male late twenties, windblown hair, relaxed grin, leaning forward slightly, denim shirt, gritty garage wall background, natural film grain, casual confident vibe"
     },
-
     {
       "id": "drv_011",
       "name": "Helen Parker",
@@ -123,7 +122,6 @@
       "age": 55,
       "prompt": "1960s senior street racer portrait, caucasian male mid fifties, gray hair, deep wrinkles, calm knowing smile, seated posture, worn leather jacket, dark workshop background, soft moody lighting"
     },
-
     {
       "id": "drv_016",
       "name": "Ricky Thompson",
@@ -164,7 +162,6 @@
       "age": 33,
       "prompt": "1960s female street racer portrait, caucasian woman early thirties, elegant but tough look, subtle smirk, standing angled to camera, leather gloves, dark garage background, cinematic lighting"
     },
-
     {
       "id": "drv_021",
       "name": "Tommy Blake",
@@ -205,7 +202,6 @@
       "age": 47,
       "prompt": "1960s female street racer portrait, caucasian woman late forties, confident knowing smile, standing relaxed, work jacket, gritty garage background, realistic film look"
     },
-
     {
       "id": "drv_026",
       "name": "Mickey Russo",
@@ -245,6 +241,254 @@
       "gender": "female",
       "age": 45,
       "prompt": "1960s female street racer portrait, caucasian woman mid forties, sharp confident grin, arms crossed, dark leather jacket, moody garage background, cinematic realism"
+    },
+    {
+      "id": "drv_031",
+      "name": "Marcus Greene",
+      "nickname": "Deacon",
+      "gender": "male",
+      "age": 43,
+      "prompt": "1960s street racer portrait, african-american male early forties, neatly trimmed mustache, calm authoritative expression, facing camera, pressed work shirt with rolled sleeves, dim garage with tool wall behind, warm low-key lighting, vintage film grain, realistic mid-century photography"
+    },
+    {
+      "id": "drv_032",
+      "name": "Stan Kowalski",
+      "nickname": "Big Stan",
+      "gender": "male",
+      "age": 38,
+      "prompt": "1960s street racer portrait, polish-american male late thirties, broad shoulders, crew cut, square jaw, amused half-smile, arms resting on a car roof, grease-stained coveralls, steel mill town garage, overcast window light, gritty vintage film grain"
+    },
+    {
+      "id": "drv_033",
+      "name": "Dolores Vasquez",
+      "nickname": "Dolly",
+      "gender": "female",
+      "age": 31,
+      "prompt": "1960s female street racer portrait, Latina woman early thirties, dark hair in a high ponytail, red lipstick, knowing smirk, head slightly tilted, fitted denim jacket, neon diner sign glow behind, warm and moody lighting, vintage film grain, realistic photography"
+    },
+    {
+      "id": "drv_034",
+      "name": "Kenji Nakamura",
+      "nickname": "Tach",
+      "gender": "male",
+      "age": 29,
+      "prompt": "1960s street racer portrait, japanese-american male late twenties, short neat side-parted hair, focused calm expression, holding a wrench, white t-shirt under open work shirt, tidy garage workbench background, soft side lighting, vintage film photograph"
+    },
+    {
+      "id": "drv_035",
+      "name": "Otis Freeman",
+      "nickname": "Sugar",
+      "gender": "male",
+      "age": 51,
+      "prompt": "1960s veteran street racer portrait, african-american male early fifties, graying short hair, laugh lines, wide easy grin, flat cap, wool cardigan over collared shirt, old service station background, golden hour light, vintage film grain, realistic"
+    },
+    {
+      "id": "drv_036",
+      "name": "Bobby Sullivan",
+      "nickname": "Fuse",
+      "gender": "male",
+      "age": 21,
+      "prompt": "1960s young street racer portrait, irish-american male early twenties, freckles, red hair in a greasy quiff, cocky grin, cigarette behind ear, white t-shirt with rolled sleeve, parking lot at night, streetlight glow, vintage film grain, gritty"
+    },
+    {
+      "id": "drv_037",
+      "name": "Irene Kovacs",
+      "nickname": "Iron Lady",
+      "gender": "female",
+      "age": 49,
+      "prompt": "1960s female street racer portrait, hungarian-american woman late forties, short practical hair with gray streaks, stern level gaze, arms crossed, mechanic coveralls, dark garage interior, hard directional light, high contrast black and white photography"
+    },
+    {
+      "id": "drv_038",
+      "name": "Frank DeLuca",
+      "nickname": "Gasket",
+      "gender": "male",
+      "age": 40,
+      "prompt": "1960s Italian-American street racer portrait, male around forty, thick eyebrows, dark wavy hair, heavy-lidded confident look, gold chain, open-collar shirt, sitting on a car fender, dim garage, warm lamplight, vintage film grain"
+    },
+    {
+      "id": "drv_039",
+      "name": "Curtis Bell",
+      "nickname": "Six-Pack",
+      "gender": "male",
+      "age": 26,
+      "prompt": "1960s street racer portrait, african-american male mid twenties, short afro, sharp sunglasses pushed up on forehead, confident grin, leather car coat, drive-in movie lot at dusk, neon glow, vintage film photograph, realistic"
+    },
+    {
+      "id": "drv_040",
+      "name": "Wanda Pierce",
+      "nickname": "Hot Rod Wanda",
+      "gender": "female",
+      "age": 36,
+      "prompt": "1960s female street racer portrait, caucasian woman mid thirties, platinum blonde victory rolls, bold eyeliner, playful challenging smile, checkered scarf, bomber jacket, gas station at night, fluorescent light, vintage film grain"
+    },
+    {
+      "id": "drv_041",
+      "name": "Ray Delgado",
+      "nickname": "Loco",
+      "gender": "male",
+      "age": 23,
+      "prompt": "1960s young Latino street racer portrait, male early twenties, slicked-back black hair, thin mustache, mischievous grin, plaid flannel buttoned to the top, lowrider garage background, warm tungsten light, vintage film grain, realistic"
+    },
+    {
+      "id": "drv_042",
+      "name": "Gus Lindqvist",
+      "nickname": "Swede",
+      "gender": "male",
+      "age": 57,
+      "prompt": "1960s senior street racer portrait, swedish-american male late fifties, tall and lean, white hair, pale blue eyes, weathered stoic face, wool work jacket, farm shed garage with old tractor, cold window light, vintage film grain"
+    },
+    {
+      "id": "drv_043",
+      "name": "Patsy Monroe",
+      "nickname": "Pinstripe",
+      "gender": "female",
+      "age": 27,
+      "prompt": "1960s female street racer portrait, caucasian woman late twenties, auburn hair in a bandana, paint smudges on cheek, cheerful grin, holding a pinstriping brush, custom paint shop background, soft window light, vintage film photograph"
+    },
+    {
+      "id": "drv_044",
+      "name": "Clarence Hayes",
+      "nickname": "Preacher",
+      "gender": "male",
+      "age": 47,
+      "prompt": "1960s street racer portrait, african-american male late forties, clean-shaven, serious thoughtful eyes, dark suit jacket over open collar, standing beside a car at dusk, empty street, streetlight glow, dramatic shadows, vintage film grain"
+    },
+    {
+      "id": "drv_045",
+      "name": "Danny Wong",
+      "nickname": "Two-Step",
+      "gender": "male",
+      "age": 33,
+      "prompt": "1960s street racer portrait, chinese-american male early thirties, short neat hair, sly smile, leaning against a garage door, varsity jacket, city alley background, night lighting with neon reflections, vintage film grain, realistic"
+    },
+    {
+      "id": "drv_046",
+      "name": "Lorraine Duval",
+      "nickname": "Cajun",
+      "gender": "female",
+      "age": 40,
+      "prompt": "1960s female street racer portrait, cajun woman around forty, dark curly hair pinned back, sun-lined face, warm confident smile, rolled-up denim shirt, bayou country garage, humid golden light, vintage film grain, realistic photography"
+    },
+    {
+      "id": "drv_047",
+      "name": "Hank Crowley",
+      "nickname": "Dozer",
+      "gender": "male",
+      "age": 45,
+      "prompt": "1960s street racer portrait, caucasian male mid forties, heavyset, thick beard stubble, gruff scowl, trucker cap, work jacket with name patch, truck stop background, harsh fluorescent light, gritty vintage film grain"
+    },
+    {
+      "id": "drv_048",
+      "name": "Vince Moretti",
+      "nickname": "Silk",
+      "gender": "male",
+      "age": 35,
+      "prompt": "1960s Italian-American street racer portrait, male mid thirties, perfectly combed hair, narrow tie loosened, smooth confident smile, sharkskin suit jacket, nightclub parking lot, neon glow, vintage film photograph, realistic"
+    },
+    {
+      "id": "drv_049",
+      "name": "Joyce Talbot",
+      "nickname": "Jinx",
+      "gender": "female",
+      "age": 24,
+      "prompt": "1960s young female street racer portrait, caucasian woman mid twenties, short pixie haircut, freckles, defiant smirk, oversized leather jacket, cigarette in hand, rain-slick street at night, streetlight reflections, vintage film grain"
+    },
+    {
+      "id": "drv_050",
+      "name": "Elijah Brooks",
+      "nickname": "Deuce",
+      "gender": "male",
+      "age": 30,
+      "prompt": "1960s street racer portrait, african-american male around thirty, pencil mustache, sharp fedora, cool relaxed expression, leaning on a chrome grille, city street at dusk, warm backlight, vintage film grain, realistic mid-century photography"
+    },
+    {
+      "id": "drv_051",
+      "name": "Walt Pruitt",
+      "nickname": "Moonshine",
+      "gender": "male",
+      "age": 60,
+      "prompt": "1960s senior street racer portrait, southern caucasian male around sixty, lean and wiry, deep wrinkles, sly crooked grin, straw hat, faded overalls, backwoods barn garage, dusty sunbeams, vintage film grain, realistic"
+    },
+    {
+      "id": "drv_052",
+      "name": "Rita Castillo",
+      "nickname": "Spitfire",
+      "gender": "female",
+      "age": 34,
+      "prompt": "1960s female street racer portrait, Latina woman mid thirties, long black hair loose, fierce direct gaze, gold hoop earrings, cropped leather jacket, garage with open hood behind, dramatic low-key lighting, vintage film grain"
+    },
+    {
+      "id": "drv_053",
+      "name": "Jimmy O'Neill",
+      "nickname": "Shamrock",
+      "gender": "male",
+      "age": 28,
+      "prompt": "1960s street racer portrait, irish-american male late twenties, dark tousled hair, crooked nose, easy boyish grin, cable-knit sweater, dockside garage, grey harbor light, vintage film grain, realistic photography"
+    },
+    {
+      "id": "drv_054",
+      "name": "Nate Coleman",
+      "nickname": "Governor",
+      "gender": "male",
+      "age": 53,
+      "prompt": "1960s veteran street racer portrait, african-american male early fifties, gray beard, dignified composed expression, tweed jacket, holding a stopwatch, drag strip grandstand background, afternoon light, vintage film grain"
+    },
+    {
+      "id": "drv_055",
+      "name": "Shirley Novak",
+      "nickname": "Slingshot",
+      "gender": "female",
+      "age": 30,
+      "prompt": "1960s female street racer portrait, czech-american woman around thirty, strawberry blonde bob, confident grin, driving gloves, racing jacket with patches, drag strip staging lane, bright daylight, vintage film photograph"
+    },
+    {
+      "id": "drv_056",
+      "name": "Buddy Carmichael",
+      "nickname": "Tailpipe",
+      "gender": "male",
+      "age": 19,
+      "prompt": "1960s teenage street racer portrait, caucasian male late teens, skinny, crew cut, nervous but eager grin, letterman jacket, high school parking lot, afternoon light, vintage film grain, realistic mid-century photography"
+    },
+    {
+      "id": "drv_057",
+      "name": "Ernesto Ruiz",
+      "nickname": "Padre",
+      "gender": "male",
+      "age": 49,
+      "prompt": "1960s Latino street racer portrait, male late forties, salt-and-pepper mustache, calm fatherly expression, work apron over shirt, family body shop background, warm lamplight, vintage film grain, realistic"
+    },
+    {
+      "id": "drv_058",
+      "name": "Gloria Haines",
+      "nickname": "Hellcat",
+      "gender": "female",
+      "age": 42,
+      "prompt": "1960s female street racer portrait, caucasian woman early forties, dark bouffant hair, sharp cheekbones, cold confident stare, fur-collared coat, luxury car showroom at night, dramatic shadows, high contrast vintage film"
+    },
+    {
+      "id": "drv_059",
+      "name": "Lamar Jenkins",
+      "nickname": "Slingblade",
+      "gender": "male",
+      "age": 32,
+      "prompt": "1960s street racer portrait, african-american male early thirties, shaved head, intense focused stare, sleeveless undershirt, muscular arms crossed, dark garage with engine hoist, hard rim light, gritty vintage film grain"
+    },
+    {
+      "id": "drv_060",
+      "name": "Artie Feldman",
+      "nickname": "Professor",
+      "gender": "male",
+      "age": 39,
+      "prompt": "1960s street racer portrait, jewish-american male late thirties, horn-rimmed glasses, curly dark hair, thoughtful half-smile, pencil behind ear, sweater vest, workshop with engine blueprints on the wall, soft window light, vintage film photograph"
+    },
+    {
+      "id": "king",
+      "name": "The King",
+      "nickname": "Crown",
+      "gender": "male",
+      "age": 41,
+      "prompt": "1960s street racing legend portrait, caucasian male early forties, jet black pompadour, sideburns, faint scar on the chin, cool unreadable half-smile, heavy-lidded eyes, black leather jacket with upturned collar over a white t-shirt, gold ring, leaning on the fender of a black muscle car, empty boulevard at night, chrome and neon reflections, cinematic low-key lighting, vintage film grain, realistic mid-century photography"
     }
   ],
   "negative_prompt": "modern clothing, modern hairstyle, contemporary fashion, digital art, illustration, cartoon, anime, cgi, 3d render, unrealistic skin, plastic skin, oversharpened, overprocessed, glamour lighting, studio portrait, selfie, smartphone photo, celebrity, famous person, perfect symmetry, deformed face, extra limbs, extra fingers, missing fingers, distorted anatomy, warped face, low resolution, blurry, out of focus, watermark, text, logo"

@@ -20,5 +20,15 @@ namespace Street_Rod_AC.Services.Opponents
         /// and his car. Nothing when there is no King among the definitions.
         /// </summary>
         void EnsureKing(GameState gameState);
+
+        /// <summary>
+        /// Racers defined since the save began (a bigger pool in a newer version) join it, not on the street yet, each
+        /// with a car and money; racers who have a portrait in their definition but none on the save get it. Once per
+        /// game state.
+        /// </summary>
+        void EnsureNewcomers(GameState gameState);
+
+        /// <summary>What a racer starts out with in the bank; a racer coming back to town brings as much</summary>
+        decimal StartingMoney(Opponent opponent);
     }
 }

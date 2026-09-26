@@ -556,11 +556,35 @@ spot never staged, the mode and the career could disagree on a breakout at the d
 strip short of the quarter, strip lengths misread ("1,000 m", feet), small engine wear lost, an engine without rotating
 parts keeping no damage, and a TUNE file settling a race. Build and tests pass; not yet tried in the game.
 
-### Step 12: a bigger opponent pool
+### Step 12: a bigger opponent pool (in progress on `feature/opponent-pool`)
 After step 10, since both touch the rivals and the newspaper.
 - New racers when the pool runs dry (`OpponentGenerationService` is written but unused).
 - Rivals put their own cars in the paper and buy used parts out of the ads.
 - The King's own portrait.
+
+**The user decided (2026-09-25):**
+- new racers come from a second batch of 30, drawn with the ComfyUI script like the first 30;
+- racers leave the scene for good now and then;
+- a full private market: rivals advertise spare cars, which the player and other rivals buy;
+- used parts both ways: what a rival takes off goes into the parts ads under their name, and rivals buy used parts
+  there when they ask less.
+Also chosen (not asked): once the new faces run out, racers who left 90 days ago or more come back; rivals trade up
+now and then, which is what fills the paper.
+
+**As built** (see `docs/systems/opponent-system.md`, "A bigger pool"):
+- 60 racers and the King (`drv_031`–`drv_060` with prompts). Older saves get the newcomers and any missing portrait
+  (`EnsureNewcomers`).
+- Leaving (`RacerStatus.Departed`): 0.2% a day; 5% a day after 45 days sitting out; always on going broke a third
+  time. Never the King, nor a racer with a race pending, a grudge or an offer on the player's car.
+- Rival car ads (`RivalCarAds`): 75–90% of the lot price, 10% off after a week, to a dealer after 14 days. They show
+  on the paper's Used Cars page as "(private)". Trade-ups: 5% of days, 20% more power, a quarter of the price left over.
+- Rival part ads (`RivalPartAds`): parts taken off go into the paper; unsold ones get the shop's trade-in. The tuner
+  buys used loose parts and whole engines (`UsedPartOffer`).
+- The Life harness (180 days) came out at about 30 private sales, 18 leaving and 7 back. A first run had 22 leaving at
+  0.4% a day, so the chance was halved.
+
+**Portraits:** the 30 new racers and the King were drawn with `generate-portraits.js` (ComfyUI, juggernautXL) on
+2026-09-26; the King's definition points at `king.png`.
 
 ### Step 13: the street encounter
 From `docs/ideas.txt`, after step 9 because it reuses its renderer work. Not SLRR's Valo City: the player's car seen

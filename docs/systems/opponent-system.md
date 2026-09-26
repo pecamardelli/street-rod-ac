@@ -67,15 +67,18 @@ retired ones first:
    gone. An impounded car can't race (`WhyCannotRace`), and is never repaired, sold or replaced: they sit it out.
 1. The best car to the front of `Cars` (`OpponentRules.CarScore`: a car that can race before any that can't, then
    dyno horsepower ×10, condition, worth). `Cars[0]` is the car every screen and the simulator use.
-2. Spares: a wreck goes for scrap (`CarSaleService.ScrapFactor`), more than 2 cars and the weakest goes to a dealer
-   at 60%, onto the trade-in lot.
-3. No car: the best listing they can afford (`OpponentRules.PurchaseScore`: power, condition, a
-   runner, power per dollar, money left over), bought exactly as the player would (`CarPurchaseService.CarFrom`).
+2. Spares: a wreck goes for scrap (`CarSaleService.ScrapFactor`); with more than 2 cars the weakest goes into the
+   paper (step 12, below), and to a dealer at 60% when nobody buys it in 14 days.
+3. No car: the best car they can afford off a lot or out of another rival's ad (`OpponentRules.PurchaseScore`: power,
+   condition, a runner, power per dollar, money left over), bought exactly as the player would
+   (`CarPurchaseService.CarFrom`, `RivalCarAds.HandOver`).
 4. A car that can't race (`CarCondition.WhyCannotRace`): the whole `RepairShop.Jobs` bill if they can pay it; else,
    when what the car fetches plus their money buys a runner, sold and replaced.
 5. Broke (`OpponentRules.IsBankrupt`: no racing car, less than the cheapest car for sale): 10–60% of the cheapest
-   car for sale scraped together ($50–500 when nothing is for sale).
+   car for sale scraped together ($50–500 when nothing is for sale). The third time they quit instead (step 12).
+   Not broke and racing: now and then a trade-up (step 12).
 6. Status: ready → `ReadyToRace`, not → `Retired`.
+7. Now and then they leave the scene for good (step 12).
 
 Then the newcomers come out (`Activate`), then tuning (below). Every car of every rival and every listing without a
 figure goes on the dyno first (`Car.PowerHp`, `UsedCarListing.PowerHp`), on copies, off the UI thread.
@@ -90,7 +93,8 @@ and spend up to 30% of the rest on one upgrade: the one with the best `gain% / c
 carbs/injection 7, exhaust 6, manifold and camshaft 5, air 3), at least 3% more power on the dyno. A part the new one
 leaves without a place is replaced by the cheapest that fits (depth 5). The block swap is a bigger engine of the same
 family, used (`UsedEnginePrice`), at most 1.6× the power it replaces. There is no ceiling on a car's power: money is
-the limit (the user's call, 2026-09-24). New parts at the mail-order price; the old ones traded in.
+the limit (the user's call, 2026-09-24). New parts at the mail-order price, or used out of the paper when an ad asks
+less (step 12); the old ones go into the paper under the racer's name.
 
 **Races between rivals** (`RaceSimulatorService`): by `Car.PowerHp`; the race's wear lands on the parts through
 `CarCondition.ApplyRace` (`SimulatedCondition`: engine life, gearbox, tyres, knocks, a loser's hard blow now and then);
@@ -110,6 +114,49 @@ switches to pink slips when he is picked) and accepts any pink slip. Beating him
   cars race with their real damage.
 - Some buyers who answer the player's newspaper ads are rivals (`CarSaleService.RivalBuyer`, 40% when one wants the
   car: no racing car, or a weaker one, and room for it); the car then races under them.
+
+## A bigger pool (step 12)
+**The user decided (2026-09-25):** new racers come from a second batch drawn like the first (not rolled on the fly);
+racers leave the scene for good now and then; rivals sell their cars through the paper to the player and to each other;
+and rivals sell the parts they take off in the parts ads and buy used parts there.
+
+**The pool** (`Assets/Opponents/opponent_definitions.json`): 60 racers and the King. `drv_031`–`drv_060` were added in
+step 12 with their portrait prompts (`Utils/Opponent Creation/opponent_prompts.json`). The scripts there keep the
+racers already defined as they are (`generate-opponent-definitions.js` adds only new ids, skill 90–100) and write
+portraits straight to `Assets/Opponents/<id>.png` (`generate-portraits.js [ids…]`, ComfyUI on 127.0.0.1:8000). An
+older save gets the racers defined since it began, not on the street yet, each with a car and money, and any portrait
+it lacks (`OpponentInitializationService.EnsureNewcomers`, once per game, from the daily review). At 6 + 2 a week,
+and more as racers leave, every new face is out by about week 21.
+
+**Leaving** (`OpponentRules.Leaves`, `RacerStatus.Departed`, `RacerCollection.Departed`): each day a racer on the
+street leaves with a 0.2% chance ("sold up and left town"); one sitting out 45 days or more with a 5% chance ("gave
+up on their car"); one going broke a third time (`Opponent.TimesBroke`) always. Never the King, nor a racer with a
+race pending, a grudge, or an offer on the player's car. Their cars go to a dealer (a wreck for scrap; an impounded one
+stays with the police), their car ads come down, and their part ads stay without a seller to pay. A departed racer is
+in no pool the game races from (`All`, `Find`), but keeps their name.
+
+**Coming back:** once `Inactive` has no new faces left, the street is topped up from racers who left 90 days ago or
+more, the longest gone first, with a new racer's money (`StartingMoney`) and a clean slate (`TimesBroke` 0).
+
+**Rivals' cars in the paper** (`RivalCarAds`, `NewspaperAds.RivalCars`): a spare over the limit, or the old car after a
+trade-up, is advertised at 75–90% of what a lot would ask, never under a dealer's 60%. The car stays in the rival's
+garage; an ad is only good while it is theirs and not the car they drive. A week unanswered and the price comes down
+10%, once; after 14 days it goes to a dealer. The player sees the ads on the paper's Used Cars page ("<name>
+(private)", the "Private sellers" filter) and buys them like any listing (`CarPurchaseService` hands over that very
+car, `CarAcquisition.PrivateSale`, the money to the rival); a carless rival weighs them with the lots.
+
+**Trading up** (`OpponentRules.WorthTradingUp`): a racing rival, 5% of days (not the day they bought a car), buys a
+car with 20% more power when a quarter of its price is left over, and puts the old one in the paper.
+
+**Rivals' parts in the paper** (`RivalPartAds`, `PartAd.SellerRival`): what a rival's tuning takes off
+(`TuneUpgrade.Removed`: each part loose, a swapped-out engine whole) goes into the parts ads at 85–110% of a used
+shop's price, under their name. They are paid when it sells (to the player or a rival) and get the shop's trade-in when
+the ad runs out. The tuner weighs the ads' parts (`UsedPartOffer`, not their own) against new: a loose part that asks
+less is bought used, worn as it is, and a whole engine of the family can be the block swap.
+
+**Checked with the Life harness** (180 days, twice): ~65–90 rival car ads, ~30 private sales, 17–33 tune-ups with used
+parts, 17–19 racers leaving (about half broke a third time), 6–7 back in town, review ~300 ms a day.
+`OpponentGenerationService` is still unused: the new racers are drawn, not generated.
 
 ## Grudges (step 10)
 A rival who loses a pink slip to the player wants a rematch (`Opponent.Grudge`, `Grudges`): for 14 days
@@ -157,6 +204,8 @@ The Diner asks before it prepares the cars' data, so a refusal costs nothing.
 ## Files
 - `Models/GameState/Opponent.cs`
 - `Services/Opponents/OpponentLifeService.cs`, `OpponentRules.cs`, `OpponentInitializationService.cs`
+- `Services/Opponents/RivalCarAds.cs`, `Services/Parts/RivalPartAds.cs`
+- `Assets/Opponents/opponent_definitions.json`, `Utils/Opponent Creation/` (prompts and the two scripts)
 - `Services/Scheduler/Tasks/OpponentReviewTask.cs`
 - `Parts/Cars/EngineTuner.cs`
 - `Services/Opponents/OpponentGenerationService.cs`

@@ -2,6 +2,7 @@ using Street_Rod_AC.Logging;
 using Street_Rod_AC.Models.Catalog;
 using Street_Rod_AC.Models.GameState;
 using Street_Rod_AC.Parts.Cars;
+using Street_Rod_AC.Services.Opponents;
 using Street_Rod_AC.Services.Parts;
 using Street_Rod_AC.Services.Storage;
 using Street_Rod_AC.Services.Time;
@@ -39,6 +40,8 @@ namespace Street_Rod_AC.Services.Market
         public async Task<PurchaseResult> PurchaseAsync(
             Models.GameState.GameState gameState, UsedCarListing listing, CarDefinition carDef)
         {
+            if (listing.PrivateSeller != null) return await PurchaseFromRivalAsync(gameState, listing, carDef);
+
             if (gameState.Player.Money < listing.Price)
             {
                 _logger.Warning("Purchase failed: insufficient funds");
@@ -104,6 +107,61 @@ namespace Street_Rod_AC.Services.Market
 
             return new PurchaseResult(PurchaseOutcome.Bought,
                 $"Congratulations! You've purchased a {carDef.Brand} {carDef.Name} for ${listing.Price:N0}.\n\n" +
+                "You can now find it in your garage.",
+                saveFailed);
+        }
+
+        /// <summary>
+        /// A rival's car out of the paper (<see cref="RivalCarAds"/>): that very car, from the rival's garage, the money to
+        /// the rival. Nothing to put together, so nothing is awaited before the car changes hands.
+        /// </summary>
+        private async Task<PurchaseResult> PurchaseFromRivalAsync(Models.GameState.GameState gameState, UsedCarListing listing, CarDefinition carDef)
+        {
+            // The ad as it stands now: its price may have come down since the page was drawn
+            var ad = RivalCarAds.AdOf(gameState, listing);
+            if (ad == null)
+            {
+                _logger.Warning("Purchase failed: the ad is gone");
+                return new PurchaseResult(PurchaseOutcome.NoLongerAvailable, "This car is no longer available.");
+            }
+
+            var price = ad.AskingPrice;
+            if (gameState.Player.Money < price)
+            {
+                _logger.Warning("Purchase failed: insufficient funds");
+                return new PurchaseResult(PurchaseOutcome.NotEnoughMoney, "You don't have enough money to purchase this car.");
+            }
+
+            var car = RivalCarAds.HandOver(gameState, ad, gameState.Player.Name, gameState.Date);
+            if (car == null)
+            {
+                _logger.Warning("Purchase failed: the rival no longer has the car");
+                return new PurchaseResult(PurchaseOutcome.NoLongerAvailable, "This car is no longer available.");
+            }
+
+            gameState.Player.Money -= price;
+            gameState.Player.Cars ??= [];
+            gameState.Player.Cars.Add(car);
+            gameState.Player.Stats.CarsOwned++;
+            gameState.Career.SyncStanding(gameState.Player);
+            gameState.Player.SelectedCarInstanceId ??= car.InstanceId;
+
+            _logger.Information("Purchase completed: {CarName} from {Seller} for ${Price}, new bankroll: ${Bankroll}",
+                carDef.Name, listing.PrivateSeller, price, gameState.Player.Money);
+
+            try
+            {
+                await _gameTimeService.SpendTimeAsync(gameState, GameAction.BuyCar);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Could not spend the time for buying the car");
+            }
+
+            var saveFailed = !GameSaves.TrySave(_gameStateRepository, gameState, _logger, "a purchase");
+
+            return new PurchaseResult(PurchaseOutcome.Bought,
+                $"You bought {listing.PrivateSeller}'s {carDef.Brand} {carDef.Name} for ${price:N0}.\n\n" +
                 "You can now find it in your garage.",
                 saveFailed);
         }

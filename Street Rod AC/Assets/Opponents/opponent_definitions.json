@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Street Rod AC - Opponent Definitions",
-  "generated": "2026-01-12T01:37:30.864Z",
+  "generated": "2026-09-26T02:53:53.851Z",
   "generation_rules": {
     "skill_range": "90-100",
     "aggression_range": "0-100",
@@ -559,6 +559,546 @@
       }
     },
     {
+      "opponentId": "drv_031",
+      "name": "Marcus Greene",
+      "nickname": "Deacon",
+      "age": 43,
+      "gender": "Male",
+      "skill": 91,
+      "aggression": 34,
+      "portraitPath": "/Assets/Opponents/drv_031.png",
+      "location": "East Side Auto Shop",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 33,
+        "ageModifier": 2,
+        "genderModifier": -1,
+        "finalAggression": 34
+      }
+    },
+    {
+      "opponentId": "drv_032",
+      "name": "Stan Kowalski",
+      "nickname": "Big Stan",
+      "age": 38,
+      "gender": "Male",
+      "skill": 93,
+      "aggression": 70,
+      "portraitPath": "/Assets/Opponents/drv_032.png",
+      "location": "West End Speed Shop",
+      "biography": "An experienced racer who drives hard and takes calculated risks.",
+      "_generationDetails": {
+        "baseAggression": 65,
+        "ageModifier": 3,
+        "genderModifier": 2,
+        "finalAggression": 70
+      }
+    },
+    {
+      "opponentId": "drv_033",
+      "name": "Dolores Vasquez",
+      "nickname": "Dolly",
+      "age": 31,
+      "gender": "Female",
+      "skill": 94,
+      "aggression": 38,
+      "portraitPath": "/Assets/Opponents/drv_033.png",
+      "location": "Industrial Quarter",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 33,
+        "ageModifier": 3,
+        "genderModifier": 2,
+        "finalAggression": 38
+      }
+    },
+    {
+      "opponentId": "drv_034",
+      "name": "Kenji Nakamura",
+      "nickname": "Tach",
+      "age": 29,
+      "gender": "Male",
+      "skill": 95,
+      "aggression": 35,
+      "portraitPath": "/Assets/Opponents/drv_034.png",
+      "location": "Riverside Mechanics",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 30,
+        "ageModifier": 2,
+        "genderModifier": 3,
+        "finalAggression": 35
+      }
+    },
+    {
+      "opponentId": "drv_035",
+      "name": "Otis Freeman",
+      "nickname": "Sugar",
+      "age": 51,
+      "gender": "Male",
+      "skill": 98,
+      "aggression": 17,
+      "portraitPath": "/Assets/Opponents/drv_035.png",
+      "location": "North Side Garage",
+      "biography": "A street racing veteran who knows when to push and when to hold back.",
+      "_generationDetails": {
+        "baseAggression": 36,
+        "ageModifier": -19,
+        "genderModifier": 0,
+        "finalAggression": 17
+      }
+    },
+    {
+      "opponentId": "drv_036",
+      "name": "Bobby Sullivan",
+      "nickname": "Fuse",
+      "age": 21,
+      "gender": "Male",
+      "skill": 99,
+      "aggression": 78,
+      "portraitPath": "/Assets/Opponents/drv_036.png",
+      "location": "South End Workshop",
+      "biography": "A young hotshot with a need for speed and something to prove on the streets.",
+      "_generationDetails": {
+        "baseAggression": 66,
+        "ageModifier": 12,
+        "genderModifier": 0,
+        "finalAggression": 78
+      }
+    },
+    {
+      "opponentId": "drv_037",
+      "name": "Irene Kovacs",
+      "nickname": "Iron Lady",
+      "age": 49,
+      "gender": "Female",
+      "skill": 92,
+      "aggression": 36,
+      "portraitPath": "/Assets/Opponents/drv_037.png",
+      "location": "Main Street Motors",
+      "biography": "A street racing veteran who knows when to push and when to hold back.",
+      "_generationDetails": {
+        "baseAggression": 58,
+        "ageModifier": -20,
+        "genderModifier": -2,
+        "finalAggression": 36
+      }
+    },
+    {
+      "opponentId": "drv_038",
+      "name": "Frank DeLuca",
+      "nickname": "Gasket",
+      "age": 40,
+      "gender": "Male",
+      "skill": 97,
+      "aggression": 71,
+      "portraitPath": "/Assets/Opponents/drv_038.png",
+      "location": "Backstreet Garage",
+      "biography": "An experienced racer who drives hard and takes calculated risks.",
+      "_generationDetails": {
+        "baseAggression": 67,
+        "ageModifier": 2,
+        "genderModifier": 2,
+        "finalAggression": 71
+      }
+    },
+    {
+      "opponentId": "drv_039",
+      "name": "Curtis Bell",
+      "nickname": "Six-Pack",
+      "age": 26,
+      "gender": "Male",
+      "skill": 96,
+      "aggression": 43,
+      "portraitPath": "/Assets/Opponents/drv_039.png",
+      "location": "Highway 66 Shop",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 36,
+        "ageModifier": 2,
+        "genderModifier": 5,
+        "finalAggression": 43
+      }
+    },
+    {
+      "opponentId": "drv_040",
+      "name": "Wanda Pierce",
+      "nickname": "Hot Rod Wanda",
+      "age": 36,
+      "gender": "Female",
+      "skill": 96,
+      "aggression": 33,
+      "portraitPath": "/Assets/Opponents/drv_040.png",
+      "location": "Downtown Garage District",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 33,
+        "ageModifier": 4,
+        "genderModifier": -4,
+        "finalAggression": 33
+      }
+    },
+    {
+      "opponentId": "drv_041",
+      "name": "Ray Delgado",
+      "nickname": "Loco",
+      "age": 23,
+      "gender": "Male",
+      "skill": 90,
+      "aggression": 58,
+      "portraitPath": "/Assets/Opponents/drv_041.png",
+      "location": "East Side Auto Shop",
+      "biography": "An up-and-coming racer making a name in the local street racing scene.",
+      "_generationDetails": {
+        "baseAggression": 42,
+        "ageModifier": 15,
+        "genderModifier": 1,
+        "finalAggression": 58
+      }
+    },
+    {
+      "opponentId": "drv_042",
+      "name": "Gus Lindqvist",
+      "nickname": "Swede",
+      "age": 57,
+      "gender": "Male",
+      "skill": 98,
+      "aggression": 41,
+      "portraitPath": "/Assets/Opponents/drv_042.png",
+      "location": "West End Speed Shop",
+      "biography": "A street racing veteran who knows when to push and when to hold back.",
+      "_generationDetails": {
+        "baseAggression": 58,
+        "ageModifier": -17,
+        "genderModifier": 0,
+        "finalAggression": 41
+      }
+    },
+    {
+      "opponentId": "drv_043",
+      "name": "Patsy Monroe",
+      "nickname": "Pinstripe",
+      "age": 27,
+      "gender": "Female",
+      "skill": 95,
+      "aggression": 38,
+      "portraitPath": "/Assets/Opponents/drv_043.png",
+      "location": "Industrial Quarter",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 37,
+        "ageModifier": 2,
+        "genderModifier": -1,
+        "finalAggression": 38
+      }
+    },
+    {
+      "opponentId": "drv_044",
+      "name": "Clarence Hayes",
+      "nickname": "Preacher",
+      "age": 47,
+      "gender": "Male",
+      "skill": 95,
+      "aggression": 45,
+      "portraitPath": "/Assets/Opponents/drv_044.png",
+      "location": "Riverside Mechanics",
+      "biography": "A street racing veteran who knows when to push and when to hold back.",
+      "_generationDetails": {
+        "baseAggression": 64,
+        "ageModifier": -18,
+        "genderModifier": -1,
+        "finalAggression": 45
+      }
+    },
+    {
+      "opponentId": "drv_045",
+      "name": "Danny Wong",
+      "nickname": "Two-Step",
+      "age": 33,
+      "gender": "Male",
+      "skill": 91,
+      "aggression": 41,
+      "portraitPath": "/Assets/Opponents/drv_045.png",
+      "location": "North Side Garage",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 41,
+        "ageModifier": 0,
+        "genderModifier": 0,
+        "finalAggression": 41
+      }
+    },
+    {
+      "opponentId": "drv_046",
+      "name": "Lorraine Duval",
+      "nickname": "Cajun",
+      "age": 40,
+      "gender": "Female",
+      "skill": 96,
+      "aggression": 49,
+      "portraitPath": "/Assets/Opponents/drv_046.png",
+      "location": "South End Workshop",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 50,
+        "ageModifier": 2,
+        "genderModifier": -3,
+        "finalAggression": 49
+      }
+    },
+    {
+      "opponentId": "drv_047",
+      "name": "Hank Crowley",
+      "nickname": "Dozer",
+      "age": 45,
+      "gender": "Male",
+      "skill": 100,
+      "aggression": 60,
+      "portraitPath": "/Assets/Opponents/drv_047.png",
+      "location": "Main Street Motors",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 56,
+        "ageModifier": 3,
+        "genderModifier": 1,
+        "finalAggression": 60
+      }
+    },
+    {
+      "opponentId": "drv_048",
+      "name": "Vince Moretti",
+      "nickname": "Silk",
+      "age": 35,
+      "gender": "Male",
+      "skill": 90,
+      "aggression": 45,
+      "portraitPath": "/Assets/Opponents/drv_048.png",
+      "location": "Backstreet Garage",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 44,
+        "ageModifier": 1,
+        "genderModifier": 0,
+        "finalAggression": 45
+      }
+    },
+    {
+      "opponentId": "drv_049",
+      "name": "Joyce Talbot",
+      "nickname": "Jinx",
+      "age": 24,
+      "gender": "Female",
+      "skill": 92,
+      "aggression": 65,
+      "portraitPath": "/Assets/Opponents/drv_049.png",
+      "location": "Highway 66 Shop",
+      "biography": "An up-and-coming racer making a name in the local street racing scene.",
+      "_generationDetails": {
+        "baseAggression": 52,
+        "ageModifier": 16,
+        "genderModifier": -3,
+        "finalAggression": 65
+      }
+    },
+    {
+      "opponentId": "drv_050",
+      "name": "Elijah Brooks",
+      "nickname": "Deuce",
+      "age": 30,
+      "gender": "Male",
+      "skill": 99,
+      "aggression": 38,
+      "portraitPath": "/Assets/Opponents/drv_050.png",
+      "location": "Downtown Garage District",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 35,
+        "ageModifier": 5,
+        "genderModifier": -2,
+        "finalAggression": 38
+      }
+    },
+    {
+      "opponentId": "drv_051",
+      "name": "Walt Pruitt",
+      "nickname": "Moonshine",
+      "age": 60,
+      "gender": "Male",
+      "skill": 93,
+      "aggression": 41,
+      "portraitPath": "/Assets/Opponents/drv_051.png",
+      "location": "East Side Auto Shop",
+      "biography": "A street racing veteran who knows when to push and when to hold back.",
+      "_generationDetails": {
+        "baseAggression": 59,
+        "ageModifier": -17,
+        "genderModifier": -1,
+        "finalAggression": 41
+      }
+    },
+    {
+      "opponentId": "drv_052",
+      "name": "Rita Castillo",
+      "nickname": "Spitfire",
+      "age": 34,
+      "gender": "Female",
+      "skill": 96,
+      "aggression": 59,
+      "portraitPath": "/Assets/Opponents/drv_052.png",
+      "location": "West End Speed Shop",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 56,
+        "ageModifier": 2,
+        "genderModifier": 1,
+        "finalAggression": 59
+      }
+    },
+    {
+      "opponentId": "drv_053",
+      "name": "Jimmy O'Neill",
+      "nickname": "Shamrock",
+      "age": 28,
+      "gender": "Male",
+      "skill": 98,
+      "aggression": 42,
+      "portraitPath": "/Assets/Opponents/drv_053.png",
+      "location": "Industrial Quarter",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 33,
+        "ageModifier": 4,
+        "genderModifier": 5,
+        "finalAggression": 42
+      }
+    },
+    {
+      "opponentId": "drv_054",
+      "name": "Nate Coleman",
+      "nickname": "Governor",
+      "age": 53,
+      "gender": "Male",
+      "skill": 90,
+      "aggression": 23,
+      "portraitPath": "/Assets/Opponents/drv_054.png",
+      "location": "Riverside Mechanics",
+      "biography": "A street racing veteran who knows when to push and when to hold back.",
+      "_generationDetails": {
+        "baseAggression": 35,
+        "ageModifier": -13,
+        "genderModifier": 1,
+        "finalAggression": 23
+      }
+    },
+    {
+      "opponentId": "drv_055",
+      "name": "Shirley Novak",
+      "nickname": "Slingshot",
+      "age": 30,
+      "gender": "Female",
+      "skill": 93,
+      "aggression": 64,
+      "portraitPath": "/Assets/Opponents/drv_055.png",
+      "location": "North Side Garage",
+      "biography": "An experienced racer who drives hard and takes calculated risks.",
+      "_generationDetails": {
+        "baseAggression": 64,
+        "ageModifier": 1,
+        "genderModifier": -1,
+        "finalAggression": 64
+      }
+    },
+    {
+      "opponentId": "drv_056",
+      "name": "Buddy Carmichael",
+      "nickname": "Tailpipe",
+      "age": 19,
+      "gender": "Male",
+      "skill": 100,
+      "aggression": 80,
+      "portraitPath": "/Assets/Opponents/drv_056.png",
+      "location": "South End Workshop",
+      "biography": "A young hotshot with a need for speed and something to prove on the streets.",
+      "_generationDetails": {
+        "baseAggression": 57,
+        "ageModifier": 20,
+        "genderModifier": 3,
+        "finalAggression": 80
+      }
+    },
+    {
+      "opponentId": "drv_057",
+      "name": "Ernesto Ruiz",
+      "nickname": "Padre",
+      "age": 49,
+      "gender": "Male",
+      "skill": 93,
+      "aggression": 30,
+      "portraitPath": "/Assets/Opponents/drv_057.png",
+      "location": "Main Street Motors",
+      "biography": "A street racing veteran who knows when to push and when to hold back.",
+      "_generationDetails": {
+        "baseAggression": 42,
+        "ageModifier": -14,
+        "genderModifier": 2,
+        "finalAggression": 30
+      }
+    },
+    {
+      "opponentId": "drv_058",
+      "name": "Gloria Haines",
+      "nickname": "Hellcat",
+      "age": 42,
+      "gender": "Female",
+      "skill": 98,
+      "aggression": 33,
+      "portraitPath": "/Assets/Opponents/drv_058.png",
+      "location": "Backstreet Garage",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 32,
+        "ageModifier": 3,
+        "genderModifier": -2,
+        "finalAggression": 33
+      }
+    },
+    {
+      "opponentId": "drv_059",
+      "name": "Lamar Jenkins",
+      "nickname": "Slingblade",
+      "age": 32,
+      "gender": "Male",
+      "skill": 91,
+      "aggression": 61,
+      "portraitPath": "/Assets/Opponents/drv_059.png",
+      "location": "Highway 66 Shop",
+      "biography": "An experienced racer who drives hard and takes calculated risks.",
+      "_generationDetails": {
+        "baseAggression": 61,
+        "ageModifier": 2,
+        "genderModifier": -2,
+        "finalAggression": 61
+      }
+    },
+    {
+      "opponentId": "drv_060",
+      "name": "Artie Feldman",
+      "nickname": "Professor",
+      "age": 39,
+      "gender": "Male",
+      "skill": 98,
+      "aggression": 46,
+      "portraitPath": "/Assets/Opponents/drv_060.png",
+      "location": "Downtown Garage District",
+      "biography": "A seasoned driver with solid racing skills and consistent performance.",
+      "_generationDetails": {
+        "baseAggression": 41,
+        "ageModifier": 0,
+        "genderModifier": 5,
+        "finalAggression": 46
+      }
+    },
+    {
       "opponentId": "king",
       "name": "The King",
       "nickname": "Crown",
@@ -566,6 +1106,7 @@
       "gender": "Male",
       "skill": 100,
       "aggression": 65,
+      "portraitPath": "/Assets/Opponents/king.png",
       "isKing": true,
       "location": "Wherever the money is",
       "biography": "Nobody remembers the last time he lost. He only races for pink slips, and only against somebody who has made a name for themselves."

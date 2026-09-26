@@ -4,8 +4,16 @@ using Street_Rod_AC.Parts.Logic;
 
 namespace Street_Rod_AC.Parts.Cars;
 
-/// <summary>One thing done to an engine, and what it came to</summary>
-public sealed record TuneUpgrade(string Change, string Group, double PowerBefore, double PowerAfter, decimal Cost, decimal TradeIn);
+/// <summary>
+/// One thing done to an engine, and what it came to. <paramref name="TradeIn"/> is what a shop pays for the parts that
+/// came off (<paramref name="Removed"/>, loose, each without what was on it; a swapped-out engine whole).
+/// <paramref name="UsedAdId"/> is the ad the part was bought from, when it was bought used out of the paper.
+/// </summary>
+public sealed record TuneUpgrade(string Change, string Group, double PowerBefore, double PowerAfter, decimal Cost, decimal TradeIn,
+    Guid? UsedAdId = null, IReadOnlyList<PartInstance>? Removed = null);
+
+/// <summary>A part or a whole engine for sale in the paper, as a tuner weighs it against a new one</summary>
+public sealed record UsedPartOffer(Guid AdId, PartInstance Part, decimal Price);
 
 /// <summary>An engine after <see cref="EngineTuner.TuneUp"/>: the parts, their dyno report, and what was done</summary>
 public sealed record TuneResult(PartInstance Engine, EngineReport Report, IReadOnlyList<TuneUpgrade> Upgrades)
@@ -23,7 +31,9 @@ public sealed record TuneResult(PartInstance Engine, EngineReport Report, IReadO
 /// per kind of part. Every upgrade is checked on the dyno and has to gain at least <see cref="MinGain"/>. A part the
 /// new one leaves without a place (a carburettor the new manifold does not take) is replaced by the cheapest that
 /// fits, to a depth of <see cref="MaxReplacementDepth"/>. The block swap is a bigger engine of the same family,
-/// bought used out of the paper. New parts cost what the mail order asks; what comes off is traded in.
+/// bought used out of the paper. New parts cost what the mail order asks; a part in the ads
+/// (<see cref="UsedPartOffer"/>) is bought used when it asks less. What comes off is traded in, or sold on by whoever
+/// does the work (<see cref="TuneUpgrade.Removed"/>).
 ///
 /// The GameMaker version's rules (scr_get_car_upgrades, StructCar.tuneUp) on the part tree and the real dyno.
 /// </summary>
@@ -64,8 +74,9 @@ public static class EngineTuner
     /// upgrades whose parts together cost no more than <paramref name="budget"/>. Null when nothing is worth doing.
     /// </summary>
     /// <param name="maxTrials">Most dyno runs spent on looking; each takes a few milliseconds</param>
+    /// <param name="used">Parts and whole engines in the paper; each is bought at most once</param>
     public static TuneResult? TuneUp(PartsCatalog catalog, EngineBuildIndex builds, PartInstance engine, decimal budget,
-        double priceMultiplier, Random random, int maxUpgrades = 2, int maxTrials = 60)
+        double priceMultiplier, Random random, int maxUpgrades = 2, int maxTrials = 60, IReadOnlyList<UsedPartOffer>? used = null)
     {
         var report = EngineFactory.Evaluate(catalog, engine);
         if (report is not { Runs: true }) return null;
@@ -77,7 +88,8 @@ public static class EngineTuner
 
         while (upgrades.Count < maxUpgrades && trials > 0)
         {
-            var best = FindBest(catalog, builds, root, report, budget, priceMultiplier, random, doneGroups, ref trials);
+            var offers = (used ?? []).Where(o => upgrades.All(u => u.UsedAdId != o.AdId)).ToList();
+            var best = FindBest(catalog, builds, root, report, budget, priceMultiplier, random, doneGroups, offers, ref trials);
             if (best == null) break;
 
             root = best.Engine;
@@ -93,12 +105,25 @@ public static class EngineTuner
     private sealed record Candidate(PartInstance Engine, EngineReport Report, TuneUpgrade Upgrade, double Score);
 
     private static Candidate? FindBest(PartsCatalog catalog, EngineBuildIndex builds, PartInstance root, EngineReport report,
-        decimal budget, double priceMultiplier, Random random, HashSet<string> doneGroups, ref int trials)
+        decimal budget, double priceMultiplier, Random random, HashSet<string> doneGroups, List<UsedPartOffer> used, ref int trials)
     {
         var power = report.Dyno!.MaxPowerHp;
         Candidate? best = null;
 
-        void Consider(PartInstance tuned, string change, string group, decimal cost, decimal tradeIn)
+        // Loose parts in the paper by what they are, the cheapest of each; whole engines on their own
+        var usedParts = used
+            .Where(o => o.Part.Children.Count == 0)
+            .GroupBy(o => o.Part.DefinitionId, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.OrderBy(o => o.Price).First(), StringComparer.OrdinalIgnoreCase);
+        UsedPartOffer? UsedFor(PartDefinition part, decimal newPrice) =>
+            usedParts.TryGetValue(part.Id, out var offer) && offer.Price < newPrice ? offer : null;
+        decimal Price(PartDefinition part)
+        {
+            var newPrice = NewPrice(part, priceMultiplier);
+            return UsedFor(part, newPrice)?.Price ?? newPrice;
+        }
+
+        void Consider(PartInstance tuned, string change, string group, decimal cost, decimal tradeIn, Guid? adId, IReadOnlyList<PartInstance> removed)
         {
             var after = EngineFactory.Evaluate(catalog, tuned);
             if (after is not { Runs: true }) return;
@@ -108,7 +133,7 @@ public static class EngineTuner
 
             var score = gain * 100 / (double)Math.Max(1m, cost) * Priority(group);
             if (best == null || score > best.Score)
-                best = new Candidate(tuned, after, new TuneUpgrade(change, group, power, after.Dyno.MaxPowerHp, cost, tradeIn), score);
+                best = new Candidate(tuned, after, new TuneUpgrade(change, group, power, after.Dyno.MaxPowerHp, cost, tradeIn, adId, removed), score);
         }
 
         // Bolt-ons: every part of a kind worth tuning, against what else goes where it sits
@@ -128,7 +153,7 @@ public static class EngineTuner
 
             var alternatives = catalog.FindMountable(parentDefinition, parentSlot)
                 .Where(c => PartKinds.GroupOf(c.Part) == group && !c.Part.Id.Equals(oldDefinition.Id, StringComparison.OrdinalIgnoreCase))
-                .Where(c => NewPrice(c.Part, priceMultiplier) <= budget)
+                .Where(c => Price(c.Part) <= budget)
                 .OrderBy(_ => random.Next())
                 .Take(6);
 
@@ -141,7 +166,18 @@ public static class EngineTuner
                 var replacement = Rebuild(catalog, newDefinition, newOwnSlot.Id, old, priceMultiplier, 0, replaced, ref extra);
                 if (replacement == null) continue;
 
-                var cost = NewPrice(newDefinition, priceMultiplier) + extra;
+                // Out of the paper when it asks less than new: that very part, worn as it is
+                var newPrice = NewPrice(newDefinition, priceMultiplier);
+                var offer = UsedFor(newDefinition, newPrice);
+                if (offer != null)
+                {
+                    replacement.InstanceId = offer.Part.InstanceId;
+                    replacement.Wear = offer.Part.Wear;
+                    replacement.Tear = offer.Part.Tear;
+                    replacement.Tuning = new Dictionary<string, double>(offer.Part.Tuning ?? []);
+                }
+
+                var cost = (offer?.Price ?? newPrice) + extra;
                 if (cost > budget) continue;
 
                 var tuned = PartTrees.Clone(root, keepIds: true);
@@ -151,7 +187,8 @@ public static class EngineTuner
 
                 trials--;
                 var tradeIn = TradeIn(catalog, old, withChildren: false) + replaced.Sum(p => TradeIn(catalog, p, withChildren: false));
-                Consider(tuned, Name(newDefinition), group, cost, tradeIn);
+                Consider(tuned, offer != null ? $"used {Name(newDefinition)}" : Name(newDefinition), group, cost, tradeIn, offer?.AdId,
+                    [Loose(old), .. replaced.Select(p => Loose(p))]);
             }
         }
 
@@ -170,14 +207,46 @@ public static class EngineTuner
             foreach (var (build, cost) in bigger)
             {
                 if (trials <= 0) break;
-                if (EngineFactory.CreateStock(catalog, build, UsedEngineCondition, random) is not { } used) continue;
+                if (EngineFactory.CreateStock(catalog, build, UsedEngineCondition, random) is not { } stock) continue;
 
                 trials--;
-                Consider(used.Root, $"the engine of a {build.Build.Name}", BlockGroup, cost, TradeIn(catalog, root, withChildren: true));
+                Consider(stock.Root, $"the engine of a {build.Build.Name}", BlockGroup, cost, TradeIn(catalog, root, withChildren: true), null,
+                    [Loose(root, withChildren: true)]);
+            }
+
+            // A whole engine somebody put in the paper, of the family and not too big
+            var engines = used
+                .Where(o => o.Part.Children.Count > 0 && o.Price <= budget)
+                .Select(o => (Offer: o, Build: builds.Runnable.FirstOrDefault(b => b.BlockId.Equals(o.Part.DefinitionId, StringComparison.OrdinalIgnoreCase))))
+                .Where(e => e.Build != null && e.Build.Family == current.Family && e.Build.PowerHp <= power * MaxSwapPower)
+                .OrderBy(_ => random.Next())
+                .Take(3)
+                .ToList();
+
+            foreach (var (offer, build) in engines)
+            {
+                if (trials <= 0) break;
+
+                var engine = PartTrees.Clone(offer.Part, keepIds: true);
+                engine.ParentSlot = root.ParentSlot;
+                engine.OwnSlot = root.OwnSlot;
+
+                trials--;
+                Consider(engine, $"a used {build!.Build.Name} engine out of the paper", BlockGroup, offer.Price, TradeIn(catalog, root, withChildren: true),
+                    offer.AdId, [Loose(root, withChildren: true)]);
             }
         }
 
         return best;
+    }
+
+    /// <summary>A part that came off, as it goes on a shelf or into the paper: a copy, loose, without what was on it unless said</summary>
+    private static PartInstance Loose(PartInstance part, bool withChildren = false)
+    {
+        var loose = PartTrees.Clone(part, keepIds: true);
+        if (!withChildren) loose.Children = [];
+        loose.ParentSlot = 0;
+        return loose;
     }
 
     /// <summary>A used engine out of the paper: its parts at a used shop's price</summary>

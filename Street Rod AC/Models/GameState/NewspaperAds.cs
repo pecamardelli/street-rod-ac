@@ -7,11 +7,33 @@ namespace Street_Rod_AC.Models.GameState
         /// <summary>The player's own cars up for sale; see <see cref="Services.Market.CarSaleService"/></summary>
         public List<CarSaleAd> PlayerCars { get; set; }
 
+        /// <summary>The rivals' spare cars up for sale; see <see cref="Services.Opponents.RivalCarAds"/></summary>
+        public List<RivalCarAd> RivalCars { get; set; }
+
         public NewspaperAds()
         {
             Parts = [];
             PlayerCars = [];
+            RivalCars = [];
         }
+    }
+
+    /// <summary>
+    /// A rival's car in the classifieds. As with the player's own ads the car stays in the rival's garage until
+    /// somebody buys it; the ad names the rival and the car.
+    /// </summary>
+    public class RivalCarAd
+    {
+        public Guid AdId { get; set; } = Guid.NewGuid();
+        public string RivalName { get; set; } = string.Empty;
+        public Guid CarInstanceId { get; set; }
+        public decimal AskingPrice { get; set; }
+
+        /// <summary>Game time</summary>
+        public DateTime PostedDate { get; set; }
+
+        /// <summary>The price came down once already</summary>
+        public bool Reduced { get; set; }
     }
 
     /// <summary>
@@ -50,6 +72,13 @@ namespace Street_Rod_AC.Models.GameState
         public PartInstance Part { get; set; }
         public decimal AskingPrice { get; set; }
         public string SellerName { get; set; }
+
+        /// <summary>
+        /// The rival selling it, when the part came off one of their cars: they are paid when it sells, and the shop's
+        /// trade-in when nobody wants it. Null for the paper's other sellers.
+        /// </summary>
+        public string? SellerRival { get; set; }
+
         /// <summary>Game time; set by whoever places the ad</summary>
         public DateTime PostedDate { get; set; }
         public int DaysActive { get; set; }

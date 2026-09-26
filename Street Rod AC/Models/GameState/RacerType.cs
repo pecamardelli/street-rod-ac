@@ -10,6 +10,9 @@ namespace Street_Rod_AC.Models.GameState
     {
         Inactive,
         Retired,
-        ReadyToRace
+        ReadyToRace,
+
+        /// <summary>Gone for good: sold up and left town (<see cref="RacerCollection.Departed"/>)</summary>
+        Departed
     }
 }

@@ -61,6 +61,14 @@ public sealed class SaveFormatTests : IDisposable
         retired.Status = RacerStatus.Retired;
         state.Racers.AddRacer(retired);
 
+        var gone = Rival("Long Gone");
+        gone.Status = RacerStatus.Departed;
+        gone.TimesBroke = 3;
+        gone.LeftDate = state.Date;
+        state.Racers.AddRacer(gone);
+        state.NewspaperAds.RivalCars.Add(new RivalCarAd { RivalName = "Ace", CarInstanceId = car.InstanceId, AskingPrice = 900m, PostedDate = state.Date, Reduced = true });
+        state.NewspaperAds.Parts.Add(new PartAd(new PartInstance("cam_hot"), 120m, "Ace") { SellerRival = "Ace", PostedDate = state.Date });
+
         state.Player.Parts.Add(new PartInstance("cam_hot") { Tuning = { ["lift"] = 1.5 } });
         state.Career.MilestoneCounters[MilestoneTrigger.DragWins] = 7;
         state.Career.CompletedMilestones.Add("first_win");
@@ -185,7 +193,7 @@ public sealed class SaveFormatTests : IDisposable
         Assert.Equal(["Easy", "Normal", "Hard", "Custom"], Enum.GetNames<Difficulty>());
         Assert.Equal(["Low", "Medium", "High"], Enum.GetNames<PinkSlipFrequency>());
         Assert.Equal(["Player", "AI"], Enum.GetNames<RacerType>());
-        Assert.Equal(["Inactive", "Retired", "ReadyToRace"], Enum.GetNames<RacerStatus>());
+        Assert.Equal(["Inactive", "Retired", "ReadyToRace", "Departed"], Enum.GetNames<RacerStatus>());
         Assert.Equal(["Male", "Female", "Other"], Enum.GetNames<Gender>());
         Assert.Equal(["DragRace", "Circuit", "Sprint"], Enum.GetNames<RaceType>());
         Assert.Equal(

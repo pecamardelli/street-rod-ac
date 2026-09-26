@@ -1,4 +1,5 @@
 using Street_Rod_AC.Models.GameState;
+using Street_Rod_AC.Services.Market;
 
 namespace Street_Rod_AC.Services.Opponents
 {
@@ -40,6 +41,67 @@ namespace Street_Rod_AC.Services.Opponents
 
         /// <summary>Share of the money over the reserve a racer spends on parts in a day</summary>
         public const decimal TuningShare = 0.3m;
+
+        /// <summary>The chance a racer on the street sells up and leaves town on a given day: one in five hundred, so most stay well over a year</summary>
+        public const double LeaveChance = 0.002;
+
+        /// <summary>Going broke this many times, they give up instead of scraping money together once more</summary>
+        public const int MaxTimesBroke = 3;
+
+        /// <summary>A racer sitting out this long starts thinking of giving up</summary>
+        public const int LaidUpDays = 45;
+
+        /// <summary>The chance, each day after <see cref="LaidUpDays"/>, that a racer sitting out gives up</summary>
+        public const double LaidUpLeaveChance = 0.05;
+
+        /// <summary>
+        /// When nobody new is left to come out, a racer who left this long ago can come back to town, with fresh money
+        /// </summary>
+        public const int ComeBackAfterDays = 90;
+
+        /// <summary>The chance a racer with money to spare goes looking for a better car on a given day</summary>
+        public const double TradeUpChance = 0.05;
+
+        /// <summary>A better car is one with this much more power: less is not worth the trouble of a sale</summary>
+        public const double TradeUpGain = 1.2;
+
+        /// <summary>What a rival asks for a car in the paper, as a share of the lot price: under what a lot asks, over what a dealer pays</summary>
+        public const double MinAskShare = 0.75;
+        public const double MaxAskShare = 0.9;
+
+        /// <summary>After this many days an ad nobody answered comes down in price, once, by <see cref="AskReduction"/></summary>
+        public const int AskReducedAfterDays = 7;
+        public const decimal AskReduction = 0.9m;
+
+        /// <summary>
+        /// Whether a racer gives up the scene today: gone broke once too often, laid up for too long, or, rarely, just
+        /// moving on. <paramref name="roll"/> is 0 to 1.
+        /// </summary>
+        public static bool Leaves(int timesBroke, int? daysSittingOut, double roll)
+        {
+            if (timesBroke >= MaxTimesBroke) return true;
+            if (daysSittingOut >= LaidUpDays && roll < LaidUpLeaveChance) return true;
+            return roll < LeaveChance;
+        }
+
+        /// <summary>
+        /// Whether a racer driving a car of <paramref name="currentHp"/> would buy one of <paramref name="hp"/> for
+        /// <paramref name="price"/>: clearly stronger, and paid for with a reserve left over (the same share of the new
+        /// car's price a tuner keeps back of theirs)
+        /// </summary>
+        public static bool WorthTradingUp(double currentHp, double hp, decimal price, decimal money) =>
+            price > 0 && Sane(hp) >= Math.Max(1, Sane(currentHp)) * TradeUpGain && money - price >= price * TuningReserveShare;
+
+        /// <summary>
+        /// What a rival asks in the paper for a car worth <paramref name="lotPrice"/> on a lot, <paramref name="roll"/>
+        /// 0 to 1 picking where in the range; never under what a dealer would pay (<paramref name="dealerPays"/>)
+        /// </summary>
+        public static decimal AskingPrice(decimal lotPrice, decimal dealerPays, double roll)
+        {
+            roll = Math.Clamp(double.IsFinite(roll) ? roll : 0, 0, 1);
+            var share = MinAskShare + roll * (MaxAskShare - MinAskShare);
+            return Math.Max(Math.Max(0m, dealerPays), CarValuation.RoundToHundred(Math.Max(0m, lotPrice) * (decimal)share));
+        }
 
         public static int WeeksElapsed(DateTime date) =>
             Math.Max(0, (date.Date - GameState.GetStartingDateTime().Date).Days / 7);

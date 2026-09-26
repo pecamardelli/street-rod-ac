@@ -97,7 +97,7 @@ public class OpponentLifeServiceTests
     public OpponentLifeServiceTests()
     {
         TestLogging.SilenceLogging();
-        _life = new OpponentLifeService(new NoParts(), _market, new NoCatalog());
+        _life = new OpponentLifeService(new NoParts(), _market, new NoCatalog(), random: new FixedRandom(0.99));
         _state = GameState.CreateNew("P");
     }
 
@@ -210,7 +210,7 @@ public class OpponentLifeServiceTests
     }
 
     [Fact]
-    public async Task A_racer_drives_their_best_car_and_sells_a_third()
+    public async Task A_racer_drives_their_best_car_and_sells_a_third_through_the_paper()
     {
         var weak = GoodCar("car_weak", 120);
         var strong = GoodCar("car_strong", 300);
@@ -219,9 +219,14 @@ public class OpponentLifeServiceTests
 
         await _life.ReviewDayAsync(_state, _state.Date);
 
+        Assert.Same(strong, racer.Cars[0]);
+        Assert.Equal(weak.InstanceId, Assert.Single(_state.NewspaperAds.RivalCars).CarInstanceId);
+
+        // Nobody called: a dealer's 60%
+        await _life.ReviewDayAsync(_state, _state.Date.AddDays(CarSaleService.AdDays));
         Assert.Equal(new[] { strong, middle }, racer.Cars);
         Assert.Equal(new[] { weak }, _market.Listed.Select(l => l.Car));
-        Assert.Equal(1000m + 600m, racer.Money); // a dealer's 60%
+        Assert.Equal(1000m + 600m, racer.Money);
         Assert.Single(_state.UsedCarMarket);
     }
 

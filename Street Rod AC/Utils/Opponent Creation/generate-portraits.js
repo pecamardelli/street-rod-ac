@@ -5,7 +5,8 @@ const http = require("http");
 // Configuration
 const COMFYUI_HOST = "127.0.0.1";
 const COMFYUI_PORT = 8000;
-const OUTPUT_DIR = __dirname; // Same directory as the script
+// Portraits go straight to the game's assets, named by opponent id (drv_031.png, king.png)
+const OUTPUT_DIR = path.join(__dirname, "..", "..", "Assets", "Opponents");
 const PROMPTS_FILE = path.join(__dirname, "opponent_prompts.json");
 const WORKFLOW_FILE = path.join(__dirname, "comfyui-workflow.json");
 
@@ -237,7 +238,7 @@ function loadWorkflow(driver, negativePrompt) {
       node.inputs &&
       node.inputs.filename_prefix !== undefined
     ) {
-      node.inputs.filename_prefix = driver.name;
+      node.inputs.filename_prefix = driver.id;
     }
   }
 
@@ -253,7 +254,7 @@ async function generateDriverPortrait(driver, index, total, negativePrompt) {
   console.log(`  👤 ${driver.gender} | Age: ${driver.age}`);
 
   // Check if portrait already exists
-  const outputPath = path.join(OUTPUT_DIR, `${driver.name}.png`);
+  const outputPath = path.join(OUTPUT_DIR, `${driver.id}.png`);
   if (fs.existsSync(outputPath)) {
     console.log(`  ✓ Portrait already exists, skipping...`);
     return;
@@ -314,7 +315,11 @@ async function main() {
   // Load opponent prompts
   console.log("\n📄 Loading opponent prompts...");
   const promptData = loadOpponentPrompts();
-  const drivers = promptData.drivers;
+  // Optional ids on the command line (node generate-portraits.js drv_031 king) limit the run to those
+  const only = process.argv.slice(2);
+  const drivers = only.length > 0
+    ? promptData.drivers.filter((d) => only.includes(d.id))
+    : promptData.drivers;
   const negativePrompt = promptData.negative_prompt;
 
   console.log(`   Loaded ${drivers.length} opponent definitions`);

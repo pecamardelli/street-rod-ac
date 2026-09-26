@@ -59,6 +59,12 @@ namespace Street_Rod_AC.Services.Parts
             var fresh = await Task.Run(() => IsAvailable ? CreateAds(wanted, currentDate, priceMultiplier) : null);
             if (fresh == null) return;
 
+            // A rival whose part nobody wanted lets a shop have it
+            foreach (var ad in ads.Where(ad => ad.SellerRival != null && IsExpired(ad, currentDate)))
+            {
+                RivalPartAds.Pay(gameState, ad, RivalPartAds.TradeIn(_parts.Catalog, ad.Part));
+            }
+
             var expired = ads.RemoveAll(ad => IsExpired(ad, currentDate) || _parts.Catalog.Get(ad.Part.DefinitionId) == null);
             foreach (var ad in ads) ad.DaysActive = Math.Max(0, (int)(currentDate - ad.PostedDate).TotalDays);
 
@@ -132,6 +138,7 @@ namespace Street_Rod_AC.Services.Parts
 
             gameState.Player.Money -= ad.AskingPrice;
             gameState.Player.Parts.Add(ad.Part);
+            RivalPartAds.Pay(gameState, ad, ad.AskingPrice);
             _logger.Information("Bought used {Part} from {Seller} for ${Price}", ad.Part.DefinitionId, ad.SellerName, ad.AskingPrice);
             return true;
         }

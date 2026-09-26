@@ -69,6 +69,15 @@ namespace Street_Rod_AC.Models.GameState
         /// <summary>They lost a pink slip to the player and want a rematch; null when they don't (see <see cref="Models.GameState.Grudge"/>)</summary>
         public Grudge? Grudge { get; set; }
 
+        /// <summary>How often they went broke and scraped money together; one time too many and they give up the scene</summary>
+        public int TimesBroke { get; set; }
+
+        /// <summary>Game date they started sitting out (<see cref="RacerStatus.Retired"/>); null while racing or not on the street yet</summary>
+        public DateTime? SittingOutSince { get; set; }
+
+        /// <summary>Game date they left the scene (<see cref="RacerStatus.Departed"/>); null while they are around</summary>
+        public DateTime? LeftDate { get; set; }
+
         /// <summary>
         /// Constructor for creating a new opponent
         /// </summary>

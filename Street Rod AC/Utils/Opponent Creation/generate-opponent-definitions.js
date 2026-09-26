@@ -3,7 +3,8 @@ const path = require("path");
 
 // Configuration
 const PROMPTS_FILE = path.join(__dirname, "opponent_prompts.json");
-const OUTPUT_FILE = path.join(__dirname, "opponent_definitions.json");
+// The game's definitions: racers already in it keep their traits, only new prompts are added
+const OUTPUT_FILE = path.join(__dirname, "..", "..", "Assets", "Opponents", "opponent_definitions.json");
 
 /**
  * Generate random integer between min (inclusive) and max (inclusive)
@@ -13,10 +14,10 @@ function randomInt(min, max) {
 }
 
 /**
- * Clamp skill to valid range (80-100)
+ * Clamp skill to valid range (90-100, Opponent.MinSkill: below it AC's AI is too slow to make a race of it)
  */
 function clampSkill(value) {
-  return Math.max(80, Math.min(100, value));
+  return Math.max(90, Math.min(100, value));
 }
 
 /**
@@ -73,8 +74,8 @@ function calculateGenderModifier(gender) {
  * Matches OpponentGenerationService.cs logic exactly
  */
 function generateTraits(age, gender) {
-  // Generate base skill between 80-100
-  const skill = randomInt(80, 100);
+  // Generate base skill between 90-100
+  const skill = randomInt(90, 100);
 
   // Generate base aggression (30-70 for neutral range)
   const baseAggression = randomInt(30, 70);
@@ -204,13 +205,20 @@ function main() {
 
   console.log(`   Loaded ${drivers.length} opponent prompts`);
 
-  // Generate opponent definitions
-  console.log("\n⚙️  Generating opponent definitions...\n");
+  // Racers already defined keep their traits (a save may be racing them); the King is written by hand
+  const existing = fs.existsSync(OUTPUT_FILE)
+    ? JSON.parse(fs.readFileSync(OUTPUT_FILE, "utf8")).opponents
+    : [];
+  const known = new Set(existing.map((o) => o.opponentId));
+  const fresh = drivers.filter((d) => !known.has(d.id));
 
-  const opponents = drivers.map((driver, index) => {
+  // Generate opponent definitions
+  console.log(`\n⚙️  Generating ${fresh.length} new opponent definitions (${existing.length} kept)...\n`);
+
+  const added = fresh.map((driver, index) => {
     const opponent = generateOpponentDefinition(driver);
 
-    console.log(`[${(index + 1).toString().padStart(3)}/${drivers.length}] ${opponent.name} "${opponent.nickname}"`);
+    console.log(`[${(index + 1).toString().padStart(3)}/${fresh.length}] ${opponent.name} "${opponent.nickname}"`);
     console.log(`   Age: ${opponent.age} | Gender: ${opponent.gender}`);
     console.log(`   Skill: ${opponent.skill} | Aggression: ${opponent.aggression}`);
     console.log(`   Modifiers: Base=${opponent._generationDetails.baseAggression}, Age=${opponent._generationDetails.ageModifier > 0 ? '+' : ''}${opponent._generationDetails.ageModifier}, Gender=${opponent._generationDetails.genderModifier > 0 ? '+' : ''}${opponent._generationDetails.genderModifier}`);
@@ -220,13 +228,17 @@ function main() {
     return opponent;
   });
 
+  // New racers go before the King, who stays last
+  const kings = existing.filter((o) => o.isKing);
+  const opponents = [...existing.filter((o) => !o.isKing), ...added, ...kings];
+
   // Create output structure
   const output = {
     version: "1.0",
     description: "Street Rod AC - Opponent Definitions",
     generated: new Date().toISOString(),
     generation_rules: {
-      skill_range: "80-100",
+      skill_range: "90-100",
       aggression_range: "0-100",
       base_aggression_range: "30-70",
       age_modifiers: {
@@ -279,7 +291,7 @@ function main() {
   console.log("\n✅ Opponent definitions generated successfully!\n");
   console.log("📌 IMPORTANT: These definitions follow the opponent system guidelines:");
   console.log("   - Engine-agnostic (no AC-specific values)");
-  console.log("   - Skill range: 80-100");
+  console.log("   - Skill range: 90-100");
   console.log("   - Aggression range: 0-100");
   console.log("   - Age-based modifiers applied");
   console.log("   - Gender as subtle tendency (not hard rule)");
