@@ -1,5 +1,10 @@
-1. New Main Screen
-	Today we show the New Game, Load Game and Settings buttons with a background. I want a full refactor of that. I thought of rendering some of the cars we got, picked randomly, and show them in any of the showrooms with a nice camera movement. Like some scenes of Gran Turismo. This would be the background. On top of that a fade to black section, from bottom to the top, starting maybe at the half of the screen. Then we show the buttons for load, new and settings. We don't navigate away from there, the elements we show can be semitransparent cards with styled animations, such as fade in and out. Give me some insights on this.
+1. New Main Screen Tweaks
+	Make the buttons smaller and place them a little bit below they are now. The degrade start below. The cars should not take all the attention.
 
 2. New Streets environment
 	Again, I want a 3D streets experience. SLRR had Valo City where the player drives around and engages an opponent to race. I don't want that but maybe render the player's car with the camera in the driver's seat pointing to the left and then an opponent shows up driving and the race dialog pops up, more like Street Rod behavior. The cars should have the engine's sound and a proper animation with body movement when bracking and throttling.
+	
+3. Engine stand and manipulation
+	We don't have a bank for the engine modeled but I want the work in the engine be in there: for working on peripherals, manifolds and even cylinder heads, we allow the player to do it with the engine installed in the car. But engine internals should be worked on the bank and in the proper order. You can't take the crankshaft before you remove the connecting rods and the pistons, and you can't do it with the engine installed (in most cases).
+	
+4. We have a special case: the Chevrolet Corvair, which has the engine in the back. Think what we can do about it.
